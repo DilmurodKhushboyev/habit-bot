@@ -27,7 +27,11 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "SHU_YERGA_TOKEN_QOYING")
 # ============================================================
 #  MA'LUMOTLAR (data.json da saqlanadi)
 # ============================================================
-DATA_FILE = "habit_data.json"
+if os.path.exists('/app/data'):
+    DATA_FILE = "/app/data/habit_data.json"
+else:
+    DATA_FILE = "habit_data.json"
+
 
 MOTIVATSIYA = [
     "💪 Har bir kun yangi imkoniyat! Odatingizni bajaring!",
