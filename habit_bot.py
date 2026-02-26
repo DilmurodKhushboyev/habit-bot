@@ -22,7 +22,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeybo
 #  SOZLAMALAR — TOKEN NI SHU YERGA QOYING
 # ============================================================
 import os
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "SHU_YERGA_TOKEN_QOYING")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8775759788:AAEAJ0vwmAGxoX06n5ivbC42F1A8F1jAXPM")
 ADMIN_ID = int(os.environ.get("ADMIN_ID", 5071908808))  # Bot egasining Telegram ID si
 
 # ============================================================
