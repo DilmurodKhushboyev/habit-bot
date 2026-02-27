@@ -2,3 +2,4 @@ pyTelegramBotAPI
 schedule
 pymongo
 dnspython
+certifi
