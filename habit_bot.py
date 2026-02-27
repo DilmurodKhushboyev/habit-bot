@@ -17,6 +17,17 @@ import time
 import threading
 from datetime import datetime, date
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from pymongo import MongoClient
+
+# MongoDB ma'lumotlar bazasiga ulanish
+MONGO_URL = os.environ.get('MONGO_URL')
+if MONGO_URL:
+    client = MongoClient(MONGO_URL)
+    db = client['habitbot_db']
+    users_collection = db['users_data']
+else:
+    print("XATOLIK: MONGO_URL topilmadi!")
+    
 
 # ============================================================
 #  SOZLAMALAR — TOKEN NI SHU YERGA QOYING
@@ -46,14 +57,36 @@ MOTIVATSIYA = [
 ]
 
 def load_data():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
+    if MONGO_URL:
+        try:
+            doc = users_collection.find_one({"_id": "all_bot_data"})
+            if doc and "data" in doc:
+                return doc["data"]
+            return {}
+        except Exception as e:
+            print("Bazadan o'qishda xatolik:", e)
+            return {}
+    else:
+        if os.path.exists(DATA_FILE):
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return {}
 
 def save_data(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    if MONGO_URL:
+        try:
+            users_collection.update_one(
+                {"_id": "all_bot_data"},
+                {"$set": {"data": data}},
+                upsert=True
+            )
+        except Exception as e:
+            print("Bazaga saqlashda xatolik:", e)
+    else:
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+
+    
 
 def get_user(data, user_id):
     uid = str(user_id)
