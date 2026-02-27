@@ -1,2 +1,4 @@
 pyTelegramBotAPI
 schedule
+pymongo
+dnspython
