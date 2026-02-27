@@ -18,11 +18,13 @@ import threading
 from datetime import datetime, date
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from pymongo import MongoClient
+import certifi
 
 # MongoDB ma'lumotlar bazasiga ulanish
 MONGO_URL = os.environ.get('MONGO_URL')
 if MONGO_URL:
-    client = MongoClient(MONGO_URL, tlsAllowInvalidCertificates=True)
+    client = MongoClient(MONGO_URL, tlsCAFile=certifi.where())
+
 
     db = client['habitbot_db']
     users_collection = db['users_data']
