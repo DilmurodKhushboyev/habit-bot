@@ -22,7 +22,8 @@ from pymongo import MongoClient
 # MongoDB ma'lumotlar bazasiga ulanish
 MONGO_URL = os.environ.get('MONGO_URL')
 if MONGO_URL:
-    client = MongoClient(MONGO_URL)
+        client = MongoClient(MONGO_URL, tlsAllowInvalidCertificates=True)
+
     db = client['habitbot_db']
     users_collection = db['users_data']
 else:
