@@ -23,9 +23,8 @@ import certifi
 # MongoDB ma'lumotlar bazasiga ulanish
 MONGO_URL = os.environ.get('MONGO_URL')
 if MONGO_URL:
+    import certifi
     client = MongoClient(MONGO_URL, tlsCAFile=certifi.where())
-
-
     db = client['habitbot_db']
     users_collection = db['users_data']
 else:
