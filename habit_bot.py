@@ -1888,6 +1888,7 @@ def generate_rating_image(top10_data):
               font=font_small, fill=(100, 100, 150), anchor="mm")
 
     buf = io.BytesIO()
+    buf.name = "reyting.png"
     img.save(buf, format="PNG")
     buf.seek(0)
     return buf
@@ -1919,23 +1920,24 @@ def show_rating(uid):
         jon_val = max(0, min(100, udata.get("jon", 100)))
         is_vip  = bool(udata.get("is_vip"))
         image_data.append((name or "?", points, jon_val, is_vip))
+    # Matn ro'yxati (caption uchun)
+    medals = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
+    caption = "🏆 *Reyting — Top 10*\n" + "▬" * 16 + "\n\n"
+    for i, (name, points, username, target_uid) in enumerate(top10):
+        uname = username.lstrip("@") if username and username != "—" else ""
+        link  = f"[{name}](https://t.me/{uname})" if uname else f"[{name}](tg://user?id={target_uid})"
+        udata   = users.get(str(target_uid), {})
+        jon_val = max(0, min(100, udata.get("jon", 100)))
+        je = "❤️" if jon_val >= 80 else "🧡" if jon_val >= 50 else "💛" if jon_val >= 20 else "🖤"
+        vip_badge = " 💎" if udata.get("is_vip") else ""
+        caption += f"{medals[i]} {link}{vip_badge} — {points} ball,  {je} {jon_val}%\n"
     try:
         img_buf = generate_rating_image(image_data)
-        sent = bot.send_photo(uid, img_buf, caption="🏆 *Reyting — Top 10*", parse_mode="Markdown", reply_markup=kb)
+        img_buf.name = "reyting.png"
+        sent = bot.send_document(uid, img_buf, caption=caption, parse_mode="Markdown", reply_markup=kb)
     except Exception as e:
         print(f"[rating_image] xato: {e}")
-        # Fallback: matn ko'rinishida
-        medals = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
-        text = T(uid, "rating_title") + "\n" + "▬" * 16 + "\n\n"
-        for i, (name, points, username, target_uid) in enumerate(top10):
-            uname = username.lstrip("@") if username and username != "—" else ""
-            link  = f"[{name}](https://t.me/{uname})" if uname else f"[{name}](tg://user?id={target_uid})"
-            udata   = users.get(str(target_uid), {})
-            jon_val = max(0, min(100, udata.get("jon", 100)))
-            je = "❤️" if jon_val >= 80 else "🧡" if jon_val >= 50 else "💛" if jon_val >= 20 else "🖤"
-            vip_badge = " 💎" if udata.get("is_vip") else ""
-            text += f"{medals[i]} {link}{vip_badge} — {points} ball,  {je} {jon_val}%\n"
-        sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb, disable_web_page_preview=True)
+        sent = bot.send_message(uid, caption, parse_mode="Markdown", reply_markup=kb, disable_web_page_preview=True)
     u["main_msg_id"] = sent.message_id
     save_user(uid, u)
 
