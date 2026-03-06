@@ -2132,17 +2132,20 @@ def callback_handler(call):
         send_main_menu(uid)
         return
 
+    if cdata == "bc_user_ack":
+        bot.answer_callback_query(call.id)
+        try: bot.delete_message(uid, call.message.message_id)
+        except: pass
+        return
+
     if cdata == "bc_confirm":
         if uid != ADMIN_ID:
             return
         bot.answer_callback_query(call.id, "✅ Tasdiqlandi")
-        def del_bc_confirm(chat_id, mid):
-            time.sleep(2)
-            try: bot.delete_message(chat_id, mid)
-            except: pass
-            try: bot.send_message(chat_id, "🛠 *Admin panel*", parse_mode="Markdown", reply_markup=admin_menu())
-            except: pass
-        threading.Thread(target=del_bc_confirm, args=(uid, call.message.message_id), daemon=True).start()
+        try: bot.delete_message(uid, call.message.message_id)
+        except: pass
+        try: bot.send_message(uid, "🛠 *Admin panel*", parse_mode="Markdown", reply_markup=admin_menu())
+        except: pass
         return
 
     if cdata == "bc_detail":
@@ -6151,6 +6154,10 @@ def _run_broadcast(admin_uid, bc_chat_id, msg_ids, state):
                     from_chat_id=bc_chat_id,
                     message_id=mid
                 )
+            # Foydalanuvchiga "Tushunarli" tugmasi
+            kb_user = InlineKeyboardMarkup()
+            kb_user.add(InlineKeyboardButton("✅ Tushunarli", callback_data="bc_user_ack"))
+            bot.send_message(target_uid_int, "👆", reply_markup=kb_user)
             sent_count += 1
             time.sleep(0.05)
         except Exception as e:
@@ -6172,13 +6179,8 @@ def _run_broadcast(admin_uid, bc_chat_id, msg_ids, state):
     kb_bc = InlineKeyboardMarkup()
     if failed_ids:
         kb_bc.add(InlineKeyboardButton("🔍 Batafsil", callback_data="bc_detail"))
-    kb_bc.add(InlineKeyboardButton("✅ Tasdiqlash", callback_data="bc_confirm"))
-    sent_r = bot.send_message(admin_uid, result, reply_markup=kb_bc)
-    def del_bc_result(chat_id, mid):
-        time.sleep(5)
-        try: bot.delete_message(chat_id, mid)
-        except: pass
-    threading.Thread(target=del_bc_result, args=(admin_uid, sent_r.message_id), daemon=True).start()
+    kb_bc.add(InlineKeyboardButton("✅ Tushunarli", callback_data="bc_confirm"))
+    bot.send_message(admin_uid, result, reply_markup=kb_bc)
 
 
 # ============================================================
