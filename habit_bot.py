@@ -1792,26 +1792,26 @@ def generate_rating_image(top10_data):
     top10_data: list of (name, points, jon_val, is_vip)
     Returns: BytesIO rasm
     """
-    W, H = 1600, 1280
+    W, H = 3200, 2560
     img  = Image.new("RGB", (W, H), color=(15, 15, 25))
     draw = ImageDraw.Draw(img)
 
     try:
-        font_big   = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 56)
-        font_med   = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
-        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
+        font_big   = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 112)
+        font_med   = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
+        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 64)
     except Exception:
         font_big = font_med = font_small = ImageFont.load_default()
 
     # Header gradient
-    for y in range(160):
+    for y in range(320):
         r = int(30 + y * 0.8)
         g = int(10 + y * 0.3)
         b = int(80 + y * 1.2)
         draw.line([(0, y), (W, y)], fill=(r, g, b))
 
     draw.text((W // 2, 56), "REYTING  TOP-10", font=font_big, fill=(255, 215, 0), anchor="mm")
-    draw.text((W // 2, 116), "Super Habits Bot", font=font_small, fill=(180, 180, 220), anchor="mm")
+    draw.text((W // 2, 232), "Super Habits Bot", font=font_small, fill=(180, 180, 220), anchor="mm")
 
     medals_text  = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
     medal_colors = [
@@ -1844,52 +1844,52 @@ def generate_rating_image(top10_data):
         (50, 35, 15),
     ]
 
-    y_start = 190
-    row_h   = 104
+    y_start = 380
+    row_h   = 208
     max_pts = top10_data[0][1] if top10_data and top10_data[0][1] > 0 else 1
 
     for i, (name, points, jon_val, is_vip) in enumerate(top10_data):
         y = y_start + i * row_h
         if i < 3:
-            draw.rectangle([(20, y - 4), (W - 20, y + row_h - 12)], fill=row_bg[i])
+            draw.rectangle([(40, y - 8), (W - 40, y + row_h - 24)], fill=row_bg[i])
         elif i % 2 == 0:
-            draw.rectangle([(20, y - 4), (W - 20, y + row_h - 12)], fill=(25, 25, 40))
+            draw.rectangle([(40, y - 8), (W - 40, y + row_h - 24)], fill=(25, 25, 40))
 
         # Medal raqam
-        draw.text((70, y + row_h // 2 - 28), medals_text[i], font=font_med, fill=medal_colors[i])
+        draw.text((140, y + row_h // 2 - 56), medals_text[i], font=font_med, fill=medal_colors[i])
 
         # Ism
         vip_mark     = " *" if is_vip else ""
         display_name = (name[:18] + vip_mark) if len(name) > 18 else (name + vip_mark)
-        draw.text((140, y + row_h // 2 - 26), display_name, font=font_med, fill=(240, 240, 255))
+        draw.text((280, y + row_h // 2 - 52), display_name, font=font_med, fill=(240, 240, 255))
 
         # Progress bar
-        bar_x  = 640
-        bar_w  = 560
-        bar_h  = 24
+        bar_x  = 1280
+        bar_w  = 1120
+        bar_h  = 48
         fill_w = int(bar_w * points / max_pts)
-        draw.rounded_rectangle([(bar_x, y + 36), (bar_x + bar_w, y + 36 + bar_h)], radius=12, fill=(40, 40, 60))
+        draw.rounded_rectangle([(bar_x, y + 72), (bar_x + bar_w, y + 72 + bar_h)], radius=24, fill=(40, 40, 60))
         if fill_w > 0:
-            draw.rounded_rectangle([(bar_x, y + 36), (bar_x + fill_w, y + 36 + bar_h)], radius=12, fill=bar_colors[i])
+            draw.rounded_rectangle([(bar_x, y + 72), (bar_x + fill_w, y + 72 + bar_h)], radius=24, fill=bar_colors[i])
 
         # Ball matni
-        draw.text((bar_x + bar_w + 24, y + 28), f"{points} ball", font=font_small, fill=(200, 200, 220))
+        draw.text((bar_x + bar_w + 48, y + 56), f"{points} ball", font=font_small, fill=(200, 200, 220))
 
         # Jon foizi
         if jon_val >= 80:   jc = (255, 80, 80)
         elif jon_val >= 50: jc = (255, 160, 50)
         elif jon_val >= 20: jc = (255, 220, 50)
         else:               jc = (120, 120, 120)
-        draw.text((bar_x, y + 4), f"♥ {jon_val}%", font=font_small, fill=jc)
+        draw.text((bar_x, y + 8), f"♥ {jon_val}%", font=font_small, fill=jc)
 
     # Footer
-    draw.line([(40, H - 70), (W - 40, H - 70)], fill=(60, 60, 100), width=2)
-    draw.text((W // 2, H - 36), "@Super_habits_bot  •  Bugun yangilangan",
+    draw.line([(80, H - 140), (W - 80, H - 140)], fill=(60, 60, 100), width=4)
+    draw.text((W // 2, H - 72), "@Super_habits_bot  •  Bugun yangilangan",
               font=font_small, fill=(100, 100, 150), anchor="mm")
 
     buf = io.BytesIO()
     buf.name = "reyting.png"
-    img.save(buf, format="PNG")
+    img.save(buf, format="PNG", optimize=False, compress_level=1)
     buf.seek(0)
     return buf
 
