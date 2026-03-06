@@ -3,3 +3,4 @@ schedule
 pymongo
 dnspython
 certifi
+Pillow
