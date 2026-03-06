@@ -1787,87 +1787,120 @@ def finish_onboarding(uid, habit_name, habit_time):
 # ============================================================
 #  REYTING RASM GENERATSIYASI
 # ============================================================
+def draw_medal(draw, cx, cy, rank, size=26):
+    colors = {1:((255,215,0),(200,160,0)), 2:((210,215,225),(150,155,165)), 3:((220,145,60),(165,100,30))}
+    if rank not in colors: return
+    c1, c2 = colors[rank]
+    draw.ellipse([(cx-size,cy-size),(cx+size,cy+size)], fill=c2)
+    s2 = int(size*0.80)
+    draw.ellipse([(cx-s2,cy-s2),(cx+s2,cy+s2)], fill=c1)
+    try:
+        f = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size-2)
+    except:
+        f = ImageFont.load_default()
+    tc = (80,50,0) if rank==1 else (60,60,70) if rank==2 else (80,45,10)
+    draw.text((cx,cy), str(rank), font=f, fill=tc, anchor="mm")
+
+def draw_heart_shape(draw, x, y, color, size=10):
+    s = size
+    draw.ellipse([(x,    y-s//2),(x+s,  y+s//2)], fill=color)
+    draw.ellipse([(x+s,  y-s//2),(x+s*2,y+s//2)], fill=color)
+    draw.polygon([(x,y+s//4),(x+s*2,y+s//4),(x+s,y+s+s//3)], fill=color)
+
+def draw_diamond_shape(draw, cx, cy, color=(130,200,255), size=10):
+    draw.polygon([(cx,cy-size),(cx+size,cy),(cx,cy+size),(cx-size,cy)], fill=color)
+
 def generate_rating_image(top10_data):
     """
     top10_data: list of (name, points, jon_val, is_vip)
     Returns: BytesIO rasm
     """
-    W      = 1080
-    ROW_H  = 96
-    HEADER_H = 160
-    FOOTER_H = 60
-    H = HEADER_H + ROW_H * 10 + FOOTER_H + 20
+    FONT   = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+    FONT_R = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
-    img  = Image.new("RGB", (W, H), color=(18, 18, 28))
+    W=1080; ROW_H=106; HDR_H=185; FTR_H=68
+    H = HDR_H + ROW_H*10 + FTR_H + 8
+
+    img  = Image.new("RGB", (W, H), (13,13,22))
     draw = ImageDraw.Draw(img)
 
     try:
-        font_title  = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 42)
-        font_sub    = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 22)
-        font_rank   = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32)
-        font_name   = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
-        font_small  = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 22)
-        font_points = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 26)
+        f_title = ImageFont.truetype(FONT,   46)
+        f_sub   = ImageFont.truetype(FONT_R, 21)
+        f_rank  = ImageFont.truetype(FONT,   28)
+        f_name  = ImageFont.truetype(FONT,   30)
+        f_small = ImageFont.truetype(FONT_R, 20)
+        f_pts   = ImageFont.truetype(FONT,   28)
+        f_jon   = ImageFont.truetype(FONT_R, 19)
     except Exception:
-        font_title = font_sub = font_rank = font_name = font_small = font_points = ImageFont.load_default()
+        f_title = f_sub = f_rank = f_name = f_small = f_pts = f_jon = ImageFont.load_default()
 
     # Header
-    draw.rectangle([(0, 0), (W, HEADER_H)], fill=(24, 24, 38))
-    draw.rectangle([(0, HEADER_H - 2), (W, HEADER_H)], fill=(80, 80, 160))
-    draw.text((W // 2, 58),  "🏆  REYTING  TOP-10",              font=font_title, fill=(255, 215, 0),   anchor="mm")
-    draw.text((W // 2, 110), "Super Habits Bot  •  @Super_habits_bot", font=font_sub,   fill=(140, 140, 180), anchor="mm")
+    for y in range(HDR_H):
+        t = y/HDR_H
+        draw.line([(0,y),(W,y)], fill=(int(18+t*10), int(18+t*10), int(35+t*18)))
+    draw.rectangle([(0,HDR_H-3),(W,HDR_H)], fill=(180,140,0))
+    draw.text((W//2, 72), "REYTING  TOP-10", font=f_title, fill=(255,215,0), anchor="mm")
+    tw = int(f_title.getlength("REYTING  TOP-10"))
+    draw.rectangle([(W//2-tw//2, 96),(W//2+tw//2, 98)], fill=(180,140,0))
+    draw.text((W//2, 135), "Super Habits Bot  •  @Super_habits_bot", font=f_sub, fill=(120,120,165), anchor="mm")
+    draw.text((90,  163), "O'RIN / ISM", font=f_small, fill=(80,80,110), anchor="lm")
+    draw.text((340, 163), "PROGRESS",   font=f_small, fill=(80,80,110), anchor="lm")
+    draw.text((920, 163), "BALL",       font=f_small, fill=(80,80,110), anchor="rm")
 
-    rank_colors = [(255, 215, 0), (200, 200, 220), (210, 140, 60)] + [(100, 120, 200)] * 7
-    bar_colors  = [(255, 215, 0), (180, 180, 255), (255, 160, 80)] + [(80, 140, 255)] * 7
-    row_bgs     = [(38, 34, 16), (30, 30, 44), (40, 30, 16)] + [(22, 22, 34)] * 7
+    bar_colors = [(255,215,0),(155,155,255),(255,145,55)] + [(55,125,255)]*7
+    row_bgs    = [(42,36,10),(26,26,46),(44,28,10)] + [(20,20,34)]*7
+    rank_dot   = [(255,215,0),(200,205,220),(215,135,55)] + [(80,110,195)]*7
+    acc_colors = [(255,215,0),(185,185,210),(210,130,50)] + [(50,65,130)]*7
+    max_pts    = top10_data[0][1] if top10_data and top10_data[0][1]>0 else 1
 
-    max_pts = top10_data[0][1] if top10_data and top10_data[0][1] > 0 else 1
+    for i,(name,points,jon_val,is_vip) in enumerate(top10_data):
+        y   = HDR_H + i*ROW_H
+        bg  = row_bgs[i] if i<3 else ((21,21,35) if i%2==0 else (25,25,39))
+        draw.rectangle([(0,y),(W,y+ROW_H)], fill=bg)
+        draw.rectangle([(0,y),(4,y+ROW_H)], fill=acc_colors[i])
+        cy = y + ROW_H//2
 
-    for i, (name, points, jon_val, is_vip) in enumerate(top10_data):
-        y  = HEADER_H + i * ROW_H
-        bg = row_bgs[i] if i < 3 else ((26, 26, 40) if i % 2 == 0 else (28, 28, 40))
-        draw.rectangle([(0, y), (W, y + ROW_H - 1)], fill=bg)
+        if i < 3:
+            draw_medal(draw, 44, cy, i+1, size=28)
+        else:
+            draw.ellipse([(22,cy-20),(66,cy+20)], fill=(28,32,55))
+            draw.text((44,cy), str(i+1), font=f_rank, fill=rank_dot[i], anchor="mm")
 
-        # Raqam
-        draw.text((44, y + ROW_H // 2), str(i + 1), font=font_rank, fill=rank_colors[i], anchor="mm")
+        draw.rectangle([(80,y+18),(82,y+ROW_H-18)], fill=(40,40,62))
 
-        # Vertikal chiziq
-        draw.rectangle([(70, y + 16), (72, y + ROW_H - 16)], fill=(50, 50, 70))
+        nc = (255,228,80) if i==0 else (212,212,255) if i<3 else (185,185,215)
+        draw.text((96, cy-16), name[:17], font=f_name, fill=nc, anchor="lm")
 
-        # Ism
-        display    = (name[:16] + " 💎") if is_vip else name[:18]
-        name_color = (255, 230, 100) if i == 0 else (220, 220, 255) if i < 3 else (200, 200, 220)
-        draw.text((90, y + ROW_H // 2 - 16), display, font=font_name,  fill=name_color, anchor="lm")
+        if is_vip:
+            nx = 96 + int(f_name.getlength(name[:17])) + 14
+            draw_diamond_shape(draw, nx, cy-16, color=(120,195,255), size=10)
 
-        # Jon foizi
-        if jon_val >= 80:   jc = (255, 80,  80)
-        elif jon_val >= 50: jc = (255, 160, 50)
-        elif jon_val >= 20: jc = (255, 220, 50)
-        else:               jc = (120, 120, 120)
-        draw.text((90, y + ROW_H // 2 + 14), f"♥ {jon_val}%", font=font_small, fill=jc, anchor="lm")
+        if jon_val>=80:   jc=(255,75,75)
+        elif jon_val>=50: jc=(255,155,45)
+        elif jon_val>=20: jc=(245,210,45)
+        else:             jc=(105,105,105)
+        draw_heart_shape(draw, 96, cy+12, jc, size=9)
+        draw.text((120, cy+18), f"{jon_val}%", font=f_jon, fill=jc, anchor="lm")
 
-        # Progress bar
-        bar_x  = 340
-        bar_w  = 550
-        bar_h  = 18
-        bar_y  = y + ROW_H // 2 - bar_h // 2
-        fill_w = max(int(bar_w * points / max_pts), 18 if points > 0 else 0)
-        draw.rounded_rectangle([(bar_x, bar_y), (bar_x + bar_w, bar_y + bar_h)], radius=9,  fill=(40, 40, 60))
-        draw.rounded_rectangle([(bar_x, bar_y), (bar_x + fill_w, bar_y + bar_h)], radius=9, fill=bar_colors[i])
+        bx=336; bw=575; bh=22; by=cy-bh//2
+        draw.rounded_rectangle([(bx+2,by+2),(bx+bw+2,by+bh+2)], radius=11, fill=(8,8,18))
+        draw.rounded_rectangle([(bx,by),(bx+bw,by+bh)], radius=11, fill=(35,35,55))
+        fw = max(int(bw*points/max_pts), 22 if points>0 else 0)
+        bc = bar_colors[i]
+        draw.rounded_rectangle([(bx,by),(bx+fw,by+bh)], radius=11, fill=bc)
+        hl = tuple(min(255,c+70) for c in bc)
+        draw.rounded_rectangle([(bx,by),(bx+fw,by+bh//2+2)], radius=11, fill=hl)
 
-        # Ball
-        draw.text((bar_x + bar_w + 20, y + ROW_H // 2),      f"{points}", font=font_points, fill=(220, 220, 240), anchor="lm")
-        draw.text((bar_x + bar_w + 20, y + ROW_H // 2 + 22), "ball",      font=font_small,  fill=(120, 120, 150), anchor="lm")
+        draw.text((932, cy-14), f"{points}", font=f_pts,   fill=(220,220,242), anchor="rm")
+        draw.text((932, cy+10), "ball",      font=f_small, fill=(100,100,138), anchor="rm")
+        draw.rectangle([(4,y+ROW_H),(W-4,y+ROW_H+1)], fill=(28,28,45))
 
-        # Row separator
-        draw.rectangle([(0, y + ROW_H - 1), (W, y + ROW_H)], fill=(35, 35, 50))
-
-    # Footer
-    fy = HEADER_H + 10 * ROW_H + 8
-    draw.rectangle([(0, fy), (W, H)], fill=(24, 24, 38))
-    draw.rectangle([(0, fy), (W, fy + 1)], fill=(80, 80, 160))
-    draw.text((W // 2, fy + FOOTER_H // 2), "Bugun yangilangan  •  Super Habits Bot",
-              font=font_small, fill=(100, 100, 140), anchor="mm")
+    fy = HDR_H + 10*ROW_H + 5
+    draw.rectangle([(0,fy),(W,H)], fill=(18,18,30))
+    draw.rectangle([(0,fy),(W,fy+2)], fill=(120,95,0))
+    draw.text((W//2, fy+FTR_H//2), "Bugun yangilangan  •  Super Habits Bot",
+              font=f_sub, fill=(85,85,125), anchor="mm")
 
     buf = io.BytesIO()
     buf.name = "reyting.png"
