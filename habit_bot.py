@@ -4675,9 +4675,11 @@ def send_reminder(user_id, habit):
     from datetime import timezone, timedelta
     tz_uz     = timezone(timedelta(hours=5))
     yesterday = (datetime.now(tz_uz) - timedelta(days=1)).strftime("%Y-%m-%d")
+    current_habit = None
     for h in habits:
         if h["id"] == habit["id"]:
             exists = True
+            current_habit = h
             # Bugun allaqachon bajarilgan bo'lsa — eslatma yubormaymiz
             if h.get("last_done") == today:
                 return
@@ -4688,12 +4690,42 @@ def send_reminder(user_id, habit):
     if not exists:
         return
     save_user(user_id, u)
-    lang = get_lang(user_id)
-    motiv = random.choice(MOTIVATSIYA.get(lang, MOTIVATSIYA["uz"]))
+
+    # Shaxsiy ma'lumotlar
+    name       = u.get("name", "").split()[0] if u.get("name") else ""
+    streak     = current_habit.get("streak", 0) if current_habit else 0
+    lang       = get_lang(user_id)
+    motiv      = random.choice(MOTIVATSIYA.get(lang, MOTIVATSIYA["uz"]))
+    habit_name = habit["name"]
+
+    # Streak ga qarab jonli xabar
+    if streak == 0:
+        streak_line = f"🌱 Bugun birinchi qadam — eng muhimi shu!"
+    elif streak == 1:
+        streak_line = f"✨ Kecha boshladingiz — davom eting!"
+    elif streak < 7:
+        streak_line = f"🔥 {streak} kun ketma-ket! Ajoyib start!"
+    elif streak < 14:
+        streak_line = f"⚡ {streak} kunlik streak! Haftani yoping!"
+    elif streak < 30:
+        streak_line = f"💪 {streak} kun! Odat shakllanmoqda — to'xtamang!"
+    elif streak < 100:
+        streak_line = f"🏆 {streak} kunlik streak! Siz mashinasiz!"
+    else:
+        streak_line = f"👑 {streak} kun! Siz — odatlar ustasisiz!"
+
+    # Xabar matni
+    greeting = f"*{name},* " if name else ""
+    text = (
+        f"⏰ {greeting}*{habit_name}* vaqti!\n\n"
+        f"{streak_line}\n\n"
+        f"_{motiv}_"
+    )
+
     try:
         bot.send_message(
             user_id,
-            T(user_id, "remind_title", name=habit["name"], motiv=motiv),
+            text,
             parse_mode="Markdown",
             reply_markup=done_keyboard(user_id, habit["id"])
         )
