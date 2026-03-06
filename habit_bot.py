@@ -17,9 +17,7 @@ import schedule
 import time
 import threading
 import random
-import io
 from datetime import datetime, date
-from PIL import Image, ImageDraw, ImageFont
 from telebot.types import (
     InlineKeyboardMarkup, InlineKeyboardButton,
     ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
@@ -1787,133 +1785,6 @@ def finish_onboarding(uid, habit_name, habit_time):
 # ============================================================
 #  REYTING RASM GENERATSIYASI
 # ============================================================
-def generate_rating_image(top10_data):
-    """
-    top10_data: list of (name, points, jon_val, is_vip)
-    Returns: BytesIO rasm
-    """
-    FONT   = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-    FONT_R = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-
-    W=1080; ROW_H=110; HDR_H=200; FTR_H=72
-    H = HDR_H + ROW_H*10 + FTR_H + 10
-
-    img  = Image.new("RGB", (W, H), (10, 10, 18))
-    draw = ImageDraw.Draw(img)
-
-    try:
-        f_title = ImageFont.truetype(FONT,   52)
-        f_sub   = ImageFont.truetype(FONT_R, 22)
-        f_name  = ImageFont.truetype(FONT,   32)
-        f_small = ImageFont.truetype(FONT_R, 20)
-        f_pts   = ImageFont.truetype(FONT,   30)
-        f_jon   = ImageFont.truetype(FONT_R, 18)
-        f_label = ImageFont.truetype(FONT_R, 17)
-    except Exception:
-        f_title = f_sub = f_name = f_small = f_pts = f_jon = f_label = ImageFont.load_default()
-
-    # Header
-    for y in range(HDR_H):
-        t = y / HDR_H
-        draw.line([(0,y),(W,y)], fill=(int(12+t*8), int(12+t*8), int(28+t*22)))
-    draw.rectangle([(0,HDR_H-3),(W,HDR_H)], fill=(200,160,0))
-    draw.text((W//2, 80), "REYTING", font=f_title, fill=(255,215,0), anchor="mm")
-    draw.rectangle([(W//2-130,108),(W//2+130,111)], fill=(200,155,0))
-    draw.text((W//2, 145), "TOP-10  •  Super Habits Bot", font=f_sub,   fill=(140,140,185), anchor="mm")
-    draw.text((W//2, 172), "@Super_habits_bot",           font=f_label, fill=(80,80,120),   anchor="mm")
-
-    top3_bg     = [(40,34,8),   (22,22,44),  (42,26,8)  ]
-    top3_accent = [(255,215,0), (180,185,205),(215,130,45)]
-    top3_name   = [(255,228,60),(210,210,255),(255,195,120)]
-    top3_bar    = [(255,215,0), (150,150,255),(255,140,50)]
-    max_pts     = top10_data[0][1] if top10_data and top10_data[0][1]>0 else 1
-
-    for i,(name,points,jon_val,is_vip) in enumerate(top10_data):
-        y  = HDR_H + i*ROW_H
-        cy = y + ROW_H//2
-        bg = top3_bg[i] if i<3 else ((18,18,30) if i%2==0 else (22,22,34))
-        draw.rectangle([(0,y),(W,y+ROW_H)], fill=bg)
-        ac = top3_accent[i] if i<3 else (45,55,110)
-        draw.rectangle([(0,y),(6,y+ROW_H)], fill=ac)
-
-        # Rank badge
-        try:
-            f_rn = ImageFont.truetype(FONT, 28 if i==0 else 26 if i<3 else 22)
-        except:
-            f_rn = ImageFont.load_default()
-
-        if i == 0:
-            draw.ellipse([(18,cy-32),(82,cy+32)], fill=(160,120,0))
-            draw.ellipse([(22,cy-28),(78,cy+28)], fill=(255,215,0))
-            draw.text((50,cy), "1", font=f_rn, fill=(80,50,0), anchor="mm")
-        elif i == 1:
-            draw.ellipse([(22,cy-28),(78,cy+28)], fill=(130,135,148))
-            draw.ellipse([(26,cy-24),(74,cy+24)], fill=(210,215,228))
-            draw.text((50,cy), "2", font=f_rn, fill=(50,52,60), anchor="mm")
-        elif i == 2:
-            draw.ellipse([(22,cy-28),(78,cy+28)], fill=(148,90,28))
-            draw.ellipse([(26,cy-24),(74,cy+24)], fill=(220,145,55))
-            draw.text((50,cy), "3", font=f_rn, fill=(80,40,8), anchor="mm")
-        else:
-            draw.ellipse([(28,cy-22),(72,cy+22)], fill=(25,28,50))
-            draw.ellipse([(32,cy-18),(68,cy+18)], fill=(32,38,68))
-            draw.text((50,cy), str(i+1), font=f_rn, fill=(80,110,200), anchor="mm")
-
-        draw.rectangle([(92,y+20),(94,y+ROW_H-20)], fill=(35,38,58))
-
-        # Ism
-        nc = top3_name[i] if i<3 else (185,188,215)
-        display = name[:17]
-        draw.text((108, cy-15), display, font=f_name, fill=nc, anchor="lm")
-
-        # VIP — ism OSTIDA, alohida qatorda
-        if is_vip:
-            vx = 108
-            vy = cy + 14
-            s  = 7
-            draw.polygon([(vx+s,vy-s),(vx+s*2,vy),(vx+s,vy+s),(vx,vy)], fill=(100,190,255))
-            draw.text((vx+s*2+6, vy+1), "VIP", font=f_jon, fill=(100,190,255), anchor="lm")
-
-        # Jon foizi — ism ostida (VIP bo'lsa undan keyin)
-        if jon_val>=80:   jc=(245,70,70)
-        elif jon_val>=50: jc=(245,148,40)
-        elif jon_val>=20: jc=(240,205,40)
-        else:             jc=(100,100,100)
-
-        jon_x = 108 if not is_vip else 160
-        # Kichik doira indikator
-        draw.ellipse([(jon_x, cy+14),(jon_x+12,cy+26)], fill=jc)
-        draw.text((jon_x+18, cy+26), f"{jon_val}%", font=f_jon, fill=jc, anchor="lm")
-
-        # Progress bar
-        bx=326; bw=580; bh=20; by2=cy-bh//2
-        draw.rounded_rectangle([(bx+2,by2+2),(bx+bw+2,by2+bh+2)], radius=10, fill=(6,6,14))
-        draw.rounded_rectangle([(bx,by2),(bx+bw,by2+bh)], radius=10, fill=(32,32,50))
-        fw = max(int(bw*points/max_pts), 20 if points>0 else 0)
-        bc = top3_bar[i] if i<3 else (50,120,250)
-        draw.rounded_rectangle([(bx,by2),(bx+fw,by2+bh)], radius=10, fill=bc)
-        hl = tuple(min(255,c+80) for c in bc)
-        if fw > 24:
-            draw.rounded_rectangle([(bx+2,by2+2),(bx+fw-2,by2+bh//2)], radius=8, fill=hl)
-
-        draw.text((926, cy-14), f"{points}", font=f_pts,   fill=(222,222,245), anchor="rm")
-        draw.text((926, cy+10), "ball",      font=f_small, fill=(95,95,132),   anchor="rm")
-        draw.rectangle([(6,y+ROW_H),(W-6,y+ROW_H+1)], fill=(25,25,40))
-
-    # Footer
-    fy = HDR_H + 10*ROW_H + 6
-    draw.rectangle([(0,fy),(W,H)], fill=(14,14,24))
-    draw.rectangle([(0,fy),(W,fy+2)], fill=(160,125,0))
-    draw.text((W//2, fy+FTR_H//2), "Bugun yangilangan  •  Super Habits Bot",
-              font=f_sub, fill=(80,80,120), anchor="mm")
-
-    buf = io.BytesIO()
-    buf.name = "reyting.png"
-    img.save(buf, format="PNG", optimize=False, compress_level=1)
-    buf.seek(0)
-    return buf
-
-
 def show_rating(uid):
     users   = load_all_users()
     ranking = []
@@ -1925,40 +1796,31 @@ def show_rating(uid):
             user_id
         ))
     ranking.sort(key=lambda x: x[1], reverse=True)
-    top10 = ranking[:10]
+    top10  = ranking[:10]
+    medals = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
+    text   = T(uid, "rating_title") + "\n" + "▬" * 16 + "\n\n"
+    if top10:
+        for i, (name, points, username, target_uid) in enumerate(top10):
+            uname = username.lstrip("@") if username and username != "—" else ""
+            if uname:
+                link = f"[{name}](https://t.me/{uname})"
+            else:
+                link = f"[{name}](tg://user?id={target_uid})"
+            udata   = users.get(str(target_uid), {})
+            jon_val = udata.get("jon", 100)
+            jon_val = max(0, min(100, jon_val))
+            if jon_val >= 80:   je = "❤️"
+            elif jon_val >= 50: je = "🧡"
+            elif jon_val >= 20: je = "💛"
+            else:               je = "🖤"
+            vip_badge = " 💎" if udata.get("is_vip") else ""
+            text += f"{medals[i]} {link}{vip_badge} — {points} ball,  {je} {jon_val}%\n"
+    else:
+        text += T(uid, "rating_empty")
     kb = InlineKeyboardMarkup()
     kb.add(cBtn(T(uid, "btn_home"), "menu_main", "primary"))
-    u = load_user(uid)
-    if not top10:
-        sent = bot.send_message(uid, T(uid, "rating_empty"), parse_mode="Markdown", reply_markup=kb)
-        u["main_msg_id"] = sent.message_id
-        save_user(uid, u)
-        return
-    # Rasm uchun ma'lumot tayyorlash
-    image_data = []
-    for name, points, username, target_uid in top10:
-        udata   = users.get(str(target_uid), {})
-        jon_val = max(0, min(100, udata.get("jon", 100)))
-        is_vip  = bool(udata.get("is_vip"))
-        image_data.append((name or "?", points, jon_val, is_vip))
-    # Matn ro'yxati (caption uchun)
-    medals = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
-    caption = "🏆 *Reyting — Top 10*\n" + "▬" * 16 + "\n\n"
-    for i, (name, points, username, target_uid) in enumerate(top10):
-        uname = username.lstrip("@") if username and username != "—" else ""
-        link  = f"[{name}](https://t.me/{uname})" if uname else f"[{name}](tg://user?id={target_uid})"
-        udata   = users.get(str(target_uid), {})
-        jon_val = max(0, min(100, udata.get("jon", 100)))
-        je = "❤️" if jon_val >= 80 else "🧡" if jon_val >= 50 else "💛" if jon_val >= 20 else "🖤"
-        vip_badge = " 💎" if udata.get("is_vip") else ""
-        caption += f"{medals[i]} {link}{vip_badge} — {points} ball,  {je} {jon_val}%\n"
-    try:
-        img_buf = generate_rating_image(image_data)
-        img_buf.name = "reyting.png"
-        sent = bot.send_document(uid, img_buf, caption=caption, parse_mode="Markdown", reply_markup=kb)
-    except Exception as e:
-        print(f"[rating_image] xato: {e}")
-        sent = bot.send_message(uid, caption, parse_mode="Markdown", reply_markup=kb, disable_web_page_preview=True)
+    u    = load_user(uid)
+    sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb, disable_web_page_preview=True)
     u["main_msg_id"] = sent.message_id
     save_user(uid, u)
 
