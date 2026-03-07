@@ -1,1 +1,0 @@
-worker: python habit_bot.py
