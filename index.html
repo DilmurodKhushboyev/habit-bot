@@ -898,11 +898,20 @@ async function loadTab(tab) {
 
 // ── FETCH ──
 async function apiFetch(endpoint) {
-  const res = await fetch(`${API}/${endpoint}`, {
-    headers: { 'X-Init-Data': initData, 'X-User-Id': userId }
-  });
-  if (!res.ok) throw new Error(res.status);
-  return res.json();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(`${API}/${endpoint}`, {
+      headers: { 'X-Init-Data': initData, 'X-User-Id': userId },
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(res.status);
+    return res.json();
+  } catch(e) {
+    clearTimeout(timer);
+    throw e;
+  }
 }
 
 // ── PROGRESS RING SVG ──
