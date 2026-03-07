@@ -980,14 +980,28 @@ function renderToday(d) {
 
   let cardsHtml = '';
   (habits || []).forEach(h => {
+    const rc  = h.repeat_count || 1;
+    const tc  = h.today_count  || 0;
+    const isRepeat = rc > 1;
+    // Tugma: bitta bo'lsa ✓, ko'p bo'lsa 3/5
+    const btnContent = h.done ? '✓' : (isRepeat && tc > 0 ? tc+'/'+rc : '');
+    // Progress dots (repeat uchun)
+    let dotsHtml = '';
+    if (isRepeat) {
+      dotsHtml = '<div style="display:flex;gap:3px;margin-top:4px">'
+        + Array.from({length: rc}, (_,i) =>
+            '<div style="width:8px;height:8px;border-radius:50%;background:'+(i<tc?'var(--green)':'var(--bg)')+';box-shadow:'+(i<tc?'none':'var(--sh-in)')+'"></div>'
+          ).join('') + '</div>';
+    }
     cardsHtml += `
       <div class="checkin-card ${h.done ? 'done' : ''}" id="ccard-${h.id}" onclick="checkin('${h.id}', this)">
         <div class="checkin-icon">${h.icon || '✅'}</div>
         <div class="checkin-info">
           <div class="checkin-name">${h.name}</div>
-          <div class="checkin-meta">${h.time !== 'vaqtsiz' ? '⏰ ' + h.time + ' · ' : ''}🔥 ${h.streak} kun</div>
+          <div class="checkin-meta">${isRepeat ? rc+' marta/kun · ' : (h.time !== 'vaqtsiz' ? '⏰ '+h.time+' · ' : '')}🔥 ${h.streak} kun</div>
+          ${dotsHtml}
         </div>
-        <button class="checkin-btn" id="cbtn-${h.id}">${h.done ? '✓' : ''}</button>
+        <button class="checkin-btn" id="cbtn-${h.id}" style="${isRepeat && !h.done && tc>0 ? 'font-size:11px;font-weight:700' : ''}">${btnContent}</button>
         <div class="confetti-pop" id="pop-${h.id}">✨</div>
       </div>`;
   });
@@ -1026,10 +1040,27 @@ async function checkin(hid, cardEl) {
     cardEl.classList.toggle('done', isDone);
     if (btn) { btn.textContent = isDone ? '✓' : ''; }
 
+    // Meta va tugmani yangilash
+    const rc  = result.repeat_count || 1;
+    const tc  = result.today_count  || 0;
+    const btn = document.getElementById('cbtn-' + hid);
+    if (btn) {
+      btn.textContent = isDone ? '✓' : (rc > 1 && tc > 0 ? tc+'/'+rc : '');
+      btn.style.fontSize = (rc > 1 && !isDone && tc > 0) ? '11px' : '';
+    }
+    // Progress dots yangilash
+    const info = cardEl.querySelector('.checkin-info');
+    if (info && rc > 1) {
+      let dots = info.querySelector('.repeat-dots');
+      if (!dots) { dots = document.createElement('div'); dots.className='repeat-dots'; dots.style.cssText='display:flex;gap:3px;margin-top:4px'; info.appendChild(dots); }
+      dots.innerHTML = Array.from({length: rc}, (_,i) =>
+        '<div style="width:8px;height:8px;border-radius:50%;background:'+(i<tc?'var(--green)':'var(--bg)')+';box-shadow:'+(i<tc?'none':'var(--sh-in)')+'"></div>'
+      ).join('');
+    }
     const metaEl = cardEl.querySelector('.checkin-meta');
     if (metaEl) {
-      const tp = metaEl.innerHTML.includes('⏰') ? metaEl.innerHTML.split('·')[0] + '· ' : '';
-      metaEl.innerHTML = `${tp}🔥 ${result.streak} kun`;
+      const isRepeat = rc > 1;
+      metaEl.innerHTML = isRepeat ? `${rc} marta/kun · 🔥 ${result.streak} kun` : `🔥 ${result.streak} kun`;
     }
 
     if (isDone && pop) {
@@ -1106,19 +1137,32 @@ function renderReminders(habits) {
   }
 
   const cardsHtml = habits.map(h => {
-    const enabled = h.reminder_enabled !== false;
-    const time    = h.time && h.time !== 'vaqtsiz' ? h.time : '';
-    const repeat  = h.repeat || 'daily';
-    const reps    = [
+    const enabled      = h.reminder_enabled !== false;
+    const repeat       = h.repeat || 'daily';
+    const times        = Array.isArray(h.times) ? h.times : (h.time && h.time !== 'vaqtsiz' ? [h.time] : []);
+    const repeatCount  = times.length || 1;
+    const reps = [
       {id:'daily',    label:'Har kun'},
       {id:'weekdays', label:'Ish kuni'},
       {id:'weekends', label:'Dam olish'},
     ];
+
+    // Vaqtlar ro'yxati HTML
+    const timesListHtml = times.map((t, i) => `
+      <div class="time-row" id="trow-${h.id}-${i}">
+        <span class="time-lbl">${i+1}-vaqt</span>
+        <input class="time-input" type="time" id="tval-${h.id}-${i}" value="${t}">
+        <button class="time-clear" onclick="removeTime('${h.id}',${i})" type="button" title="O'chirish">✕</button>
+      </div>`).join('');
+
     return `
       <div class="rem-card ${!enabled ? 'disabled' : ''}" id="remcard-${h.id}">
         <div class="rem-top">
           <div class="rem-icon">${h.icon || '✅'}</div>
-          <div class="rem-name">${h.name}</div>
+          <div style="flex:1">
+            <div class="rem-name">${h.name}</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">${repeatCount} marta / kun</div>
+          </div>
           <div class="toggle-wrap">
             <label class="toggle" onclick="toggleReminder('${h.id}', this)">
               <input type="checkbox" id="tog-${h.id}" ${enabled ? 'checked' : ''}>
@@ -1134,12 +1178,9 @@ function renderReminders(habits) {
               ${reps.map(r => `<button class="rep-btn ${repeat===r.id?'active':''}" id="rep-${h.id}-${r.id}" onclick="setRepeat('${h.id}','${r.id}')" type="button">${r.label}</button>`).join('')}
             </div>
           </div>
-          <div class="time-row">
-            <span class="time-lbl">Vaqt</span>
-            <input class="time-input" type="time" id="time-${h.id}" value="${time}" placeholder="--:--">
-            <button class="time-clear" onclick="clearTime('${h.id}')" title="Vaqtni o'chirish" type="button">✕</button>
-          </div>
-          <button class="rem-save-btn" id="rsave-${h.id}" onclick="saveReminder('${h.id}')" type="button">
+          <div id="times-list-${h.id}">${timesListHtml}</div>
+          <button class="rep-btn" style="width:100%;margin-top:6px;justify-content:center" onclick="addTime('${h.id}')" type="button">＋ Vaqt qo'shish</button>
+          <button class="rem-save-btn" id="rsave-${h.id}" onclick="saveReminder('${h.id}')" type="button" style="margin-top:8px">
             💾 Saqlash
           </button>
         </div>
@@ -1151,7 +1192,7 @@ function renderReminders(habits) {
       <div class="rem-info-icon">🔔</div>
       <div class="rem-info-text">
         <div class="rem-info-title">Eslatma sozlamalari</div>
-        <div class="rem-info-sub">Har bir odat uchun vaqt va kun turini belgilang. Toggle orqali o'chiring.</div>
+        <div class="rem-info-sub">Har bir odat uchun bir yoki bir nechta vaqt belgilang.</div>
       </div>
     </div>
     <div class="section-title">Odatlar (${habits.length})</div>
@@ -1191,6 +1232,38 @@ function clearTime(hid) {
   if (inp) inp.value = '';
 }
 
+function addTime(hid) {
+  const list = document.getElementById('times-list-' + hid);
+  if (!list) return;
+  const rows = list.querySelectorAll('.time-row');
+  if (rows.length >= 10) return;
+  const i = rows.length;
+  const div = document.createElement('div');
+  div.className = 'time-row';
+  div.id = 'trow-' + hid + '-' + i;
+  div.innerHTML = `<span class="time-lbl">${i+1}-vaqt</span>
+    <input class="time-input" type="time" id="tval-${hid}-${i}">
+    <button class="time-clear" onclick="removeTime('${hid}',${i})" type="button" title="O'chirish">✕</button>`;
+  list.appendChild(div);
+}
+
+function removeTime(hid, idx) {
+  const row = document.getElementById('trow-' + hid + '-' + idx);
+  if (row) row.remove();
+  // Qayta raqamlash
+  const list = document.getElementById('times-list-' + hid);
+  if (!list) return;
+  list.querySelectorAll('.time-row').forEach((r, i) => {
+    r.id = 'trow-' + hid + '-' + i;
+    const lbl = r.querySelector('.time-lbl');
+    if (lbl) lbl.textContent = (i+1) + '-vaqt';
+    const inp = r.querySelector('input[type=time]');
+    if (inp) inp.id = 'tval-' + hid + '-' + i;
+    const btn = r.querySelector('.time-clear');
+    if (btn) btn.setAttribute('onclick', "removeTime('" + hid + "'," + i + ")");
+  });
+}
+
 async function saveReminder(hid) {
   const tog    = document.getElementById('tog-' + hid);
   const timeEl = document.getElementById('time-' + hid);
@@ -1204,12 +1277,23 @@ async function saveReminder(hid) {
 
   if (saveBtn) { saveBtn.textContent = '⏳ Saqlanmoqda...'; saveBtn.disabled = true; }
 
+  // Vaqtlar ro'yxatini yig'ish
+  const timesList = document.getElementById('times-list-' + hid);
+  const timesArr = [];
+  if (timesList) {
+    timesList.querySelectorAll('input[type=time]').forEach(inp => {
+      if (inp.value) timesArr.push(inp.value);
+    });
+  }
+  const firstTime = timesArr[0] || '';
+
   try {
     const res = await fetch(`${API}/reminder/${userId}/${hid}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
       body: JSON.stringify({
-        time:    time || 'vaqtsiz',
+        time:    firstTime || 'vaqtsiz',
+        times:   timesArr,
         enabled: enabled,
         repeat:  repeat,
       })

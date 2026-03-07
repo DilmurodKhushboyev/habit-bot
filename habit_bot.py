@@ -6741,12 +6741,14 @@ try:
         habits = []
         for h in u.get("habits", []):
             habits.append({
-                "id":         h.get("id",""),
-                "name":       h.get("name",""),
-                "icon":       h.get("icon","✅"),
-                "time":       h.get("time","vaqtsiz"),
-                "streak":     h.get("streak",0),
-                "total_done": h.get("total_done",0),
+                "id":           h.get("id",""),
+                "name":         h.get("name",""),
+                "icon":         h.get("icon","✅"),
+                "time":         h.get("time","vaqtsiz"),
+                "times":        h.get("times", []),
+                "streak":       h.get("streak",0),
+                "total_done":   h.get("total_done",0),
+                "repeat_count": len(h.get("times", [])) or 1,
             })
         return jsonify({"habits": habits})
 
@@ -6760,16 +6762,21 @@ try:
         if not name:
             return jsonify({"ok": False, "error": "Nom bo'sh"}), 400
         u = load_user(uid)
+        times = data.get("times", [])
+        if isinstance(times, list):
+            times = [t for t in times if t and isinstance(t, str)][:10]
         new_habit = {
-            "id":         str(uuid.uuid4())[:8],
-            "name":       name,
-            "icon":       icon,
-            "time":       time_,
-            "type":       "daily",
-            "streak":     0,
-            "total_done": 0,
-            "last_done":  None,
-            "created_at": str(datetime.now().date()),
+            "id":          str(uuid.uuid4())[:8],
+            "name":        name,
+            "icon":        icon,
+            "time":        time_,
+            "times":       times,
+            "type":        "daily",
+            "streak":      0,
+            "total_done":  0,
+            "last_done":   None,
+            "today_count": {},
+            "created_at":  str(datetime.now().date()),
         }
         habits = u.get("habits", [])
         habits.append(new_habit)
@@ -6793,11 +6800,14 @@ try:
             return jsonify({"ok": False, "error": "Nom bo'sh"}), 400
         u = load_user(uid)
         habits = u.get("habits", [])
+        edit_times = data.get("times", None)
         for h in habits:
             if h.get("id") == hid:
                 h["name"] = name
                 h["icon"] = icon
                 h["time"] = time_
+                if edit_times is not None and isinstance(edit_times, list):
+                    h["times"] = [t for t in edit_times if t and isinstance(t, str)][:10]
                 break
         else:
             return jsonify({"ok": False, "error": "Topilmadi"}), 404
@@ -6851,6 +6861,21 @@ try:
         except Exception:
             pass
 
+        # times array saqlash
+        times_list = body.get("times", None)
+        if times_list is not None and isinstance(times_list, list):
+            import re as _re
+            clean_times = []
+            for t in times_list[:10]:
+                t = str(t).strip()
+                if _re.match(r"^\d{2}:\d{2}$", t):
+                    h_, m_ = map(int, t.split(":"))
+                    if 0 <= h_ <= 23 and 0 <= m_ <= 59:
+                        clean_times.append(t)
+            habit["times"] = clean_times
+            if clean_times:
+                time_ = clean_times[0]
+
         # Yangilash
         habit["time"]             = time_ if time_ else "vaqtsiz"
         habit["reminder_enabled"] = enabled
@@ -6859,16 +6884,20 @@ try:
         u["habits"] = habits
         save_user(uid, u)
 
-        # Yangi schedule (faqat enabled va vaqt bo'lsa)
-        if enabled and time_ and time_ != "vaqtsiz":
+        # Yangi schedule — har bir vaqt uchun
+        if enabled:
             try:
-                schedule_habit(uid, habit)
+                schedule.clear(f"{uid}_{hid}")
+                for t in habit.get("times", [time_]):
+                    if t and t != "vaqtsiz":
+                        schedule_habit(uid, hid, habit.get("name",""), t)
             except Exception:
                 pass
 
         return jsonify({
             "ok":      True,
             "time":    habit["time"],
+            "times":   habit.get("times", []),
             "enabled": enabled,
             "repeat":  repeat,
         })
@@ -6897,13 +6926,19 @@ try:
         u = load_user(uid)
         habits = []
         for h in u.get("habits", []):
+            repeat_count = len(h.get("times", [])) or 1  # necha marta/kun
+            today_count  = h.get("today_count", {}).get(today, 0)
+            fully_done   = today_count >= repeat_count
             habits.append({
-                "id":     h.get("id", ""),
-                "name":   h.get("name", ""),
-                "icon":   h.get("icon", "✅"),
-                "time":   h.get("time", "vaqtsiz"),
-                "streak": h.get("streak", 0),
-                "done":   h.get("last_done") == today,
+                "id":           h.get("id", ""),
+                "name":         h.get("name", ""),
+                "icon":         h.get("icon", "✅"),
+                "time":         h.get("time", "vaqtsiz"),
+                "times":        h.get("times", []),
+                "streak":       h.get("streak", 0),
+                "done":         fully_done,
+                "today_count":  today_count,
+                "repeat_count": repeat_count,
             })
         total      = len(habits)
         done_count = sum(1 for h in habits if h["done"])
@@ -6925,50 +6960,74 @@ try:
         if not habit:
             return jsonify({"ok": False, "error": "Odat topilmadi"}), 404
 
-        already_done = habit.get("last_done") == today
-        if already_done:
-            # ↩️ Bekor qilish
-            habit["last_done"]  = None
-            habit["streak"]     = max(0, habit.get("streak", 0) - 1)
-            habit["total_done"] = max(0, habit.get("total_done", 0) - 1)
-            # done_dates dan olib tashlash
+        repeat_count = len(habit.get("times", [])) or 1
+        today_counts = habit.get("today_count", {})
+        cur_count    = today_counts.get(today, 0)
+        was_full     = cur_count >= repeat_count  # oldin to'liq bajarilganmi
+
+        if was_full:
+            # ↩️ Bir qadam orqaga (to'liq bekor)
+            today_counts[today] = 0
+            habit["today_count"] = today_counts
+            habit["last_done"]   = None
+            habit["streak"]      = max(0, habit.get("streak", 0) - 1)
+            habit["total_done"]  = max(0, habit.get("total_done", 0) - 1)
             done_dates = habit.get("done_dates", [])
             if today in done_dates:
                 done_dates.remove(today)
             habit["done_dates"] = done_dates
-            u["points"] = max(0, u.get("points", 0) - 5)
-            u["habits"] = habits
+            u["points"]  = max(0, u.get("points", 0) - 5)
+            u["habits"]  = habits
             save_user(uid, u)
             return jsonify({"ok": True, "done": False,
+                            "today_count": 0, "repeat_count": repeat_count,
                             "streak": habit["streak"], "points": u.get("points", 0),
-                            "msg": "Bekor qilindi", "all_done": False})
+                            "msg": "Bekor qilindi", "all_done": False,
+                            "new_badges": []})
         else:
-            # ✅ Bajarildi
-            habit["streak"]     = habit.get("streak", 0) + 1 if habit.get("last_done") == yesterday else 1
-            habit["last_done"]  = today
-            habit["total_done"] = habit.get("total_done", 0) + 1
-            # done_dates ga qo'shish
-            done_dates = habit.get("done_dates", [])
-            if today not in done_dates:
-                done_dates.append(today)
-            # Faqat oxirgi 90 kunni saqlash
-            done_dates = sorted(done_dates)[-90:]
-            habit["done_dates"] = done_dates
-            u["points"] = u.get("points", 0) + 5
-            done_log = u.get("done_log", {})
-            done_log[today] = True
-            u["done_log"] = done_log
-            u["habits"] = habits
-            save_user(uid, u)
-            all_done = all(hh.get("last_done") == today for hh in u.get("habits", []))
-            # Yutuqlarni tekshirish va xabar yuborish
-            new_badges = check_achievements(uid, u)
-            threading.Thread(target=notify_achievements, args=(uid, new_badges), daemon=True).start()
-            new_badge_data = [{"icon": b["icon"], "title": b["title"]} for b in new_badges]
-            return jsonify({"ok": True, "done": True,
-                            "streak": habit["streak"], "points": u.get("points", 0),
-                            "all_done": all_done, "msg": "Bajarildi! +5 ⭐",
-                            "new_badges": new_badge_data})
+            # ✅ Bir qadam oldinga
+            new_count = cur_count + 1
+            today_counts[today] = new_count
+            habit["today_count"] = today_counts
+            habit["total_done"]  = habit.get("total_done", 0) + 1
+            fully_done = new_count >= repeat_count
+            new_badges_data = []
+
+            if fully_done:
+                # To'liq bajarildi — streak va ball
+                habit["streak"]   = habit.get("streak", 0) + 1 if habit.get("last_done") == yesterday else 1
+                habit["last_done"] = today
+                done_dates = habit.get("done_dates", [])
+                if today not in done_dates:
+                    done_dates.append(today)
+                done_dates = sorted(done_dates)[-90:]
+                habit["done_dates"] = done_dates
+                u["points"]  = u.get("points", 0) + 5
+                done_log     = u.get("done_log", {})
+                done_log[today] = True
+                u["done_log"] = done_log
+                u["habits"]   = habits
+                save_user(uid, u)
+                all_done = all(
+                    hh.get("today_count", {}).get(today, 0) >= (len(hh.get("times", [])) or 1)
+                    for hh in u.get("habits", [])
+                )
+                new_badges = check_achievements(uid, u)
+                threading.Thread(target=notify_achievements, args=(uid, new_badges), daemon=True).start()
+                new_badges_data = [{"icon": b["icon"], "title": b["title"]} for b in new_badges]
+                msg = f"Bajarildi! +5 ⭐" if repeat_count == 1 else f"{new_count}/{repeat_count} — To'liq! +5 ⭐"
+            else:
+                # Hali to'liq emas
+                u["habits"] = habits
+                save_user(uid, u)
+                all_done = False
+                msg = f"{new_count}/{repeat_count} bajarildi"
+
+            return jsonify({"ok": True, "done": fully_done,
+                            "today_count": new_count, "repeat_count": repeat_count,
+                            "streak": habit.get("streak", 0), "points": u.get("points", 0),
+                            "all_done": all_done, "msg": msg,
+                            "new_badges": new_badges_data})
 
     # ── YUTUQLAR ──
     @api_app.route("/api/achievements/<int:uid>", methods=["GET"])
