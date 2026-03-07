@@ -7035,17 +7035,24 @@ try:
         current_streak    = u.get("streak", 0)
         points            = u.get("points", 0)
 
+        # 30 kunlik bar chart (har kuni)
+        monthly = []
+        for dstr in days_30:
+            count = sum(1 for h in habits if dstr in h.get("done_dates", []))
+            monthly.append({"date": dstr, "count": count, "total": len(habits)})
+
         return jsonify({
             "today":        today_str,
             "weekly":       weekly,
+            "monthly":      monthly,
             "heatmap":      heatmap,
             "days_30":      days_30,
             "habit_stats":  habit_stats,
             "summary": {
-                "points":        points,
-                "streak":        current_streak,
+                "points":         points,
+                "streak":         current_streak,
                 "active_days_30": total_days_active,
-                "total_habits":  len(habits),
+                "total_habits":   len(habits),
             }
         })
 

@@ -519,6 +519,28 @@ body {
 }
 .wd.done { background: var(--green); box-shadow: none; }
 
+.period-switch {
+  display: flex; background: var(--bg); box-shadow: var(--sh-in);
+  border-radius: 14px; padding: 4px; gap: 4px; margin-bottom: 12px;
+}
+.period-btn {
+  flex: 1; border: none; background: none; border-radius: 10px;
+  padding: 8px; font-size: 12px; font-weight: 600; color: var(--sub);
+  cursor: pointer; font-family: inherit; transition: all .2s;
+}
+.period-btn.active {
+  background: var(--bg); box-shadow: var(--sh-sm); color: var(--text);
+}
+.hstat-progress-bar {
+  height: 6px; border-radius: 3px;
+  background: var(--bg); box-shadow: var(--sh-in);
+  overflow: hidden; margin-top: 8px;
+}
+.hstat-progress-fill {
+  height: 100%; border-radius: 3px;
+  transition: width .6s ease;
+}
+
 /* ── ESLATMALAR ── */
 .rem-info-card {
   background: var(--bg); box-shadow: var(--sh-card);
@@ -1442,16 +1464,48 @@ function renderStats(d) {
           </div>
         </div>
         <div class="week-dots-row">${wdDots}</div>
+        <div class="hstat-progress-bar"><div class="hstat-progress-fill" style="width:${h.percent}%;background:${pctColor}"></div></div>
       </div>`;
   });
 
   document.getElementById('stats-content').innerHTML = `
     <div class="section-title">Umumiy</div>
     ${sumHtml}
-    ${barChartHtml}
+    <div class="period-switch">
+      <button class="period-btn active" id="pbtn-7"  onclick="setPeriod(7)"  type="button">7 kun</button>
+      <button class="period-btn"        id="pbtn-30" onclick="setPeriod(30)" type="button">30 kun</button>
+    </div>
+    <div id="bar-chart-wrap">${barChartHtml}</div>
     ${heatmapHtml}
     <div class="section-title">Har bir odat</div>
-    ${habitCardsHtml || '<div class="empty-state"><div class="icon">📋</div>Hali odat qo\'shilmagan</div>'}`;
+    ${habitCardsHtml || '<div class="empty-state"><div class="icon">\u{1F4CB}</div>Hali odat qo\'shilmagan</div>'}`;
+}
+
+let _statPeriod = 7;
+function setPeriod(p) {
+  _statPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  const ab = document.getElementById('pbtn-' + p);
+  if (ab) ab.classList.add('active');
+  if (!data.stats) return;
+  const d = data.stats;
+  const days = p === 7 ? d.weekly : (d.monthly || d.weekly);
+  const dayLabels = ['Ya','Du','Se','Ch','Pa','Ju','Sh'];
+  const barsHtml = days.map(w => {
+    const pct   = w.total ? Math.round(w.count / w.total * 100) : 0;
+    const hPx   = Math.max(4, Math.round(pct * 0.7));
+    const color = pct >= 80 ? '#4CAF7D' : pct >= 40 ? '#5B8DEF' : pct > 0 ? '#E07040' : '#C8CBD8';
+    const isToday = w.date === d.today;
+    const lbl = p === 7 ? dayLabels[new Date(w.date).getDay()] : new Date(w.date).getDate();
+    return '<div class="bar-col">'
+      + '<div class="bar-num">' + (w.count > 0 ? w.count : '') + '</div>'
+      + '<div class="bar-fill" style="height:' + hPx + 'px;background:' + color + ';' + (isToday ? 'box-shadow:0 0 0 2px ' + color + '44' : '') + '"></div>'
+      + '<div class="bar-lbl" style="' + (isToday ? 'color:var(--text);font-weight:700' : '') + '">' + lbl + '</div>'
+      + '</div>';
+  }).join('');
+  const title = p === 7 ? 'Haftalik bajarilish' : '30 kunlik bajarilish';
+  const wrap = document.getElementById('bar-chart-wrap');
+  if (wrap) wrap.innerHTML = '<div class="bar-chart"><div class="bar-chart-title">' + title + '</div><div class="bars">' + barsHtml + '</div></div>';
 }
 
 // ── REYTING ──
