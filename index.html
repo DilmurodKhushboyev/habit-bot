@@ -866,10 +866,29 @@ body {
 // ── TELEGRAM WEB APP ──
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
-const user     = tg?.initDataUnsafe?.user || { id: 0, first_name: 'Test' };
-const initData = tg?.initData || '';
-const userId   = user.id || 0;
-const API      = window.location.origin + '/api';
+
+// initData dan user olish (ba'zan kechikib keladi)
+function getTgUser() {
+  try {
+    if (tg?.initDataUnsafe?.user?.id) return tg.initDataUnsafe.user;
+    if (tg?.initData) {
+      const params = new URLSearchParams(tg.initData);
+      const u = params.get('user');
+      if (u) return JSON.parse(decodeURIComponent(u));
+    }
+  } catch(e) {}
+  return null;
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+const urlUserId = urlParams.get('uid');
+const tgUser    = getTgUser();
+const user      = tgUser || { id: urlUserId || 0, first_name: 'Test' };
+const initData  = tg?.initData || '';
+const userId    = tgUser?.id || urlUserId || 0;
+const API       = window.location.origin + '/api';
+
+console.log('[WebApp] userId:', userId, '| tgUser:', tgUser, '| urlUserId:', urlUserId);
 
 // ── STATE ──
 let loaded = { today: false, rating: false, profile: false, habits: false, groups: false, stats: false, achievements: false, reminders: false };
