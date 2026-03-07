@@ -101,6 +101,84 @@ def delete_group(group_id):
     groups_col.delete_one({"_id": str(group_id)})
 
 # ============================================================
+#  YUTUQLAR (ACHIEVEMENTS)
+# ============================================================
+ACHIEVEMENTS = [
+    # 🔥 Streak
+    {"id": "streak_7",    "cat": "streak",  "icon": "🔥", "title": "Haftalik olov",    "desc": "7 kun streak",          "req": 7,    "key": "streak"},
+    {"id": "streak_14",   "cat": "streak",  "icon": "🔥", "title": "Ikki hafta!",      "desc": "14 kun streak",         "req": 14,   "key": "streak"},
+    {"id": "streak_30",   "cat": "streak",  "icon": "🏅", "title": "Oylik chempion",   "desc": "30 kun streak",         "req": 30,   "key": "streak"},
+    {"id": "streak_100",  "cat": "streak",  "icon": "👑", "title": "Yuz kunlik qorol", "desc": "100 kun streak",        "req": 100,  "key": "streak"},
+    # ⭐ Ball
+    {"id": "pts_100",     "cat": "points",  "icon": "⭐", "title": "Birinchi yuz",     "desc": "100 ball to'plash",     "req": 100,  "key": "points"},
+    {"id": "pts_500",     "cat": "points",  "icon": "💫", "title": "Besh yuz!",        "desc": "500 ball to'plash",     "req": 500,  "key": "points"},
+    {"id": "pts_1000",    "cat": "points",  "icon": "🌟", "title": "Ming ball",        "desc": "1000 ball to'plash",    "req": 1000, "key": "points"},
+    {"id": "pts_5000",    "cat": "points",  "icon": "💎", "title": "Olmosli chegara",  "desc": "5000 ball to'plash",    "req": 5000, "key": "points"},
+    # ✅ Jami bajarilgan
+    {"id": "done_10",     "cat": "done",    "icon": "✅", "title": "Ilk qadamlar",     "desc": "10 marta bajarish",     "req": 10,   "key": "total_done_all"},
+    {"id": "done_50",     "cat": "done",    "icon": "🎯", "title": "Ellik marta!",     "desc": "50 marta bajarish",     "req": 50,   "key": "total_done_all"},
+    {"id": "done_100",    "cat": "done",    "icon": "🏆", "title": "Yuz marta",        "desc": "100 marta bajarish",    "req": 100,  "key": "total_done_all"},
+    {"id": "done_500",    "cat": "done",    "icon": "🚀", "title": "Besh yuz marta",   "desc": "500 marta bajarish",    "req": 500,  "key": "total_done_all"},
+    # 📋 Odat soni
+    {"id": "habits_3",    "cat": "habits",  "icon": "📋", "title": "Uchlik",           "desc": "3 ta odat qo'shish",    "req": 3,    "key": "habits_count"},
+    {"id": "habits_5",    "cat": "habits",  "icon": "📚", "title": "Beshalik",         "desc": "5 ta odat qo'shish",    "req": 5,    "key": "habits_count"},
+    {"id": "habits_10",   "cat": "habits",  "icon": "🌈", "title": "O'nlik",           "desc": "10 ta odat qo'shish",   "req": 10,   "key": "habits_count"},
+    # 👥 Guruh
+    {"id": "group_join",  "cat": "group",   "icon": "👥", "title": "Jamoa a'zosi",     "desc": "Guruhga qo'shilish",    "req": 1,    "key": "groups_joined"},
+    {"id": "group_win",   "cat": "group",   "icon": "🏆", "title": "Guruh g'olibi",    "desc": "Guruhda 1-o'rin",       "req": 1,    "key": "group_wins"},
+]
+
+def get_user_stats_for_achievements(uid, udata):
+    """Foydalanuvchi yutuq tekshirish uchun ko'rsatkichlar"""
+    total_done_all = sum(h.get("total_done", 0) for h in udata.get("habits", []))
+    try:
+        groups_joined = mongo_db["groups"].count_documents({"members": str(uid)})
+    except:
+        groups_joined = 0
+    return {
+        "streak":        udata.get("streak", 0),
+        "points":        udata.get("points", 0),
+        "total_done_all": total_done_all,
+        "habits_count":  len(udata.get("habits", [])),
+        "groups_joined": groups_joined,
+        "group_wins":    udata.get("group_wins", 0),
+    }
+
+def check_achievements(uid, udata):
+    """
+    Yangi badge tekshirish va berish.
+    Qaytaradi: yangi qozonilgan badge'lar ro'yxati (notification uchun)
+    """
+    earned   = udata.get("achievements", [])  # allaqachon bor badge IDlar
+    stats    = get_user_stats_for_achievements(uid, udata)
+    new_ones = []
+
+    for ach in ACHIEVEMENTS:
+        if ach["id"] in earned:
+            continue
+        val = stats.get(ach["key"], 0)
+        if val >= ach["req"]:
+            earned.append(ach["id"])
+            new_ones.append(ach)
+
+    if new_ones:
+        udata["achievements"] = earned
+        save_user(uid, udata)
+
+    return new_ones
+
+def notify_achievements(uid, new_badges):
+    """Bot orqali foydalanuvchiga badge xabari yuborish"""
+    if not new_badges:
+        return
+    try:
+        lines = "\n".join(f"{b['icon']} *{b['title']}* — {b['desc']}" for b in new_badges)
+        text  = f"🎉 *Yangi yutuq{'lar' if len(new_badges) > 1 else ''}!*\n\n{lines}\n\nDavom eting! 💪"
+        bot.send_message(uid, text, parse_mode="Markdown")
+    except Exception:
+        pass
+
+# ============================================================
 #  KO'P TIL
 # ============================================================
 LANGS = {
@@ -6643,6 +6721,9 @@ try:
         try:
             schedule_habit(uid, new_habit["id"], name, time_)
         except: pass
+        # Yutuqlarni tekshirish
+        new_badges = check_achievements(uid, u)
+        threading.Thread(target=notify_achievements, args=(uid, new_badges), daemon=True).start()
         return jsonify({"ok": True, "habit": new_habit})
 
     @api_app.route("/api/habits/<int:uid>/<hid>", methods=["PUT"])
@@ -6759,9 +6840,54 @@ try:
             u["habits"] = habits
             save_user(uid, u)
             all_done = all(hh.get("last_done") == today for hh in u.get("habits", []))
+            # Yutuqlarni tekshirish va xabar yuborish
+            new_badges = check_achievements(uid, u)
+            threading.Thread(target=notify_achievements, args=(uid, new_badges), daemon=True).start()
+            new_badge_data = [{"icon": b["icon"], "title": b["title"]} for b in new_badges]
             return jsonify({"ok": True, "done": True,
                             "streak": habit["streak"], "points": u.get("points", 0),
-                            "all_done": all_done, "msg": "Bajarildi! +5 ⭐"})
+                            "all_done": all_done, "msg": "Bajarildi! +5 ⭐",
+                            "new_badges": new_badge_data})
+
+    # ── YUTUQLAR ──
+    @api_app.route("/api/achievements/<int:uid>", methods=["GET"])
+    def api_achievements(uid):
+        u      = load_user(uid)
+        earned = u.get("achievements", [])
+        stats  = get_user_stats_for_achievements(uid, u)
+
+        result = []
+        for ach in ACHIEVEMENTS:
+            val      = stats.get(ach["key"], 0)
+            is_done  = ach["id"] in earned
+            result.append({
+                "id":       ach["id"],
+                "cat":      ach["cat"],
+                "icon":     ach["icon"],
+                "title":    ach["title"],
+                "desc":     ach["desc"],
+                "req":      ach["req"],
+                "current":  min(val, ach["req"]),
+                "earned":   is_done,
+            })
+
+        cats = [
+            {"id": "streak",  "label": "🔥 Streak"},
+            {"id": "points",  "label": "⭐ Ball"},
+            {"id": "done",    "label": "✅ Bajarilgan"},
+            {"id": "habits",  "label": "📋 Odatlar"},
+            {"id": "group",   "label": "👥 Guruh"},
+        ]
+        return jsonify({
+            "achievements": result,
+            "cats":         cats,
+            "earned_count": len(earned),
+            "total_count":  len(ACHIEVEMENTS),
+        })
+
+    @api_app.route("/api/achievements/<int:uid>", methods=["OPTIONS"])
+    def options_achievements(uid):
+        return jsonify({}), 200
 
     # ── STATISTIKA ──
     @api_app.route("/api/stats/<int:uid>", methods=["GET"])

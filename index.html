@@ -516,6 +516,104 @@ body {
 }
 .wd.done { background: var(--green); box-shadow: none; }
 
+/* ── YUTUQLAR ── */
+.ach-summary {
+  background: var(--bg); box-shadow: var(--sh-card);
+  border-radius: 20px; padding: 18px;
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 12px;
+}
+.ach-ring-wrap { position: relative; flex-shrink: 0; }
+.ach-ring-wrap svg { filter: drop-shadow(2px 2px 6px #B8BBCA) drop-shadow(-2px -2px 5px #FFF); }
+.ach-ring-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.ach-ring-num  { font-size: 18px; font-weight: 700; color: var(--text); font-family: 'DM Mono', monospace; }
+.ach-ring-lbl  { font-size: 9px; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; }
+.ach-sum-info  { flex: 1; }
+.ach-sum-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.ach-sum-sub   { font-size: 12px; color: var(--sub); margin-top: 4px; }
+
+.ach-cat-tabs {
+  display: flex; gap: 6px; overflow-x: auto;
+  scrollbar-width: none; margin-bottom: 14px; padding-bottom: 2px;
+}
+.ach-cat-tabs::-webkit-scrollbar { display: none; }
+.ach-cat-btn {
+  flex-shrink: 0; padding: 7px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  border: none; background: var(--bg);
+  box-shadow: var(--sh-sm); color: var(--sub);
+  transition: all .2s; font-family: inherit;
+}
+.ach-cat-btn.active {
+  box-shadow: var(--sh-press); color: var(--text);
+  background: var(--bg2);
+}
+
+.ach-card {
+  background: var(--bg); box-shadow: var(--sh-sm);
+  border-radius: 18px; padding: 16px;
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 8px; transition: all .2s;
+  position: relative; overflow: hidden;
+}
+.ach-card.locked { opacity: 0.55; }
+.ach-card.earned {
+  box-shadow: var(--sh-sm), inset 0 0 0 1.5px #4CAF7D44;
+}
+
+.ach-badge {
+  width: 52px; height: 52px; border-radius: 16px;
+  background: var(--bg); box-shadow: var(--sh-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; flex-shrink: 0; position: relative;
+}
+.ach-card.earned .ach-badge {
+  box-shadow: var(--sh-press);
+  background: linear-gradient(135deg, #E8F5E9, #F1F8E9);
+}
+.ach-badge-check {
+  position: absolute; bottom: -3px; right: -3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--green); color: #fff;
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 1px 1px 4px rgba(0,0,0,.15);
+}
+
+.ach-info { flex: 1; min-width: 0; }
+.ach-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.ach-desc  { font-size: 11px; color: var(--sub); margin-top: 2px; }
+.ach-prog-wrap { margin-top: 8px; }
+.ach-prog-bg {
+  height: 5px; border-radius: 4px;
+  background: var(--bg); box-shadow: var(--sh-in);
+  overflow: hidden;
+}
+.ach-prog-fill {
+  height: 100%; border-radius: 4px;
+  transition: width .5s ease;
+}
+.ach-prog-txt { font-size: 10px; color: var(--sub); margin-top: 4px; font-family: 'DM Mono', monospace; }
+
+/* Badge notification popup */
+.badge-popup {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px);
+  background: var(--bg); box-shadow: var(--sh-card);
+  border-radius: 20px; padding: 14px 20px;
+  display: flex; align-items: center; gap: 12px;
+  z-index: 300; min-width: 240px; max-width: 90vw;
+  transition: transform .4s cubic-bezier(.32,1.2,.5,1), opacity .3s;
+  opacity: 0;
+}
+.badge-popup.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.bp-icon  { font-size: 28px; }
+.bp-text  { flex: 1; }
+.bp-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.bp-sub   { font-size: 11px; color: var(--sub); margin-top: 2px; }
+
 /* ── GURUHLAR ── */
 .group-card {
   background: var(--bg);
@@ -608,6 +706,13 @@ body {
   </div>
 </div>
 
+<!-- YUTUQLAR -->
+<div class="page" id="page-achievements">
+  <div id="achievements-content">
+    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
+</div>
+
 <!-- STATISTIKA -->
 <div class="page" id="page-stats">
   <div id="stats-content">
@@ -632,9 +737,9 @@ body {
     <span class="nav-icon">📊</span>
     <span class="nav-label">Statistika</span>
   </button>
-  <button class="nav-item" id="nav-rating" onclick="switchTab('rating', this)">
+  <button class="nav-item" id="nav-achievements" onclick="switchTab('achievements', this)">
     <span class="nav-icon">🏆</span>
-    <span class="nav-label">Reyting</span>
+    <span class="nav-label">Yutuqlar</span>
   </button>
   <button class="nav-item" id="nav-profile" onclick="switchTab('profile', this)">
     <span class="nav-icon">👤</span>
@@ -646,6 +751,15 @@ body {
   </button>
 </nav>
 
+<!-- Badge popup -->
+<div class="badge-popup" id="badge-popup">
+  <div class="bp-icon" id="bp-icon">🏆</div>
+  <div class="bp-text">
+    <div class="bp-title" id="bp-title">Yangi yutuq!</div>
+    <div class="bp-sub"  id="bp-sub">Tabriklaymiz!</div>
+  </div>
+</div>
+
 <script>
 // ── TELEGRAM WEB APP ──
 const tg = window.Telegram?.WebApp;
@@ -656,7 +770,7 @@ const userId   = user.id || 0;
 const API      = window.location.origin + '/api';
 
 // ── STATE ──
-let loaded = { today: false, rating: false, profile: false, habits: false, groups: false, stats: false };
+let loaded = { today: false, rating: false, profile: false, habits: false, groups: false, stats: false, achievements: false };
 let data   = {};
 
 // ── TAB SWITCH ──
@@ -669,12 +783,13 @@ function switchTab(tab, el) {
 }
 
 async function loadTab(tab) {
-  if (tab === 'today')   await loadToday();
-  if (tab === 'stats')   await loadStats();
-  if (tab === 'rating')  await loadRating();
-  if (tab === 'profile') await loadProfile();
-  if (tab === 'habits')  await loadHabits();
-  if (tab === 'groups')  await loadGroups();
+  if (tab === 'today')        await loadToday();
+  if (tab === 'stats')        await loadStats();
+  if (tab === 'achievements') await loadAchievements();
+  if (tab === 'rating')       await loadRating();
+  if (tab === 'profile')      await loadProfile();
+  if (tab === 'habits')       await loadHabits();
+  if (tab === 'groups')       await loadGroups();
   loaded[tab] = true;
 }
 
@@ -809,7 +924,11 @@ async function checkin(hid, cardEl) {
     }
 
     showTodayToast(isDone ? '✅ ' + result.msg : '↩️ Bekor qilindi');
-    loaded.profile = false; loaded.rating = false;
+    loaded.profile = false; loaded.rating = false; loaded.achievements = false;
+    // Yangi badge popup
+    if (isDone && result.new_badges && result.new_badges.length) {
+      result.new_badges.forEach(b => showBadgePopup(b.icon, b.title, 'Yangi yutuq qozonildi!'));
+    }
   } catch(e) {
     showTodayToast('❌ Xato: ' + e.message, true);
   } finally {
@@ -823,6 +942,119 @@ function showTodayToast(msg, err = false) {
   t.textContent = msg;
   t.className = 'toast show' + (err ? ' err' : '');
   setTimeout(() => { t.className = 'toast'; }, 2500);
+}
+
+// ── YUTUQLAR ──
+let achFilter = 'all';
+
+async function loadAchievements() {
+  try {
+    const d = await apiFetch(`achievements/${userId}`);
+    data.achievements = d;
+    renderAchievements(d, achFilter);
+  } catch(e) {
+    document.getElementById('achievements-content').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
+  }
+}
+
+function renderAchievements(d, filter = 'all') {
+  const { achievements, cats, earned_count, total_count } = d;
+
+  // Ring SVG
+  const pct  = total_count ? Math.round(earned_count / total_count * 100) : 0;
+  const r    = 34; const circ = 2 * Math.PI * r;
+  const dash = circ * pct / 100;
+  const ringColor = pct >= 80 ? '#4CAF7D' : pct >= 40 ? '#5B8DEF' : '#E07040';
+  const ringSvg = `<svg width="80" height="80" viewBox="0 0 80 80">
+    <circle cx="40" cy="40" r="${r}" fill="none" stroke="#C8CBD8" stroke-width="6"/>
+    <circle cx="40" cy="40" r="${r}" fill="none" stroke="${ringColor}" stroke-width="6"
+      stroke-dasharray="${dash} ${circ}" stroke-dashoffset="${circ/4}" stroke-linecap="round"/>
+  </svg>`;
+
+  const sumHtml = `
+    <div class="ach-summary">
+      <div class="ach-ring-wrap">
+        ${ringSvg}
+        <div class="ach-ring-center">
+          <div class="ach-ring-num">${pct}%</div>
+        </div>
+      </div>
+      <div class="ach-sum-info">
+        <div class="ach-sum-title">Yutuqlarim</div>
+        <div class="ach-sum-sub">${earned_count} / ${total_count} qozonildi</div>
+      </div>
+    </div>`;
+
+  // Category tabs
+  const allCats = [{id:'all',label:'Barchasi'}, ...cats];
+  const catTabsHtml = allCats.map(c => `
+    <button class="ach-cat-btn ${filter === c.id ? 'active' : ''}"
+      onclick="filterAch('${c.id}')">${c.label}</button>`
+  ).join('');
+
+  // Cards
+  const filtered = filter === 'all' ? achievements : achievements.filter(a => a.cat === filter);
+
+  // Avval qozonilganlar
+  const sorted = [...filtered].sort((a,b) => b.earned - a.earned);
+
+  const cardsHtml = sorted.map(a => {
+    const progPct   = a.req ? Math.round(a.current / a.req * 100) : 0;
+    const progColor = a.earned ? '#4CAF7D' : progPct >= 50 ? '#5B8DEF' : '#E07040';
+    return `
+      <div class="ach-card ${a.earned ? 'earned' : 'locked'}">
+        <div class="ach-badge">
+          ${a.icon}
+          ${a.earned ? '<div class="ach-badge-check">✓</div>' : ''}
+        </div>
+        <div class="ach-info">
+          <div class="ach-title">${a.title}</div>
+          <div class="ach-desc">${a.desc}</div>
+          ${!a.earned ? `
+          <div class="ach-prog-wrap">
+            <div class="ach-prog-bg">
+              <div class="ach-prog-fill" style="width:${progPct}%;background:${progColor}"></div>
+            </div>
+            <div class="ach-prog-txt">${a.current} / ${a.req}</div>
+          </div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('achievements-content').innerHTML = `
+    ${sumHtml}
+    <div class="ach-cat-tabs">${catTabsHtml}</div>
+    ${cardsHtml || '<div class="empty-state"><div class="icon">🔒</div>Bu kategoriyada hali yutuq yo\'q</div>'}`;
+}
+
+function filterAch(cat) {
+  achFilter = cat;
+  if (data.achievements) renderAchievements(data.achievements, cat);
+}
+
+// Badge popup (check-in dan keyin)
+let popupQueue = [];
+let popupBusy  = false;
+
+function showBadgePopup(icon, title, desc) {
+  popupQueue.push({icon, title, desc});
+  if (!popupBusy) nextPopup();
+}
+
+function nextPopup() {
+  if (!popupQueue.length) { popupBusy = false; return; }
+  popupBusy = true;
+  const {icon, title, desc} = popupQueue.shift();
+  const el = document.getElementById('badge-popup');
+  document.getElementById('bp-icon').textContent  = icon;
+  document.getElementById('bp-title').textContent = '🎉 ' + title;
+  document.getElementById('bp-sub').textContent   = desc;
+  el.classList.add('show');
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(nextPopup, 400);
+  }, 3000);
 }
 
 // ── STATISTIKA ──
