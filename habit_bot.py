@@ -1456,6 +1456,36 @@ def cmd_start(msg):
         except Exception:
             pass
 
+    # Do'st qo'shish parametri
+    if start_param.startswith("friend_"):
+        try:
+            friend_id = int(start_param[7:])
+            if friend_id != uid:
+                u_me = load_user(uid)
+                u_fr = load_user(friend_id)
+                my_friends  = u_me.get("friends", [])
+                fr_friends  = u_fr.get("friends", [])
+                if friend_id not in my_friends:
+                    my_friends.append(friend_id)
+                    u_me["friends"] = my_friends
+                    save_user(uid, u_me)
+                if uid not in fr_friends:
+                    fr_friends.append(uid)
+                    u_fr["friends"] = fr_friends
+                    save_user(friend_id, u_fr)
+                    try:
+                        fr_name = u_me.get("name", "Kimdir")
+                        bot.send_message(friend_id,
+                            f"🤝 *{fr_name}* siz bilan do'st bo'ldi!
+
+"
+                            f"Endi umumiy streakingiz ko'rsatiladi 🔥",
+                            parse_mode="Markdown"
+                        )
+                    except: pass
+        except Exception:
+            pass
+
     # Guruhga qo'shilish parametri
     if start_param.startswith("grp_"):
         g_id = start_param[4:]
@@ -7232,6 +7262,65 @@ try:
     def options_groups(**kwargs):
         return jsonify({}), 200
 
+
+    # ── DO'STLAR ──
+    @api_app.route("/api/friends/<int:uid>", methods=["GET"])
+    def api_friends_get(uid):
+        from datetime import timezone, timedelta as _td
+        tz_uz   = timezone(_td(hours=5))
+        today   = datetime.now(tz_uz).strftime("%Y-%m-%d")
+        u_me    = load_user(uid)
+        friends = u_me.get("friends", [])
+        result  = []
+        for fid in friends[:20]:
+            try:
+                u_fr = load_user(int(fid))
+                # Umumiy streak: ikkalasi ham bugun bajarganmi
+                done_log_me = u_me.get("done_log", {})
+                done_log_fr = u_fr.get("done_log", {})
+                # Umumiy streak uzunligini hisoblash
+                mutual_streak = 0
+                from datetime import date as _date
+                for i in range(365):
+                    d = (datetime.now(tz_uz) - _td(days=i)).strftime("%Y-%m-%d")
+                    if done_log_me.get(d) and done_log_fr.get(d):
+                        mutual_streak += 1
+                    else:
+                        break
+                result.append({
+                    "id":             fid,
+                    "name":           u_fr.get("name", "?"),
+                    "points":         u_fr.get("points", 0),
+                    "streak":         u_fr.get("streak", 0),
+                    "mutual_streak":  mutual_streak,
+                    "done_today":     bool(done_log_fr.get(today)),
+                })
+            except Exception:
+                pass
+        try:
+            bot_info   = bot.get_me()
+            invite_link = f"https://t.me/{bot_info.username}?start=friend_{uid}"
+        except Exception:
+            invite_link = ""
+        return jsonify({
+            "friends":     result,
+            "invite_link": invite_link,
+            "my_streak":   u_me.get("streak", 0),
+            "my_done_today": bool(u_me.get("done_log", {}).get(today)),
+        })
+
+    @api_app.route("/api/friends/<int:uid>/remove/<int:fid>", methods=["DELETE"])
+    def api_friends_remove(uid, fid):
+        u_me = load_user(uid)
+        friends = [f for f in u_me.get("friends", []) if f != fid]
+        u_me["friends"] = friends
+        save_user(uid, u_me)
+        return jsonify({"ok": True})
+
+    @api_app.route("/api/friends/<int:uid>", methods=["OPTIONS"])
+    @api_app.route("/api/friends/<int:uid>/remove/<int:fid>", methods=["OPTIONS"])
+    def options_friends(**kwargs):
+        return jsonify({}), 200
 
     @api_app.route("/")
     def api_index():

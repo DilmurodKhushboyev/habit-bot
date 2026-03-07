@@ -849,7 +849,14 @@ body {
 
 <!-- GURUHLAR -->
 <div class="page" id="page-groups">
+  <div class="period-switch" style="margin-bottom:0">
+    <button class="period-btn active" id="gsub-groups"  onclick="setGroupSub('groups')"  type="button">👥 Guruhlar</button>
+    <button class="period-btn"        id="gsub-friends" onclick="setGroupSub('friends')" type="button">🤝 Do'stlar</button>
+  </div>
   <div id="groups-content">
+    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
+  <div id="friends-content" style="display:none">
     <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
   </div>
 </div>
@@ -917,7 +924,10 @@ async function loadTab(tab) {
   if (tab === 'rating')       await loadRating();
   if (tab === 'profile')      await loadProfile();
   if (tab === 'habits')       await loadHabits();
-  if (tab === 'groups')       await loadGroups();
+  if (tab === 'groups') {
+    await loadGroups();
+    await loadFriends();
+  }
   loaded[tab] = true;
 }
 
@@ -2112,6 +2122,92 @@ function showGroupToast(msg, err=false) {
   if (!t) return;
   t.textContent = msg; t.className = 'toast show' + (err?' err':'');
   setTimeout(() => t.className = 'toast', 2500);
+}
+
+// ── DO'STLAR ──
+let _groupSub = 'groups';
+function setGroupSub(sub) {
+  _groupSub = sub;
+  document.getElementById('gsub-groups')?.classList.toggle('active', sub === 'groups');
+  document.getElementById('gsub-friends')?.classList.toggle('active', sub === 'friends');
+  document.getElementById('groups-content').style.display  = sub === 'groups'  ? '' : 'none';
+  document.getElementById('friends-content').style.display = sub === 'friends' ? '' : 'none';
+}
+
+async function loadFriends() {
+  try {
+    const d = await apiFetch(`friends/${userId}`);
+    renderFriends(d);
+  } catch(e) {
+    document.getElementById('friends-content').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
+  }
+}
+
+function renderFriends(d) {
+  const friends = d.friends || [];
+  const emptyFriendsHtml = '<div class="empty-state"><div class="icon">\uD83E\uDD1D</div>Hali do\u2019st yo\u2019q</div>';
+  let html = '';
+  friends.forEach(f => {
+    const mutualColor = f.mutual_streak >= 7 ? '#4CAF7D' : f.mutual_streak >= 3 ? '#5B8DEF' : '#E07040';
+    html += `
+      <div class="rem-card">
+        <div class="rem-top">
+          <div class="rem-icon" style="font-size:28px">${f.name[0]?.toUpperCase() || '?'}</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">${f.name}</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">⭐ ${f.points} ball · 🔥 ${f.streak} kun streak</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:11px;color:var(--sub)">Umumiy</div>
+            <div style="font-size:18px;font-weight:700;color:${mutualColor};font-family:'DM Mono',monospace">${f.mutual_streak}</div>
+            <div style="font-size:9px;color:var(--sub)">kun 🔥</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <div style="flex:1;height:6px;border-radius:3px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">
+            <div style="height:100%;border-radius:3px;background:${f.done_today?'var(--green)':'#E07040'};width:${f.done_today?100:0}%"></div>
+          </div>
+          <span style="font-size:10px;color:var(--sub)">${f.done_today ? '✅ Bugun bajarildi' : '⏳ Hali bajarilmadi'}</span>
+        </div>
+        <button class="rem-save-btn" style="margin-top:10px;background:var(--bg);color:var(--sub);box-shadow:var(--sh-in)" 
+          onclick="removeFriend(${f.id})" type="button">✕ Do'stlikdan chiqarish</button>
+      </div>`;
+  });
+
+  document.getElementById('friends-content').innerHTML = `
+    <div class="rem-card" style="background:linear-gradient(135deg,#5B8DEF22,#4CAF7D22)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:32px">🤝</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">Do'stingizni taklif qiling</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:3px">Link orqali kirsа — umumiy streakingiz birlashadi!</div>
+        </div>
+      </div>
+      <button class="rem-save-btn" style="margin-top:12px" onclick="copyFriendLink('${d.invite_link}')" type="button">
+        🔗 Invite link nusxalash
+      </button>
+    </div>
+    <div class="section-title">Do'stlarim (${friends.length})</div>
+    ${html || emptyFriendsHtml}
+    <div class="toast" id="toast-friends"></div>`;
+}
+
+function copyFriendLink(link) {
+  if (!link) return;
+  if (navigator.clipboard) navigator.clipboard.writeText(link);
+  const t = document.getElementById('toast-friends');
+  if (t) { t.textContent = '🔗 Link nusxalandi!'; t.className = 'toast show'; setTimeout(()=>t.className='toast',2500); }
+}
+
+async function removeFriend(fid) {
+  if (!confirm("Do'stlikdan chiqarasizmi?")) return;
+  try {
+    await fetch(`${API}/friends/${userId}/remove/${fid}`, {
+      method: 'DELETE', headers: { 'X-User-Id': userId }
+    });
+    await loadFriends();
+  } catch(e) {}
 }
 
 // ── START ──
