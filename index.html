@@ -1196,7 +1196,7 @@ async function saveReminder(hid) {
         saveBtn.disabled = false;
       }, 2000);
     }
-    showRemToast(enabled && time ? `🔔 ${time} da eslatma o'rnatildi` : '🔕 Eslatma o'chirildi');
+    showRemToast(enabled && time ? `🔔 ${time} da eslatma o'rnatildi` : `🔕 Eslatma o'chirildi`);
     loaded.habits = false;
   } catch(e) {
     if (saveBtn) { saveBtn.textContent = '💾 Saqlash'; saveBtn.disabled = false; }
