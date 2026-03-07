@@ -1981,113 +1981,120 @@ def _tf(path, size):
 
 def generate_rating_grid(top10_users, all_users):
     """
-    HTML generatsiya qilib playwright bilan screenshot oladi.
     top10_users: [(name, points, username, user_id), ...]
     all_users:   {user_id: udata, ...}
     Returns: BytesIO rasm
     """
     from datetime import timezone, timedelta
-    import tempfile, os
     tz_uz     = timezone(timedelta(hours=5))
     today_dt  = datetime.now(tz_uz)
     today_str = today_dt.strftime("%Y-%m-%d")
     days      = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
     day_lbls  = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
-    oy_uzb    = ["","Yan","Fev","Mar","Apr","May","Iyn","Iyl","Avg","Sen","Okt","Noy","Dek"]
-    month_lbl = oy_uzb[today_dt.month]
 
-    rank_colors = ["#FFD700","#C8CDDC","#D78737","#6B7DC3","#6B7DC3","#6B7DC3","#6B7DC3","#6B7DC3","#6B7DC3","#6B7DC3"]
-    bg_colors   = ["#26220A","#181828","#141420","#181828","#141420","#181828","#141420","#181828","#141420","#181828"]
-    medals_sym  = ["🥇","🥈","🥉","4","5","6","7","8","9","10"]
+    # Font
+    FONT_B = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+    FONT_R = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
+    if not os.path.exists(FONT_B):
+        FONT_B = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+    if not os.path.exists(FONT_R):
+        FONT_R = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
-    rows_html = ""
+    # O'lchamlar — barcha nisbatlar shu yerda
+    W       = 780
+    ROW_H   = 72
+    HDR_H   = 108
+    FTR_H   = 48
+    COL_W   = 56
+    NAME_W  = 240
+    PAD_L   = 16
+    CELL_R  = 22
+    ROWS    = len(top10_users)
+    H       = HDR_H + ROW_H * ROWS + FTR_H
+
+    F_TITLE = ImageFont.truetype(FONT_B, 28)
+    F_SUB   = ImageFont.truetype(FONT_R, 16)
+    F_NAME  = ImageFont.truetype(FONT_B, 22)
+    F_PTS   = ImageFont.truetype(FONT_R, 15)
+    F_RANK  = ImageFont.truetype(FONT_B, 20)
+    F_DAY   = ImageFont.truetype(FONT_R, 14)
+    F_LEG   = ImageFont.truetype(FONT_R, 14)
+
+    img  = Image.new("RGB", (W, H), (13, 13, 22))
+    draw = ImageDraw.Draw(img)
+
+    # Header
+    for y in range(HDR_H):
+        t = y / HDR_H
+        r = int(13 + t * 8); b = int(22 + t * 16)
+        draw.line([(0,y),(W,y)], fill=(r, r, b))
+    draw.rectangle([(0, HDR_H-2),(W, HDR_H)], fill=(180,140,0))
+    draw.text((W//2, int(HDR_H*0.38)), "TOP-10  •  7 KUNLIK FAOLLIK",
+              font=F_TITLE, fill=(255,215,0), anchor="mm")
+    draw.text((W//2, int(HDR_H*0.72)), "Super Habits Bot  •  @Super_habits_bot",
+              font=F_SUB, fill=(120,120,165), anchor="mm")
+
+    oy_uzb = ["","Yan","Fev","Mar","Apr","May","Iyn","Iyl","Avg","Sen","Okt","Noy","Dek"]
+    for j in range(7):
+        cx     = PAD_L + NAME_W + j * COL_W + COL_W // 2
+        dt_obj = today_dt - timedelta(days=6-j)
+        draw.text((cx, HDR_H - 10), day_lbls[j], font=F_DAY, fill=(180,180,210), anchor="mb")
+        if j == 0 or dt_obj.day == 1:
+            draw.text((cx, HDR_H - 26), oy_uzb[dt_obj.month], font=F_DAY, fill=(100,100,145), anchor="mb")
+
+    rank_colors = [(255,215,0),(200,205,220),(215,135,55)] + [(80,110,195)]*7
+    bg_colors   = [(38,34,10),(20,20,34),(24,24,40),(20,20,34),(24,24,40),
+                   (20,20,34),(24,24,40),(20,20,34),(24,24,40),(20,20,34)]
+
     for i, (name, points, username, target_uid) in enumerate(top10_users):
+        y  = HDR_H + i * ROW_H
+        cy = y + ROW_H // 2
+        rc = rank_colors[i]
+        draw.rectangle([(0,y),(W, y+ROW_H)], fill=bg_colors[i])
+        draw.rectangle([(0,y),(4, y+ROW_H)], fill=rc)
+
+        rr = ROW_H // 2 - 8
+        draw.ellipse([(PAD_L+2, cy-rr),(PAD_L+2+rr*2, cy+rr)], fill=(24,28,52))
+        draw.text((PAD_L+2+rr, cy), str(i+1), font=F_RANK, fill=rc, anchor="mm")
+
+        tx = PAD_L + 2 + rr*2 + 10
+        draw.text((tx, cy - 12), name[:15], font=F_NAME, fill=(215,215,245), anchor="lm")
+        draw.text((tx, cy + 12), f"{points} ball", font=F_PTS, fill=(110,110,155), anchor="lm")
+
         udata     = all_users.get(str(target_uid), {})
         done_log  = udata.get("done_log", {})
         bot_start = min(done_log.keys()) if done_log else today_str
-        cells = ""
-        for dstr in days:
+
+        for j, dstr in enumerate(days):
+            cx = PAD_L + NAME_W + j * COL_W + COL_W // 2
+            r  = CELL_R
             if dstr > today_str or dstr < bot_start:
-                cells += '<td class="cell empty"></td>'
+                draw.ellipse([(cx-r,cy-r),(cx+r,cy+r)], outline=(45,45,68), width=2)
             elif done_log.get(dstr):
-                cells += '<td class="cell done"></td>'
+                draw.ellipse([(cx-r,cy-r),(cx+r,cy+r)], fill=(22,145,62))
+                draw.ellipse([(cx-r+4,cy-r+4),(cx+r-4,cy+r-4)], fill=(40,200,82))
             else:
-                cells += '<td class="cell miss"></td>'
-        rc = rank_colors[i]; bg = bg_colors[i]
-        rows_html += f'''
-        <tr style="background:{bg}; border-left: 5px solid {rc};">
-          <td class="rank" style="color:{rc}">{medals_sym[i]}</td>
-          <td class="nameblock">
-            <div class="name">{name[:16]}</div>
-            <div class="pts">{points} ball</div>
-          </td>
-          {cells}
-        </tr>'''
+                draw.ellipse([(cx-r,cy-r),(cx+r,cy+r)], fill=(145,25,25))
+                draw.ellipse([(cx-r+4,cy-r+4),(cx+r-4,cy+r-4)], fill=(195,48,48))
 
-    day_headers = "".join(f'<th class="dayth">{d}</th>' for d in day_lbls)
-    html = f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8"><style>
-*{{margin:0;padding:0;box-sizing:border-box;}}
-body{{background:#0D0D16;font-family:'Segoe UI',Arial,sans-serif;width:680px;}}
-.header{{background:linear-gradient(180deg,#0E0E1C 0%,#1A1A2E 100%);text-align:center;padding:22px 20px 16px;border-bottom:3px solid #B8900A;}}
-.title{{color:#FFD700;font-size:24px;font-weight:900;letter-spacing:1px;}}
-.subtitle{{color:#7878A8;font-size:13px;margin-top:5px;}}
-table{{width:100%;border-collapse:collapse;}}
-.rank{{width:48px;text-align:center;font-size:18px;font-weight:bold;padding:0 6px;}}
-.nameblock{{width:180px;padding:10px 8px;}}
-.name{{color:#D8D8F0;font-size:15px;font-weight:700;}}
-.pts{{color:#6A6A96;font-size:12px;margin-top:2px;}}
-.dayth{{width:54px;text-align:center;color:#A8A8C8;font-size:13px;font-weight:600;padding:8px 0 6px;background:#0D0D16;}}
-.monthlbl{{text-align:left;padding:8px 0 6px 16px;color:#6A6A96;font-size:12px;background:#0D0D16;width:230px;}}
-.cell{{width:54px;height:52px;text-align:center;vertical-align:middle;}}
-.cell::after{{content:'';display:inline-block;width:32px;height:32px;border-radius:50%;}}
-.done::after{{background:radial-gradient(circle at 38% 38%,#52E888,#1CA050);box-shadow:0 2px 8px rgba(42,200,80,0.5);}}
-.miss::after{{background:radial-gradient(circle at 38% 38%,#F05050,#A02020);box-shadow:0 2px 8px rgba(200,42,42,0.4);}}
-.empty::after{{background:transparent;border:2px solid #2E2E48;}}
-tr{{border-bottom:1px solid #1E1E30;}}
-.footer{{background:#101020;border-top:2px solid #786000;padding:10px 20px;display:flex;gap:24px;align-items:center;}}
-.leg{{display:flex;align-items:center;gap:7px;font-size:12px;color:#9090B0;}}
-.dot{{width:14px;height:14px;border-radius:50%;}}
-.d-green{{background:#2AC855;}}.d-red{{background:#C82A2A;}}.d-empty{{border:2px solid #2E2E48;background:transparent;}}
-</style></head><body>
-<div class="header">
-  <div class="title">TOP-10 &nbsp;•&nbsp; 7 KUNLIK FAOLLIK</div>
-  <div class="subtitle">Super Habits Bot &nbsp;•&nbsp; @Super_habits_bot</div>
-</div>
-<table>
-  <thead><tr><td class="monthlbl" colspan="2">{month_lbl} {today_dt.year}</td>{day_headers}</tr></thead>
-  <tbody>{rows_html}</tbody>
-</table>
-<div class="footer">
-  <div class="leg"><div class="dot d-green"></div> Bajarildi</div>
-  <div class="leg"><div class="dot d-red"></div> Bajarilmadi</div>
-  <div class="leg"><div class="dot d-empty"></div> Ma'lumot yo'q</div>
-</div>
-</body></html>"""
+        draw.rectangle([(4,y+ROW_H-1),(W-4, y+ROW_H)], fill=(28,28,44))
 
-    # HTML faylga yoz
-    html_path = tempfile.mktemp(suffix=".html")
-    png_path  = tempfile.mktemp(suffix=".png")
-    with open(html_path, "w", encoding="utf-8") as f:
-        f.write(html)
+    fy = HDR_H + ROWS * ROW_H
+    draw.rectangle([(0,fy),(W,H)], fill=(14,14,24))
+    draw.rectangle([(0,fy),(W,fy+2)], fill=(120,95,0))
+    lx = PAD_L + 8; ly = fy + FTR_H // 2; r2 = 8
+    draw.ellipse([(lx,       ly-r2),(lx+r2*2,       ly+r2)], fill=(40,200,82))
+    draw.text((lx+r2*2+6,         ly), "Bajarildi",      font=F_LEG, fill=(150,150,180), anchor="lm")
+    draw.ellipse([(lx+130,   ly-r2),(lx+130+r2*2,   ly+r2)], fill=(195,48,48))
+    draw.text((lx+130+r2*2+6,     ly), "Bajarilmadi",    font=F_LEG, fill=(150,150,180), anchor="lm")
+    draw.ellipse([(lx+280,   ly-r2),(lx+280+r2*2,   ly+r2)], outline=(45,45,68), width=2)
+    draw.text((lx+280+r2*2+6,     ly), "Ma'lumot yo'q", font=F_LEG, fill=(95,95,125), anchor="lm")
 
-    # Playwright bilan screenshot
-    from playwright.sync_api import sync_playwright
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page    = browser.new_page(viewport={"width": 680, "height": 800})
-        page.goto(f"file://{html_path}")
-        page.wait_for_timeout(200)
-        page.screenshot(path=png_path, full_page=True)
-        browser.close()
-
-    os.unlink(html_path)
-    buf = io.BytesIO(open(png_path, "rb").read())
-    os.unlink(png_path)
+    buf = io.BytesIO()
     buf.name = "reyting.png"
+    img.save(buf, format="PNG", optimize=False, compress_level=1)
     buf.seek(0)
     return buf
-
 
 def show_rating(uid):
     from datetime import timezone, timedelta
