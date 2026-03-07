@@ -930,11 +930,10 @@ async function loadToday() {
     const d = await apiFetch(`today/${userId}`);
     data.today = d;
     renderToday(d);
-    // Header points
-    try {
-      const p = await apiFetch(`profile/${userId}`);
-      document.getElementById('header-pts').textContent = '⭐ ' + (p.points || 0);
-    } catch(e) {}
+    // Header points — today javobidan olinadi
+    if (d.points !== undefined) {
+      document.getElementById('header-pts').textContent = '⭐ ' + d.points;
+    }
   } catch(e) {
     document.getElementById('today-content').innerHTML =
       `<div class="empty-state">
@@ -1034,7 +1033,14 @@ async function checkin(hid, cardEl) {
       if (b) b.classList.remove('show');
     }
 
-    showTodayToast(isDone ? '✅ ' + result.msg : '↩️ Bekor qilindi');
+    if (result.points !== undefined) {
+      const ptsEl = document.getElementById("header-pts");
+      if (ptsEl) ptsEl.textContent = "⭐ " + result.points;
+      if (data.today) data.today.points = result.points;
+    }
+
+    const diffTxt = isDone ? '+5 ⭐' : '-5 ⭐';
+    showTodayToast(isDone ? `✅ Bajarildi! ${diffTxt}` : `↩️ Bekor qilindi ${diffTxt}`);
     loaded.profile = false; loaded.rating = false; loaded.achievements = false;
     // Yangi badge popup
     if (isDone && result.new_badges && result.new_badges.length) {

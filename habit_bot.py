@@ -6873,7 +6873,8 @@ try:
         done_count = sum(1 for h in habits if h["done"])
         percent    = round(done_count / total * 100) if total else 0
         return jsonify({"habits": habits, "today": today,
-                        "done_count": done_count, "total": total, "percent": percent})
+                        "done_count": done_count, "total": total, "percent": percent,
+                        "points": u.get("points", 0)})
 
     # ── CHECK-IN TOGGLE ──
     @api_app.route("/api/checkin/<int:uid>/<hid>", methods=["POST"])
