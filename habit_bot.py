@@ -2130,9 +2130,8 @@ def show_rating(uid):
         save_user(uid, u)
         return
 
-    medals = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
-    # Matn caption (rasm ostida)
-    caption = "🏆 *Reyting — Top 10*\n\n"
+    medals  = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
+    text    = "🏆 *Reyting — Top 10*\n" + "▬" * 20 + "\n\n"
     for i, (name, points, username, target_uid) in enumerate(top10):
         udata   = users.get(str(target_uid), {})
         jon_val = max(0, min(100, udata.get("jon", 100)))
@@ -2140,16 +2139,10 @@ def show_rating(uid):
         vip_b   = " 💎" if udata.get("is_vip") else ""
         uname   = username.lstrip("@") if username and username != "—" else ""
         link    = f"[{name}](https://t.me/{uname})" if uname else f"[{name}](tg://user?id={target_uid})"
-        caption += f"{medals[i]} {link}{vip_b} — *{points}* ball {je}\n"
+        text   += f"{medals[i]} {link}{vip_b} — *{points}* ball  {je} {jon_val}%\n"
 
-    # Rasm (HTML → screenshot)
-    try:
-        img_buf = generate_rating_grid(top10, users)
-        sent = bot.send_photo(uid, img_buf, caption=caption, parse_mode="Markdown", reply_markup=kb)
-    except Exception as e:
-        print(f"[rating_grid] xato: {e}")
-        sent = bot.send_message(uid, caption, parse_mode="Markdown", reply_markup=kb,
-                                disable_web_page_preview=True)
+    sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb,
+                            disable_web_page_preview=True)
     u["main_msg_id"] = sent.message_id
     save_user(uid, u)
 
