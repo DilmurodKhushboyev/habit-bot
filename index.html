@@ -1083,13 +1083,6 @@ function renderReminders(habits) {
       {id:'weekdays', label:'Ish kuni'},
       {id:'weekends', label:'Dam olish'},
     ];
-    const repBtns = reps.map(r =>
-      `<button class="rep-btn ${repeat===r.id?'active':''} ${!enabled?'':''}
-        id="rep-${h.id}-${r.id}"
-        onclick="setRepeat('${h.id}','${r.id}')"
-        ${!enabled ? 'disabled' : ''}>${r.label}</button>`
-    ).join('');
-
     return `
       <div class="rem-card ${!enabled ? 'disabled' : ''}" id="remcard-${h.id}">
         <div class="rem-top">
@@ -1103,18 +1096,19 @@ function renderReminders(habits) {
             </label>
           </div>
         </div>
-        <div class="rem-body" id="rembody-${h.id}" style="${!enabled ? 'opacity:.4;pointer-events:none' : ''}">
-          <div class="time-row">
-            <span class="time-lbl">Vaqt</span>
-            <input class="time-input" type="time" id="time-${h.id}"
-              value="${time}" placeholder="--:--">
-            <button class="time-clear" onclick="clearTime('${h.id}')" title="Vaqtni o'chirish">✕</button>
-          </div>
+        <div class="rem-body" id="rembody-${h.id}">
           <div class="repeat-row">
             <span class="repeat-lbl">Kun</span>
-            <div class="repeat-opts">${repBtns}</div>
+            <div class="repeat-opts">
+              ${reps.map(r => `<button class="rep-btn ${repeat===r.id?'active':''}" id="rep-${h.id}-${r.id}" onclick="setRepeat('${h.id}','${r.id}')" type="button">${r.label}</button>`).join('')}
+            </div>
           </div>
-          <button class="rem-save-btn" id="rsave-${h.id}" onclick="saveReminder('${h.id}')">
+          <div class="time-row">
+            <span class="time-lbl">Vaqt</span>
+            <input class="time-input" type="time" id="time-${h.id}" value="${time}" placeholder="--:--">
+            <button class="time-clear" onclick="clearTime('${h.id}')" title="Vaqtni o'chirish" type="button">✕</button>
+          </div>
+          <button class="rem-save-btn" id="rsave-${h.id}" onclick="saveReminder('${h.id}')" type="button">
             💾 Saqlash
           </button>
         </div>
@@ -1152,8 +1146,13 @@ function toggleReminder(hid, labelEl) {
 function setRepeat(hid, val) {
   ['daily','weekdays','weekends'].forEach(r => {
     const btn = document.getElementById(`rep-${hid}-${r}`);
-    if (btn) btn.classList.toggle('active', r === val);
+    if (btn) {
+      btn.classList.toggle('active', r === val);
+    }
   });
+  // rem-body pointer-events ni tiklash
+  const body = document.getElementById('rembody-' + hid);
+  if (body) body.style.pointerEvents = 'auto';
 }
 
 function clearTime(hid) {
