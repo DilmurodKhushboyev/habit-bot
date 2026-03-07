@@ -1,8 +1,0 @@
-pyTelegramBotAPI
-schedule
-pymongo
-dnspython
-certifi
-Pillow
-flask
-flask-cors
