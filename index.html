@@ -910,15 +910,18 @@ async function apiFetch(endpoint) {
 
 // ── PROGRESS RING SVG ──
 function ringHTML(percent, size = 80) {
-  const r = (size - 10) / 2;
+  const r = (size - 12) / 2;
   const circ = 2 * Math.PI * r;
-  const dash = circ * percent / 100;
+  const dash = circ * Math.min(percent, 100) / 100;
+  const gap  = circ - dash;
   const color = percent >= 100 ? '#4CAF7D' : percent >= 50 ? '#5B8DEF' : '#E07040';
+  const offset = circ * 0.25;
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#C8CBD8" stroke-width="6"/>
-    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="6"
-      stroke-dasharray="${dash} ${circ}" stroke-dashoffset="${circ/4}"
-      stroke-linecap="round" style="transition:stroke-dasharray .6s ease"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#C8CBD8" stroke-width="7"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="7"
+      stroke-dasharray="${dash} ${gap}"
+      stroke-dashoffset="${offset}"
+      stroke-linecap="round"/>
     <text x="${size/2}" y="${size/2 + 6}" text-anchor="middle"
       font-family="DM Mono,monospace" font-size="18" font-weight="600" fill="#3A3D4A">${percent}%</text>
   </svg>`;
