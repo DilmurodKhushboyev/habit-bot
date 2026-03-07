@@ -1748,7 +1748,22 @@ function renderGroups(d) {
 }
 
 // ── START ──
-loadToday();
+async function startApp() {
+  if (!userId || userId == 0 || userId === '0') {
+    document.getElementById('today-content').innerHTML =
+      '<div class="empty-state"><div class="icon">⚠️</div>Foydalanuvchi aniqlanmadi.<br><small>Iltimos botdan qayta oching.</small></div>';
+    // 1.5 soniya kutib qayta urinamiz (Telegram initData kechikishi uchun)
+    await new Promise(r => setTimeout(r, 1500));
+    const tgUser2 = getTgUser();
+    const uid2 = tgUser2?.id || new URLSearchParams(window.location.search).get('uid') || 0;
+    if (uid2 && uid2 != 0) {
+      window.location.reload();
+    }
+    return;
+  }
+  loadToday();
+}
+startApp();
 </script>
 </body>
 </html>
