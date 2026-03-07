@@ -1863,7 +1863,7 @@ def generate_rating_image(top10_data):
 
         # Rank badge
         try:
-            f_rn = ImageFont.truetype(FONT, 26 if i==0 else 24 if i<3 else 21)
+            f_rn = _tf(FONT, 26 if i==0 else 24 if i<3 else 21)
         except:
             f_rn = f_rank
         if i == 0:
@@ -1953,6 +1953,31 @@ def generate_rating_image(top10_data):
     img.save(buf, format="PNG", optimize=False, compress_level=1)
     buf.seek(0)
     return buf
+def _tf(path, size):
+    """Font topish - har xil serverlarda ishlaydi"""
+    import os
+    bold_fallbacks = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
+        "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf",
+    ]
+    regular_fallbacks = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+        "/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf",
+    ]
+    candidates = [path] if path else []
+    for fp in bold_fallbacks + regular_fallbacks:
+        if fp not in candidates:
+            candidates.append(fp)
+    for fp in candidates:
+        if fp and os.path.exists(fp):
+            try: return ImageFont.truetype(fp, size)
+            except: continue
+    return ImageFont.load_default()
+
 
 def generate_rating_grid(top10_users, all_users):
     """
@@ -1985,15 +2010,13 @@ def generate_rating_grid(top10_users, all_users):
     img  = Image.new("RGB", (W, H), (13, 13, 22))
     draw = ImageDraw.Draw(img)
 
-    try:
-        f_title  = ImageFont.truetype(FONT,   28)
-        f_sub    = ImageFont.truetype(FONT_R, 18)
-        f_name   = ImageFont.truetype(FONT,   22)
-        f_day    = ImageFont.truetype(FONT_R, 18)
-        f_rank   = ImageFont.truetype(FONT,   18)
-        f_pts    = ImageFont.truetype(FONT_R, 16)
-    except Exception:
-        f_title = f_sub = f_name = f_day = f_rank = f_pts = ImageFont.load_default()
+    f_title = _tf(FONT,   28)
+    f_sub   = _tf(FONT_R, 18)
+    f_name  = _tf(FONT,   22)
+    f_day   = _tf(FONT_R, 18)
+    f_rank  = _tf(FONT,   18)
+    f_pts   = _tf(FONT_R, 16)
+    f_tiny  = _tf(FONT_R, 14)
 
     # Header
     for y in range(HDR_H):
@@ -2011,7 +2034,7 @@ def generate_rating_grid(top10_users, all_users):
         oy  = oy_uzb[dt_obj.month]
         draw.text((cx, HDR_H - 28), dlbl, font=f_day, fill=(180,180,210), anchor="mm")
         if j == 0 or dt_obj.day == 1:
-            draw.text((cx, HDR_H - 48), oy, font=ImageFont.truetype(FONT_R, 14) if True else f_day, fill=(120,120,150), anchor="mm")
+            draw.text((cx, HDR_H - 48), oy, font=f_tiny, fill=(120,120,150), anchor="mm")
 
     # Rows
     rank_colors = [(255,215,0),(200,205,220),(215,135,55)] + [(80,110,195)]*7
@@ -2112,7 +2135,9 @@ def show_rating(uid):
         img_buf = generate_rating_grid(top10, users)
         sent = bot.send_document(uid, img_buf, caption=caption, parse_mode="Markdown", reply_markup=kb)
     except Exception as e:
+        import traceback
         print(f"[rating_grid] xato: {e}")
+        print(traceback.format_exc())
         sent = bot.send_message(uid, caption, parse_mode="Markdown", reply_markup=kb, disable_web_page_preview=True)
     u["main_msg_id"] = sent.message_id
     save_user(uid, u)
