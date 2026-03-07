@@ -214,6 +214,102 @@
   }
   .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
 
+  /* ── ODATLAR ── */
+  .habits-manage { padding: 0; }
+  .add-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px; border-radius: 12px;
+    background: linear-gradient(135deg, #2A3A6E, #1E2A50);
+    border: 1.5px dashed var(--blue); color: var(--blue);
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    margin-bottom: 12px; transition: all .2s;
+  }
+  .add-btn:active { transform: scale(0.97); }
+
+  .habit-card {
+    background: var(--card); border-radius: 12px;
+    margin-bottom: 8px; border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .habit-card-top {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+  }
+  .habit-card-icon { font-size: 22px; flex-shrink: 0; }
+  .habit-card-info { flex: 1; min-width: 0; }
+  .habit-card-name { font-size: 14px; font-weight: 700; }
+  .habit-card-meta { font-size: 11px; color: var(--sub); margin-top: 2px; }
+  .habit-card-actions { display: flex; gap: 6px; }
+  .hbtn {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: none; cursor: pointer; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .15s;
+  }
+  .hbtn:active { transform: scale(0.9); }
+  .hbtn-edit   { background: #1E2A50; color: var(--blue); }
+  .hbtn-del    { background: #2A1520; color: var(--red); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.7); z-index: 100;
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #16162A; border-radius: 20px 20px 0 0;
+    padding: 20px 16px 32px; width: 100%;
+    border-top: 1px solid var(--border);
+    animation: slideUp .25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; text-align: center; }
+  .modal-close {
+    position: absolute; right: 16px; top: 16px;
+    background: var(--card2); border: none; color: var(--sub);
+    width: 28px; height: 28px; border-radius: 50%;
+    font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .field { margin-bottom: 12px; }
+  .field label { font-size: 12px; color: var(--sub); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 12px 14px; border-radius: 10px;
+    background: var(--card2); border: 1.5px solid var(--border);
+    color: var(--text); font-size: 14px; font-family: inherit;
+    outline: none; transition: border-color .2s;
+  }
+  .field input:focus { border-color: var(--blue); }
+
+  .icon-grid {
+    display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 6px;
+  }
+  .icon-opt {
+    aspect-ratio: 1; border-radius: 8px; background: var(--card2);
+    border: 1.5px solid transparent; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .15s;
+  }
+  .icon-opt.selected { border-color: var(--gold); background: #2A2210; }
+
+  .save-btn {
+    width: 100%; padding: 14px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--blue), #9B5BEE);
+    border: none; color: #fff; font-size: 15px; font-weight: 700;
+    font-family: inherit; cursor: pointer; margin-top: 6px;
+    transition: transform .15s;
+  }
+  .save-btn:active { transform: scale(0.97); }
+
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: #2DD36F; color: #000; padding: 10px 20px; border-radius: 20px;
+    font-size: 13px; font-weight: 700; z-index: 200; opacity: 0;
+    transition: opacity .3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .toast.err  { background: var(--red); color: #fff; }
+
   /* Legend */
   .legend {
     display: flex; gap: 14px; padding: 0 4px 10px;
@@ -237,9 +333,10 @@
     </div>
   </div>
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('rating')">🏆 Reyting</button>
-    <button class="tab" onclick="switchTab('profile')">👤 Profil</button>
-    <button class="tab" onclick="switchTab('groups')">👥 Guruhlar</button>
+    <button class="tab active" onclick="switchTab('rating', this)">🏆 Reyting</button>
+    <button class="tab" onclick="switchTab('profile', this)">👤 Profil</button>
+    <button class="tab" onclick="switchTab('habits', this)">📋 Odatlar</button>
+    <button class="tab" onclick="switchTab('groups', this)">👥 Guruhlar</button>
   </div>
 </div>
 
@@ -253,6 +350,13 @@
 <!-- PROFIL -->
 <div class="page" id="page-profile">
   <div id="profile-content">
+    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
+</div>
+
+<!-- ODATLAR -->
+<div class="page" id="page-habits">
+  <div id="habits-content">
     <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
   </div>
 </div>
@@ -281,10 +385,10 @@ let loaded = { rating: false, profile: false, groups: false };
 let data   = {};
 
 // ── TAB ──
-function switchTab(tab) {
+function switchTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  event.target.classList.add('active');
+  if (el) el.classList.add('active');
   document.getElementById('page-' + tab).classList.add('active');
   if (!loaded[tab]) loadTab(tab);
 }
@@ -292,6 +396,7 @@ function switchTab(tab) {
 async function loadTab(tab) {
   if (tab === 'rating')  await loadRating();
   if (tab === 'profile') await loadProfile();
+  if (tab === 'habits')  await loadHabits();
   if (tab === 'groups')  await loadGroups();
   loaded[tab] = true;
 }
@@ -423,6 +528,155 @@ function renderProfile(d) {
     </div>
     <div class="section-title">Odatlarim</div>
     <div class="habits-list">${habitsHtml || '<div class="empty-state"><div class="icon">📋</div>Hozircha odat yo\'q</div>'}</div>`;
+}
+
+// ── ODATLAR ──
+const ICONS = ['✅','📚','🏃','💪','🧘','🍎','💧','😴','✍️','🎯','🎸','🌿','🧹','💊','🙏','🧠','🚴','🏋️','📝','🌅'];
+let editingHabitId = null;
+
+async function loadHabits() {
+  try {
+    const d = await apiFetch(`habits/${userId}`);
+    renderHabits(d.habits || []);
+  } catch(e) {
+    document.getElementById('habits-content').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
+  }
+}
+
+function renderHabits(habits) {
+  let rows = '';
+  habits.forEach(h => {
+    rows += `
+      <div class="habit-card" id="hcard-${h.id}">
+        <div class="habit-card-top">
+          <div class="habit-card-icon">${h.icon||'✅'}</div>
+          <div class="habit-card-info">
+            <div class="habit-card-name">${h.name}</div>
+            <div class="habit-card-meta">⏰ ${h.time||'vaqtsiz'} &nbsp;🔥 ${h.streak} kun</div>
+          </div>
+          <div class="habit-card-actions">
+            <button class="hbtn hbtn-edit" onclick="openEdit('${h.id}','${h.name.replace(/'/g,"\\'")}','${h.icon||'✅'}','${h.time||'vaqtsiz'}')">✏️</button>
+            <button class="hbtn hbtn-del"  onclick="deleteHabit('${h.id}')">🗑️</button>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  const iconGrid = ICONS.map(ic =>
+    `<div class="icon-opt" data-icon="${ic}" onclick="selectIcon(this)">${ic}</div>`
+  ).join('');
+
+  document.getElementById('habits-content').innerHTML = `
+    <div class="habits-manage">
+      <button class="add-btn" onclick="openAdd()">➕ Yangi odat qo'shish</button>
+      <div class="section-title">Odatlarim (${habits.length})</div>
+      ${rows || '<div class="empty-state"><div class="icon">📋</div>Hozircha odat yo\'q</div>'}
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="modal-overlay" id="habit-modal">
+      <div class="modal" style="position:relative">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div class="modal-title" id="modal-title">Yangi odat</div>
+        <div class="field">
+          <label>Nomi</label>
+          <input id="h-name" type="text" placeholder="Masalan: Kitob o'qish" maxlength="60">
+        </div>
+        <div class="field">
+          <label>Vaqt (ixtiyoriy)</label>
+          <input id="h-time" type="text" placeholder="Masalan: 07:00 yoki vaqtsiz">
+        </div>
+        <div class="field">
+          <label>Icon tanlang</label>
+          <div class="icon-grid">${iconGrid}</div>
+        </div>
+        <button class="save-btn" onclick="saveHabit()">💾 Saqlash</button>
+      </div>
+    </div>`;
+}
+
+function selectIcon(el) {
+  document.querySelectorAll('.icon-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function openAdd() {
+  editingHabitId = null;
+  document.getElementById('modal-title').textContent = 'Yangi odat';
+  document.getElementById('h-name').value = '';
+  document.getElementById('h-time').value = '';
+  document.querySelectorAll('.icon-opt').forEach(e => e.classList.remove('selected'));
+  document.querySelector('.icon-opt').classList.add('selected');
+  document.getElementById('habit-modal').classList.add('open');
+}
+
+function openEdit(id, name, icon, time) {
+  editingHabitId = id;
+  document.getElementById('modal-title').textContent = 'Odatni tahrirlash';
+  document.getElementById('h-name').value = name;
+  document.getElementById('h-time').value = time === 'vaqtsiz' ? '' : time;
+  document.querySelectorAll('.icon-opt').forEach(e => {
+    e.classList.toggle('selected', e.dataset.icon === icon);
+  });
+  document.getElementById('habit-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('habit-modal').classList.remove('open');
+}
+
+function showToast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (err ? ' err' : '');
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+async function saveHabit() {
+  const name = document.getElementById('h-name').value.trim();
+  const time = document.getElementById('h-time').value.trim() || 'vaqtsiz';
+  const icon = document.querySelector('.icon-opt.selected')?.dataset.icon || '✅';
+  if (!name) { showToast('Nom kiriting!', true); return; }
+
+  try {
+    if (editingHabitId) {
+      await fetch(`${API}/habits/${userId}/${editingHabitId}`, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json','X-User-Id':userId},
+        body: JSON.stringify({name, icon, time})
+      });
+      showToast('✅ Saqlandi!');
+    } else {
+      await fetch(`${API}/habits/${userId}`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-User-Id':userId},
+        body: JSON.stringify({name, icon, time})
+      });
+      showToast('✅ Qo\'shildi!');
+    }
+    closeModal();
+    loaded.habits = false;
+    await loadHabits();
+  } catch(e) {
+    showToast('Xato yuz berdi!', true);
+  }
+}
+
+async function deleteHabit(id) {
+  if (!confirm('Odatni o\'chirasizmi?')) return;
+  try {
+    await fetch(`${API}/habits/${userId}/${id}`, {
+      method: 'DELETE',
+      headers: {'X-User-Id': userId}
+    });
+    showToast('🗑️ O\'chirildi!');
+    loaded.habits = false;
+    await loadHabits();
+  } catch(e) {
+    showToast('Xato!', true);
+  }
 }
 
 // ── GURUHLAR ──

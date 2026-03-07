@@ -6600,6 +6600,84 @@ try:
             "habits": habits,
         })
 
+    @api_app.route("/api/habits/<int:uid>", methods=["GET"])
+    def api_habits_get(uid):
+        u = load_user(uid)
+        habits = []
+        for h in u.get("habits", []):
+            habits.append({
+                "id":         h.get("id",""),
+                "name":       h.get("name",""),
+                "icon":       h.get("icon","✅"),
+                "time":       h.get("time","vaqtsiz"),
+                "streak":     h.get("streak",0),
+                "total_done": h.get("total_done",0),
+            })
+        return jsonify({"habits": habits})
+
+    @api_app.route("/api/habits/<int:uid>", methods=["POST"])
+    def api_habits_add(uid):
+        import uuid
+        data  = request.get_json() or {}
+        name  = (data.get("name") or "").strip()
+        icon  = (data.get("icon") or "✅").strip()
+        time_ = (data.get("time") or "vaqtsiz").strip()
+        if not name:
+            return jsonify({"ok": False, "error": "Nom bo'sh"}), 400
+        u = load_user(uid)
+        new_habit = {
+            "id":         str(uuid.uuid4())[:8],
+            "name":       name,
+            "icon":       icon,
+            "time":       time_,
+            "type":       "daily",
+            "streak":     0,
+            "total_done": 0,
+            "last_done":  None,
+            "created_at": str(datetime.now().date()),
+        }
+        habits = u.get("habits", [])
+        habits.append(new_habit)
+        u["habits"] = habits
+        save_user(uid, u)
+        try:
+            schedule_habit(uid, new_habit["id"], name, time_)
+        except: pass
+        return jsonify({"ok": True, "habit": new_habit})
+
+    @api_app.route("/api/habits/<int:uid>/<hid>", methods=["PUT"])
+    def api_habits_edit(uid, hid):
+        data  = request.get_json() or {}
+        name  = (data.get("name") or "").strip()
+        icon  = (data.get("icon") or "✅").strip()
+        time_ = (data.get("time") or "vaqtsiz").strip()
+        if not name:
+            return jsonify({"ok": False, "error": "Nom bo'sh"}), 400
+        u = load_user(uid)
+        habits = u.get("habits", [])
+        for h in habits:
+            if h.get("id") == hid:
+                h["name"] = name
+                h["icon"] = icon
+                h["time"] = time_
+                break
+        else:
+            return jsonify({"ok": False, "error": "Topilmadi"}), 404
+        u["habits"] = habits
+        save_user(uid, u)
+        return jsonify({"ok": True})
+
+    @api_app.route("/api/habits/<int:uid>/<hid>", methods=["DELETE"])
+    def api_habits_delete(uid, hid):
+        u = load_user(uid)
+        habits = u.get("habits", [])
+        new_habits = [h for h in habits if h.get("id") != hid]
+        if len(new_habits) == len(habits):
+            return jsonify({"ok": False, "error": "Topilmadi"}), 404
+        u["habits"] = new_habits
+        save_user(uid, u)
+        return jsonify({"ok": True})
+
     @api_app.route("/api/groups/<int:uid>")
     def api_groups(uid):
         try:
