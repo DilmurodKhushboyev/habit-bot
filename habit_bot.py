@@ -7063,11 +7063,72 @@ try:
                 members.append({"name": mu.get("name","?"), "points": mu.get("points",0)})
             members.sort(key=lambda x: x["points"], reverse=True)
             result.append({
+                "id":           str(g.get("_id","") or g.get("id","")),
                 "name":         g.get("name","Guruh"),
+                "habit_name":   g.get("habit_name",""),
                 "member_count": len(members_raw),
                 "members":      members[:5],
+                "is_admin":     g.get("admin_id") == uid,
+                "invite_link":  f"https://t.me/{os.environ.get('BOT_USERNAME','')}?start=grp_{g.get('_id','') or g.get('id','')}",
             })
         return jsonify({"groups": result})
+
+    @api_app.route("/api/groups/<int:uid>", methods=["POST"])
+    def api_groups_create(uid):
+        body       = request.get_json() or {}
+        name       = (body.get("name") or "").strip()
+        habit_name = (body.get("habit_name") or "").strip()
+        habit_time = (body.get("habit_time") or "vaqtsiz").strip()
+        if not name:       return jsonify({"ok": False, "error": "Guruh nomi bo'sh"}), 400
+        if not habit_name: return jsonify({"ok": False, "error": "Odat nomi bo'sh"}), 400
+        import uuid as _uuid
+        g_id  = str(_uuid.uuid4())[:8]
+        group = {
+            "id":         g_id,
+            "name":       name,
+            "habit_name": habit_name,
+            "habit_time": habit_time,
+            "admin_id":   uid,
+            "members":    [str(uid)],
+            "streak":     0,
+            "created_at": datetime.now().strftime("%Y-%m-%d"),
+        }
+        save_group(g_id, group)
+        u = load_user(uid)
+        groups = u.get("groups", [])
+        groups.append({"id": g_id, "name": name, "admin_id": uid})
+        u["groups"] = groups
+        save_user(uid, u)
+        try:
+            bot_info   = bot.get_me()
+            inv_link   = f"https://t.me/{bot_info.username}?start=grp_{g_id}"
+        except Exception:
+            inv_link   = f"https://t.me/?start=grp_{g_id}"
+        return jsonify({"ok": True, "id": g_id, "invite_link": inv_link})
+
+    @api_app.route("/api/groups/<int:uid>/<g_id>", methods=["DELETE"])
+    def api_groups_delete(uid, g_id):
+        g = load_group(g_id)
+        if not g: return jsonify({"ok": False, "error": "Guruh topilmadi"}), 404
+        if g.get("admin_id") != uid:
+            return jsonify({"ok": False, "error": "Faqat admin o'chira oladi"}), 403
+        # Guruhni o'chirish
+        try: mongo_db["groups"].delete_one({"_id": g_id})
+        except Exception: pass
+        # A'zolardan guruhni olib tashlash
+        for mid in g.get("members", []):
+            try:
+                mu = load_user(int(mid))
+                mu["groups"] = [x for x in mu.get("groups",[]) if x.get("id") != g_id]
+                save_user(int(mid), mu)
+            except Exception: pass
+        return jsonify({"ok": True})
+
+    @api_app.route("/api/groups/<int:uid>/<g_id>", methods=["OPTIONS"])
+    @api_app.route("/api/groups/<int:uid>", methods=["OPTIONS"])
+    def options_groups(**kwargs):
+        return jsonify({}), 200
+
 
     @api_app.route("/")
     def api_index():

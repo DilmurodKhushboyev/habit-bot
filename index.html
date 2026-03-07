@@ -846,9 +846,9 @@ body {
     <span class="nav-icon">📋</span>
     <span class="nav-label">Odatlar</span>
   </button>
-  <button class="nav-item" id="nav-reminders" onclick="switchTab('reminders', this)">
-    <span class="nav-icon">🔔</span>
-    <span class="nav-label">Eslatma</span>
+  <button class="nav-item" id="nav-groups" onclick="switchTab('groups', this)">
+    <span class="nav-icon">👥</span>
+    <span class="nav-label">Guruhlar</span>
   </button>
   <button class="nav-item" id="nav-profile" onclick="switchTab('profile', this)">
     <span class="nav-icon">👤</span>
@@ -1562,6 +1562,14 @@ function renderProfile(d) {
       </button>
     </div>
 
+    <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('reminders', null)">
+      <div class="rem-top" style="margin-bottom:0">
+        <div class="rem-icon">🔔</div>
+        <div class="rem-name">Eslatmalar</div>
+        <div style="color:var(--sub);font-size:18px">›</div>
+      </div>
+    </div>
+
     <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('achievements', null)">
       <div class="rem-top" style="margin-bottom:0">
         <div class="rem-icon">🏆</div>
@@ -1756,28 +1764,120 @@ async function loadGroups() {
 }
 
 function renderGroups(d) {
-  if (!d.groups || d.groups.length === 0) {
-    document.getElementById('groups-content').innerHTML =
-      `<div class="empty-state"><div class="icon">👥</div>Siz hech qanday guruhga a'zo emassiz</div>`;
-    return;
-  }
+  const groups = d.groups || [];
   let html = '';
-  d.groups.forEach(g => {
-    let membersHtml = (g.members || []).slice(0,5).map((m,i) =>
+  groups.forEach(g => {
+    const membersHtml = (g.members || []).slice(0,5).map((m,i) =>
       `<div class="member-row">
-        <div class="member-name">${['🥇','🥈','🥉'][i]||'•'} ${m.name}</div>
-        <div class="member-pts">${m.points} ball</div>
-       </div>`
+        <span>${['🥇','🥈','🥉','4️⃣','5️⃣'][i]} ${m.name}</span>
+        <span style="color:var(--sub);font-size:12px">${m.points} ball</span>
+      </div>`
     ).join('');
+
     html += `
-      <div class="group-card">
-        <div class="group-name">👥 ${g.name}</div>
-        <div class="group-meta">${g.member_count} a'zo</div>
-        <div class="group-members">${membersHtml}</div>
+      <div class="rem-card" id="gcard-${g.id}">
+        <div class="rem-top">
+          <div class="rem-icon">👥</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">${g.name}</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">📌 ${g.habit_name} · ${g.member_count} a'zo ${g.is_admin ? '· 👑 Admin' : ''}</div>
+          </div>
+          ${g.is_admin ? `<button class="hbtn" onclick="deleteGroup('${g.id}')" title="O'chirish">🗑️</button>` : ''}
+        </div>
+        ${membersHtml ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">${membersHtml}</div>` : ''}
+        ${g.invite_link ? `
+        <button class="rem-save-btn" style="margin-top:10px" onclick="copyInvite('${g.invite_link}')" type="button">
+          🔗 Invite link nusxalash
+        </button>` : ''}
       </div>`;
   });
-  document.getElementById('groups-content').innerHTML =
-    `<div class="section-title">Mening guruhlarim</div>${html}`;
+
+  document.getElementById('groups-content').innerHTML = `
+    <button class="add-btn" onclick="openGroupAdd()">＋ Yangi guruh yaratish</button>
+    <div class="section-title">Guruhlarim (${groups.length})</div>
+    ${html || '<div class="empty-state"><div class="icon">👥</div>Hozircha guruh yo\'q</div>'}
+    <div class="toast" id="toast-group"></div>
+
+    <div class="modal-overlay" id="group-modal">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <button class="modal-close" onclick="closeGroupModal()">✕</button>
+        <div class="modal-title">Yangi guruh</div>
+        <div class="field">
+          <label>Guruh nomi</label>
+          <input id="g-name" type="text" placeholder="Masalan: Kitob klubi" maxlength="40">
+        </div>
+        <div class="field">
+          <label>Odat nomi</label>
+          <input id="g-habit" type="text" placeholder="Masalan: Kitob o'qish" maxlength="60">
+        </div>
+        <div class="field">
+          <label>Vaqt (ixtiyoriy)</label>
+          <input id="g-time" type="time">
+        </div>
+        <button class="save-btn" onclick="saveGroup()" type="button">Yaratish</button>
+      </div>
+    </div>`;
+}
+
+function openGroupAdd() {
+  document.getElementById('group-modal').classList.add('open');
+}
+function closeGroupModal() {
+  document.getElementById('group-modal').classList.remove('open');
+}
+
+async function saveGroup() {
+  const name  = (document.getElementById('g-name').value || '').trim();
+  const habit = (document.getElementById('g-habit').value || '').trim();
+  const time  = document.getElementById('g-time').value || 'vaqtsiz';
+  if (!name)  { showGroupToast('Guruh nomini kiriting!', true); return; }
+  if (!habit) { showGroupToast('Odat nomini kiriting!', true); return; }
+  try {
+    const res = await fetch(`${API}/groups/${userId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
+      body: JSON.stringify({ name, habit_name: habit, habit_time: time })
+    });
+    const r = await res.json();
+    if (!r.ok) throw new Error(r.error);
+    closeGroupModal();
+    showGroupToast('✅ Guruh yaratildi!');
+    if (r.invite_link) {
+      setTimeout(() => {
+        if (navigator.clipboard) navigator.clipboard.writeText(r.invite_link);
+        showGroupToast('🔗 Invite link nusxalandi!');
+      }, 1000);
+    }
+    loaded.groups = false;
+    await loadGroups();
+  } catch(e) { showGroupToast('Xato: ' + e.message, true); }
+}
+
+async function deleteGroup(gid) {
+  if (!confirm('Guruhni o\'chirasizmi? Barcha a\'zolar chiqariladi!')) return;
+  try {
+    const res = await fetch(`${API}/groups/${userId}/${gid}`, {
+      method: 'DELETE', headers: { 'X-User-Id': userId }
+    });
+    const r = await res.json();
+    if (!r.ok) throw new Error(r.error);
+    showGroupToast('🗑️ Guruh o\'chirildi!');
+    loaded.groups = false;
+    await loadGroups();
+  } catch(e) { showGroupToast('Xato: ' + e.message, true); }
+}
+
+function copyInvite(link) {
+  if (navigator.clipboard) navigator.clipboard.writeText(link);
+  showGroupToast('🔗 Link nusxalandi!');
+}
+
+function showGroupToast(msg, err=false) {
+  const t = document.getElementById('toast-group');
+  if (!t) return;
+  t.textContent = msg; t.className = 'toast show' + (err?' err':'');
+  setTimeout(() => t.className = 'toast', 2500);
 }
 
 // ── START ──
