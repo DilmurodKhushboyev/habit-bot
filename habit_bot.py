@@ -6602,7 +6602,7 @@ try:
 
     @api_app.route("/api/groups/<int:uid>")
     def api_groups(uid):
-        all_groups = db["groups"].find({"members": str(uid)}) if db else []
+        all_groups = mongo_db["groups"].find({"members": str(uid)}) if mongo_db else []
         result = []
         for g in all_groups:
             members_raw = g.get("members", [])
