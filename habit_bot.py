@@ -2088,6 +2088,7 @@ def generate_rating_grid(top10_users, all_users):
     return buf
 
 def show_rating(uid):
+    from datetime import timezone, timedelta
     users   = load_all_users()
     ranking = []
     for user_id, udata in users.items():
@@ -2099,7 +2100,6 @@ def show_rating(uid):
         ))
     ranking.sort(key=lambda x: x[1], reverse=True)
     top10  = ranking[:10]
-    medals = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
     kb     = InlineKeyboardMarkup()
     kb.add(cBtn(T(uid, "btn_home"), "menu_main", "primary"))
     u = load_user(uid)
@@ -2108,25 +2108,51 @@ def show_rating(uid):
         u["main_msg_id"] = sent.message_id
         save_user(uid, u)
         return
-    # Matn (caption)
-    caption = "🏆 *Reyting — Top 10*\n" + "▬" * 16 + "\n\n"
+
+    tz_uz     = timezone(timedelta(hours=5))
+    today_dt  = __import__("datetime").datetime.now(tz_uz)
+    today_str = today_dt.strftime("%Y-%m-%d")
+    days      = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
+    day_lbls  = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
+
+    medals     = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
+    done_emoji = "🟢"
+    miss_emoji = "🔴"
+    empty_emoj = "⬜"
+
+    # Sarlavha
+    day_header = "  ".join(day_lbls)
+    divider    = "▬" * 22
+    text  = f"🏆 *Reyting — Top 10*\n`{divider}`\n\n"
+    text += f"`📅  {day_header}`\n\n"
+
     for i, (name, points, username, target_uid) in enumerate(top10):
+        udata     = users.get(str(target_uid), {})
+        done_log  = udata.get("done_log", {})
+        bot_start = min(done_log.keys()) if done_log else today_str
+        jon_val   = max(0, min(100, udata.get("jon", 100)))
+        je        = "❤️" if jon_val>=80 else "🧡" if jon_val>=50 else "💛" if jon_val>=20 else "🖤"
+        vip_b     = " 💎" if udata.get("is_vip") else ""
+
+        # Grid qatori
+        grid = ""
+        for dstr in days:
+            if dstr > today_str or dstr < bot_start:
+                grid += empty_emoj
+            elif done_log.get(dstr):
+                grid += done_emoji
+            else:
+                grid += miss_emoji
+
+        # Ism (link)
         uname = username.lstrip("@") if username and username != "—" else ""
         link  = f"[{name}](https://t.me/{uname})" if uname else f"[{name}](tg://user?id={target_uid})"
-        udata   = users.get(str(target_uid), {})
-        jon_val = max(0, min(100, udata.get("jon", 100)))
-        je      = "❤️" if jon_val>=80 else "🧡" if jon_val>=50 else "💛" if jon_val>=20 else "🖤"
-        vip_b   = " 💎" if udata.get("is_vip") else ""
-        caption += f"{medals[i]} {link}{vip_b} — {points} ball,  {je} {jon_val}%\n"
-    # Rasm
-    try:
-        img_buf = generate_rating_grid(top10, users)
-        sent = bot.send_document(uid, img_buf, caption=caption, parse_mode="Markdown", reply_markup=kb)
-    except Exception as e:
-        import traceback
-        print(f"[rating_grid] xato: {e}")
-        print(traceback.format_exc())
-        sent = bot.send_message(uid, caption, parse_mode="Markdown", reply_markup=kb, disable_web_page_preview=True)
+
+        text += f"{medals[i]} {link}{vip_b} \u2014 *{points}* ball  {je} {jon_val}%\n"
+        text += f"`{grid}`\n\n"
+
+    sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb,
+                            disable_web_page_preview=True)
     u["main_msg_id"] = sent.message_id
     save_user(uid, u)
 
