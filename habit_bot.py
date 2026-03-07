@@ -6555,7 +6555,7 @@ try:
         day_lbls  = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
 
         users   = load_all_users()
-        ranking = sorted(users.items(), key=lambda x: x[1].get("points",0), reverse=True)[:10]
+        ranking = sorted(users.items(), key=lambda x: x[1].get("points",0), reverse=True)
 
         result = []
         for uid, udata in ranking:
