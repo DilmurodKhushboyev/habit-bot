@@ -1983,7 +1983,7 @@ def generate_rating_grid(top10_users, all_users):
     """
     top10_users: [(name, points, username, user_id), ...]
     all_users:   {user_id: udata, ...}
-    Returns: BytesIO rasm — ultra yuqori sifat (S=5, 3x matn)
+    Returns: BytesIO rasm
     """
     FONT   = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
     FONT_R = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
@@ -1992,51 +1992,47 @@ def generate_rating_grid(top10_users, all_users):
     tz_uz     = timezone(timedelta(hours=5))
     today_dt  = datetime.now(tz_uz)
     today_str = today_dt.strftime("%Y-%m-%d")
-
     days      = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
-    day_labels = [(today_dt - timedelta(days=6-i)).strftime("%d")       for i in range(7)]
 
     ROWS   = len(top10_users)
-    S      = 5           # 5x o'lcham — ultra sifat
-    COL_W  = 56  * S
-    NAME_W = 220 * S
-    PAD    = 28  * S
-    ROW_H  = 90  * S
-    HDR_H  = 130 * S
-    FTR_H  = 65  * S
-    CELL_R = 20  * S
+    S      = 3          # Base unit — barcha o'lchamlar shunga mutanosib
+    ROW_H  = 120 * S
+    HDR_H  = 160 * S
+    FTR_H  =  60 * S
+    COL_W  =  62 * S
+    NAME_W = 280 * S
+    PAD    =  20 * S
+    CELL_R =  22 * S
     W      = PAD*2 + NAME_W + COL_W*7 + PAD
-    H      = HDR_H + ROW_H*ROWS + FTR_H + 10*S
+    H      = HDR_H + ROW_H*ROWS + FTR_H + 4*S
 
     img  = Image.new("RGB", (W, H), (13, 13, 22))
     draw = ImageDraw.Draw(img)
 
-    # 3x matn o'lchamlari
-    f_title = _tf(FONT,   84)
-    f_sub   = _tf(FONT_R, 54)
-    f_name  = _tf(FONT,   66)
-    f_day   = _tf(FONT_R, 52)
-    f_rank  = _tf(FONT,   56)
-    f_pts   = _tf(FONT_R, 48)
-    f_tiny  = _tf(FONT_R, 42)
-    f_leg   = _tf(FONT_R, 48)
+    f_title = _tf(FONT,   int(HDR_H * 0.28))
+    f_sub   = _tf(FONT_R, int(HDR_H * 0.17))
+    f_name  = _tf(FONT,   int(ROW_H * 0.38))
+    f_pts   = _tf(FONT_R, int(ROW_H * 0.25))
+    f_rank  = _tf(FONT,   int(ROW_H * 0.32))
+    f_day   = _tf(FONT_R, int(HDR_H * 0.14))
+    f_tiny  = _tf(FONT_R, int(HDR_H * 0.11))
+    f_leg   = _tf(FONT_R, int(FTR_H * 0.38))
 
     # Header gradient
     for y in range(HDR_H):
         t = y / HDR_H
         draw.line([(0,y),(W,y)], fill=(int(14+t*10), int(14+t*10), int(28+t*20)))
     draw.rectangle([(0, HDR_H-3*S),(W, HDR_H)], fill=(180,140,0))
-    draw.text((W//2, HDR_H*38//130), "TOP-10  •  7 KUNLIK FAOLLIK",            font=f_title, fill=(255,215,0),   anchor="mm")
-    draw.text((W//2, HDR_H*88//130), "Super Habits Bot  •  @Super_habits_bot", font=f_sub,   fill=(120,120,165), anchor="mm")
+    draw.text((W//2, int(HDR_H*0.35)), "TOP-10  •  7 KUNLIK FAOLLIK",            font=f_title, fill=(255,215,0),   anchor="mm")
+    draw.text((W//2, int(HDR_H*0.72)), "Super Habits Bot  •  @Super_habits_bot", font=f_sub,   fill=(120,120,165), anchor="mm")
 
-    # Kun sarlavhalari
     oy_uzb = ["","Yan","Fev","Mar","Apr","May","Iyn","Iyl","Avg","Sen","Okt","Noy","Dek"]
     for j in range(7):
         cx     = PAD + NAME_W + j*COL_W + COL_W//2
         dt_obj = today_dt - timedelta(days=6-j)
-        draw.text((cx, HDR_H - 16*S), day_labels[j], font=f_day, fill=(180,180,210), anchor="mm")
+        draw.text((cx, HDR_H - int(HDR_H*0.10)), dt_obj.strftime("%d"), font=f_day,  fill=(180,180,210), anchor="mm")
         if j == 0 or dt_obj.day == 1:
-            draw.text((cx, HDR_H - 30*S), oy_uzb[dt_obj.month], font=f_tiny, fill=(120,120,150), anchor="mm")
+            draw.text((cx, HDR_H - int(HDR_H*0.20)), oy_uzb[dt_obj.month], font=f_tiny, fill=(120,120,150), anchor="mm")
 
     rank_colors = [(255,215,0),(200,205,220),(215,135,55)] + [(80,110,195)]*7
 
@@ -2047,9 +2043,14 @@ def generate_rating_grid(top10_users, all_users):
         draw.rectangle([(0,y),(W,y+ROW_H)], fill=bg)
         draw.rectangle([(0,y),(5*S, y+ROW_H)], fill=rank_colors[i] if i<3 else (40,50,100))
 
-        draw.text((PAD+20*S, cy),       str(i+1),          font=f_rank, fill=rank_colors[i], anchor="mm")
-        draw.text((PAD+42*S, cy-14*S),  name[:14],          font=f_name, fill=(210,210,240),  anchor="lm")
-        draw.text((PAD+42*S, cy+14*S),  f"{points} ball",   font=f_pts,  fill=(100,100,140),  anchor="lm")
+        rc = rank_colors[i]
+        rr = int(ROW_H * 0.30)
+        draw.ellipse([(PAD+8*S, cy-rr),(PAD+8*S+rr*2, cy+rr)], fill=(28,32,58))
+        draw.text((PAD+8*S+rr, cy), str(i+1), font=f_rank, fill=rc, anchor="mm")
+
+        tx = PAD + 8*S + rr*2 + 12*S
+        draw.text((tx, cy - int(ROW_H*0.18)), name[:16],        font=f_name, fill=(215,215,245), anchor="lm")
+        draw.text((tx, cy + int(ROW_H*0.16)), f"{points} ball", font=f_pts,  fill=(110,110,155), anchor="lm")
 
         udata     = all_users.get(str(target_uid), {})
         done_log  = udata.get("done_log", {})
@@ -2059,27 +2060,26 @@ def generate_rating_grid(top10_users, all_users):
             cx = PAD + NAME_W + j*COL_W + COL_W//2
             r  = CELL_R
             if dstr > today_str or dstr < bot_start:
-                draw.ellipse([(cx-r,cy-r),(cx+r,cy+r)], outline=(45,45,68), width=S)
+                draw.ellipse([(cx-r,cy-r),(cx+r,cy+r)], outline=(48,48,72), width=max(2,S))
             elif done_log.get(dstr):
-                draw.ellipse([(cx-r,   cy-r),   (cx+r,   cy+r)],             fill=(28,160,70))
-                draw.ellipse([(cx-r+4*S,cy-r+4*S),(cx+r-4*S,cy+r-4*S)],     fill=(45,210,90))
+                draw.ellipse([(cx-r,   cy-r),   (cx+r,   cy+r)],         fill=(25,148,65))
+                draw.ellipse([(cx-r+3*S,cy-r+3*S),(cx+r-3*S,cy+r-3*S)], fill=(42,200,85))
             else:
-                draw.ellipse([(cx-r,   cy-r),   (cx+r,   cy+r)],             fill=(155,30,30))
-                draw.ellipse([(cx-r+4*S,cy-r+4*S),(cx+r-4*S,cy+r-4*S)],     fill=(195,48,48))
+                draw.ellipse([(cx-r,   cy-r),   (cx+r,   cy+r)],         fill=(148,28,28))
+                draw.ellipse([(cx-r+3*S,cy-r+3*S),(cx+r-3*S,cy+r-3*S)], fill=(195,48,48))
 
-        draw.rectangle([(5*S, y+ROW_H),(W-5*S, y+ROW_H+S)], fill=(28,28,44))
+        draw.rectangle([(5*S, y+ROW_H-S),(W-5*S, y+ROW_H)], fill=(30,30,48))
 
-    # Footer + legend
-    fy = HDR_H + ROWS*ROW_H + 6*S
+    fy = HDR_H + ROWS*ROW_H + 2*S
     draw.rectangle([(0,fy),(W,H)], fill=(16,16,28))
     draw.rectangle([(0,fy),(W,fy+S*2)], fill=(120,95,0))
-    lx=PAD; ly=fy+FTR_H//2; r2=10*S
-    draw.ellipse([(lx,       ly-r2),(lx+r2*2,       ly+r2)], fill=(45,210,90))
-    draw.text((lx+r2*2+8*S,         ly), "Bajarildi",      font=f_leg, fill=(160,160,190), anchor="lm")
-    draw.ellipse([(lx+160*S, ly-r2),(lx+160*S+r2*2, ly+r2)], fill=(195,48,48))
-    draw.text((lx+160*S+r2*2+8*S,   ly), "Bajarilmadi",    font=f_leg, fill=(160,160,190), anchor="lm")
-    draw.ellipse([(lx+340*S, ly-r2),(lx+340*S+r2*2, ly+r2)], outline=(45,45,68), width=S)
-    draw.text((lx+340*S+r2*2+8*S,   ly), "Ma'lumot yo'q", font=f_leg, fill=(100,100,130), anchor="lm")
+    lx=PAD+8*S; ly=fy+FTR_H//2; r2=int(FTR_H*0.22)
+    draw.ellipse([(lx,       ly-r2),(lx+r2*2,       ly+r2)], fill=(42,200,85))
+    draw.text((lx+r2*2+6*S,         ly), "Bajarildi",      font=f_leg, fill=(155,155,185), anchor="lm")
+    draw.ellipse([(lx+170*S, ly-r2),(lx+170*S+r2*2, ly+r2)], fill=(195,48,48))
+    draw.text((lx+170*S+r2*2+6*S,   ly), "Bajarilmadi",    font=f_leg, fill=(155,155,185), anchor="lm")
+    draw.ellipse([(lx+360*S, ly-r2),(lx+360*S+r2*2, ly+r2)], outline=(48,48,72), width=max(2,S))
+    draw.text((lx+360*S+r2*2+6*S,   ly), "Ma'lumot yo'q", font=f_leg, fill=(100,100,130), anchor="lm")
 
     buf = io.BytesIO()
     buf.name = "reyting.png"
