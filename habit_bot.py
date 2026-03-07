@@ -40,6 +40,7 @@ mongo_client  = MongoClient(MONGO_URI)
 mongo_db      = mongo_client["habit_bot"]
 mongo_col     = mongo_db["users"]
 groups_col    = mongo_db["groups"]   # Guruhlar kolleksiyasi
+challenges_col = mongo_db["challenges"]  # Challengelar
 
 # ============================================================
 #  MA'LUMOTLAR BAZASI FUNKSIYALARI
@@ -83,6 +84,85 @@ def user_exists(user_id):
 
 def count_users():
     return mongo_col.count_documents({"_id": {"$not": {"$regex": "^_"}}})
+
+def _finish_challenge(cid, c=None):
+    """Challenge tugaganda g'olibni aniqlash va ball berish"""
+    if c is None:
+        c = load_challenge(cid)
+    if not c or c.get("status") != "active":
+        return
+    days       = c.get("days", 1)
+    start      = c.get("start_date","")
+    end        = c.get("end_date","")
+    s_log      = c.get("sender_log", {})
+    r_log      = c.get("receiver_log", {})
+    # Faqat challenge kunlarini hisoblash
+    from datetime import date as _dt, timedelta as _td
+    try:
+        start_d = _dt.fromisoformat(start)
+        end_d   = _dt.fromisoformat(end)
+    except Exception:
+        return
+    all_days = [(start_d + _td(days=i)).strftime("%Y-%m-%d") for i in range(days)]
+    s_done = sum(1 for d in all_days if s_log.get(d))
+    r_done = sum(1 for d in all_days if r_log.get(d))
+    bet    = c.get("bet", 0)
+    sid    = c.get("sender_id")
+    rid    = c.get("receiver_id")
+    # G'olibni aniqlash
+    if s_done > r_done:
+        winner_id, loser_id = sid, rid
+        w_done, l_done = s_done, r_done
+    elif r_done > s_done:
+        winner_id, loser_id = rid, sid
+        w_done, l_done = r_done, s_done
+    else:
+        # Draw — ikkalasiga ball qaytarish
+        for pid in [sid, rid]:
+            pu = load_user(pid)
+            pu["points"] = pu.get("points", 0) + bet
+            save_user(pid, pu)
+        c["status"] = "draw"
+        save_challenge(cid, c)
+        for pid in [sid, rid]:
+            try:
+                bot.send_message(pid,
+                    "\U0001F91D *Challenge tugadi \u2014 Durrang!*\n\nIkkalangiz teng bajardingliz. Balllar qaytarildi.",
+                    parse_mode="Markdown")
+            except Exception:
+                pass
+        return
+    # G'olib/yutqazuvchi
+    wu = load_user(winner_id)
+    lu = load_user(loser_id)
+    wu["points"] = wu.get("points", 0) + bet * 2
+    save_user(winner_id, wu)
+    c["status"]    = "finished"
+    c["winner_id"] = winner_id
+    save_challenge(cid, c)
+    wname = wu.get("name","?")
+    lname = lu.get("name","?")
+    try:
+        bot.send_message(winner_id,
+            "\U0001F3C6 *Challenge tugadi \u2014 Siz g\u2019olib!*\n\n\U0001F4CA " + str(w_done) + "/" + str(days) + " kun bajardingliz\n\u2B50 +" + str(bet*2) + " ball oldingliz!",
+            parse_mode="Markdown")
+    except Exception:
+        pass
+    try:
+        bot.send_message(loser_id,
+            "\U0001F614 *Challenge tugadi \u2014 " + wname + " g\u2019olib bo\u2019ldi*\n\n\U0001F4CA " + str(l_done) + "/" + str(days) + " kun bajardingliz\n\u2B50 " + str(bet) + " ball yechildi",
+            parse_mode="Markdown")
+    except Exception:
+        pass
+
+def load_challenge(cid):
+    doc = challenges_col.find_one({"_id": str(cid)})
+    if doc:
+        return {k: v for k, v in doc.items() if k != "_id"}
+    return None
+
+def save_challenge(cid, data):
+    challenges_col.update_one({"_id": str(cid)}, {"$set": data}, upsert=True)
 
 def load_group(group_id):
     doc = groups_col.find_one({"_id": str(group_id)})
@@ -4889,6 +4969,61 @@ def callback_handler(call):
         bot.answer_callback_query(call.id)
         return
 
+    # ── CHALLENGE CALLBACK ──
+    if cdata.startswith("ch_accept_"):
+        cid = cdata[len("ch_accept_"):]
+        bot.answer_callback_query(call.id)
+        c = load_challenge(cid)
+        if not c or c.get("status") != "pending":
+            try: bot.edit_message_text("Bu challenge allaqachon javob berilgan.", uid, call.message.message_id)
+            except: pass
+            return
+        if c.get("receiver_id") != uid:
+            return
+        # Ikkalasidan garov yechish
+        bet = c.get("bet", 0)
+        for pid in [c["sender_id"], c["receiver_id"]]:
+            pu = load_user(pid)
+            pu["points"] = max(0, pu.get("points", 0) - bet)
+            save_user(pid, pu)
+        # Challenge boshlash
+        from datetime import timezone, timedelta as _td, date as _dt
+        tz_uz    = timezone(_td(hours=5))
+        start_d  = datetime.now(tz_uz).date()
+        end_d    = start_d + _td(days=c["days"] - 1)
+        c["status"]     = "active"
+        c["start_date"] = str(start_d)
+        c["end_date"]   = str(end_d)
+        save_challenge(cid, c)
+        try: bot.delete_message(uid, call.message.message_id)
+        except: pass
+        ru = load_user(uid)
+        su = load_user(c["sender_id"])
+        for pid, other_name in [(uid, su.get("name","?")), (c["sender_id"], ru.get("name","?"))]:
+            try:
+                bot.send_message(pid,
+                    "\U0001F3AF *Challenge boshlandi!*\n\n" + "\U0001F4CC Odat: *" + c['habit_name'] + "*\n" + "\U0001F4C5 Muddat: *" + str(c['days']) + " kun* (" + str(start_d) + " \u2014 " + str(end_d) + ")\n" + "\u2B50 Garov: *" + str(bet) + " ball*\n\n" + "Raqibingiz: *" + other_name + "*\nHar kuni Web App orqali check-in qiling!",
+                    parse_mode="Markdown")
+            except: pass
+        return
+
+    if cdata.startswith("ch_reject_"):
+        cid = cdata[len("ch_reject_"):]
+        bot.answer_callback_query(call.id)
+        c = load_challenge(cid)
+        if not c or c.get("status") != "pending": return
+        if c.get("receiver_id") != uid: return
+        c["status"] = "rejected"
+        save_challenge(cid, c)
+        try: bot.delete_message(uid, call.message.message_id)
+        except: pass
+        try:
+            bot.send_message(c["sender_id"],
+                "❌ Challenge rad etildi.",
+                parse_mode="Markdown")
+        except: pass
+        return
+
     # ── Fallback: agar hech bir handler mos kelmasa ──
     try:
         bot.answer_callback_query(call.id)
@@ -7257,6 +7392,134 @@ try:
     def options_groups(**kwargs):
         return jsonify({}), 200
 
+
+    # ── CHALLENGELAR ──
+    @api_app.route("/api/challenges/<int:uid>", methods=["GET"])
+    def api_challenges_list(uid):
+        from datetime import timezone, timedelta as _td
+        tz_uz = timezone(_td(hours=5))
+        today = datetime.now(tz_uz).strftime("%Y-%m-%d")
+        # Foydalanuvchi challenge larini topish
+        my_chs = list(challenges_col.find({
+            "$or": [{"sender_id": uid}, {"receiver_id": uid}]
+        }))
+        result = []
+        for c in my_chs:
+            cid = str(c.get("_id",""))
+            sender_id   = c.get("sender_id")
+            receiver_id = c.get("receiver_id")
+            other_id    = receiver_id if sender_id == uid else sender_id
+            other_u     = load_user(other_id)
+            # Progress hisoblash
+            start   = c.get("start_date","")
+            end     = c.get("end_date","")
+            days    = c.get("days", 0)
+            s_log   = c.get("sender_log", {})
+            r_log   = c.get("receiver_log", {})
+            my_log  = s_log if sender_id == uid else r_log
+            op_log  = r_log if sender_id == uid else s_log
+            my_done  = sum(1 for d,v in my_log.items() if v and start <= d <= today)
+            op_done  = sum(1 for d,v in op_log.items() if v and start <= d <= today)
+            elapsed  = max(1, (datetime.now(tz_uz).date() - datetime.fromisoformat(start).date()).days + 1) if start else 1
+            result.append({
+                "id":          cid,
+                "status":      c.get("status","pending"),
+                "habit_name":  c.get("habit_name",""),
+                "days":        days,
+                "bet":         c.get("bet", 0),
+                "start_date":  start,
+                "end_date":    end,
+                "other_name":  other_u.get("name","?"),
+                "other_id":    other_id,
+                "i_am_sender": sender_id == uid,
+                "my_done":     my_done,
+                "op_done":     op_done,
+                "elapsed":     min(elapsed, days),
+                "done_today":  bool(my_log.get(today)),
+            })
+        return jsonify({"challenges": result})
+
+    @api_app.route("/api/challenges/<int:uid>/send", methods=["POST"])
+    def api_challenges_send(uid):
+        import uuid as _uuid
+        from datetime import timezone, timedelta as _td
+        body        = request.get_json() or {}
+        receiver_id = int(body.get("receiver_id", 0))
+        habit_name  = (body.get("habit_name") or "").strip()
+        days        = int(body.get("days", 7))
+        bet         = int(body.get("bet", 50))
+        if not habit_name:   return jsonify({"ok": False, "error": "Odat nomi bo'sh"}), 400
+        if receiver_id == uid: return jsonify({"ok": False, "error": "O'zingizga challenge bera olmaysiz"}), 400
+        if days < 1 or days > 90: return jsonify({"ok": False, "error": "Kun 1-90 orasida bo'lishi kerak"}), 400
+        if bet < 10 or bet > 500: return jsonify({"ok": False, "error": "Garov 10-500 orasida"}), 400
+        u = load_user(uid)
+        if u.get("points", 0) < bet:
+            return jsonify({"ok": False, "error": "Yetarli ball yo'q"}), 400
+        cid = str(_uuid.uuid4())[:8]
+        challenge = {
+            "sender_id":   uid,
+            "receiver_id": receiver_id,
+            "habit_name":  habit_name,
+            "days":        days,
+            "bet":         bet,
+            "status":      "pending",
+            "created_at":  datetime.now().strftime("%Y-%m-%d"),
+            "start_date":  "",
+            "end_date":    "",
+            "sender_log":  {},
+            "receiver_log":{},
+        }
+        save_challenge(cid, challenge)
+        # Botda xabar yuborish
+        try:
+            sender_name = u.get("name", "Kimdir")
+            rec_u = load_user(receiver_id)
+            kb = InlineKeyboardMarkup()
+            kb.row(
+                InlineKeyboardButton("✅ Qabul", callback_data=f"ch_accept_{cid}"),
+                InlineKeyboardButton("❌ Rad",   callback_data=f"ch_reject_{cid}")
+            )
+            bot.send_message(receiver_id,
+                "\U0001F3AF *Challenge!*\n\n*" + sender_name + "* sizga challenge berdi:\n\n" + "\U0001F4CC Odat: *" + habit_name + "*\n" + "\U0001F4C5 Muddat: *" + str(days) + " kun*\n" + "\u2B50 Garov: *" + str(bet) + " ball*\n\n" + "Qabul qilsangiz, ikkalangizdan " + str(bet) + " ball yechiladi.\nG\u2019olib ikki baravar ball oladi!",
+            )
+        except Exception:
+            pass
+        return jsonify({"ok": True, "id": cid})
+
+    @api_app.route("/api/challenges/<int:uid>/<cid>/checkin", methods=["POST"])
+    def api_challenge_checkin(uid, cid):
+        from datetime import timezone, timedelta as _td
+        tz_uz = timezone(_td(hours=5))
+        today = datetime.now(tz_uz).strftime("%Y-%m-%d")
+        c = load_challenge(cid)
+        if not c: return jsonify({"ok": False, "error": "Topilmadi"}), 404
+        if c.get("status") != "active":
+            return jsonify({"ok": False, "error": "Challenge aktiv emas"}), 400
+        is_sender = c.get("sender_id") == uid
+        log_key   = "sender_log" if is_sender else "receiver_log"
+        log       = c.get(log_key, {})
+        if log.get(today):
+            # Bekor qilish
+            log[today] = False
+            c[log_key] = log
+            save_challenge(cid, c)
+            return jsonify({"ok": True, "done": False, "done_today": False})
+        log[today] = True
+        c[log_key] = log
+        # Muddat tugaganmi tekshirish
+        end_date = c.get("end_date","")
+        if today >= end_date:
+            _finish_challenge(cid, c)
+            c = load_challenge(cid)
+        else:
+            save_challenge(cid, c)
+        return jsonify({"ok": True, "done": True, "done_today": True, "status": c.get("status","active")})
+
+    @api_app.route("/api/challenges/<int:uid>", methods=["OPTIONS"])
+    @api_app.route("/api/challenges/<int:uid>/send", methods=["OPTIONS"])
+    @api_app.route("/api/challenges/<int:uid>/<cid>/checkin", methods=["OPTIONS"])
+    def options_challenges(**kwargs):
+        return jsonify({}), 200
 
     # ── DO'STLAR ──
     @api_app.route("/api/friends/<int:uid>", methods=["GET"])

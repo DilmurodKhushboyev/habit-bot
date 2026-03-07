@@ -861,6 +861,42 @@ body {
   </div>
 </div>
 
+<!-- CHALLENGE MODAL -->
+<div id="challenge-modal" class="modal-overlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);align-items:flex-end;justify-content:center">
+  <div style="background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;box-shadow:0 -4px 30px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-size:16px;font-weight:700;color:var(--text)">🎯 Challenge yuborish</div>
+      <button onclick="closeChallengeModal()" style="background:none;border:none;font-size:20px;color:var(--sub);cursor:pointer" type="button">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--sub);margin-bottom:16px">Raqib: <b id="ch-receiver-name" style="color:var(--text)"></b></div>
+    <input type="hidden" id="ch-receiver-id">
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:var(--sub);display:block;margin-bottom:6px">Odat nomi</label>
+      <input id="ch-habit" type="text" placeholder="Masalan: Kitob o'qish..." 
+        style="width:100%;box-sizing:border-box;background:var(--bg);border:none;border-radius:12px;padding:12px 14px;color:var(--text);font-size:14px;box-shadow:var(--sh-in);outline:none">
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="flex:1">
+        <label style="font-size:11px;color:var(--sub);display:block;margin-bottom:6px">Muddat (kun)</label>
+        <input id="ch-days" type="number" value="7" min="1" max="90"
+          style="width:100%;box-sizing:border-box;background:var(--bg);border:none;border-radius:12px;padding:12px 14px;color:var(--text);font-size:14px;box-shadow:var(--sh-in);outline:none">
+      </div>
+      <div style="flex:1">
+        <label style="font-size:11px;color:var(--sub);display:block;margin-bottom:6px">Garov (ball)</label>
+        <input id="ch-bet" type="number" value="50" min="10" max="500"
+          style="width:100%;box-sizing:border-box;background:var(--bg);border:none;border-radius:12px;padding:12px 14px;color:var(--text);font-size:14px;box-shadow:var(--sh-in);outline:none">
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--sub);margin-bottom:16px;background:var(--bg);border-radius:10px;padding:10px 12px;box-shadow:var(--sh-in)">
+      ⚠️ Garov ikkalangizdan yechiladi. G'olib 2× ball oladi. Yutqazgan hech narsa olmaydi.
+    </div>
+    <button id="ch-send-btn" onclick="sendChallenge()" 
+      style="width:100%;padding:14px;background:linear-gradient(135deg,#5B8DEF,#4CAF7D);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer" type="button">
+      🎯 Yuborish
+    </button>
+  </div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <button class="nav-item active" id="nav-today" onclick="switchTab('today', this)">
@@ -2168,10 +2204,12 @@ function renderFriends(d) {
           <div style="flex:1;height:6px;border-radius:3px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">
             <div style="height:100%;border-radius:3px;background:${f.done_today?'var(--green)':'#E07040'};width:${f.done_today?100:0}%"></div>
           </div>
-          <span style="font-size:10px;color:var(--sub)">${f.done_today ? '✅ Bugun bajarildi' : '⏳ Hali bajarilmadi'}</span>
+          <span style="font-size:10px;color:var(--sub)">${f.done_today ? '\u2705 Bugun' : '\u23f3 Bajarilmadi'}</span>
         </div>
-        <button class="rem-save-btn" style="margin-top:10px;background:var(--bg);color:var(--sub);box-shadow:var(--sh-in)" 
-          onclick="removeFriend(${f.id})" type="button">✕ Do'stlikdan chiqarish</button>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <button class="rem-save-btn" style="flex:1" onclick="openChallenge(${f.id},'${f.name}')" type="button">🎯 Challenge</button>
+          <button class="rem-save-btn" style="flex:1;background:var(--bg);color:var(--sub);box-shadow:var(--sh-in)" onclick="removeFriend(${f.id})" type="button">✕ Chiqarish</button>
+        </div>
       </div>`;
   });
 
@@ -2208,6 +2246,42 @@ async function removeFriend(fid) {
     });
     await loadFriends();
   } catch(e) {}
+}
+
+// ── CHALLENGE ──
+function openChallenge(fid, fname) {
+  document.getElementById('ch-receiver-id').value  = fid;
+  document.getElementById('ch-receiver-name').textContent = fname;
+  document.getElementById('challenge-modal').classList.add('open');
+}
+function closeChallengeModal() {
+  document.getElementById('challenge-modal').classList.remove('open');
+}
+
+async function sendChallenge() {
+  const fid       = document.getElementById('ch-receiver-id').value;
+  const habitName = (document.getElementById('ch-habit').value || '').trim();
+  const days      = parseInt(document.getElementById('ch-days').value) || 7;
+  const bet       = parseInt(document.getElementById('ch-bet').value) || 50;
+  const btn       = document.getElementById('ch-send-btn');
+  if (!habitName) { alert('Odat nomini kiriting!'); return; }
+  if (btn) { btn.textContent = '⏳ Yuborilmoqda...'; btn.disabled = true; }
+  try {
+    const res = await fetch(`${API}/challenges/${userId}/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
+      body: JSON.stringify({ receiver_id: parseInt(fid), habit_name: habitName, days, bet })
+    });
+    const r = await res.json();
+    if (!r.ok) throw new Error(r.error);
+    closeChallengeModal();
+    const t = document.getElementById('toast-friends');
+    if (t) { t.textContent = '🎯 Challenge yuborildi!'; t.className = 'toast show'; setTimeout(()=>t.className='toast',2500); }
+  } catch(e) {
+    alert('Xato: ' + e.message);
+  } finally {
+    if (btn) { btn.textContent = '🎯 Yuborish'; btn.disabled = false; }
+  }
 }
 
 // ── START ──
