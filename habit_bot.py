@@ -6673,27 +6673,63 @@ try:
                 "streak": h.get("streak",0),
             })
 
+        from datetime import timezone, timedelta as _td
+        tz_uz      = timezone(_td(hours=5))
+        today_dt   = datetime.now(tz_uz)
+        days_30    = [(today_dt - _td(days=29-i)).strftime("%Y-%m-%d") for i in range(30)]
+
+        total_done_all = sum(h.get("total_done", 0) for h in u.get("habits", []))
+        best_streak    = max((h.get("streak", 0) for h in u.get("habits", [])), default=0)
+        done_log       = u.get("done_log", {})
+        active_days_30 = sum(1 for d in days_30 if done_log.get(d))
+        heatmap_30     = {d: bool(done_log.get(d)) for d in days_30}
+
+        # Yutuqlar progress
+        earned_list    = u.get("achievements", [])
+        total_ach      = len(ACHIEVEMENTS)
+        earned_ach     = len(earned_list)
+
         return jsonify({
-            "name":   u.get("name","?"),
-            "points": u.get("points",0),
-            "streak": u.get("streak",0),
-            "jon":    u.get("jon",100),
-            "is_vip": u.get("is_vip",False),
-            "rank":   rank,
-            "habits": habits,
-            "lang":   u.get("lang","uz"),
+            "name":            u.get("name","?"),
+            "points":          u.get("points",0),
+            "streak":          u.get("streak",0),
+            "jon":             u.get("jon",100),
+            "is_vip":          u.get("is_vip",False),
+            "rank":            rank,
+            "habits":          habits,
+            "lang":            u.get("lang","uz"),
+            "joined_at":       u.get("joined_at",""),
+            "total_done_all":  total_done_all,
+            "best_streak":     best_streak,
+            "active_days_30":  active_days_30,
+            "total_users":     len(users),
+            "daily_target":    u.get("daily_target", 0),
+            "heatmap_30":      heatmap_30,
+            "days_30":         days_30,
+            "earned_ach":      earned_ach,
+            "total_ach":       total_ach,
         })
 
     @api_app.route("/api/profile/<int:uid>", methods=["PUT"])
     def api_profile_update(uid):
-        body = request.get_json() or {}
+        body   = request.get_json() or {}
+        u      = load_user(uid)
+        updated = {}
         lang = body.get("lang", "").strip()
-        if lang not in ("uz", "ru", "en"):
-            return jsonify({"ok": False, "error": "Noto'g'ri til"}), 400
-        u = load_user(uid)
-        u["lang"] = lang
+        if lang in ("uz", "ru", "en"):
+            u["lang"] = lang
+            updated["lang"] = lang
+        if "daily_target" in body:
+            try:
+                t = int(body["daily_target"])
+                u["daily_target"] = max(0, min(t, len(u.get("habits", []))))
+                updated["daily_target"] = u["daily_target"]
+            except (ValueError, TypeError):
+                pass
+        if not updated:
+            return jsonify({"ok": False, "error": "Hech narsa yangilanmadi"}), 400
         save_user(uid, u)
-        return jsonify({"ok": True, "lang": lang})
+        return jsonify({"ok": True, **updated})
 
     @api_app.route("/api/profile/<int:uid>", methods=["OPTIONS"])
     def options_profile(**kwargs):

@@ -1581,67 +1581,154 @@ function renderProfile(d) {
   const jonColor = jon >= 70 ? '#4CAF7D' : jon >= 40 ? '#D4963A' : '#E05050';
   const initial = (d.name || '?')[0].toUpperCase();
   const lang = d.lang || 'uz';
+  const photoUrl = user.photo_url || '';
 
+  // Avatar: rasm yoki harf
+  const avatarHtml = photoUrl
+    ? `<img src="${photoUrl}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;box-shadow:var(--sh-sm)" onerror="this.outerHTML='<div class=\\'avatar\\'>${initial}</div>'">`
+    : `<div class="avatar">${initial}</div>`;
+
+  // Qo'shilgan sana
+  const joinedStr = d.joined_at ? (() => {
+    const months = ['','Yan','Fev','Mar','Apr','May','Iyn','Iyl','Avg','Sen','Okt','Noy','Dek'];
+    const p = d.joined_at.split('-');
+    return p[2] + ' ' + (months[+p[1]] || p[1]) + ' ' + p[0];
+  })() : '—';
+
+  const rankTxt = d.rank ? `#${d.rank} / ${d.total_users || '?'}` : '';
+  const vipBadge = d.is_vip
+    ? '<span style="background:#5B8DEF22;color:#5B8DEF;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700;margin-left:6px">💎 VIP</span>'
+    : '';
+
+  // Kunlik maqsad
+  const habitCount = (d.habits || []).length;
+  const target = d.daily_target || habitCount;
+  const targetPct = habitCount ? Math.round(target / habitCount * 100) : 0;
+  const targetOpts = Array.from({length: habitCount + 1}, (_, i) =>
+    `<option value="${i}" ${i === target ? 'selected' : ''}>${i === 0 ? 'Maqsadsiz' : i + ' ta odat'}</option>`
+  ).join('');
+
+  // Mini heatmap (30 kun)
+  const hmCells = (d.days_30 || []).map(day => {
+    const done = d.heatmap_30 && d.heatmap_30[day];
+    return `<div style="aspect-ratio:1;border-radius:4px;background:${done ? 'var(--green)' : 'var(--bg)'};box-shadow:${done ? '1px 1px 3px #3DA86840,-1px -1px 3px #fff' : 'var(--sh-in)'}"></div>`;
+  }).join('');
+
+  // Yutuqlar progress
+  const achPct = d.total_ach ? Math.round(d.earned_ach / d.total_ach * 100) : 0;
+  const achColor = achPct >= 80 ? '#4CAF7D' : achPct >= 40 ? '#5B8DEF' : '#E07040';
+
+  // Til tugmalari
   const langBtns = [
     {id:'uz', label:"🇺🇿 O'zbek"},
     {id:'ru', label:'🇷🇺 Русский'},
     {id:'en', label:'🇬🇧 English'},
-  ].map(l => `
-    <button class="rep-btn ${lang===l.id?'active':''}" id="lang-${l.id}"
-      onclick="setLang('${l.id}')" type="button">${l.label}</button>
-  `).join('');
+  ].map(l => `<button class="rep-btn ${lang===l.id?'active':''}" id="lang-${l.id}" onclick="setLang('${l.id}')" type="button">${l.label}</button>`).join('');
 
   document.getElementById('profile-content').innerHTML = `
+    <!-- Profil karta -->
     <div class="profile-card">
       <div class="profile-top">
-        <div class="avatar">${initial}</div>
-        <div>
-          <div class="profile-name">${d.name || 'Foydalanuvchi'}</div>
-          <div class="profile-rank">${d.rank ? '#'+d.rank+' o\'rinda' : ''} ${d.is_vip ? '💎 VIP' : ''}</div>
+        ${avatarHtml}
+        <div style="flex:1;min-width:0">
+          <div class="profile-name">${d.name || 'Foydalanuvchi'}${vipBadge}</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:2px">🏆 ${rankTxt} o'rinda</div>
+          <div style="font-size:10px;color:var(--sub);margin-top:2px">📅 ${joinedStr} dan beri</div>
         </div>
       </div>
-      <div class="stats-grid">
+
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-top:14px">
         <div class="stat-box"><div class="stat-val">${d.points || 0}</div><div class="stat-lbl">Ball</div></div>
         <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div class="stat-lbl">Streak</div></div>
-        <div class="stat-box"><div class="stat-val">${(d.habits||[]).length}</div><div class="stat-lbl">Odat</div></div>
+        <div class="stat-box"><div class="stat-val">${d.best_streak || 0}</div><div class="stat-lbl">Best</div></div>
+        <div class="stat-box"><div class="stat-val">${d.total_done_all || 0}</div><div class="stat-lbl">Jami</div></div>
       </div>
-      <div class="jon-bar-top"><span>❤️ Jon</span><span>${jon}%</span></div>
-      <div class="jon-bar-bg">
-        <div class="jon-bar-fill" style="width:${jon}%;background:${jonColor}"></div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:700;color:var(--sub)">❤️ JON</span>
+        <span style="font-size:12px;font-weight:700;color:${jonColor}">${jon}%</span>
+      </div>
+      <div class="jon-bar-bg"><div class="jon-bar-fill" style="width:${jon}%;background:${jonColor}"></div></div>
+    </div>
+
+    <!-- Kunlik maqsad -->
+    <div class="section-title">🎯 Kunlik maqsad</div>
+    <div class="rem-card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="font-size:28px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace">${target}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">ta odat / kun</div>
+          <div style="font-size:11px;color:var(--sub)">${habitCount} ta odatdan ${targetPct}%</div>
+        </div>
+      </div>
+      <select id="target-select" style="width:100%;padding:10px 14px;border-radius:12px;border:none;background:var(--bg);box-shadow:var(--sh-in);font-family:inherit;font-size:13px;color:var(--text);cursor:pointer">
+        ${targetOpts}
+      </select>
+      <button class="rem-save-btn" style="margin-top:10px" onclick="saveTarget()" type="button" id="target-save-btn">💾 Saqlash</button>
+    </div>
+
+    <!-- Mini heatmap -->
+    <div class="section-title">📅 30 kunlik faollik</div>
+    <div class="rem-card">
+      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px">${hmCells}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:10px;color:var(--sub)">
+        <div style="width:10px;height:10px;border-radius:2px;background:var(--green)"></div> Bajarildi
+        <div style="width:10px;height:10px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-left:8px"></div> Bajarilmadi
+        <span style="margin-left:auto">${d.active_days_30 || 0} / 30 kun</span>
       </div>
     </div>
 
+    <!-- Yutuqlar progress -->
+    <div class="section-title">🏅 Yutuqlar</div>
+    <div class="rem-card" style="cursor:pointer" onclick="switchTab('achievements',null)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:13px;font-weight:700;color:var(--text)">${d.earned_ach || 0} / ${d.total_ach || 0} ta yutuq</span>
+        <span style="font-size:12px;font-weight:700;color:${achColor}">${achPct}%</span>
+      </div>
+      <div class="hstat-progress-bar">
+        <div class="hstat-progress-fill" style="width:${achPct}%;background:${achColor}"></div>
+      </div>
+      <div style="font-size:11px;color:var(--sub);margin-top:8px">Barchasini ko'rish ›</div>
+    </div>
+
+    <!-- Sozlamalar -->
     <div class="section-title">⚙️ Sozlamalar</div>
     <div class="rem-card">
-      <div class="rem-top">
-        <div class="rem-icon">🌐</div>
-        <div class="rem-name">Bot tili</div>
-      </div>
-      <div class="repeat-opts" style="gap:6px;display:flex">
-        ${langBtns}
-      </div>
-      <button class="rem-save-btn" style="margin-top:12px" onclick="saveLang()" type="button" id="lang-save-btn">
-        💾 Saqlash
-      </button>
+      <div class="rem-top"><div class="rem-icon">🌐</div><div class="rem-name">Bot tili</div></div>
+      <div class="repeat-opts" style="gap:6px;display:flex">${langBtns}</div>
+      <button class="rem-save-btn" style="margin-top:12px" onclick="saveLang()" type="button" id="lang-save-btn">💾 Saqlash</button>
     </div>
-
-    <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('reminders', null)">
+    <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('reminders',null)">
       <div class="rem-top" style="margin-bottom:0">
-        <div class="rem-icon">🔔</div>
-        <div class="rem-name">Eslatmalar</div>
-        <div style="color:var(--sub);font-size:18px">›</div>
-      </div>
-    </div>
-
-    <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('achievements', null)">
-      <div class="rem-top" style="margin-bottom:0">
-        <div class="rem-icon">🏆</div>
-        <div class="rem-name">Yutuqlarim</div>
+        <div class="rem-icon">🔔</div><div class="rem-name">Eslatmalar</div>
         <div style="color:var(--sub);font-size:18px">›</div>
       </div>
     </div>
 
     <div class="toast" id="toast-profile"></div>`;
+}
+
+
+async function saveTarget() {
+  const sel = document.getElementById('target-select');
+  if (!sel) return;
+  const btn = document.getElementById('target-save-btn');
+  if (btn) { btn.textContent = '⏳...'; btn.disabled = true; }
+  try {
+    const res = await fetch(`${API}/profile/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
+      body: JSON.stringify({ daily_target: parseInt(sel.value) })
+    });
+    const r = await res.json();
+    if (!r.ok) throw new Error(r.error);
+    if (btn) { btn.textContent = '✅ Saqlandi!'; btn.classList.add('saved'); }
+    setTimeout(() => { if (btn) { btn.textContent = '💾 Saqlash'; btn.classList.remove('saved'); btn.disabled = false; } }, 2000);
+    const t = document.getElementById('toast-profile');
+    if (t) { t.textContent = '🎯 Maqsad saqlandi!'; t.className = 'toast show'; setTimeout(()=>t.className='toast',2500); }
+  } catch(e) {
+    if (btn) { btn.textContent = '💾 Saqlash'; btn.disabled = false; }
+  }
 }
 
 let selectedLang = null;
