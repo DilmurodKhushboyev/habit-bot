@@ -2131,7 +2131,7 @@ def show_rating(uid):
         return
 
     medals  = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
-    text    = "🏆 *Reyting — Top 10*\n" + "▬" * 20 + "\n\n"
+    text    = "🏆 *Reyting — Top 10*\n" + "▬" * 12 + "\n\n"
     for i, (name, points, username, target_uid) in enumerate(top10):
         udata   = users.get(str(target_uid), {})
         jon_val = max(0, min(100, udata.get("jon", 100)))
