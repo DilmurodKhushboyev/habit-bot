@@ -2116,15 +2116,22 @@ def show_rating(uid):
     day_lbls  = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
 
     medals     = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
-    done_emoji = "🟢"
-    miss_emoji = "🔴"
+    done_emoji = "🟩"
+    miss_emoji = "🟥"
     empty_emoj = "⬜"
 
-    # Sarlavha
-    day_header = "  ".join(day_lbls)
-    divider    = "▬" * 22
-    text  = f"🏆 *Reyting — Top 10*\n`{divider}`\n\n"
-    text += f"`📅  {day_header}`\n\n"
+    # Sarlavha — emoji kvadrat kengligi = 2 char, shuning uchun har birini alohida chizamiz
+    # Kun raqamlarini ham shu kenglikka moslaymiz
+    # "01" = 2 char, emoji = 2 char — to'g'ri mos keladi
+    oy_uzb = ["","Yan","Fev","Mar","Apr","May","Iyn","Iyl","Avg","Sen","Okt","Noy","Dek"]
+    cur_month = today_dt.month
+    month_name = oy_uzb[cur_month]
+
+    day_header = "".join(d for d in day_lbls)   # "01020304050607"
+    # Har raqam 2 char, har emoji 2 char — monospace da to'g'ri mos keladi
+    divider = "▬" * 14
+    text  = f"🏆 *Reyting — Top 10*\n`{divider}`\n"
+    text += f"`📅 {month_name}: {' '.join(day_lbls)}`\n\n"
 
     for i, (name, points, username, target_uid) in enumerate(top10):
         udata     = users.get(str(target_uid), {})
@@ -2134,21 +2141,22 @@ def show_rating(uid):
         je        = "❤️" if jon_val>=80 else "🧡" if jon_val>=50 else "💛" if jon_val>=20 else "🖤"
         vip_b     = " 💎" if udata.get("is_vip") else ""
 
-        # Grid qatori
-        grid = ""
+        # Grid — 7 ta emoji, har biri kun bilan mos
+        grid_emojis = []
         for dstr in days:
             if dstr > today_str or dstr < bot_start:
-                grid += empty_emoj
+                grid_emojis.append(empty_emoj)
             elif done_log.get(dstr):
-                grid += done_emoji
+                grid_emojis.append(done_emoji)
             else:
-                grid += miss_emoji
+                grid_emojis.append(miss_emoji)
+        grid = "".join(grid_emojis)
 
         # Ism (link)
         uname = username.lstrip("@") if username and username != "—" else ""
         link  = f"[{name}](https://t.me/{uname})" if uname else f"[{name}](tg://user?id={target_uid})"
 
-        text += f"{medals[i]} {link}{vip_b} \u2014 *{points}* ball  {je} {jon_val}%\n"
+        text += f"{medals[i]} {link}{vip_b} \u2014 *{points}* ball {je}\n"
         text += f"`{grid}`\n\n"
 
     sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb,
