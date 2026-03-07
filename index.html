@@ -1517,16 +1517,16 @@ function renderProfile(d) {
   const jon = d.jon ?? 100;
   const jonColor = jon >= 70 ? '#4CAF7D' : jon >= 40 ? '#D4963A' : '#E05050';
   const initial = (d.name || '?')[0].toUpperCase();
+  const lang = d.lang || 'uz';
 
-  let habitsHtml = '';
-  (d.habits || []).forEach(h => {
-    habitsHtml += `
-      <div class="habit-item">
-        <div class="habit-icon">${h.icon || '✅'}</div>
-        <div class="habit-name">${h.name}</div>
-        <div class="habit-streak">🔥 ${h.streak || 0} kun</div>
-      </div>`;
-  });
+  const langBtns = [
+    {id:'uz', label:"🇺🇿 O'zbek"},
+    {id:'ru', label:'🇷🇺 Русский'},
+    {id:'en', label:'🇬🇧 English'},
+  ].map(l => `
+    <button class="rep-btn ${lang===l.id?'active':''}" id="lang-${l.id}"
+      onclick="setLang('${l.id}')" type="button">${l.label}</button>
+  `).join('');
 
   document.getElementById('profile-content').innerHTML = `
     <div class="profile-card">
@@ -1547,8 +1547,54 @@ function renderProfile(d) {
         <div class="jon-bar-fill" style="width:${jon}%;background:${jonColor}"></div>
       </div>
     </div>
-    <div class="section-title">Odatlarim</div>
-    <div class="habits-list">${habitsHtml || '<div class="empty-state"><div class="icon">📋</div>Hozircha odat yo\'q</div>'}</div>`;
+
+    <div class="section-title">⚙️ Sozlamalar</div>
+    <div class="rem-card">
+      <div class="rem-top">
+        <div class="rem-icon">🌐</div>
+        <div class="rem-name">Bot tili</div>
+      </div>
+      <div class="repeat-opts" style="gap:6px;display:flex">
+        ${langBtns}
+      </div>
+      <button class="rem-save-btn" style="margin-top:12px" onclick="saveLang()" type="button" id="lang-save-btn">
+        💾 Saqlash
+      </button>
+    </div>
+
+    <div class="toast" id="toast-profile"></div>`;
+}
+
+let selectedLang = null;
+function setLang(val) {
+  selectedLang = val;
+  ['uz','ru','en'].forEach(l => {
+    const btn = document.getElementById('lang-' + l);
+    if (btn) btn.classList.toggle('active', l === val);
+  });
+}
+
+async function saveLang() {
+  if (!selectedLang) return;
+  const btn = document.getElementById('lang-save-btn');
+  if (btn) { btn.textContent = '⏳ Saqlanmoqda...'; btn.disabled = true; }
+  try {
+    const res = await fetch(`${API}/profile/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
+      body: JSON.stringify({ lang: selectedLang })
+    });
+    const r = await res.json();
+    if (!r.ok) throw new Error(r.error);
+    if (btn) { btn.textContent = '✅ Saqlandi!'; btn.classList.add('saved'); }
+    setTimeout(() => {
+      if (btn) { btn.textContent = '💾 Saqlash'; btn.classList.remove('saved'); btn.disabled = false; }
+    }, 2000);
+    const t = document.getElementById('toast-profile');
+    if (t) { t.textContent = '✅ Til o\'zgartirildi!'; t.className = 'toast show'; setTimeout(()=>t.className='toast',2500); }
+  } catch(e) {
+    if (btn) { btn.textContent = '💾 Saqlash'; btn.disabled = false; }
+  }
 }
 
 // ── ODATLAR ──

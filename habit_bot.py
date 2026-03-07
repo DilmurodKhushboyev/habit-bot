@@ -6681,7 +6681,23 @@ try:
             "is_vip": u.get("is_vip",False),
             "rank":   rank,
             "habits": habits,
+            "lang":   u.get("lang","uz"),
         })
+
+    @api_app.route("/api/profile/<int:uid>", methods=["PUT"])
+    def api_profile_update(uid):
+        body = request.get_json() or {}
+        lang = body.get("lang", "").strip()
+        if lang not in ("uz", "ru", "en"):
+            return jsonify({"ok": False, "error": "Noto'g'ri til"}), 400
+        u = load_user(uid)
+        u["lang"] = lang
+        save_user(uid, u)
+        return jsonify({"ok": True, "lang": lang})
+
+    @api_app.route("/api/profile/<int:uid>", methods=["OPTIONS"])
+    def options_profile(**kwargs):
+        return jsonify({}), 200
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
     def api_habits_get(uid):
