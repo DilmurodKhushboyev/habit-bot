@@ -871,7 +871,7 @@ const tg      = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 const user     = tg?.initDataUnsafe?.user || { id: 0, first_name: 'Test' };
 const initData = tg?.initData || '';
-const userId   = user.id || 5071908808;
+const userId   = user.id || 0;
 const API      = window.location.origin + '/api';
 
 // ── STATE ──
