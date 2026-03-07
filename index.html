@@ -866,12 +866,9 @@ body {
 // ── TELEGRAM WEB APP ──
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
-// URL dan uid olish
-const urlParams = new URLSearchParams(window.location.search);
-const urlUserId = urlParams.get('uid');
-const user      = tg?.initDataUnsafe?.user || { id: urlUserId || 0, first_name: 'Test' };
-const initData  = tg?.initData || '';
-const userId    = user.id || urlUserId || 0;
+const user     = tg?.initDataUnsafe?.user || { id: 0, first_name: 'Test' };
+const initData = tg?.initData || '';
+const userId   = user.id || 0;
 const API      = window.location.origin + '/api';
 
 // ── STATE ──
@@ -1723,15 +1720,7 @@ function renderGroups(d) {
 }
 
 // ── START ──
-async function startApp() {
-  if (!userId || userId == 0 || userId === '0') {
-    document.getElementById('today-content').innerHTML =
-      '<div class="empty-state"><div class="icon">⚠️</div>Foydalanuvchi aniqlanmadi.<br><small>Iltimos botdan "🌐 To\'liq ko\'rish" tugmasini bosing.</small></div>';
-    return;
-  }
-  loadToday();
-}
-startApp();
+loadToday();
 </script>
 </body>
 </html>

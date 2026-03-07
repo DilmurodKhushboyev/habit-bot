@@ -2203,7 +2203,7 @@ def show_rating(uid):
     webapp_url = os.environ.get("WEBAPP_URL", "")
     if webapp_url:
         from telebot.types import WebAppInfo
-        kb.add(InlineKeyboardButton("🌐 To'liq ko'rish", web_app=WebAppInfo(url=f"{webapp_url}?uid={uid}")))
+        kb.add(InlineKeyboardButton("🌐 To'liq ko'rish", web_app=WebAppInfo(url=webapp_url)))
     kb.add(cBtn(T(uid, "btn_home"), "menu_main", "primary"))
     u = load_user(uid)
     if not top10:
