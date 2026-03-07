@@ -866,29 +866,13 @@ body {
 // ── TELEGRAM WEB APP ──
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
-
-// initData dan user olish (ba'zan kechikib keladi)
-function getTgUser() {
-  try {
-    if (tg?.initDataUnsafe?.user?.id) return tg.initDataUnsafe.user;
-    if (tg?.initData) {
-      const params = new URLSearchParams(tg.initData);
-      const u = params.get('user');
-      if (u) return JSON.parse(decodeURIComponent(u));
-    }
-  } catch(e) {}
-  return null;
-}
-
+// URL dan uid olish
 const urlParams = new URLSearchParams(window.location.search);
 const urlUserId = urlParams.get('uid');
-const tgUser    = getTgUser();
-const user      = tgUser || { id: urlUserId || 0, first_name: 'Test' };
+const user      = tg?.initDataUnsafe?.user || { id: urlUserId || 0, first_name: 'Test' };
 const initData  = tg?.initData || '';
-const userId    = tgUser?.id || urlUserId || 0;
-const API       = window.location.origin + '/api';
-
-console.log('[WebApp] userId:', userId, '| tgUser:', tgUser, '| urlUserId:', urlUserId);
+const userId    = user.id || urlUserId || 0;
+const API      = window.location.origin + '/api';
 
 // ── STATE ──
 let loaded = { today: false, rating: false, profile: false, habits: false, groups: false, stats: false, achievements: false, reminders: false };
@@ -917,20 +901,11 @@ async function loadTab(tab) {
 
 // ── FETCH ──
 async function apiFetch(endpoint) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000);
-  try {
-    const res = await fetch(`${API}/${endpoint}`, {
-      headers: { 'X-Init-Data': initData, 'X-User-Id': userId },
-      signal: controller.signal
-    });
-    clearTimeout(timer);
-    if (!res.ok) throw new Error(res.status);
-    return res.json();
-  } catch(e) {
-    clearTimeout(timer);
-    throw e;
-  }
+  const res = await fetch(`${API}/${endpoint}`, {
+    headers: { 'X-Init-Data': initData, 'X-User-Id': userId }
+  });
+  if (!res.ok) throw new Error(res.status);
+  return res.json();
 }
 
 // ── PROGRESS RING SVG ──
@@ -1751,14 +1726,7 @@ function renderGroups(d) {
 async function startApp() {
   if (!userId || userId == 0 || userId === '0') {
     document.getElementById('today-content').innerHTML =
-      '<div class="empty-state"><div class="icon">⚠️</div>Foydalanuvchi aniqlanmadi.<br><small>Iltimos botdan qayta oching.</small></div>';
-    // 1.5 soniya kutib qayta urinamiz (Telegram initData kechikishi uchun)
-    await new Promise(r => setTimeout(r, 1500));
-    const tgUser2 = getTgUser();
-    const uid2 = tgUser2?.id || new URLSearchParams(window.location.search).get('uid') || 0;
-    if (uid2 && uid2 != 0) {
-      window.location.reload();
-    }
+      '<div class="empty-state"><div class="icon">⚠️</div>Foydalanuvchi aniqlanmadi.<br><small>Iltimos botdan "🌐 To\'liq ko\'rish" tugmasini bosing.</small></div>';
     return;
   }
   loadToday();
