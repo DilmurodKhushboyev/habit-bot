@@ -6832,6 +6832,8 @@ try:
     # ── BUGUNGI HOLAT ──
     @api_app.route("/api/today/<int:uid>", methods=["GET"])
     def api_today(uid):
+        if uid == 0:
+            return jsonify({"error": "Noto'g'ri foydalanuvchi"}), 400
         from datetime import timezone, timedelta
         tz_uz = timezone(timedelta(hours=5))
         today = datetime.now(tz_uz).strftime("%Y-%m-%d")

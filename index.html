@@ -864,11 +864,33 @@ body {
 
 <script>
 // ── TELEGRAM WEB APP ──
-const tg = window.Telegram?.WebApp;
+const tg      = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 const user     = tg?.initDataUnsafe?.user || { id: 0, first_name: 'Test' };
 const initData = tg?.initData || '';
 const userId   = user.id || 0;
+const API      = window.location.origin + '/api';
+
+// Debug: userId 0 bo'lsa xato ko'rsat
+if (!userId) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('today-content');
+    if (el) el.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">⚠️</div>
+        <div>Telegram orqali oching!</div>
+        <small style="color:var(--sub);margin-top:8px;display:block">
+          Bu sahifani to'g'ridan brauzerda ochib bo'lmaydi.<br>
+          Botdan Web App tugmasini bosing.
+        </small>
+        <div style="margin-top:14px;padding:10px;background:var(--bg);box-shadow:var(--sh-in);border-radius:12px;font-size:10px;font-family:monospace;color:var(--sub);text-align:left;word-break:break-all">
+          tg: ${tg ? 'bor' : 'yo\'q'}<br>
+          initData: ${initData ? initData.substring(0,40)+'...' : 'bo\'sh'}<br>
+          user: ${JSON.stringify(tg?.initDataUnsafe?.user || null)}
+        </div>
+      </div>`;
+  });
+}
 const API      = window.location.origin + '/api';
 
 // ── STATE ──
@@ -923,6 +945,7 @@ function ringHTML(percent, size = 80) {
 
 // ── BUGUN ──
 async function loadToday() {
+  if (!userId) return; // userId=0 bo'lsa yuklamaymiz
   try {
     const d = await apiFetch(`today/${userId}`);
     data.today = d;
@@ -934,7 +957,12 @@ async function loadToday() {
     } catch(e) {}
   } catch(e) {
     document.getElementById('today-content').innerHTML =
-      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.<br><small>${e}</small></div>`;
+      `<div class="empty-state">
+        <div class="icon">⚠️</div>
+        <div>Ma'lumot yuklanmadi</div>
+        <small style="color:var(--sub);margin-top:8px;display:block">${e}</small>
+        <button onclick="loaded.today=false;loadToday()" style="margin-top:14px;padding:10px 20px;border-radius:12px;border:none;background:var(--bg);box-shadow:var(--sh-sm);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">🔄 Qayta urinish</button>
+      </div>`;
   }
 }
 
