@@ -6525,10 +6525,21 @@ def _run_broadcast(admin_uid, bc_chat_id, msg_ids, state):
 # ============================================================
 try:
     from flask import Flask, jsonify, request
-    from flask_cors import CORS
 
     api_app = Flask(__name__)
-    CORS(api_app)
+
+    @api_app.after_request
+    def add_cors(response):
+        response.headers["Access-Control-Allow-Origin"]  = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        return response
+
+    @api_app.route("/api/rating", methods=["OPTIONS"])
+    @api_app.route("/api/profile/<int:uid>", methods=["OPTIONS"])
+    @api_app.route("/api/groups/<int:uid>", methods=["OPTIONS"])
+    def options_preflight(**kwargs):
+        return jsonify({}), 200
 
     def _tz_today():
         from datetime import timezone, timedelta
