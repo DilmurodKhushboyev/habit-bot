@@ -1054,6 +1054,11 @@ def main_menu_dict(uid=None, page=1):
         {"text": "🛒 Bozor",             "callback_data": "menu_bozor",     "style": "primary"},
         {"text": T(uid, "btn_settings"), "callback_data": "menu_settings", "style": "primary"},
     ])
+    webapp_url = os.environ.get("WEBAPP_URL", "")
+    if webapp_url:
+        rows.append([
+            {"text": "🌐 Web App", "web_app": {"url": webapp_url}},
+        ])
     rows.append([
         {"text": "🏠 2-menyu",           "callback_data": "menu2_open",     "style": "primary"},
     ])
