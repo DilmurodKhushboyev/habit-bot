@@ -1992,15 +1992,27 @@ def generate_rating_grid(top10_users, all_users):
     days      = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
     day_lbls  = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
 
-    # Font
-    FONT_B = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
-    FONT_R = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
-    if not os.path.exists(FONT_B):
-        FONT_B = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-    if not os.path.exists(FONT_R):
-        FONT_R = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+    # Font — _tf() barcha serverlarda ishlaydi (fallback bilan)
+    FB = None  # bold
+    FR = None  # regular
+    for p in ["/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+              "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+              "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
+              "/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf"]:
+        if os.path.exists(p): FB = p; break
+    for p in ["/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+              "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+              "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+              "/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf"]:
+        if os.path.exists(p): FR = p; break
 
-    # O'lchamlar — barcha nisbatlar shu yerda
+    def _f(path, size):
+        if path:
+            try: return ImageFont.truetype(path, size)
+            except: pass
+        return ImageFont.load_default()
+
+    # O'lchamlar
     W       = 780
     ROW_H   = 72
     HDR_H   = 108
@@ -2012,13 +2024,13 @@ def generate_rating_grid(top10_users, all_users):
     ROWS    = len(top10_users)
     H       = HDR_H + ROW_H * ROWS + FTR_H
 
-    F_TITLE = ImageFont.truetype(FONT_B, 28)
-    F_SUB   = ImageFont.truetype(FONT_R, 16)
-    F_NAME  = ImageFont.truetype(FONT_B, 22)
-    F_PTS   = ImageFont.truetype(FONT_R, 15)
-    F_RANK  = ImageFont.truetype(FONT_B, 20)
-    F_DAY   = ImageFont.truetype(FONT_R, 14)
-    F_LEG   = ImageFont.truetype(FONT_R, 14)
+    F_TITLE = _f(FB, 28)
+    F_SUB   = _f(FR, 16)
+    F_NAME  = _f(FB, 22)
+    F_PTS   = _f(FR, 15)
+    F_RANK  = _f(FB, 20)
+    F_DAY   = _f(FR, 14)
+    F_LEG   = _f(FR, 14)
 
     img  = Image.new("RGB", (W, H), (13, 13, 22))
     draw = ImageDraw.Draw(img)
