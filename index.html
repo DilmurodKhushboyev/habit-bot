@@ -842,9 +842,9 @@ body {
     <span class="nav-icon">📊</span>
     <span class="nav-label">Statistika</span>
   </button>
-  <button class="nav-item" id="nav-achievements" onclick="switchTab('achievements', this)">
-    <span class="nav-icon">🏆</span>
-    <span class="nav-label">Yutuqlar</span>
+  <button class="nav-item" id="nav-habits" onclick="switchTab('habits', this)">
+    <span class="nav-icon">📋</span>
+    <span class="nav-label">Odatlar</span>
   </button>
   <button class="nav-item" id="nav-reminders" onclick="switchTab('reminders', this)">
     <span class="nav-icon">🔔</span>
@@ -1560,6 +1560,14 @@ function renderProfile(d) {
       <button class="rem-save-btn" style="margin-top:12px" onclick="saveLang()" type="button" id="lang-save-btn">
         💾 Saqlash
       </button>
+    </div>
+
+    <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('achievements', null)">
+      <div class="rem-top" style="margin-bottom:0">
+        <div class="rem-icon">🏆</div>
+        <div class="rem-name">Yutuqlarim</div>
+        <div style="color:var(--sub);font-size:18px">›</div>
+      </div>
     </div>
 
     <div class="toast" id="toast-profile"></div>`;
