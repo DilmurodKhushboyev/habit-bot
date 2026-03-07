@@ -2122,6 +2122,10 @@ def show_rating(uid):
     ranking.sort(key=lambda x: x[1], reverse=True)
     top10  = ranking[:10]
     kb     = InlineKeyboardMarkup()
+    webapp_url = os.environ.get("WEBAPP_URL", "")
+    if webapp_url:
+        from telebot.types import WebAppInfo
+        kb.add(InlineKeyboardButton("🌐 To'liq ko'rish", web_app=WebAppInfo(url=webapp_url)))
     kb.add(cBtn(T(uid, "btn_home"), "menu_main", "primary"))
     u = load_user(uid)
     if not top10:
@@ -6517,6 +6521,108 @@ def _run_broadcast(admin_uid, bc_chat_id, msg_ids, state):
 
 
 # ============================================================
+#  WEB APP API SERVER (Flask)
+# ============================================================
+try:
+    from flask import Flask, jsonify, request
+    from flask_cors import CORS
+
+    api_app = Flask(__name__)
+    CORS(api_app)
+
+    def _tz_today():
+        from datetime import timezone, timedelta
+        tz_uz = timezone(timedelta(hours=5))
+        return datetime.now(tz_uz)
+
+    @api_app.route("/api/rating")
+    def api_rating():
+        from datetime import timezone, timedelta
+        today_dt  = _tz_today()
+        today_str = today_dt.strftime("%Y-%m-%d")
+        days      = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
+        day_lbls  = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
+
+        users   = load_all_users()
+        ranking = sorted(users.items(), key=lambda x: x[1].get("points",0), reverse=True)[:10]
+
+        result = []
+        for uid, udata in ranking:
+            done_log  = udata.get("done_log", {})
+            bot_start = min(done_log.keys()) if done_log else today_str
+            result.append({
+                "name":      udata.get("name", "?"),
+                "points":    udata.get("points", 0),
+                "done_log":  done_log,
+                "bot_start": bot_start,
+            })
+
+        return jsonify({
+            "today":      today_str,
+            "days":       days,
+            "day_labels": day_lbls,
+            "users":      result,
+        })
+
+    @api_app.route("/api/profile/<int:uid>")
+    def api_profile(uid):
+        users   = load_all_users()
+        ranking = sorted(users.items(), key=lambda x: x[1].get("points",0), reverse=True)
+        rank    = next((i+1 for i,(k,_) in enumerate(ranking) if k==str(uid)), None)
+
+        u = load_user(uid)
+        habits = []
+        for h in u.get("habits", []):
+            habits.append({
+                "name":   h.get("name",""),
+                "icon":   h.get("icon","✅"),
+                "streak": h.get("streak",0),
+            })
+
+        return jsonify({
+            "name":   u.get("name","?"),
+            "points": u.get("points",0),
+            "streak": u.get("streak",0),
+            "jon":    u.get("jon",100),
+            "is_vip": u.get("is_vip",False),
+            "rank":   rank,
+            "habits": habits,
+        })
+
+    @api_app.route("/api/groups/<int:uid>")
+    def api_groups(uid):
+        all_groups = db["groups"].find({"members": str(uid)}) if db else []
+        result = []
+        for g in all_groups:
+            members_raw = g.get("members", [])
+            members = []
+            for mid in members_raw[:10]:
+                mu = load_user(int(mid))
+                members.append({"name": mu.get("name","?"), "points": mu.get("points",0)})
+            members.sort(key=lambda x: x["points"], reverse=True)
+            result.append({
+                "name":         g.get("name","Guruh"),
+                "member_count": len(members_raw),
+                "members":      members[:5],
+            })
+        return jsonify({"groups": result})
+
+    @api_app.route("/")
+    def api_health():
+        return jsonify({"status": "ok", "bot": "Super Habits"})
+
+    def run_api():
+        port = int(os.environ.get("PORT", 8080))
+        api_app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
+
+    print("[API] Flask server tayyor (port 8080)")
+
+except ImportError:
+    print("[API] Flask yo'q — Web App API ishlamaydi. 'pip install flask flask-cors' qiling.")
+    run_api = None
+
+
+# ============================================================
 #  ISHGA TUSHURISH
 # ============================================================
 if __name__ == "__main__":
@@ -6533,5 +6639,8 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Menyu o'rnatishda xato: {e}")
     threading.Thread(target=scheduler_loop, daemon=True).start()
+    # Web App API serverni alohida threadda ishga tushurish
+    if run_api:
+        threading.Thread(target=run_api, daemon=True).start()
     print("Bot tayyor! Telegramdan /start yuboring.")
     bot.infinity_polling(timeout=60, long_polling_timeout=30, logger_level=None, allowed_updates=None, restart_on_change=False)

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Super Habits</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap');
+
+  :root {
+    --bg:       #0D0D18;
+    --card:     #14141F;
+    --card2:    #1A1A28;
+    --gold:     #FFD700;
+    --silver:   #C8CDDC;
+    --bronze:   #D78737;
+    --blue:     #5B7BE8;
+    --green:    #2DD36F;
+    --red:      #EB445A;
+    --empty:    #2A2A3E;
+    --text:     #E0E0F0;
+    --sub:      #7070A0;
+    --border:   #222236;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Outfit', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 24px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(160deg, #12122A 0%, #1A1A30 100%);
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .header-top {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  }
+  .logo { font-size: 22px; }
+  .header-title { font-size: 18px; font-weight: 700; color: var(--gold); }
+  .header-sub { font-size: 12px; color: var(--sub); margin-top: 1px; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex; gap: 6px; overflow-x: auto;
+    scrollbar-width: none; padding-bottom: 2px;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex-shrink: 0;
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: transparent; color: var(--sub);
+    transition: all .2s;
+  }
+  .tab.active {
+    background: var(--gold); color: #000;
+    border-color: var(--gold);
+  }
+
+  /* ── PAGES ── */
+  .page { display: none; padding: 14px 12px; }
+  .page.active { display: block; }
+
+  /* ── REYTING ── */
+  .section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    color: var(--sub); text-transform: uppercase;
+    margin-bottom: 10px; padding-left: 4px;
+  }
+
+  /* Kun sarlavhalari */
+  .grid-header {
+    display: flex; align-items: center;
+    padding: 0 12px 6px;
+    margin-bottom: 2px;
+  }
+  .gh-name { flex: 1; min-width: 0; font-size: 11px; color: var(--sub); padding-left: 44px; }
+  .gh-days { display: flex; gap: 0; }
+  .gh-day  { width: 34px; text-align: center; font-size: 11px; color: var(--sub); font-weight: 600; }
+
+  /* Har bir foydalanuvchi qatori */
+  .user-row {
+    display: flex; align-items: center;
+    background: var(--card);
+    border-radius: 12px; margin-bottom: 6px;
+    padding: 10px 12px;
+    border-left: 3px solid transparent;
+    transition: transform .15s;
+  }
+  .user-row:active { transform: scale(0.98); }
+  .user-row.rank-1 { background: #1E1A06; border-color: var(--gold); }
+  .user-row.rank-2 { background: #181820; border-color: var(--silver); }
+  .user-row.rank-3 { background: #1A1510; border-color: var(--bronze); }
+
+  .rank-badge {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; flex-shrink: 0;
+    background: #1E1E32; margin-right: 8px;
+  }
+
+  .user-info { flex: 1; min-width: 0; margin-right: 8px; }
+  .user-name {
+    font-size: 14px; font-weight: 700; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .user-pts { font-size: 11px; color: var(--sub); margin-top: 1px; }
+
+  .day-dots { display: flex; gap: 3px; flex-shrink: 0; }
+  .dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; flex-shrink: 0;
+  }
+  .dot.done    { background: radial-gradient(circle at 35% 35%, #4EE88A, #1CB855); box-shadow: 0 0 6px rgba(46,211,111,.4); }
+  .dot.miss    { background: radial-gradient(circle at 35% 35%, #F06070, #C02030); box-shadow: 0 0 6px rgba(235,68,90,.3); }
+  .dot.empty   { background: transparent; border: 1.5px solid var(--empty); }
+  .dot.future  { background: transparent; }
+
+  /* ── PROFIL ── */
+  .profile-card {
+    background: var(--card);
+    border-radius: 16px; padding: 20px 16px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+  }
+  .profile-top {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+  }
+  .avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue), #9B5BEE);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 900; color: #fff; flex-shrink: 0;
+  }
+  .profile-name { font-size: 18px; font-weight: 700; }
+  .profile-rank { font-size: 12px; color: var(--sub); margin-top: 3px; }
+
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  }
+  .stat-box {
+    background: var(--card2); border-radius: 10px;
+    padding: 12px 8px; text-align: center;
+  }
+  .stat-val { font-size: 22px; font-weight: 900; color: var(--gold); }
+  .stat-lbl { font-size: 10px; color: var(--sub); margin-top: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+
+  /* Jon bar */
+  .jon-bar-wrap { margin-top: 14px; }
+  .jon-bar-top { display: flex; justify-content: space-between; font-size: 12px; color: var(--sub); margin-bottom: 6px; }
+  .jon-bar-bg { background: var(--card2); border-radius: 99px; height: 8px; overflow: hidden; }
+  .jon-bar-fill { height: 100%; border-radius: 99px; transition: width .8s ease; }
+
+  /* Odatlar ro'yxati */
+  .habits-list { margin-top: 4px; }
+  .habit-item {
+    background: var(--card); border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 10px;
+    border: 1px solid var(--border);
+  }
+  .habit-icon { font-size: 20px; flex-shrink: 0; }
+  .habit-name { font-size: 14px; font-weight: 600; flex: 1; }
+  .habit-streak { font-size: 12px; color: var(--sub); text-align: right; }
+  .habit-streak span { color: var(--gold); font-weight: 700; }
+
+  /* ── GURUH ── */
+  .group-card {
+    background: var(--card); border-radius: 14px;
+    padding: 16px; margin-bottom: 8px;
+    border: 1px solid var(--border);
+  }
+  .group-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .group-meta { font-size: 12px; color: var(--sub); }
+  .group-members { margin-top: 12px; }
+  .member-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .member-row:last-child { border: none; }
+  .member-name { font-weight: 600; }
+  .member-pts  { color: var(--gold); font-weight: 700; font-size: 13px; }
+
+  /* ── LOADING ── */
+  .loading {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 60px 20px; gap: 16px; color: var(--sub);
+    font-size: 14px;
+  }
+  .spinner {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 3px solid var(--border);
+    border-top-color: var(--gold);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    text-align: center; padding: 40px 20px;
+    color: var(--sub); font-size: 14px;
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 10px; }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 14px; padding: 0 4px 10px;
+    flex-wrap: wrap;
+  }
+  .leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--sub); }
+  .leg-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .leg-green { background: var(--green); }
+  .leg-red   { background: var(--red); }
+  .leg-empty { border: 1.5px solid var(--empty); background: transparent; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <span class="logo">🌱</span>
+    <div>
+      <div class="header-title">Super Habits</div>
+      <div class="header-sub">@Super_habits_bot</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('rating')">🏆 Reyting</button>
+    <button class="tab" onclick="switchTab('profile')">👤 Profil</button>
+    <button class="tab" onclick="switchTab('groups')">👥 Guruhlar</button>
+  </div>
+</div>
+
+<!-- REYTING -->
+<div class="page active" id="page-rating">
+  <div id="rating-content">
+    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
+</div>
+
+<!-- PROFIL -->
+<div class="page" id="page-profile">
+  <div id="profile-content">
+    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
+</div>
+
+<!-- GURUHLAR -->
+<div class="page" id="page-groups">
+  <div id="groups-content">
+    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
+</div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.expand();
+tg.setHeaderColor('#0D0D18');
+tg.setBackgroundColor('#0D0D18');
+
+// Railway API URL — deploy qilgandan keyin o'zgartiring
+const API = 'https://YOUR-RAILWAY-URL.railway.app/api';
+
+const initData = tg.initData || '';
+const user = tg.initDataUnsafe?.user || {};
+const userId = user.id || 0;
+
+let loaded = { rating: false, profile: false, groups: false };
+let data   = {};
+
+// ── TAB ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('page-' + tab).classList.add('active');
+  if (!loaded[tab]) loadTab(tab);
+}
+
+async function loadTab(tab) {
+  if (tab === 'rating')  await loadRating();
+  if (tab === 'profile') await loadProfile();
+  if (tab === 'groups')  await loadGroups();
+  loaded[tab] = true;
+}
+
+// ── FETCH ──
+async function apiFetch(endpoint) {
+  const res = await fetch(`${API}/${endpoint}`, {
+    headers: { 'X-Init-Data': initData, 'X-User-Id': userId }
+  });
+  if (!res.ok) throw new Error(res.status);
+  return res.json();
+}
+
+// ── REYTING ──
+async function loadRating() {
+  try {
+    const d = await apiFetch('rating');
+    data.rating = d;
+    renderRating(d);
+  } catch(e) {
+    document.getElementById('rating-content').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.<br><small>${e}</small></div>`;
+  }
+}
+
+function renderRating(d) {
+  const today = d.today;
+  const days  = d.days;       // ['2026-03-01', ...]
+  const lbls  = d.day_labels; // ['01', '02', ...]
+  const users = d.users;      // [{name, points, rank, done_log, bot_start}, ...]
+
+  const rankColors = ['#FFD700','#C8CDDC','#D78737'];
+
+  // Grid header
+  let daysHtml = lbls.map(l => `<div class="gh-day">${l}</div>`).join('');
+
+  let rowsHtml = '';
+  users.forEach((u, i) => {
+    const rc = rankColors[i] || '#5B7BE8';
+    const rankClass = i < 3 ? `rank-${i+1}` : '';
+    const medal = ['🥇','🥈','🥉'][i] || (i+1);
+
+    let dots = '';
+    days.forEach(dstr => {
+      if (dstr > today || dstr < u.bot_start) {
+        dots += `<div class="dot empty"></div>`;
+      } else if (u.done_log && u.done_log[dstr]) {
+        dots += `<div class="dot done"></div>`;
+      } else {
+        dots += `<div class="dot miss"></div>`;
+      }
+    });
+
+    rowsHtml += `
+      <div class="user-row ${rankClass}">
+        <div class="rank-badge" style="color:${rc}">${medal}</div>
+        <div class="user-info">
+          <div class="user-name">${u.name}</div>
+          <div class="user-pts">${u.points} ball</div>
+        </div>
+        <div class="day-dots">${dots}</div>
+      </div>`;
+  });
+
+  const oy = ['','Yan','Fev','Mar','Apr','May','Iyn','Iyl','Avg','Sen','Okt','Noy','Dek'];
+  const now = new Date();
+  const monthLbl = oy[now.getMonth()+1] + ' ' + now.getFullYear();
+
+  document.getElementById('rating-content').innerHTML = `
+    <div class="section-title">Top 10 • ${monthLbl}</div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot leg-green"></div> Bajarildi</div>
+      <div class="leg-item"><div class="leg-dot leg-red"></div> Bajarilmadi</div>
+      <div class="leg-item"><div class="leg-dot leg-empty"></div> Ma'lumot yo'q</div>
+    </div>
+    <div class="grid-header">
+      <div class="gh-name">Foydalanuvchi</div>
+      <div class="gh-days">${daysHtml}</div>
+    </div>
+    ${rowsHtml}`;
+}
+
+// ── PROFIL ──
+async function loadProfile() {
+  try {
+    const d = await apiFetch(`profile/${userId}`);
+    renderProfile(d);
+  } catch(e) {
+    document.getElementById('profile-content').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
+  }
+}
+
+function renderProfile(d) {
+  const jon = d.jon ?? 100;
+  const jonColor = jon >= 70 ? '#2DD36F' : jon >= 40 ? '#FFC409' : '#EB445A';
+  const initial = (d.name || '?')[0].toUpperCase();
+
+  let habitsHtml = '';
+  (d.habits || []).forEach(h => {
+    habitsHtml += `
+      <div class="habit-item">
+        <div class="habit-icon">${h.icon || '✅'}</div>
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-streak">🔥 <span>${h.streak || 0}</span> kun</div>
+      </div>`;
+  });
+
+  document.getElementById('profile-content').innerHTML = `
+    <div class="profile-card">
+      <div class="profile-top">
+        <div class="avatar">${initial}</div>
+        <div>
+          <div class="profile-name">${d.name || 'Foydalanuvchi'}</div>
+          <div class="profile-rank">${d.rank ? '#'+d.rank+' o\'rinda' : ''} ${d.is_vip ? '💎 VIP' : ''}</div>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-val">${d.points || 0}</div><div class="stat-lbl">Ball</div></div>
+        <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div class="stat-lbl">Streak</div></div>
+        <div class="stat-box"><div class="stat-val">${(d.habits||[]).length}</div><div class="stat-lbl">Odat</div></div>
+      </div>
+      <div class="jon-bar-wrap">
+        <div class="jon-bar-top"><span>❤️ Jon</span><span>${jon}%</span></div>
+        <div class="jon-bar-bg">
+          <div class="jon-bar-fill" style="width:${jon}%;background:${jonColor}"></div>
+        </div>
+      </div>
+    </div>
+    <div class="section-title">Odatlarim</div>
+    <div class="habits-list">${habitsHtml || '<div class="empty-state"><div class="icon">📋</div>Hozircha odat yo\'q</div>'}</div>`;
+}
+
+// ── GURUHLAR ──
+async function loadGroups() {
+  try {
+    const d = await apiFetch(`groups/${userId}`);
+    renderGroups(d);
+  } catch(e) {
+    document.getElementById('groups-content').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
+  }
+}
+
+function renderGroups(d) {
+  if (!d.groups || d.groups.length === 0) {
+    document.getElementById('groups-content').innerHTML =
+      `<div class="empty-state"><div class="icon">👥</div>Siz hech qanday guruhga a'zo emassiz</div>`;
+    return;
+  }
+
+  let html = '';
+  d.groups.forEach(g => {
+    let membersHtml = (g.members || []).slice(0,5).map((m,i) =>
+      `<div class="member-row">
+        <div class="member-name">${['🥇','🥈','🥉'][i]||'•'} ${m.name}</div>
+        <div class="member-pts">${m.points} ball</div>
+       </div>`
+    ).join('');
+
+    html += `
+      <div class="group-card">
+        <div class="group-name">👥 ${g.name}</div>
+        <div class="group-meta">${g.member_count} a'zo</div>
+        <div class="group-members">${membersHtml}</div>
+      </div>`;
+  });
+
+  document.getElementById('groups-content').innerHTML =
+    `<div class="section-title">Mening guruhlarim</div>${html}`;
+}
+
+// Sahifa ochilganda reytingni yuklash
+loadRating();
+</script>
+</body>
+</html>
