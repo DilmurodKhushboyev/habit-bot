@@ -516,6 +516,101 @@ body {
 }
 .wd.done { background: var(--green); box-shadow: none; }
 
+/* ── ESLATMALAR ── */
+.rem-info-card {
+  background: var(--bg); box-shadow: var(--sh-card);
+  border-radius: 20px; padding: 18px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 14px;
+}
+.rem-info-icon { font-size: 30px; }
+.rem-info-text { flex: 1; }
+.rem-info-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.rem-info-sub   { font-size: 11px; color: var(--sub); margin-top: 3px; line-height: 1.5; }
+
+.rem-card {
+  background: var(--bg); box-shadow: var(--sh-sm);
+  border-radius: 18px; padding: 16px; margin-bottom: 10px;
+  transition: box-shadow .2s;
+}
+.rem-card.disabled { opacity: 0.6; }
+
+.rem-top {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+}
+.rem-icon  { font-size: 24px; }
+.rem-name  { flex: 1; font-size: 14px; font-weight: 700; color: var(--text); }
+
+/* Toggle switch */
+.toggle-wrap { display: flex; align-items: center; }
+.toggle {
+  position: relative; width: 44px; height: 24px;
+  cursor: pointer;
+}
+.toggle input { display: none; }
+.toggle-track {
+  width: 44px; height: 24px; border-radius: 12px;
+  background: var(--bg); box-shadow: var(--sh-in);
+  transition: background .25s;
+  position: relative;
+}
+.toggle input:checked + .toggle-track { background: var(--green); box-shadow: inset 2px 2px 5px #3DA86860; }
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--bg); box-shadow: var(--sh-sm);
+  transition: transform .25s cubic-bezier(.32,1.2,.5,1);
+}
+.toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
+
+.rem-body { display: flex; flex-direction: column; gap: 10px; }
+
+/* Time picker */
+.time-row { display: flex; align-items: center; gap: 10px; }
+.time-lbl { font-size: 11px; color: var(--sub); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1px; width: 60px; }
+.time-input {
+  flex: 1; padding: 11px 14px; border-radius: 12px;
+  background: var(--bg); box-shadow: var(--sh-in);
+  border: none; color: var(--text); font-size: 15px;
+  font-family: 'DM Mono', monospace; font-weight: 600;
+  outline: none; cursor: pointer;
+}
+.time-input:disabled { opacity: 0.4; cursor: not-allowed; }
+.time-clear {
+  width: 34px; height: 34px; border-radius: 10px;
+  border: none; cursor: pointer; font-size: 14px;
+  background: var(--bg); box-shadow: var(--sh-sm);
+  color: var(--sub); display: flex; align-items: center;
+  justify-content: center; transition: all .15s;
+  font-family: inherit;
+}
+.time-clear:active { box-shadow: var(--sh-press); }
+
+/* Repeat selector */
+.repeat-row { display: flex; align-items: center; gap: 8px; }
+.repeat-lbl { font-size: 11px; color: var(--sub); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1px; width: 60px; }
+.repeat-opts { display: flex; gap: 6px; flex: 1; }
+.rep-btn {
+  flex: 1; padding: 8px 4px; border-radius: 10px; border: none;
+  background: var(--bg); box-shadow: var(--sh-sm);
+  font-size: 11px; font-weight: 600; color: var(--sub);
+  cursor: pointer; font-family: inherit; text-align: center;
+  transition: all .2s;
+}
+.rep-btn.active { box-shadow: var(--sh-press); color: var(--text); background: var(--bg2); }
+.rep-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.rem-save-btn {
+  width: 100%; padding: 12px; border-radius: 14px; border: none;
+  background: var(--bg); box-shadow: var(--sh-sm);
+  font-size: 14px; font-weight: 700; color: var(--text);
+  font-family: inherit; cursor: pointer; margin-top: 4px;
+  transition: all .15s;
+}
+.rem-save-btn:active { box-shadow: var(--sh-press); transform: scale(0.98); }
+.rem-save-btn.saved  { color: var(--green); }
+
 /* ── YUTUQLAR ── */
 .ach-summary {
   background: var(--bg); box-shadow: var(--sh-card);
@@ -706,6 +801,13 @@ body {
   </div>
 </div>
 
+<!-- ESLATMALAR -->
+<div class="page" id="page-reminders">
+  <div id="reminders-content">
+    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
+</div>
+
 <!-- YUTUQLAR -->
 <div class="page" id="page-achievements">
   <div id="achievements-content">
@@ -741,13 +843,13 @@ body {
     <span class="nav-icon">🏆</span>
     <span class="nav-label">Yutuqlar</span>
   </button>
+  <button class="nav-item" id="nav-reminders" onclick="switchTab('reminders', this)">
+    <span class="nav-icon">🔔</span>
+    <span class="nav-label">Eslatma</span>
+  </button>
   <button class="nav-item" id="nav-profile" onclick="switchTab('profile', this)">
     <span class="nav-icon">👤</span>
     <span class="nav-label">Profil</span>
-  </button>
-  <button class="nav-item" id="nav-habits" onclick="switchTab('habits', this)">
-    <span class="nav-icon">📋</span>
-    <span class="nav-label">Odatlar</span>
   </button>
 </nav>
 
@@ -770,7 +872,7 @@ const userId   = user.id || 0;
 const API      = window.location.origin + '/api';
 
 // ── STATE ──
-let loaded = { today: false, rating: false, profile: false, habits: false, groups: false, stats: false, achievements: false };
+let loaded = { today: false, rating: false, profile: false, habits: false, groups: false, stats: false, achievements: false, reminders: false };
 let data   = {};
 
 // ── TAB SWITCH ──
@@ -786,6 +888,7 @@ async function loadTab(tab) {
   if (tab === 'today')        await loadToday();
   if (tab === 'stats')        await loadStats();
   if (tab === 'achievements') await loadAchievements();
+  if (tab === 'reminders')    await loadReminders();
   if (tab === 'rating')       await loadRating();
   if (tab === 'profile')      await loadProfile();
   if (tab === 'habits')       await loadHabits();
@@ -938,6 +1041,163 @@ async function checkin(hid, cardEl) {
 
 function showTodayToast(msg, err = false) {
   const t = document.getElementById('toast-today');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = 'toast show' + (err ? ' err' : '');
+  setTimeout(() => { t.className = 'toast'; }, 2500);
+}
+
+// ── ESLATMALAR ──
+async function loadReminders() {
+  try {
+    const d = await apiFetch(`habits/${userId}`);
+    data.reminders = d.habits || [];
+    renderReminders(d.habits || []);
+  } catch(e) {
+    document.getElementById('reminders-content').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
+  }
+}
+
+function renderReminders(habits) {
+  if (!habits.length) {
+    document.getElementById('reminders-content').innerHTML =
+      `<div class="empty-state"><div class="icon">📋</div>Hali odat qo'shilmagan.<br>Avval odat qo'shing!</div>`;
+    return;
+  }
+
+  const cardsHtml = habits.map(h => {
+    const enabled = h.reminder_enabled !== false;
+    const time    = h.time && h.time !== 'vaqtsiz' ? h.time : '';
+    const repeat  = h.repeat || 'daily';
+    const reps    = [
+      {id:'daily',    label:'Har kun'},
+      {id:'weekdays', label:'Ish kuni'},
+      {id:'weekends', label:'Dam olish'},
+    ];
+    const repBtns = reps.map(r =>
+      `<button class="rep-btn ${repeat===r.id?'active':''} ${!enabled?'':''}
+        id="rep-${h.id}-${r.id}"
+        onclick="setRepeat('${h.id}','${r.id}')"
+        ${!enabled ? 'disabled' : ''}>${r.label}</button>`
+    ).join('');
+
+    return `
+      <div class="rem-card ${!enabled ? 'disabled' : ''}" id="remcard-${h.id}">
+        <div class="rem-top">
+          <div class="rem-icon">${h.icon || '✅'}</div>
+          <div class="rem-name">${h.name}</div>
+          <div class="toggle-wrap">
+            <label class="toggle" onclick="toggleReminder('${h.id}', this)">
+              <input type="checkbox" id="tog-${h.id}" ${enabled ? 'checked' : ''}>
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+        </div>
+        <div class="rem-body" id="rembody-${h.id}" style="${!enabled ? 'opacity:.4;pointer-events:none' : ''}">
+          <div class="time-row">
+            <span class="time-lbl">Vaqt</span>
+            <input class="time-input" type="time" id="time-${h.id}"
+              value="${time}" placeholder="--:--">
+            <button class="time-clear" onclick="clearTime('${h.id}')" title="Vaqtni o'chirish">✕</button>
+          </div>
+          <div class="repeat-row">
+            <span class="repeat-lbl">Kun</span>
+            <div class="repeat-opts">${repBtns}</div>
+          </div>
+          <button class="rem-save-btn" id="rsave-${h.id}" onclick="saveReminder('${h.id}')">
+            💾 Saqlash
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('reminders-content').innerHTML = `
+    <div class="rem-info-card">
+      <div class="rem-info-icon">🔔</div>
+      <div class="rem-info-text">
+        <div class="rem-info-title">Eslatma sozlamalari</div>
+        <div class="rem-info-sub">Har bir odat uchun vaqt va kun turini belgilang. Toggle orqali o'chiring.</div>
+      </div>
+    </div>
+    <div class="section-title">Odatlar (${habits.length})</div>
+    ${cardsHtml}
+    <div class="toast" id="toast-rem"></div>`;
+}
+
+function toggleReminder(hid, labelEl) {
+  const card   = document.getElementById('remcard-' + hid);
+  const body   = document.getElementById('rembody-' + hid);
+  const tog    = document.getElementById('tog-' + hid);
+  const enabled = tog.checked;
+  card.classList.toggle('disabled', !enabled);
+  body.style.opacity       = enabled ? '1' : '0.4';
+  body.style.pointerEvents = enabled ? 'auto' : 'none';
+  // rep butonlarni ham disable/enable
+  ['daily','weekdays','weekends'].forEach(r => {
+    const btn = document.getElementById(`rep-${hid}-${r}`);
+    if (btn) btn.disabled = !enabled;
+  });
+}
+
+function setRepeat(hid, val) {
+  ['daily','weekdays','weekends'].forEach(r => {
+    const btn = document.getElementById(`rep-${hid}-${r}`);
+    if (btn) btn.classList.toggle('active', r === val);
+  });
+}
+
+function clearTime(hid) {
+  const inp = document.getElementById('time-' + hid);
+  if (inp) inp.value = '';
+}
+
+async function saveReminder(hid) {
+  const tog    = document.getElementById('tog-' + hid);
+  const timeEl = document.getElementById('time-' + hid);
+  const saveBtn= document.getElementById('rsave-' + hid);
+  const enabled = tog ? tog.checked : true;
+  const time    = timeEl ? timeEl.value : '';
+  const repeat  = ['daily','weekdays','weekends'].find(r => {
+    const btn = document.getElementById(`rep-${hid}-${r}`);
+    return btn && btn.classList.contains('active');
+  }) || 'daily';
+
+  if (saveBtn) { saveBtn.textContent = '⏳ Saqlanmoqda...'; saveBtn.disabled = true; }
+
+  try {
+    const res = await fetch(`${API}/reminder/${userId}/${hid}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
+      body: JSON.stringify({
+        time:    time || 'vaqtsiz',
+        enabled: enabled,
+        repeat:  repeat,
+      })
+    });
+    const result = await res.json();
+    if (!result.ok) throw new Error(result.error);
+
+    if (saveBtn) {
+      saveBtn.textContent = '✅ Saqlandi!';
+      saveBtn.classList.add('saved');
+      setTimeout(() => {
+        saveBtn.textContent = '💾 Saqlash';
+        saveBtn.classList.remove('saved');
+        saveBtn.disabled = false;
+      }, 2000);
+    }
+    showRemToast(enabled && time ? `🔔 ${time} da eslatma o'rnatildi` : '🔕 Eslatma o'chirildi');
+    loaded.habits = false;
+  } catch(e) {
+    if (saveBtn) { saveBtn.textContent = '💾 Saqlash'; saveBtn.disabled = false; }
+    showRemToast('❌ Xato: ' + e.message, true);
+  }
+}
+
+function showRemToast(msg, err = false) {
+  const t = document.getElementById('toast-rem');
   if (!t) return;
   t.textContent = msg;
   t.className = 'toast show' + (err ? ' err' : '');

@@ -6759,6 +6759,67 @@ try:
         save_user(uid, u)
         return jsonify({"ok": True})
 
+    # ── ESLATMA SOZLASH ──
+    @api_app.route("/api/reminder/<int:uid>/<hid>", methods=["PUT"])
+    def api_reminder_update(uid, hid):
+        """
+        Eslatma sozlamalarini yangilash:
+          { "time": "07:30" | "vaqtsiz",
+            "enabled": true | false,
+            "repeat": "daily" | "weekdays" | "weekends" }
+        """
+        body     = request.get_json() or {}
+        time_    = (body.get("time") or "vaqtsiz").strip()
+        enabled  = body.get("enabled", True)
+        repeat   = body.get("repeat", "daily")
+
+        # Vaqt formatini tekshirish
+        if time_ not in ("vaqtsiz", "", None):
+            import re
+            if not re.match(r"^\d{2}:\d{2}$", time_):
+                return jsonify({"ok": False, "error": "Noto'g'ri vaqt formati (HH:MM)"}), 400
+            h_, m_ = map(int, time_.split(":"))
+            if not (0 <= h_ <= 23 and 0 <= m_ <= 59):
+                return jsonify({"ok": False, "error": "Vaqt chegaradan tashqari"}), 400
+
+        u      = load_user(uid)
+        habits = u.get("habits", [])
+        habit  = next((h for h in habits if h.get("id") == hid), None)
+        if not habit:
+            return jsonify({"ok": False, "error": "Odat topilmadi"}), 404
+
+        # Eski schedule ni o'chirish
+        try:
+            schedule.clear(f"{uid}_{hid}")
+        except Exception:
+            pass
+
+        # Yangilash
+        habit["time"]             = time_ if time_ else "vaqtsiz"
+        habit["reminder_enabled"] = enabled
+        habit["repeat"]           = repeat
+
+        u["habits"] = habits
+        save_user(uid, u)
+
+        # Yangi schedule (faqat enabled va vaqt bo'lsa)
+        if enabled and time_ and time_ != "vaqtsiz":
+            try:
+                schedule_habit(uid, habit)
+            except Exception:
+                pass
+
+        return jsonify({
+            "ok":      True,
+            "time":    habit["time"],
+            "enabled": enabled,
+            "repeat":  repeat,
+        })
+
+    @api_app.route("/api/reminder/<int:uid>/<hid>", methods=["OPTIONS"])
+    def options_reminder(**kwargs):
+        return jsonify({}), 200
+
     # ── OPTIONS (CORS preflight) ──
     @api_app.route("/api/today/<int:uid>",          methods=["OPTIONS"])
     @api_app.route("/api/checkin/<int:uid>/<hid>",  methods=["OPTIONS"])
