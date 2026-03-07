@@ -1983,60 +1983,59 @@ def generate_rating_grid(top10_users, all_users):
     """
     top10_users: [(name, points, username, user_id), ...]
     all_users:   {user_id: udata, ...}
-    Returns: BytesIO rasm
+    Returns: BytesIO rasm — 2x sifat
     """
     FONT   = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
     FONT_R = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
     from datetime import timezone, timedelta
-    tz_uz    = timezone(timedelta(hours=5))
-    today_dt = datetime.now(tz_uz)
+    tz_uz     = timezone(timedelta(hours=5))
+    today_dt  = datetime.now(tz_uz)
+    today_str = today_dt.strftime("%Y-%m-%d")
 
-    # Oxirgi 7 kun (bugun oxirgi)
-    days = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
-    day_labels = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
+    days       = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
+    day_labels = [(today_dt - timedelta(days=6-i)).strftime("%d")       for i in range(7)]
 
-    ROWS    = len(top10_users)
-    COL_W   = 52    # har bir kun katakning kengligi
-    NAME_W  = 200   # ism ustuni
-    PAD     = 30    # yon boʻshliq
-    ROW_H   = 68
-    HDR_H   = 110
-    FTR_H   = 55
-    CELL_S  = 38    # kvadrat/doira hajmi
-    W       = PAD*2 + NAME_W + COL_W*7 + PAD
-    H       = HDR_H + ROW_H*ROWS + FTR_H + 10
+    ROWS   = len(top10_users)
+    S      = 2          # 2x masshtab
+    COL_W  = 52  * S
+    NAME_W = 200 * S
+    PAD    = 30  * S
+    ROW_H  = 68  * S
+    HDR_H  = 110 * S
+    FTR_H  = 55  * S
+    CELL_R = 16  * S
+    W      = PAD*2 + NAME_W + COL_W*7 + PAD
+    H      = HDR_H + ROW_H*ROWS + FTR_H + 10*S
 
     img  = Image.new("RGB", (W, H), (13, 13, 22))
     draw = ImageDraw.Draw(img)
 
-    f_title = _tf(FONT,   28)
-    f_sub   = _tf(FONT_R, 18)
-    f_name  = _tf(FONT,   22)
-    f_day   = _tf(FONT_R, 18)
-    f_rank  = _tf(FONT,   18)
-    f_pts   = _tf(FONT_R, 16)
-    f_tiny  = _tf(FONT_R, 14)
+    f_title = _tf(FONT,   28*S)
+    f_sub   = _tf(FONT_R, 18*S)
+    f_name  = _tf(FONT,   22*S)
+    f_day   = _tf(FONT_R, 18*S)
+    f_rank  = _tf(FONT,   18*S)
+    f_pts   = _tf(FONT_R, 16*S)
+    f_tiny  = _tf(FONT_R, 14*S)
 
-    # Header
+    # Header gradient
     for y in range(HDR_H):
-        t = y/HDR_H
+        t = y / HDR_H
         draw.line([(0,y),(W,y)], fill=(int(14+t*10), int(14+t*10), int(28+t*20)))
-    draw.rectangle([(0,HDR_H-2),(W,HDR_H)], fill=(180,140,0))
-    draw.text((W//2, 40), "TOP-10  •  7 KUNLIK FAOLLIK", font=f_title, fill=(255,215,0), anchor="mm")
-    draw.text((W//2, 76), "Super Habits Bot  •  @Super_habits_bot", font=f_sub, fill=(120,120,165), anchor="mm")
+    draw.rectangle([(0, HDR_H-2*S),(W, HDR_H)], fill=(180,140,0))
+    draw.text((W//2, HDR_H*36//110), "TOP-10  •  7 KUNLIK FAOLLIK",         font=f_title, fill=(255,215,0),   anchor="mm")
+    draw.text((W//2, HDR_H*76//110), "Super Habits Bot  •  @Super_habits_bot", font=f_sub, fill=(120,120,165), anchor="mm")
 
     # Kun sarlavhalari
     oy_uzb = ["","Yan","Fev","Mar","Apr","May","Iyn","Iyl","Avg","Sen","Okt","Noy","Dek"]
-    for j, (dstr, dlbl) in enumerate(zip(days, day_labels)):
-        cx = PAD + NAME_W + j*COL_W + COL_W//2
+    for j in range(7):
+        cx     = PAD + NAME_W + j*COL_W + COL_W//2
         dt_obj = today_dt - timedelta(days=6-j)
-        oy  = oy_uzb[dt_obj.month]
-        draw.text((cx, HDR_H - 28), dlbl, font=f_day, fill=(180,180,210), anchor="mm")
+        draw.text((cx, HDR_H - 14*S), day_labels[j], font=f_day, fill=(180,180,210), anchor="mm")
         if j == 0 or dt_obj.day == 1:
-            draw.text((cx, HDR_H - 48), oy, font=f_tiny, fill=(120,120,150), anchor="mm")
+            draw.text((cx, HDR_H - 24*S), oy_uzb[dt_obj.month], font=f_tiny, fill=(120,120,150), anchor="mm")
 
-    # Rows
     rank_colors = [(255,215,0),(200,205,220),(215,135,55)] + [(80,110,195)]*7
 
     for i, (name, points, username, target_uid) in enumerate(top10_users):
@@ -2044,53 +2043,47 @@ def generate_rating_grid(top10_users, all_users):
         cy  = y + ROW_H//2
         bg  = (38,34,10) if i==0 else (24,24,40) if i%2==0 else (20,20,34)
         draw.rectangle([(0,y),(W,y+ROW_H)], fill=bg)
+        draw.rectangle([(0,y),(4*S, y+ROW_H)], fill=rank_colors[i] if i<3 else (40,50,100))
 
-        # Chap aksent
-        ac = rank_colors[i] if i<3 else (40,50,100)
-        draw.rectangle([(0,y),(4,y+ROW_H)], fill=ac)
+        draw.text((PAD+18*S, cy),      str(i+1),       font=f_rank, fill=rank_colors[i], anchor="mm")
+        draw.text((PAD+36*S, cy-10*S), name[:14],      font=f_name, fill=(210,210,240),  anchor="lm")
+        draw.text((PAD+36*S, cy+10*S), f"{points} ball", font=f_pts, fill=(100,100,140), anchor="lm")
 
-        # Rank + ism
-        draw.text((PAD+18, cy), str(i+1), font=f_rank, fill=rank_colors[i], anchor="mm")
-        draw.text((PAD+36, cy-10), name[:14], font=f_name, fill=(210,210,240), anchor="lm")
-        draw.text((PAD+36, cy+12), f"{points} ball", font=f_pts, fill=(100,100,140), anchor="lm")
-
-        # 7 kunlik grid
-        udata    = all_users.get(str(target_uid), {})
-        done_log = udata.get("done_log", {})
+        # done_log
+        udata     = all_users.get(str(target_uid), {})
+        done_log  = udata.get("done_log", {})
+        # Bot ishga tushgan eng birinchi kun
+        bot_start = min(done_log.keys()) if done_log else today_str
 
         for j, dstr in enumerate(days):
-            cx   = PAD + NAME_W + j*COL_W + COL_W//2
-            r    = CELL_S//2 - 2
-            done = done_log.get(dstr)
-            is_future = dstr > today_dt.strftime("%Y-%m-%d")
+            cx = PAD + NAME_W + j*COL_W + COL_W//2
+            r  = CELL_R
 
-            if is_future:
-                # Kelajak — bo'sh
-                draw.ellipse([(cx-r,cy-r),(cx+r,cy+r)], outline=(40,40,60), width=1)
-            elif done:
+            if dstr > today_str or dstr < bot_start:
+                # Kelajak YOKI bot boshlangunga qadar — bo'sh outline
+                draw.ellipse([(cx-r,cy-r),(cx+r,cy+r)], outline=(45,45,68), width=S)
+            elif done_log.get(dstr):
                 # Bajarilgan — yashil
-                draw.ellipse([(cx-r,cy-r),(cx+r,cy+r)], fill=(34,180,80))
-                draw.ellipse([(cx-r+3,cy-r+3),(cx+r-3,cy+r-3)], fill=(50,220,100))
+                draw.ellipse([(cx-r,   cy-r),   (cx+r,   cy+r)],   fill=(28,160,70))
+                draw.ellipse([(cx-r+3*S, cy-r+3*S),(cx+r-3*S, cy+r-3*S)], fill=(45,210,90))
             else:
-                # Bajarilmagan — qizil
-                draw.ellipse([(cx-r,cy-r),(cx+r,cy+r)], fill=(160,35,35))
-                draw.ellipse([(cx-r+3,cy-r+3),(cx+r-3,cy+r-3)], fill=(200,50,50))
+                # Bajarilmagan (bot ishga tushgandan keyin) — qizil
+                draw.ellipse([(cx-r,   cy-r),   (cx+r,   cy+r)],   fill=(155,30,30))
+                draw.ellipse([(cx-r+3*S, cy-r+3*S),(cx+r-3*S, cy+r-3*S)], fill=(195,48,48))
 
-        # Row chiziq
-        draw.rectangle([(4,y+ROW_H),(W-4,y+ROW_H+1)], fill=(28,28,44))
+        draw.rectangle([(4*S, y+ROW_H),(W-4*S, y+ROW_H+S)], fill=(28,28,44))
 
-    # Legend + footer
-    fy = HDR_H + ROWS*ROW_H + 6
+    # Footer + legend
+    fy = HDR_H + ROWS*ROW_H + 6*S
     draw.rectangle([(0,fy),(W,H)], fill=(16,16,28))
-    draw.rectangle([(0,fy),(W,fy+1)], fill=(120,95,0))
-    lx = PAD
-    ly = fy + FTR_H//2
-    draw.ellipse([(lx,ly-8),(lx+16,ly+8)], fill=(50,220,100))
-    draw.text((lx+24, ly), "Bajarildi", font=f_pts, fill=(160,160,190), anchor="lm")
-    draw.ellipse([(lx+130,ly-8),(lx+146,ly+8)], fill=(200,50,50))
-    draw.text((lx+154, ly), "Bajarilmadi", font=f_pts, fill=(160,160,190), anchor="lm")
-    draw.ellipse([(lx+290,ly-8),(lx+306,ly+8)], outline=(40,40,60), width=1)
-    draw.text((lx+314, ly), "Ma'lumot yo'q", font=f_pts, fill=(100,100,130), anchor="lm")
+    draw.rectangle([(0,fy),(W,fy+S)], fill=(120,95,0))
+    lx = PAD; ly = fy + FTR_H//2; r2 = 8*S
+    draw.ellipse([(lx,      ly-r2),(lx+r2*2,       ly+r2)], fill=(45,210,90))
+    draw.text((lx+r2*2+6*S,       ly), "Bajarildi",    font=f_pts, fill=(160,160,190), anchor="lm")
+    draw.ellipse([(lx+130*S, ly-r2),(lx+130*S+r2*2, ly+r2)], fill=(195,48,48))
+    draw.text((lx+130*S+r2*2+6*S, ly), "Bajarilmadi",  font=f_pts, fill=(160,160,190), anchor="lm")
+    draw.ellipse([(lx+280*S, ly-r2),(lx+280*S+r2*2, ly+r2)], outline=(45,45,68), width=S)
+    draw.text((lx+280*S+r2*2+6*S, ly), "Ma'lumot yo'q", font=f_pts, fill=(100,100,130), anchor="lm")
 
     buf = io.BytesIO()
     buf.name = "reyting.png"
