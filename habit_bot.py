@@ -6619,6 +6619,15 @@ try:
         return jsonify({"groups": result})
 
     @api_app.route("/")
+    def api_index():
+        import os as _os
+        html_path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "index.html")
+        if _os.path.exists(html_path):
+            from flask import send_file
+            return send_file(html_path)
+        return jsonify({"status": "ok", "bot": "Super Habits"})
+
+    @api_app.route("/health")
     def api_health():
         return jsonify({"status": "ok", "bot": "Super Habits"})
 

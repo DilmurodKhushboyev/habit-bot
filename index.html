@@ -271,7 +271,7 @@ tg.setHeaderColor('#0D0D18');
 tg.setBackgroundColor('#0D0D18');
 
 // Railway API URL — deploy qilgandan keyin o'zgartiring
-const API = 'https://YOUR-RAILWAY-URL.railway.app/api';
+const API = window.location.origin + '/api';
 
 const initData = tg.initData || '';
 const user = tg.initDataUnsafe?.user || {};
