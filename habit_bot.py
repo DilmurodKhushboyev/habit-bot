@@ -6541,8 +6541,6 @@ try:
     def options_preflight(**kwargs):
         return jsonify({}), 200
 
-
-
     def _tz_today():
         from datetime import timezone, timedelta
         tz_uz = timezone(timedelta(hours=5))
@@ -6680,110 +6678,165 @@ try:
         save_user(uid, u)
         return jsonify({"ok": True})
 
-    @api_app.route("/api/habits/<int:uid>", methods=["OPTIONS"])
-    @api_app.route("/api/habits/<int:uid>/<hid>", methods=["OPTIONS"])
-    @api_app.route("/api/checkin/<int:uid>/<hid>", methods=["OPTIONS"])
-    @api_app.route("/api/today/<int:uid>", methods=["OPTIONS"])
-    def options_habits(**kwargs):
+    # ── OPTIONS (CORS preflight) ──
+    @api_app.route("/api/today/<int:uid>",          methods=["OPTIONS"])
+    @api_app.route("/api/checkin/<int:uid>/<hid>",  methods=["OPTIONS"])
+    @api_app.route("/api/stats/<int:uid>",          methods=["OPTIONS"])
+    @api_app.route("/api/habits/<int:uid>",         methods=["OPTIONS"])
+    @api_app.route("/api/habits/<int:uid>/<hid>",   methods=["OPTIONS"])
+    def options_extra(**kwargs):
         return jsonify({}), 200
 
+    # ── BUGUNGI HOLAT ──
     @api_app.route("/api/today/<int:uid>", methods=["GET"])
     def api_today(uid):
-        """Bugungi odat holati — har bir odat done yoki not"""
         from datetime import timezone, timedelta
         tz_uz = timezone(timedelta(hours=5))
         today = datetime.now(tz_uz).strftime("%Y-%m-%d")
-        yesterday = (datetime.now(tz_uz) - timedelta(days=1)).strftime("%Y-%m-%d")
-
         u = load_user(uid)
         habits = []
         for h in u.get("habits", []):
-            done = h.get("last_done") == today
             habits.append({
                 "id":     h.get("id", ""),
                 "name":   h.get("name", ""),
                 "icon":   h.get("icon", "✅"),
                 "time":   h.get("time", "vaqtsiz"),
                 "streak": h.get("streak", 0),
-                "done":   done,
+                "done":   h.get("last_done") == today,
             })
-
-        total = len(habits)
+        total      = len(habits)
         done_count = sum(1 for h in habits if h["done"])
-        percent = round(done_count / total * 100) if total else 0
+        percent    = round(done_count / total * 100) if total else 0
+        return jsonify({"habits": habits, "today": today,
+                        "done_count": done_count, "total": total, "percent": percent})
 
-        return jsonify({
-            "habits":     habits,
-            "today":      today,
-            "done_count": done_count,
-            "total":      total,
-            "percent":    percent,
-        })
-
+    # ── CHECK-IN TOGGLE ──
     @api_app.route("/api/checkin/<int:uid>/<hid>", methods=["POST"])
     def api_checkin(uid, hid):
-        """Odat bajarildi yoki bekor qilindi (toggle)"""
         from datetime import timezone, timedelta
-        tz_uz = timezone(timedelta(hours=5))
+        tz_uz     = timezone(timedelta(hours=5))
         today     = datetime.now(tz_uz).strftime("%Y-%m-%d")
         yesterday = (datetime.now(tz_uz) - timedelta(days=1)).strftime("%Y-%m-%d")
-
-        u = load_user(uid)
+        u      = load_user(uid)
         habits = u.get("habits", [])
         habit  = next((h for h in habits if h.get("id") == hid), None)
         if not habit:
             return jsonify({"ok": False, "error": "Odat topilmadi"}), 404
 
         already_done = habit.get("last_done") == today
-
         if already_done:
             # ↩️ Bekor qilish
             habit["last_done"]  = None
             habit["streak"]     = max(0, habit.get("streak", 0) - 1)
             habit["total_done"] = max(0, habit.get("total_done", 0) - 1)
-            u["points"]         = max(0, u.get("points", 0) - 5)
-            done_log = u.get("done_log", {})
-            # Boshqa odatlar hali done bo'lsa, done_log ni olib tashlamaymiz
-            all_still_done = all(
-                hh.get("last_done") == today
-                for hh in u.get("habits", [])
-                if hh.get("id") != hid
-            )
-            if not all_still_done:
-                done_log.pop(today, None)
-            u["done_log"] = done_log
+            # done_dates dan olib tashlash
+            done_dates = habit.get("done_dates", [])
+            if today in done_dates:
+                done_dates.remove(today)
+            habit["done_dates"] = done_dates
+            u["points"] = max(0, u.get("points", 0) - 5)
             u["habits"] = habits
             save_user(uid, u)
-            return jsonify({
-                "ok":     True,
-                "done":   False,
-                "streak": habit["streak"],
-                "points": u.get("points", 0),
-                "msg":    "Bekor qilindi"
-            })
+            return jsonify({"ok": True, "done": False,
+                            "streak": habit["streak"], "points": u.get("points", 0),
+                            "msg": "Bekor qilindi", "all_done": False})
         else:
             # ✅ Bajarildi
             habit["streak"]     = habit.get("streak", 0) + 1 if habit.get("last_done") == yesterday else 1
             habit["last_done"]  = today
             habit["total_done"] = habit.get("total_done", 0) + 1
-            u["points"]         = u.get("points", 0) + 5
+            # done_dates ga qo'shish
+            done_dates = habit.get("done_dates", [])
+            if today not in done_dates:
+                done_dates.append(today)
+            # Faqat oxirgi 90 kunni saqlash
+            done_dates = sorted(done_dates)[-90:]
+            habit["done_dates"] = done_dates
+            u["points"] = u.get("points", 0) + 5
             done_log = u.get("done_log", {})
             done_log[today] = True
             u["done_log"] = done_log
             u["habits"] = habits
             save_user(uid, u)
-
-            # Barcha odat bajarilidimi?
             all_done = all(hh.get("last_done") == today for hh in u.get("habits", []))
+            return jsonify({"ok": True, "done": True,
+                            "streak": habit["streak"], "points": u.get("points", 0),
+                            "all_done": all_done, "msg": "Bajarildi! +5 ⭐"})
 
-            return jsonify({
-                "ok":      True,
-                "done":    True,
-                "streak":  habit["streak"],
-                "points":  u.get("points", 0),
-                "all_done": all_done,
-                "msg":     "Bajarildi! +5 ⭐"
+    # ── STATISTIKA ──
+    @api_app.route("/api/stats/<int:uid>", methods=["GET"])
+    def api_stats(uid):
+        from datetime import timezone, timedelta
+        tz_uz = timezone(timedelta(hours=5))
+        today_dt  = datetime.now(tz_uz)
+        today_str = today_dt.strftime("%Y-%m-%d")
+
+        # So'nggi 30 kun
+        days_30 = [(today_dt - timedelta(days=29-i)).strftime("%Y-%m-%d") for i in range(30)]
+        # So'nggi 7 kun
+        days_7  = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
+        days_7_lbls = [(today_dt - timedelta(days=6-i)).strftime("%a") for i in range(7)]
+
+        u = load_user(uid)
+        habits = u.get("habits", [])
+
+        # --- Haftalik umumiy bajarilish (bar chart uchun) ---
+        weekly = []
+        for i, dstr in enumerate(days_7):
+            count = sum(1 for h in habits if dstr in h.get("done_dates", []))
+            weekly.append({"date": dstr, "label": days_7_lbls[i], "count": count, "total": len(habits)})
+
+        # --- Oylik heatmap (done_log asosida) ---
+        done_log = u.get("done_log", {})
+        heatmap  = {d: bool(done_log.get(d)) for d in days_30}
+
+        # --- Har bir odat statistikasi ---
+        habit_stats = []
+        for h in habits:
+            done_dates = h.get("done_dates", [])
+            # So'nggi 30 kun ichida nechta
+            done_30 = sum(1 for d in days_30 if d in done_dates)
+            # So'nggi 7 kun
+            done_7  = sum(1 for d in days_7 if d in done_dates)
+            # % (faqat odat qo'shilganidan beri)
+            created = h.get("created_at", days_30[0])
+            active_days = sum(1 for d in days_30 if d >= created)
+            pct = round(done_30 / active_days * 100) if active_days else 0
+
+            # Mini heatmap (7 kun) — 1/0 ro'yxat
+            week_dots = [1 if d in done_dates else 0 for d in days_7]
+
+            habit_stats.append({
+                "id":         h.get("id",""),
+                "name":       h.get("name",""),
+                "icon":       h.get("icon","✅"),
+                "streak":     h.get("streak", 0),
+                "total_done": h.get("total_done", 0),
+                "done_7":     done_7,
+                "done_30":    done_30,
+                "percent":    pct,
+                "week_dots":  week_dots,
+                "best_streak": h.get("streak", 0),
             })
+
+        # --- Umumiy ko'rsatkichlar ---
+        total_days_active = sum(1 for d in days_30 if done_log.get(d))
+        current_streak    = u.get("streak", 0)
+        points            = u.get("points", 0)
+
+        return jsonify({
+            "today":        today_str,
+            "weekly":       weekly,
+            "heatmap":      heatmap,
+            "days_30":      days_30,
+            "habit_stats":  habit_stats,
+            "summary": {
+                "points":        points,
+                "streak":        current_streak,
+                "active_days_30": total_days_active,
+                "total_habits":  len(habits),
+            }
+        })
 
     @api_app.route("/api/groups/<int:uid>")
     def api_groups(uid):

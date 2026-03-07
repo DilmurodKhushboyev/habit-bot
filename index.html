@@ -442,6 +442,80 @@ body {
   100% { opacity: 0; transform: scale(1.8); }
 }
 
+/* ── STATISTIKA ── */
+.summary-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+  margin-bottom: 4px;
+}
+.sum-card {
+  background: var(--bg); box-shadow: var(--sh-sm);
+  border-radius: 18px; padding: 16px; text-align: center;
+}
+.sum-val { font-size: 28px; font-weight: 700; color: var(--text); font-family: 'DM Mono', monospace; }
+.sum-lbl { font-size: 10px; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+.sum-icon { font-size: 20px; margin-bottom: 4px; }
+
+/* Bar chart */
+.bar-chart {
+  background: var(--bg); box-shadow: var(--sh-card);
+  border-radius: 20px; padding: 18px; margin-bottom: 12px;
+}
+.bar-chart-title { font-size: 12px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+.bars { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
+.bar-fill {
+  width: 100%; border-radius: 8px 8px 4px 4px;
+  box-shadow: 2px 2px 6px #B8BBCA, -2px -2px 6px #FFFFFF;
+  min-height: 4px; transition: height .5s ease;
+}
+.bar-lbl { font-size: 10px; color: var(--sub); font-weight: 500; }
+.bar-num { font-size: 9px; color: var(--sub); font-family: 'DM Mono', monospace; }
+
+/* Heatmap */
+.heatmap-wrap {
+  background: var(--bg); box-shadow: var(--sh-card);
+  border-radius: 20px; padding: 18px; margin-bottom: 12px;
+}
+.heatmap-title { font-size: 12px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+.heatmap-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
+.hm-cell {
+  aspect-ratio: 1; border-radius: 6px;
+  background: var(--bg); box-shadow: var(--sh-in);
+  transition: all .2s;
+}
+.hm-cell.done { background: var(--green); box-shadow: 2px 2px 5px #3DA86840, -2px -2px 5px #FFFFFF; }
+.hm-cell.today-cell { box-shadow: var(--sh-in), 0 0 0 2px var(--accent2); }
+.heatmap-legend { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 10px; color: var(--sub); }
+.hm-leg { width: 12px; height: 12px; border-radius: 3px; }
+
+/* Habit stat cards */
+.hstat-card {
+  background: var(--bg); box-shadow: var(--sh-sm);
+  border-radius: 18px; padding: 16px; margin-bottom: 10px;
+}
+.hstat-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.hstat-icon { font-size: 26px; }
+.hstat-info { flex: 1; }
+.hstat-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.hstat-sub  { font-size: 11px; color: var(--sub); margin-top: 2px; }
+.hstat-pct  {
+  font-size: 18px; font-weight: 700; color: var(--accent2);
+  font-family: 'DM Mono', monospace;
+}
+.hstat-nums { display: flex; gap: 8px; margin-bottom: 10px; }
+.hstat-num-box {
+  flex: 1; background: var(--bg); box-shadow: var(--sh-in);
+  border-radius: 12px; padding: 10px; text-align: center;
+}
+.hstat-num-val { font-size: 16px; font-weight: 700; color: var(--text); font-family: 'DM Mono', monospace; }
+.hstat-num-lbl { font-size: 9px; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.week-dots-row { display: flex; gap: 5px; }
+.wd {
+  flex: 1; height: 8px; border-radius: 4px;
+  background: var(--bg); box-shadow: var(--sh-in);
+}
+.wd.done { background: var(--green); box-shadow: none; }
+
 /* ── GURUHLAR ── */
 .group-card {
   background: var(--bg);
@@ -534,6 +608,13 @@ body {
   </div>
 </div>
 
+<!-- STATISTIKA -->
+<div class="page" id="page-stats">
+  <div id="stats-content">
+    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
+</div>
+
 <!-- GURUHLAR -->
 <div class="page" id="page-groups">
   <div id="groups-content">
@@ -547,6 +628,10 @@ body {
     <span class="nav-icon">☀️</span>
     <span class="nav-label">Bugun</span>
   </button>
+  <button class="nav-item" id="nav-stats" onclick="switchTab('stats', this)">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">Statistika</span>
+  </button>
   <button class="nav-item" id="nav-rating" onclick="switchTab('rating', this)">
     <span class="nav-icon">🏆</span>
     <span class="nav-label">Reyting</span>
@@ -558,10 +643,6 @@ body {
   <button class="nav-item" id="nav-habits" onclick="switchTab('habits', this)">
     <span class="nav-icon">📋</span>
     <span class="nav-label">Odatlar</span>
-  </button>
-  <button class="nav-item" id="nav-groups" onclick="switchTab('groups', this)">
-    <span class="nav-icon">👥</span>
-    <span class="nav-label">Guruhlar</span>
   </button>
 </nav>
 
@@ -575,7 +656,7 @@ const userId   = user.id || 0;
 const API      = window.location.origin + '/api';
 
 // ── STATE ──
-let loaded = { today: false, rating: false, profile: false, habits: false, groups: false };
+let loaded = { today: false, rating: false, profile: false, habits: false, groups: false, stats: false };
 let data   = {};
 
 // ── TAB SWITCH ──
@@ -589,6 +670,7 @@ function switchTab(tab, el) {
 
 async function loadTab(tab) {
   if (tab === 'today')   await loadToday();
+  if (tab === 'stats')   await loadStats();
   if (tab === 'rating')  await loadRating();
   if (tab === 'profile') await loadProfile();
   if (tab === 'habits')  await loadHabits();
@@ -741,6 +823,127 @@ function showTodayToast(msg, err = false) {
   t.textContent = msg;
   t.className = 'toast show' + (err ? ' err' : '');
   setTimeout(() => { t.className = 'toast'; }, 2500);
+}
+
+// ── STATISTIKA ──
+async function loadStats() {
+  try {
+    const d = await apiFetch(`stats/${userId}`);
+    data.stats = d;
+    renderStats(d);
+  } catch(e) {
+    document.getElementById('stats-content').innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.<br><small>${e}</small></div>`;
+  }
+}
+
+function renderStats(d) {
+  const { summary, weekly, heatmap, days_30, habit_stats, today } = d;
+
+  // ── Summary cards ──
+  const sumHtml = `
+    <div class="summary-grid">
+      <div class="sum-card">
+        <div class="sum-icon">🔥</div>
+        <div class="sum-val">${summary.streak}</div>
+        <div class="sum-lbl">Streak</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon">⭐</div>
+        <div class="sum-val">${summary.points}</div>
+        <div class="sum-lbl">Ball</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon">✅</div>
+        <div class="sum-val">${summary.active_days_30}</div>
+        <div class="sum-lbl">Faol kun (30)</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-icon">📋</div>
+        <div class="sum-val">${summary.total_habits}</div>
+        <div class="sum-lbl">Odat</div>
+      </div>
+    </div>`;
+
+  // ── Bar chart (haftalik) ──
+  const maxCount = Math.max(...weekly.map(w => w.total), 1);
+  const dayLabels = ['Ya','Du','Se','Ch','Pa','Ju','Sh'];
+  const barsHtml = weekly.map((w, i) => {
+    const pct   = w.total ? Math.round(w.count / w.total * 100) : 0;
+    const hPx   = Math.max(4, Math.round(pct * 0.7));
+    const color = pct >= 80 ? '#4CAF7D' : pct >= 40 ? '#5B8DEF' : pct > 0 ? '#E07040' : '#C8CBD8';
+    const isToday = w.date === today;
+    return `
+      <div class="bar-col">
+        <div class="bar-num">${w.count > 0 ? w.count : ''}</div>
+        <div class="bar-fill" style="height:${hPx}px;background:${color};${isToday ? 'box-shadow:0 0 0 2px '+color+'44,2px 2px 6px #B8BBCA,-2px -2px 6px #FFFFFF' : ''}"></div>
+        <div class="bar-lbl" style="${isToday ? 'color:var(--text);font-weight:700' : ''}">${dayLabels[new Date(w.date).getDay()]}</div>
+      </div>`;
+  }).join('');
+
+  const barChartHtml = `
+    <div class="bar-chart">
+      <div class="bar-chart-title">Haftalik bajarilish</div>
+      <div class="bars">${barsHtml}</div>
+    </div>`;
+
+  // ── Heatmap (30 kun) ──
+  const hmCells = days_30.map(d => {
+    const done    = heatmap[d];
+    const isToday = d === today;
+    return `<div class="hm-cell ${done ? 'done' : ''} ${isToday ? 'today-cell' : ''}" title="${d}"></div>`;
+  }).join('');
+
+  const heatmapHtml = `
+    <div class="heatmap-wrap">
+      <div class="heatmap-title">30 kunlik faollik</div>
+      <div class="heatmap-grid">${hmCells}</div>
+      <div class="heatmap-legend">
+        <div class="hm-leg" style="background:var(--bg);box-shadow:var(--sh-in)"></div> Bajarilmadi
+        <div class="hm-leg" style="background:var(--green);margin-left:10px"></div> Bajarildi
+      </div>
+    </div>`;
+
+  // ── Har bir odat ──
+  let habitCardsHtml = '';
+  (habit_stats || []).forEach(h => {
+    const pctColor = h.percent >= 80 ? '#4CAF7D' : h.percent >= 50 ? '#5B8DEF' : '#E07040';
+    const wdDots   = h.week_dots.map(v => `<div class="wd ${v ? 'done' : ''}"></div>`).join('');
+    habitCardsHtml += `
+      <div class="hstat-card">
+        <div class="hstat-top">
+          <div class="hstat-icon">${h.icon}</div>
+          <div class="hstat-info">
+            <div class="hstat-name">${h.name}</div>
+            <div class="hstat-sub">🔥 ${h.streak} kun streak</div>
+          </div>
+          <div class="hstat-pct" style="color:${pctColor}">${h.percent}%</div>
+        </div>
+        <div class="hstat-nums">
+          <div class="hstat-num-box">
+            <div class="hstat-num-val">${h.done_7}</div>
+            <div class="hstat-num-lbl">7 kun</div>
+          </div>
+          <div class="hstat-num-box">
+            <div class="hstat-num-val">${h.done_30}</div>
+            <div class="hstat-num-lbl">30 kun</div>
+          </div>
+          <div class="hstat-num-box">
+            <div class="hstat-num-val">${h.total_done}</div>
+            <div class="hstat-num-lbl">Jami</div>
+          </div>
+        </div>
+        <div class="week-dots-row">${wdDots}</div>
+      </div>`;
+  });
+
+  document.getElementById('stats-content').innerHTML = `
+    <div class="section-title">Umumiy</div>
+    ${sumHtml}
+    ${barChartHtml}
+    ${heatmapHtml}
+    <div class="section-title">Har bir odat</div>
+    ${habitCardsHtml || '<div class="empty-state"><div class="icon">📋</div>Hali odat qo\'shilmagan</div>'}`;
 }
 
 // ── REYTING ──
