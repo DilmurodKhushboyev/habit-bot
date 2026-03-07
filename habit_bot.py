@@ -1981,111 +1981,113 @@ def _tf(path, size):
 
 def generate_rating_grid(top10_users, all_users):
     """
+    HTML generatsiya qilib playwright bilan screenshot oladi.
     top10_users: [(name, points, username, user_id), ...]
     all_users:   {user_id: udata, ...}
     Returns: BytesIO rasm
     """
-    FONT   = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-    FONT_R = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-
     from datetime import timezone, timedelta
+    import tempfile, os
     tz_uz     = timezone(timedelta(hours=5))
     today_dt  = datetime.now(tz_uz)
     today_str = today_dt.strftime("%Y-%m-%d")
     days      = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
+    day_lbls  = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
+    oy_uzb    = ["","Yan","Fev","Mar","Apr","May","Iyn","Iyl","Avg","Sen","Okt","Noy","Dek"]
+    month_lbl = oy_uzb[today_dt.month]
 
-    ROWS   = len(top10_users)
-    S      = 3          # Base unit — barcha o'lchamlar shunga mutanosib
-    ROW_H  = 120 * S
-    HDR_H  = 160 * S
-    FTR_H  =  60 * S
-    COL_W  =  62 * S
-    NAME_W = 280 * S
-    PAD    =  20 * S
-    CELL_R =  22 * S
-    W      = PAD*2 + NAME_W + COL_W*7 + PAD
-    H      = HDR_H + ROW_H*ROWS + FTR_H + 4*S
+    rank_colors = ["#FFD700","#C8CDDC","#D78737","#6B7DC3","#6B7DC3","#6B7DC3","#6B7DC3","#6B7DC3","#6B7DC3","#6B7DC3"]
+    bg_colors   = ["#26220A","#181828","#141420","#181828","#141420","#181828","#141420","#181828","#141420","#181828"]
+    medals_sym  = ["🥇","🥈","🥉","4","5","6","7","8","9","10"]
 
-    img  = Image.new("RGB", (W, H), (13, 13, 22))
-    draw = ImageDraw.Draw(img)
-
-    f_title = _tf(FONT,   int(HDR_H * 0.28))
-    f_sub   = _tf(FONT_R, int(HDR_H * 0.17))
-    f_name  = _tf(FONT,   int(ROW_H * 0.38))
-    f_pts   = _tf(FONT_R, int(ROW_H * 0.25))
-    f_rank  = _tf(FONT,   int(ROW_H * 0.32))
-    f_day   = _tf(FONT_R, int(HDR_H * 0.14))
-    f_tiny  = _tf(FONT_R, int(HDR_H * 0.11))
-    f_leg   = _tf(FONT_R, int(FTR_H * 0.38))
-
-    # Header gradient
-    for y in range(HDR_H):
-        t = y / HDR_H
-        draw.line([(0,y),(W,y)], fill=(int(14+t*10), int(14+t*10), int(28+t*20)))
-    draw.rectangle([(0, HDR_H-3*S),(W, HDR_H)], fill=(180,140,0))
-    draw.text((W//2, int(HDR_H*0.35)), "TOP-10  •  7 KUNLIK FAOLLIK",            font=f_title, fill=(255,215,0),   anchor="mm")
-    draw.text((W//2, int(HDR_H*0.72)), "Super Habits Bot  •  @Super_habits_bot", font=f_sub,   fill=(120,120,165), anchor="mm")
-
-    oy_uzb = ["","Yan","Fev","Mar","Apr","May","Iyn","Iyl","Avg","Sen","Okt","Noy","Dek"]
-    for j in range(7):
-        cx     = PAD + NAME_W + j*COL_W + COL_W//2
-        dt_obj = today_dt - timedelta(days=6-j)
-        draw.text((cx, HDR_H - int(HDR_H*0.10)), dt_obj.strftime("%d"), font=f_day,  fill=(180,180,210), anchor="mm")
-        if j == 0 or dt_obj.day == 1:
-            draw.text((cx, HDR_H - int(HDR_H*0.20)), oy_uzb[dt_obj.month], font=f_tiny, fill=(120,120,150), anchor="mm")
-
-    rank_colors = [(255,215,0),(200,205,220),(215,135,55)] + [(80,110,195)]*7
-
+    rows_html = ""
     for i, (name, points, username, target_uid) in enumerate(top10_users):
-        y   = HDR_H + i*ROW_H
-        cy  = y + ROW_H//2
-        bg  = (38,34,10) if i==0 else (24,24,40) if i%2==0 else (20,20,34)
-        draw.rectangle([(0,y),(W,y+ROW_H)], fill=bg)
-        draw.rectangle([(0,y),(5*S, y+ROW_H)], fill=rank_colors[i] if i<3 else (40,50,100))
-
-        rc = rank_colors[i]
-        rr = int(ROW_H * 0.30)
-        draw.ellipse([(PAD+8*S, cy-rr),(PAD+8*S+rr*2, cy+rr)], fill=(28,32,58))
-        draw.text((PAD+8*S+rr, cy), str(i+1), font=f_rank, fill=rc, anchor="mm")
-
-        tx = PAD + 8*S + rr*2 + 12*S
-        draw.text((tx, cy - int(ROW_H*0.18)), name[:16],        font=f_name, fill=(215,215,245), anchor="lm")
-        draw.text((tx, cy + int(ROW_H*0.16)), f"{points} ball", font=f_pts,  fill=(110,110,155), anchor="lm")
-
         udata     = all_users.get(str(target_uid), {})
         done_log  = udata.get("done_log", {})
         bot_start = min(done_log.keys()) if done_log else today_str
-
-        for j, dstr in enumerate(days):
-            cx = PAD + NAME_W + j*COL_W + COL_W//2
-            r  = CELL_R
+        cells = ""
+        for dstr in days:
             if dstr > today_str or dstr < bot_start:
-                draw.ellipse([(cx-r,cy-r),(cx+r,cy+r)], outline=(48,48,72), width=max(2,S))
+                cells += '<td class="cell empty"></td>'
             elif done_log.get(dstr):
-                draw.ellipse([(cx-r,   cy-r),   (cx+r,   cy+r)],         fill=(25,148,65))
-                draw.ellipse([(cx-r+3*S,cy-r+3*S),(cx+r-3*S,cy+r-3*S)], fill=(42,200,85))
+                cells += '<td class="cell done"></td>'
             else:
-                draw.ellipse([(cx-r,   cy-r),   (cx+r,   cy+r)],         fill=(148,28,28))
-                draw.ellipse([(cx-r+3*S,cy-r+3*S),(cx+r-3*S,cy+r-3*S)], fill=(195,48,48))
+                cells += '<td class="cell miss"></td>'
+        rc = rank_colors[i]; bg = bg_colors[i]
+        rows_html += f'''
+        <tr style="background:{bg}; border-left: 5px solid {rc};">
+          <td class="rank" style="color:{rc}">{medals_sym[i]}</td>
+          <td class="nameblock">
+            <div class="name">{name[:16]}</div>
+            <div class="pts">{points} ball</div>
+          </td>
+          {cells}
+        </tr>'''
 
-        draw.rectangle([(5*S, y+ROW_H-S),(W-5*S, y+ROW_H)], fill=(30,30,48))
+    day_headers = "".join(f'<th class="dayth">{d}</th>' for d in day_lbls)
+    html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+*{{margin:0;padding:0;box-sizing:border-box;}}
+body{{background:#0D0D16;font-family:'Segoe UI',Arial,sans-serif;width:680px;}}
+.header{{background:linear-gradient(180deg,#0E0E1C 0%,#1A1A2E 100%);text-align:center;padding:22px 20px 16px;border-bottom:3px solid #B8900A;}}
+.title{{color:#FFD700;font-size:24px;font-weight:900;letter-spacing:1px;}}
+.subtitle{{color:#7878A8;font-size:13px;margin-top:5px;}}
+table{{width:100%;border-collapse:collapse;}}
+.rank{{width:48px;text-align:center;font-size:18px;font-weight:bold;padding:0 6px;}}
+.nameblock{{width:180px;padding:10px 8px;}}
+.name{{color:#D8D8F0;font-size:15px;font-weight:700;}}
+.pts{{color:#6A6A96;font-size:12px;margin-top:2px;}}
+.dayth{{width:54px;text-align:center;color:#A8A8C8;font-size:13px;font-weight:600;padding:8px 0 6px;background:#0D0D16;}}
+.monthlbl{{text-align:left;padding:8px 0 6px 16px;color:#6A6A96;font-size:12px;background:#0D0D16;width:230px;}}
+.cell{{width:54px;height:52px;text-align:center;vertical-align:middle;}}
+.cell::after{{content:'';display:inline-block;width:32px;height:32px;border-radius:50%;}}
+.done::after{{background:radial-gradient(circle at 38% 38%,#52E888,#1CA050);box-shadow:0 2px 8px rgba(42,200,80,0.5);}}
+.miss::after{{background:radial-gradient(circle at 38% 38%,#F05050,#A02020);box-shadow:0 2px 8px rgba(200,42,42,0.4);}}
+.empty::after{{background:transparent;border:2px solid #2E2E48;}}
+tr{{border-bottom:1px solid #1E1E30;}}
+.footer{{background:#101020;border-top:2px solid #786000;padding:10px 20px;display:flex;gap:24px;align-items:center;}}
+.leg{{display:flex;align-items:center;gap:7px;font-size:12px;color:#9090B0;}}
+.dot{{width:14px;height:14px;border-radius:50%;}}
+.d-green{{background:#2AC855;}}.d-red{{background:#C82A2A;}}.d-empty{{border:2px solid #2E2E48;background:transparent;}}
+</style></head><body>
+<div class="header">
+  <div class="title">TOP-10 &nbsp;•&nbsp; 7 KUNLIK FAOLLIK</div>
+  <div class="subtitle">Super Habits Bot &nbsp;•&nbsp; @Super_habits_bot</div>
+</div>
+<table>
+  <thead><tr><td class="monthlbl" colspan="2">{month_lbl} {today_dt.year}</td>{day_headers}</tr></thead>
+  <tbody>{rows_html}</tbody>
+</table>
+<div class="footer">
+  <div class="leg"><div class="dot d-green"></div> Bajarildi</div>
+  <div class="leg"><div class="dot d-red"></div> Bajarilmadi</div>
+  <div class="leg"><div class="dot d-empty"></div> Ma'lumot yo'q</div>
+</div>
+</body></html>"""
 
-    fy = HDR_H + ROWS*ROW_H + 2*S
-    draw.rectangle([(0,fy),(W,H)], fill=(16,16,28))
-    draw.rectangle([(0,fy),(W,fy+S*2)], fill=(120,95,0))
-    lx=PAD+8*S; ly=fy+FTR_H//2; r2=int(FTR_H*0.22)
-    draw.ellipse([(lx,       ly-r2),(lx+r2*2,       ly+r2)], fill=(42,200,85))
-    draw.text((lx+r2*2+6*S,         ly), "Bajarildi",      font=f_leg, fill=(155,155,185), anchor="lm")
-    draw.ellipse([(lx+170*S, ly-r2),(lx+170*S+r2*2, ly+r2)], fill=(195,48,48))
-    draw.text((lx+170*S+r2*2+6*S,   ly), "Bajarilmadi",    font=f_leg, fill=(155,155,185), anchor="lm")
-    draw.ellipse([(lx+360*S, ly-r2),(lx+360*S+r2*2, ly+r2)], outline=(48,48,72), width=max(2,S))
-    draw.text((lx+360*S+r2*2+6*S,   ly), "Ma'lumot yo'q", font=f_leg, fill=(100,100,130), anchor="lm")
+    # HTML faylga yoz
+    html_path = tempfile.mktemp(suffix=".html")
+    png_path  = tempfile.mktemp(suffix=".png")
+    with open(html_path, "w", encoding="utf-8") as f:
+        f.write(html)
 
-    buf = io.BytesIO()
+    # Playwright bilan screenshot
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page    = browser.new_page(viewport={"width": 680, "height": 800})
+        page.goto(f"file://{html_path}")
+        page.wait_for_timeout(200)
+        page.screenshot(path=png_path, full_page=True)
+        browser.close()
+
+    os.unlink(html_path)
+    buf = io.BytesIO(open(png_path, "rb").read())
+    os.unlink(png_path)
     buf.name = "reyting.png"
-    img.save(buf, format="PNG", optimize=False, compress_level=1)
     buf.seek(0)
     return buf
+
 
 def show_rating(uid):
     from datetime import timezone, timedelta
@@ -2109,58 +2111,26 @@ def show_rating(uid):
         save_user(uid, u)
         return
 
-    tz_uz     = timezone(timedelta(hours=5))
-    today_dt  = __import__("datetime").datetime.now(tz_uz)
-    today_str = today_dt.strftime("%Y-%m-%d")
-    days      = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
-    day_lbls  = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
-
-    medals     = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
-    done_emoji = "🟩"
-    miss_emoji = "🟥"
-    empty_emoj = "⬜"
-
-    # Sarlavha — emoji kvadrat kengligi = 2 char, shuning uchun har birini alohida chizamiz
-    # Kun raqamlarini ham shu kenglikka moslaymiz
-    # "01" = 2 char, emoji = 2 char — to'g'ri mos keladi
-    oy_uzb = ["","Yan","Fev","Mar","Apr","May","Iyn","Iyl","Avg","Sen","Okt","Noy","Dek"]
-    cur_month = today_dt.month
-    month_name = oy_uzb[cur_month]
-
-    day_header = "".join(d for d in day_lbls)   # "01020304050607"
-    # Har raqam 2 char, har emoji 2 char — monospace da to'g'ri mos keladi
-    divider = "▬" * 14
-    text  = f"🏆 *Reyting — Top 10*\n`{divider}`\n"
-    text += f"`📅 {month_name}: {' '.join(day_lbls)}`\n\n"
-
+    medals = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
+    # Matn caption (rasm ostida)
+    caption = "🏆 *Reyting — Top 10*\n\n"
     for i, (name, points, username, target_uid) in enumerate(top10):
-        udata     = users.get(str(target_uid), {})
-        done_log  = udata.get("done_log", {})
-        bot_start = min(done_log.keys()) if done_log else today_str
-        jon_val   = max(0, min(100, udata.get("jon", 100)))
-        je        = "❤️" if jon_val>=80 else "🧡" if jon_val>=50 else "💛" if jon_val>=20 else "🖤"
-        vip_b     = " 💎" if udata.get("is_vip") else ""
+        udata   = users.get(str(target_uid), {})
+        jon_val = max(0, min(100, udata.get("jon", 100)))
+        je      = "❤️" if jon_val>=80 else "🧡" if jon_val>=50 else "💛" if jon_val>=20 else "🖤"
+        vip_b   = " 💎" if udata.get("is_vip") else ""
+        uname   = username.lstrip("@") if username and username != "—" else ""
+        link    = f"[{name}](https://t.me/{uname})" if uname else f"[{name}](tg://user?id={target_uid})"
+        caption += f"{medals[i]} {link}{vip_b} — *{points}* ball {je}\n"
 
-        # Grid — 7 ta emoji, har biri kun bilan mos
-        grid_emojis = []
-        for dstr in days:
-            if dstr > today_str or dstr < bot_start:
-                grid_emojis.append(empty_emoj)
-            elif done_log.get(dstr):
-                grid_emojis.append(done_emoji)
-            else:
-                grid_emojis.append(miss_emoji)
-        grid = "".join(grid_emojis)
-
-        # Ism (link)
-        uname = username.lstrip("@") if username and username != "—" else ""
-        link  = f"[{name}](https://t.me/{uname})" if uname else f"[{name}](tg://user?id={target_uid})"
-
-        text += f"{medals[i]} {link}{vip_b} \u2014 *{points}* ball {je}\n"
-        text += f"`{grid}`\n\n"
-
-    sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb,
-                            disable_web_page_preview=True)
+    # Rasm (HTML → screenshot)
+    try:
+        img_buf = generate_rating_grid(top10, users)
+        sent = bot.send_photo(uid, img_buf, caption=caption, parse_mode="Markdown", reply_markup=kb)
+    except Exception as e:
+        print(f"[rating_grid] xato: {e}")
+        sent = bot.send_message(uid, caption, parse_mode="Markdown", reply_markup=kb,
+                                disable_web_page_preview=True)
     u["main_msg_id"] = sent.message_id
     save_user(uid, u)
 
