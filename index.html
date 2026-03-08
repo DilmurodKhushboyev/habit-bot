@@ -1893,6 +1893,7 @@ function renderProfile(d) {
   const jonColor = jon >= 70 ? '#4CAF7D' : jon >= 40 ? '#D4963A' : '#E05050';
   const initial = (d.name || '?')[0].toUpperCase();
   const lang = d.lang || 'uz';
+  currentLang = lang;
   const photoUrl = user.photo_url || '';
 
   // Avatar: rasm yoki harf
@@ -2201,6 +2202,7 @@ async function saveTarget() {
 }
 
 let selectedLang = null;
+let currentLang = 'uz';
 function setLang(val) {
   selectedLang = val;
   ['uz','ru','en'].forEach(l => {
