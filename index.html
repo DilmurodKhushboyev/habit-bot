@@ -855,17 +855,25 @@ body {
 #tour-card .tour-dot.active {
   background: var(--accent); opacity: 1; width: 16px; border-radius: 3px;
 }
+#tour-card .tour-tip {
+  font-size: 11.5px; color: #e07040;
+  background: #fff4ed; border-left: 3px solid #e07040;
+  border-radius: 0 8px 8px 0;
+  padding: 7px 10px; margin-bottom: 14px;
+  line-height: 1.5; font-weight: 500;
+}
 </style>
 </head>
 <body>
 
 <!-- TOUR OVERLAY -->
-<div id="tour-overlay">
+<div id="tour-overlay" onclick="tourNext()">
   <div id="tour-spotlight"></div>
-  <div id="tour-card">
+  <div id="tour-card" onclick="event.stopPropagation()">
     <div class="tour-step-num" id="tour-step-num"></div>
     <div class="tour-title"    id="tour-title"></div>
     <div class="tour-desc"     id="tour-desc"></div>
+    <div class="tour-tip"      id="tour-tip"></div>
     <div class="tour-btns">
       <button class="tour-skip" onclick="endTour()" type="button" id="tour-skip-btn"></button>
       <div class="tour-dots"  id="tour-dots"></div>
@@ -3013,111 +3021,132 @@ const TOUR_STEPS = {
     {
       target: 'nav-today',
       title: "👋 Xush kelibsiz, yangi odat egasi!",
-      desc: "Super Habits — har kuni o'sib boruvchi odamlar uchun yaratilgan. Biz sizi 7 ta qadamda dastur bilan tanishtirамиз. Boshlaylik! 💪"
+      desc: "Super Habits — har kuni o'sib boruvchi odamlar uchun yaratilgan. Sizi 7 ta qadamda dastur bilan tanishtiramiz.",
+      tip: "Ekranning istalgan joyiga bosib yoki 'Keyingi' tugmasini bosib o'tishingiz mumkin."
     },
     {
       target: 'today-content',
       title: "☀️ Bugun — eng muhim kun",
-      desc: "Bugungi odatlaringiz shu yerda. Har birini bajargach ✅ belgisi bosing — streak uzilmaydi, ballar to'planadi. Bir kun ham o'tkazib yubormang!"
+      desc: "Bugungi odatlaringiz shu yerda. Har birini bajargach ✅ belgisini bosing — streak uzilmaydi, ballar to'planadi.",
+      tip: "Bir kunni o'tkazib yuborsangiz streak nolga tushadi. Har kuni kiring!"
     },
     {
       target: 'nav-stats',
       title: "🏆 Reyting — o'zingizni sinang",
-      desc: "Barcha foydalanuvchilar orasidagi o'rningizni ko'ring. Qancha ko'p odat bajarsangiz, shuncha yuqori chiqasiz. Birinchi o'ringa intiling!"
+      desc: "Barcha foydalanuvchilar orasidagi o'rningizni ko'ring. Qancha ko'p odat bajarsangiz, shuncha yuqori chiqasiz.",
+      tip: "Reyting haftalik yangilanadi. Birinchi o'ringa chiqing — maxsus badge sizniki!"
     },
     {
       target: 'nav-habits',
       title: "✏️ Odatlarni boshqaring",
-      desc: "Yangi odat qo'shing, mavjudlarini tahrirlang yoki o'chiring. Har bir odatga qulay vaqt va eslatma belgilang — tizim o'zi xabar beradi."
+      desc: "Yangi odat qo'shing, mavjudlarini tahrirlang yoki o'chiring. Har bir odatga qulay vaqt va eslatma belgilang.",
+      tip: "Kuniga 3-5 ta odat ideal. Ko'p boshlasangiz, barini bajarish qiyinlashadi."
     },
     {
       target: 'nav-bozor',
       title: "🛒 Bozor — mehnatga mukofot",
-      desc: "Har bajarilgan odat uchun ball to'playsiz. Bu ballarni Bozorda maxsus imtiyozlar va mukofotlarga almashtiring. Ko'proq ishlang — ko'proq qozonang!"
+      desc: "Har bajarilgan odat uchun ball to'playsiz. Bu ballarni maxsus imtiyozlar va mukofotlarga almashtiring.",
+      tip: "Ball qancha ko'p bo'lsa, shuncha katta mukofot olasiz. Tejab yig'ing!"
     },
     {
       target: 'nav-profile',
       title: "👤 Profilingiz — siz haqida",
-      desc: "Yutuqlaringiz, statistikangiz va shaxsiy sozlamalar shu yerda. Til tanlang, eslatmalarni moslashtiring va o'z taraqqiyotingizni kuzating."
+      desc: "Yutuqlaringiz, statistikangiz va shaxsiy sozlamalar shu yerda. Til tanlang va taraqqiyotingizni kuzating.",
+      tip: "Profil rasmingizni qo'ying — reytingda ajralib turasan!"
     },
     {
       target: null,
       title: "🚀 Sayohat boshlanmoqda!",
-      desc: "Siz tayyor! Birinchi odatni yarating va 21 kunlik qoidani boshlang. Esda tuting: katta o'zgarishlar — kichik qadamlardan boshlanadi. Omad! 🌱"
+      desc: "Siz tayyor! Birinchi odatni yarating va 21 kunlik qoidani boshlang. Katta o'zgarishlar — kichik qadamlardan boshlanadi.",
+      tip: "Muvaffaqiyat siri: har kuni, hech bahona qilmay, bir qadam tashlash!"
     }
   ],
   ru: [
     {
       target: 'nav-today',
       title: "👋 Добро пожаловать, будущий чемпион!",
-      desc: "Super Habits создан для людей, которые хотят расти каждый день. Мы проведём вас через 7 шагов. Начнём! 💪"
+      desc: "Super Habits создан для людей, которые растут каждый день. Проведём вас через 7 шагов знакомства.",
+      tip: "Нажмите в любое место экрана или кнопку 'Далее', чтобы перейти."
     },
     {
       target: 'today-content',
       title: "☀️ Сегодня — самый важный день",
-      desc: "Ваши привычки на сегодня здесь. Отмечайте каждую после выполнения ✅ — streak не прервётся, очки накапливаются. Ни дня без отметки!"
+      desc: "Ваши привычки на сегодня здесь. Отмечайте каждую после выполнения ✅ — streak не прервётся, очки растут.",
+      tip: "Пропустите один день — streak обнулится. Заходите каждый день!"
     },
     {
       target: 'nav-stats',
       title: "🏆 Рейтинг — докажите себе",
-      desc: "Смотрите своё место среди всех пользователей. Чем больше привычек выполняете — тем выше позиция. Стремитесь к первому месту!"
+      desc: "Смотрите своё место среди всех пользователей. Больше привычек — выше позиция.",
+      tip: "Рейтинг обновляется еженедельно. Первое место даёт особый значок!"
     },
     {
       target: 'nav-habits',
       title: "✏️ Управление привычками",
-      desc: "Добавляйте новые привычки, редактируйте или удаляйте существующие. Задайте удобное время и напоминания — система сама напомнит."
+      desc: "Добавляйте новые привычки, редактируйте или удаляйте. Задайте удобное время — система напомнит.",
+      tip: "3-5 привычек в день — идеально. Не перегружайте себя с первого дня."
     },
     {
       target: 'nav-bozor',
       title: "🛒 Магазин — награда за труд",
-      desc: "За каждую выполненную привычку начисляются очки. Обменивайте их в Магазине на особые привилегии и награды. Больше делаете — больше получаете!"
+      desc: "За каждую выполненную привычку — очки. Обменивайте их на особые привилегии и награды.",
+      tip: "Накапливайте очки — чем больше, тем ценнее награда."
     },
     {
       target: 'nav-profile',
       title: "👤 Ваш профиль — ваш путь",
-      desc: "Достижения, статистика и личные настройки — всё здесь. Выберите язык, настройте напоминания и следите за своим прогрессом."
+      desc: "Достижения, статистика и настройки — всё здесь. Выберите язык и следите за прогрессом.",
+      tip: "Добавьте фото профиля — выделяйтесь в рейтинге!"
     },
     {
       target: null,
       title: "🚀 Путь начинается!",
-      desc: "Вы готовы! Создайте первую привычку и запустите правило 21 дня. Помните: великие перемены начинаются с маленьких шагов. Удачи! 🌱"
+      desc: "Вы готовы! Создайте первую привычку и запустите правило 21 дня. Великие перемены — с маленьких шагов.",
+      tip: "Секрет успеха: каждый день, без исключений, один маленький шаг!"
     }
   ],
   en: [
     {
       target: 'nav-today',
       title: "👋 Welcome, future champion!",
-      desc: "Super Habits is built for people who grow every single day. We'll walk you through 7 steps to get you started. Let's go! 💪"
+      desc: "Super Habits is built for people who grow every single day. We'll walk you through 7 steps.",
+      tip: "Tap anywhere on the screen or press 'Next' to continue."
     },
     {
       target: 'today-content',
       title: "☀️ Today is the most important day",
-      desc: "Your habits for today are right here. Tap ✅ after each one — your streak stays alive and points keep growing. Never miss a day!"
+      desc: "Your habits for today are right here. Tap ✅ after each one — your streak stays alive and points grow.",
+      tip: "Miss one day and your streak resets to zero. Check in every day!"
     },
     {
       target: 'nav-stats',
       title: "🏆 Leaderboard — prove yourself",
-      desc: "See where you stand among all users. The more habits you complete, the higher you climb. Aim for the top!"
+      desc: "See where you stand among all users. The more habits you complete, the higher you climb.",
+      tip: "The leaderboard updates weekly. First place earns a special badge!"
     },
     {
       target: 'nav-habits',
       title: "✏️ Manage your habits",
-      desc: "Add new habits, edit or delete existing ones. Set a convenient time and reminders — the app will notify you automatically."
+      desc: "Add, edit or delete habits. Set a convenient time — the app will remind you automatically.",
+      tip: "3-5 habits per day is ideal. Don't overwhelm yourself from day one."
     },
     {
       target: 'nav-bozor',
       title: "🛒 Shop — rewards for your effort",
-      desc: "Every completed habit earns you points. Redeem them in the Shop for special perks and rewards. Work more — earn more!"
+      desc: "Every completed habit earns you points. Redeem them for special perks and rewards.",
+      tip: "Save up your points — the bigger the balance, the better the reward."
     },
     {
       target: 'nav-profile',
       title: "👤 Your profile — your journey",
-      desc: "Achievements, statistics and personal settings — all in one place. Choose your language, customize reminders and track your progress."
+      desc: "Achievements, stats and settings — all in one place. Choose your language and track progress.",
+      tip: "Add a profile photo — stand out on the leaderboard!"
     },
     {
       target: null,
       title: "🚀 Your journey begins now!",
-      desc: "You're all set! Create your first habit and kick off the 21-day rule. Remember: great changes start with small steps. Good luck! 🌱"
+      desc: "You're all set! Create your first habit and kick off the 21-day rule. Great changes start with small steps.",
+      tip: "The secret to success: one small step every single day, no excuses!"
     }
   ]
 };
@@ -3159,6 +3188,13 @@ function showTourStep() {
     `${_tourStep + 1} ${TOUR_OF_LABELS[lang]} ${total}`;
   document.getElementById('tour-title').textContent = step.title;
   document.getElementById('tour-desc').textContent  = step.desc;
+  const tipEl = document.getElementById('tour-tip');
+  if (step.tip) {
+    tipEl.textContent = '💡 ' + step.tip;
+    tipEl.style.display = 'block';
+  } else {
+    tipEl.style.display = 'none';
+  }
 
   // Skip / Next button labels
   document.getElementById('tour-skip-btn').textContent =
