@@ -1398,21 +1398,21 @@ def build_main_text(uid):
     return text
 
 def send_main_menu(uid, text=None):
-    """Foydalanuvchiga Web App tugmali xabar yuborish"""
+    """Foydalanuvchiga Web App tugmali xabar yuborish — to'g'ridan HTTP API"""
     u = load_user(uid)
     webapp_url = os.environ.get("WEBAPP_URL", "").strip()
 
-    # Qisqa matn — faqat asosiy holat
+    # Matn tayyorlash
     if text is None:
         try:
-            today   = today_uz5()
-            habits  = u.get("habits", [])
-            done    = sum(1 for h in habits if h.get("last_done") == today)
-            total   = len(habits)
-            points  = u.get("points", 0)
-            jon     = u.get("jon", 100)
-            streak  = max((h.get("streak",0) for h in habits), default=0)
-            jon_e   = "\u2764\ufe0f" if jon>=80 else "\U0001f9e1" if jon>=50 else "\U0001f49b" if jon>=20 else "\U0001f5a4"
+            today  = today_uz5()
+            habits = u.get("habits", [])
+            done   = sum(1 for h in habits if h.get("last_done") == today)
+            total  = len(habits)
+            points = u.get("points", 0)
+            jon    = u.get("jon", 100)
+            streak = max((h.get("streak", 0) for h in habits), default=0)
+            jon_e  = "\u2764\ufe0f" if jon>=80 else "\U0001f9e1" if jon>=50 else "\U0001f49b" if jon>=20 else "\U0001f5a4"
             text = (
                 "\U0001f44b *Salom, " + str(u.get("name","Foydalanuvchi")) + "!*\n\n"
                 "\u2705 Bugun: *" + str(done) + "/" + str(total) + "* odat bajarildi\n"
@@ -1420,37 +1420,57 @@ def send_main_menu(uid, text=None):
                 + jon_e + " Jon: *" + str(jon) + "%*"
             )
         except Exception as e:
-            logger.error(f"send_main_menu text build error: {e}")
+            logger.error(f"send_main_menu text error: {e}")
             text = "\U0001f44b Xush kelibsiz!"
 
-    # Eski main_msg ni o'chirish
+    # Eski xabarni o'chirish
     old_mid = u.get("main_msg_id")
     if old_mid:
         try: bot.delete_message(uid, old_mid)
         except: pass
 
-    # Xabar yuborish
+    # To'g'ridan Telegram HTTP API orqali yuborish
+    api_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    if webapp_url:
+        reply_markup = json.dumps({
+            "inline_keyboard": [[
+                {"text": "\U0001f680 Web Appni ochish", "web_app": {"url": webapp_url}}
+            ]]
+        })
+    else:
+        reply_markup = json.dumps({"inline_keyboard": []})
+
     try:
-        if webapp_url:
-            kb = InlineKeyboardMarkup()
-            kb.add(InlineKeyboardButton("\U0001f680 Web Appni ochish", web_app=WebAppInfo(url=webapp_url)))
-            sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb)
-        else:
-            sent = bot.send_message(uid, text, parse_mode="Markdown")
-        u["main_msg_id"] = sent.message_id
-        ids = u.get("start_msg_ids", [])
-        ids.append(sent.message_id)
-        u["start_msg_ids"] = ids
-        save_user(uid, u)
-    except Exception as e:
-        logger.error(f"send_main_menu send error: {e}")
-        # Markdown xato bo'lsa — oddiy matn bilan qayta urinish
-        try:
-            sent = bot.send_message(uid, "Xush kelibsiz! Web Appni oching.")
-            u["main_msg_id"] = sent.message_id
+        resp = requests.post(api_url, data={
+            "chat_id":      uid,
+            "text":         text,
+            "parse_mode":   "Markdown",
+            "reply_markup": reply_markup,
+        }, timeout=10)
+        result = resp.json()
+        logger.info(f"send_main_menu result: ok={result.get('ok')} desc={result.get('description','')}")
+        if result.get("ok"):
+            mid = result["result"]["message_id"]
+            u["main_msg_id"] = mid
+            ids = u.get("start_msg_ids", [])
+            ids.append(mid)
+            u["start_msg_ids"] = ids
             save_user(uid, u)
-        except Exception as e2:
-            logger.error(f"send_main_menu fallback error: {e2}")
+        else:
+            # parse_mode xato bo'lsa — oddiy matn
+            resp2 = requests.post(api_url, data={
+                "chat_id":      uid,
+                "text":         text.replace("*","").replace("_","").replace("`",""),
+                "reply_markup": reply_markup,
+            }, timeout=10)
+            r2 = resp2.json()
+            logger.info(f"send_main_menu fallback: ok={r2.get('ok')} desc={r2.get('description','')}")
+            if r2.get("ok"):
+                mid = r2["result"]["message_id"]
+                u["main_msg_id"] = mid
+                save_user(uid, u)
+    except Exception as e:
+        logger.error(f"send_main_menu exception: {e}")
 
 
 # ============================================================
