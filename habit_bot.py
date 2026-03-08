@@ -6293,9 +6293,9 @@ def _run_broadcast(admin_uid, bc_chat_id, msg_ids, state):
                     from_chat_id=bc_chat_id,
                     message_id=mid
                 )
-            # Foydalanuvchiga "Tushunarli" tugmasi
+            # Foydalanuvchiga tugmalar
             kb_user = InlineKeyboardMarkup()
-            kb_user.add(InlineKeyboardButton("✅ Tushunarli", callback_data="bc_user_ack"))
+            kb_user.add(InlineKeyboardButton("🚀 Botni ochish", url="https://t.me/Super_habits_bot?start=bc"))
             bot.send_message(target_uid_int, "👆", reply_markup=kb_user)
             sent_count += 1
             time.sleep(0.05)
