@@ -910,7 +910,7 @@ def build_main_text(uid):
         f"kuzatib borish, qiziqarli raqobat, oson va tez "
         f"shakillantirish uchun, eng to\'g\'ri joydasiz!\n\n"
         f"Ushbu sayohatni boshlash uchun:\n"
-        f"« 📃 *Kirish*» tugmasini bosing\! 👇"
+        f"« 📃 *Kirish*» tugmasini bosing! 👇"
     )
 
 
