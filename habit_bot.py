@@ -7036,7 +7036,7 @@ try:
             best_str = max((h.get("streak",0) for h in udata.get("habits",[])), default=0)
             entry = {
                 "rank":      i + 1,
-                "name":      udata.get("name", "?"),
+                "name":      udata.get("display_name") or udata.get("name", "?"),
                 "points":    udata.get("points", 0),
                 "streak":    best_str,
                 "score":     score,
@@ -7044,6 +7044,7 @@ try:
                 "bot_start": bot_start,
                 "badge":     badge,
                 "pet":       pet,
+                "photo_url": udata.get("photo_url", ""),
                 "is_me":     uid_str == str(caller_uid),
             }
             if i < 10:
@@ -7120,6 +7121,9 @@ try:
             "streak_shields":  u.get("inventory",{}).get("streak_shield", 0) + u.get("inventory",{}).get("double_shield", 0),
             "bonus_2x_active": u.get("bonus_2x_until","") >= str(__import__("datetime").date.today()) if u.get("bonus_2x_until") else False,
             "bonus_3x_active": u.get("bonus_3x_until","") >= str(__import__("datetime").date.today()) if u.get("bonus_3x_until") else False,
+            "photo_url":       u.get("photo_url", ""),
+            "display_name":    u.get("display_name", ""),
+            "phone":           u.get("phone", ""),
         })
 
     @api_app.route("/api/profile/<int:uid>", methods=["PUT"])
@@ -7141,6 +7145,19 @@ try:
         if "evening_notify" in body:
             u["evening_notify"] = bool(body["evening_notify"])
             updated["evening_notify"] = u["evening_notify"]
+        if "photo_url" in body:
+            url = str(body["photo_url"])[:500]
+            u["photo_url"] = url
+            updated["photo_url"] = url
+        if "display_name" in body:
+            n = str(body["display_name"]).strip()[:60]
+            if n:
+                u["display_name"] = n
+                updated["display_name"] = n
+        if "phone" in body:
+            p = str(body["phone"]).strip()[:20]
+            u["phone"] = p
+            updated["phone"] = p
         if not updated:
             return jsonify({"ok": False, "error": "Hech narsa yangilanmadi"}), 400
         save_user(uid, u)

@@ -1720,6 +1720,16 @@ async function loadRating() {
 function setRatSort(s)   { _ratSort   = s; loadRating(); }
 function setRatPeriod(p) { _ratPeriod = p; loadRating(); }
 
+function userAvatarHTML(u, size = 32) {
+  const initial = (u.name || '?')[0].toUpperCase();
+  if (u.photo_url) {
+    return `<img src="${u.photo_url}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0"
+      onerror="this.outerHTML='<div style=\\'width:${size}px;height:${size}px;border-radius:50%;background:var(--bg);box-shadow:var(--sh-sm);display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.4)}px;font-weight:700;color:var(--text);flex-shrink:0\\'>${initial}</div>'">`;
+  }
+  return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:var(--bg);box-shadow:var(--sh-sm);
+    display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.4)}px;font-weight:700;color:var(--text);flex-shrink:0">${initial}</div>`;
+}
+
 function renderRating(d) {
   const { today, days, day_labels: lbls, users, caller_entry, total_users, sort_by, period } = d;
   const maxScore = users.length ? Math.max(...users.map(u => u.score), 1) : 1;
@@ -1739,10 +1749,12 @@ function renderRating(d) {
     const isMe = u.is_me;
     podiumHtml += `
       <div style="flex:1;max-width:110px;text-align:center">
-        <div style="font-size:${idx===0?'28px':'22px'};margin-bottom:4px">${u.pet || u.badge || medals[idx]}</div>
-        <div style="font-size:${idx===0?'13px':'11px'};font-weight:700;color:var(--text);margin-bottom:2px;
-          ${isMe?'color:#5B8DEF':''}">${u.name.split(' ')[0]}</div>
-        ${u.badge && u.pet ? `<div style="font-size:10px">${u.badge}</div>` : ''}
+        <div style="display:flex;justify-content:center;margin-bottom:6px;position:relative">
+          ${userAvatarHTML(u, idx===0?48:38)}
+          <span style="position:absolute;bottom:-4px;right:calc(50% - ${idx===0?36:29}px);font-size:${idx===0?'16px':'13px'}">${u.pet || medals[idx]}</span>
+        </div>
+        <div style="font-size:${idx===0?'13px':'11px'};font-weight:700;color:${isMe?'#5B8DEF':'var(--text)'};margin-bottom:2px">${u.name.split(' ')[0]}</div>
+        ${u.badge ? `<div style="font-size:10px">${u.badge}</div>` : ''}
         <div style="font-size:10px;color:${col};font-weight:700;margin-bottom:6px">
           ${sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+' 🔥':u.score+' kun'}
         </div>
@@ -1767,7 +1779,7 @@ function renderRating(d) {
         border-radius:14px;margin-bottom:4px;background:var(--card);
         box-shadow:${isMe?'0 0 0 2px #5B8DEF':' var(--sh)'}">
         <div style="font-size:13px;font-weight:700;color:var(--sub);width:20px;text-align:center">${rank}</div>
-        <div style="font-size:22px">${u.pet || u.badge || '👤'}</div>
+        ${userAvatarHTML(u, 34)}
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700;color:${isMe?'#5B8DEF':'var(--text)'};
             white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
@@ -1793,7 +1805,7 @@ function renderRating(d) {
         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
           border-radius:14px;background:var(--card);box-shadow:0 0 0 2px #5B8DEF">
           <div style="font-size:13px;font-weight:700;color:#5B8DEF;width:20px;text-align:center">${u.rank}</div>
-          <div style="font-size:22px">${u.pet || u.badge || '👤'}</div>
+          ${userAvatarHTML(u, 34)}
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:700;color:#5B8DEF">${u.name}</div>
             <div style="height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-top:5px;overflow:hidden">
@@ -1816,8 +1828,10 @@ function renderRating(d) {
       style="font-size:11px;padding:6px 10px" type="button">${l}</button>`).join('');
 
   document.getElementById('rating-content').innerHTML = `
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px">${sortBtns}</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">${perBtns}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px">
+      <div style="display:flex;gap:4px">${sortBtns}</div>
+      <div style="display:flex;gap:4px">${perBtns}</div>
+    </div>
     <div style="font-size:10px;color:var(--sub);text-align:right;margin-bottom:4px">
       Jami ${total_users} foydalanuvchi
     </div>
@@ -1830,6 +1844,15 @@ function renderRating(d) {
 async function loadProfile() {
   try {
     const d = await apiFetch(`profile/${userId}`);
+    // photo_url ni DB ga saqlaymiz (Telegram WebApp orqali)
+    const photoUrl = user.photo_url || '';
+    if (photoUrl && !d.photo_url) {
+      fetch(`${API}/profile/${userId}`, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ photo_url: photoUrl })
+      }).catch(() => {});
+    }
     renderProfile(d);
   } catch(e) {
     document.getElementById('profile-content').innerHTML =
@@ -1838,6 +1861,7 @@ async function loadProfile() {
 }
 
 function renderProfile(d) {
+  data.profile = d;
   const jon = d.jon ?? 100;
   const jonColor = jon >= 70 ? '#4CAF7D' : jon >= 40 ? '#D4963A' : '#E05050';
   const initial = (d.name || '?')[0].toUpperCase();
@@ -1963,16 +1987,18 @@ function renderProfile(d) {
 
     <!-- Sozlamalar -->
     <div class="section-title">⚙️ Sozlamalar</div>
-    <div style="display:flex;gap:6px;margin-bottom:4px">
-      <div class="rem-card" style="flex:1;cursor:pointer;margin:0" onclick="switchTab('rating',null)">
+    <div style="margin-bottom:4px">
+      <div class="rem-card" style="cursor:pointer;margin:0" onclick="openEditProfile()">
         <div class="rem-top" style="margin-bottom:0">
-          <div class="rem-icon">🏆</div><div class="rem-name" style="font-size:12px">Reyting</div>
+          <div class="rem-icon">✏️</div><div class="rem-name" style="font-size:12px">Ma'lumotlarni tahrirlash</div>
           <div style="color:var(--sub);font-size:18px">›</div>
         </div>
       </div>
-      <div class="rem-card" style="flex:1;cursor:pointer;margin:0" onclick="switchTab('groups',null);setGroupSub('shop')">
+    </div>
+    <div style="margin-bottom:4px">
+      <div class="rem-card" style="cursor:pointer;margin:0" onclick="switchTab('stats',null);setStatSub('rating')">
         <div class="rem-top" style="margin-bottom:0">
-          <div class="rem-icon">🛒</div><div class="rem-name" style="font-size:12px">Bozor</div>
+          <div class="rem-icon">🏆</div><div class="rem-name" style="font-size:12px">Reyting</div>
           <div style="color:var(--sub);font-size:18px">›</div>
         </div>
       </div>
@@ -2005,13 +2031,97 @@ function renderProfile(d) {
         </label>
       </div>
     </div>
-    <div class="toast" id="toast-profile"></div>`;
+    <div class="toast" id="toast-profile"></div>
+
+    <!-- Ma'lumotlarni tahrirlash modal -->
+    <div class="modal-overlay" id="edit-profile-modal">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <button class="modal-close" onclick="closeEditProfile()">✕</button>
+        <div class="modal-title">Ma'lumotlarni tahrirlash</div>
+        <div class="field" style="text-align:center;margin-bottom:16px">
+          <div id="ep-avatar-wrap" style="display:inline-block;position:relative;cursor:pointer" onclick="document.getElementById('ep-photo-input').click()">
+            <div id="ep-avatar" style="width:72px;height:72px;border-radius:50%;background:var(--bg);box-shadow:var(--sh);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--text);overflow:hidden;margin:0 auto"></div>
+            <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:var(--text);display:flex;align-items:center;justify-content:center;font-size:12px">✏️</div>
+          </div>
+          <input type="file" id="ep-photo-input" accept="image/*" style="display:none" onchange="previewEpPhoto(this)">
+          <div style="font-size:10px;color:var(--sub);margin-top:6px">Rasmga bosing</div>
+        </div>
+        <div class="field">
+          <label>Ism</label>
+          <input id="ep-name" type="text" placeholder="Ismingiz" maxlength="60">
+        </div>
+        <div class="field">
+          <label>Telefon raqam</label>
+          <input id="ep-phone" type="tel" placeholder="+998 90 123 45 67" maxlength="20">
+        </div>
+        <button class="save-btn" onclick="saveEditProfile()" type="button">💾 Saqlash</button>
+      </div>
+    </div>`;
   setTimeout(function() {
     var tog = document.getElementById("evening-toggle");
     if (tog) { tog.checked = (d.evening_notify !== false); updateToggleVisual(tog.checked); }
   }, 30);
 }
 
+
+// ── PROFIL TAHRIRLASH ──
+let _epPhotoDataUrl = null;
+
+function openEditProfile() {
+  const d = data.profile || {};
+  const photoUrl = d.photo_url || user.photo_url || '';
+  const initial  = ((d.display_name || d.name || '?')[0]).toUpperCase();
+  const epAv = document.getElementById('ep-avatar');
+  if (epAv) {
+    if (photoUrl) epAv.innerHTML = `<img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover">`;
+    else epAv.textContent = initial;
+  }
+  const epName  = document.getElementById('ep-name');
+  const epPhone = document.getElementById('ep-phone');
+  if (epName)  epName.value  = d.display_name || d.name || '';
+  if (epPhone) epPhone.value = d.phone || '';
+  _epPhotoDataUrl = null;
+  document.getElementById('edit-profile-modal')?.classList.add('open');
+}
+function closeEditProfile() {
+  document.getElementById('edit-profile-modal')?.classList.remove('open');
+}
+function previewEpPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _epPhotoDataUrl = e.target.result;
+    const epAv = document.getElementById('ep-avatar');
+    if (epAv) epAv.innerHTML = `<img src="${_epPhotoDataUrl}" style="width:100%;height:100%;object-fit:cover">`;
+  };
+  reader.readAsDataURL(file);
+}
+async function saveEditProfile() {
+  const name  = document.getElementById('ep-name')?.value.trim();
+  const phone = document.getElementById('ep-phone')?.value.trim();
+  const body  = {};
+  if (name)           body.display_name = name;
+  if (phone)          body.phone        = phone;
+  if (_epPhotoDataUrl) body.photo_url   = _epPhotoDataUrl;
+  if (!Object.keys(body).length) { closeEditProfile(); return; }
+  try {
+    await fetch(`${API}/profile/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
+      body: JSON.stringify(body)
+    });
+    closeEditProfile();
+    loaded.profile = false;
+    await loadProfile();
+    const t = document.getElementById('toast-profile');
+    if (t) { t.textContent = '✅ Saqlandi'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+  } catch(e) {
+    const t = document.getElementById('toast-profile');
+    if (t) { t.textContent = '❌ Xato'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+  }
+}
 
 function updateToggleVisual(checked) {
   const slider = document.getElementById('evening-slider');
