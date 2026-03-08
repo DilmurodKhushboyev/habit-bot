@@ -932,14 +932,9 @@ body {
     <span class="nav-icon">📊</span>
     <span class="nav-label">Statistika</span>
   </button>
-  <button class="nav-item" id="nav-habits" onclick="switchTab('habits', this)" type="button"
-    style="padding:4px 8px">
-    <span style="display:flex;align-items:center;justify-content:center;
-      width:42px;height:42px;border-radius:50%;
-      background:var(--bg);
-      box-shadow:var(--sh);
-      font-size:28px;color:var(--text);font-weight:300;line-height:1">＋</span>
-    <span class="nav-label" style="margin-top:2px">Qo'sh</span>
+  <button class="nav-item" id="nav-habits" onclick="switchTab('habits', this)" type="button">
+    <span class="nav-icon">✏️</span>
+    <span class="nav-label">Tahrirlash</span>
   </button>
   <button class="nav-item" id="nav-bozor" onclick="switchTab('bozor', this)">
     <span class="nav-icon">🛒</span>
@@ -1136,7 +1131,7 @@ function renderToday(d) {
       <div class="today-sub" id="prog-sub">${done_count} / ${total} odat bajarildi</div>
     </div>
 
-    <div class="section-title">Bugungi odatlar</div>
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Bugungi odatlar<button onclick="switchTab('habits',document.getElementById('nav-habits'))" type="button" style="font-size:12px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px">＋ Odat yaratish</button></div>
     ${cardsHtml || '<div class="empty-state"><div class="icon">📋</div>Hali odat qo\'shilmagan</div>'}
     <div class="toast" id="toast-today"></div>`;
 }
