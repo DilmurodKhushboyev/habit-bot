@@ -22,8 +22,7 @@ from datetime import datetime, date
 from PIL import Image, ImageDraw, ImageFont
 from telebot.types import (
     InlineKeyboardMarkup, InlineKeyboardButton,
-    ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove,
-    WebAppInfo
+    ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 )
 from pymongo import MongoClient
 
@@ -41,7 +40,6 @@ mongo_client  = MongoClient(MONGO_URI)
 mongo_db      = mongo_client["habit_bot"]
 mongo_col     = mongo_db["users"]
 groups_col    = mongo_db["groups"]   # Guruhlar kolleksiyasi
-challenges_col = mongo_db["challenges"]  # Challengelar
 
 # ============================================================
 #  MA'LUMOTLAR BAZASI FUNKSIYALARI
@@ -59,113 +57,6 @@ def save_user(user_id, udata):
         {"$set": udata},
         upsert=True
     )
-
-# ============================================================
-#  SHOP KATALOGI
-# ============================================================
-SHOP_ITEMS = {
-    # ── HIMOYA ──
-    "streak_shield": {
-        "id": "streak_shield", "cat": "protection",
-        "name": "Streak himoyasi", "emoji": "🛡",
-        "desc": "Bir kun odat bajarmay qolsangiz streakingiz saqlanadi",
-        "price_ball": 100, "price_stars": 0, "max_own": 3,
-    },
-    "double_shield": {
-        "id": "double_shield", "cat": "protection",
-        "name": "Ikki kunlik himoya", "emoji": "🛡🛡",
-        "desc": "Ikki kun ketma-ket bajarmay qolsangiz ham streak saqlanadi",
-        "price_ball": 220, "price_stars": 0, "max_own": 1,
-    },
-    # ── BONUS ──
-    "double_ball": {
-        "id": "double_ball", "cat": "bonus",
-        "name": "2× ball bonusi", "emoji": "⚡",
-        "desc": "1 kun davomida barcha odat ballaringiz 2 baravar ko'payadi",
-        "price_ball": 150, "price_stars": 0, "max_own": 5,
-    },
-    "mega_ball": {
-        "id": "mega_ball", "cat": "bonus",
-        "name": "Mega bonus", "emoji": "🔥",
-        "desc": "3 kun davomida 3× ball — faqat Stars bilan",
-        "price_ball": 0, "price_stars": 25, "max_own": 2,
-    },
-    # ── BADGE ──
-    "badge_champ": {
-        "id": "badge_champ", "cat": "badge",
-        "name": "Chempion 🏆", "emoji": "🥇",
-        "desc": "Profilingizda maxsus Chempion belgisi ko'rsatiladi",
-        "price_ball": 500, "price_stars": 0, "max_own": 1,
-    },
-    "badge_legend": {
-        "id": "badge_legend", "cat": "badge",
-        "name": "Afsona 🌀", "emoji": "🌀",
-        "desc": "Eng noyob unvon — faqat Stars bilan olish mumkin",
-        "price_ball": 0, "price_stars": 99, "max_own": 1,
-    },
-    "badge_master": {
-        "id": "badge_master", "cat": "badge",
-        "name": "Ustoz 🧠", "emoji": "🧠",
-        "desc": "30 kunlik streak egalariga maxsus unvon",
-        "price_ball": 300, "price_stars": 0, "max_own": 1,
-    },
-    # ── HAYVONLAR ──
-    "pet_cat": {
-        "id": "pet_cat", "cat": "pet",
-        "name": "Mushuk", "emoji": "🐱",
-        "desc": "Sizning virtual hamrohingiz. Har kuni bajarganingizda xursand bo'ladi!",
-        "price_ball": 200, "price_stars": 0, "max_own": 1,
-    },
-    "pet_dog": {
-        "id": "pet_dog", "cat": "pet",
-        "name": "It", "emoji": "🐕",
-        "desc": "Sodiq do'st. Streak uzilsa xafa bo'ladi...",
-        "price_ball": 200, "price_stars": 0, "max_own": 1,
-    },
-    "pet_dragon": {
-        "id": "pet_dragon", "cat": "pet",
-        "name": "Ajdaho", "emoji": "🐉",
-        "desc": "Eng kuchli hayvon — faqat Stars bilan!",
-        "price_ball": 0, "price_stars": 49, "max_own": 1,
-    },
-    # ── AVTOMOBILLAR ──
-    "car_sport": {
-        "id": "car_sport", "cat": "car",
-        "name": "Sport mashinа", "emoji": "🏎",
-        "desc": "Profilingizda sport mashina ko'rsatiladi",
-        "price_ball": 800, "price_stars": 0, "max_own": 1,
-    },
-    "car_luxury": {
-        "id": "car_luxury", "cat": "car",
-        "name": "Lyuks avto", "emoji": "🚗",
-        "desc": "Eng hashamatli avto — faqat Stars!",
-        "price_ball": 0, "price_stars": 79, "max_own": 1,
-    },
-    # ── SOVGʻALAR ──
-    "gift_star": {
-        "id": "gift_star", "cat": "gift",
-        "name": "Yulduz sovg'a", "emoji": "🎁",
-        "desc": "Do'stingizga 50 ball sovg'a qilasiz",
-        "price_ball": 75, "price_stars": 0, "max_own": 99,
-        "gift_amount": 50,
-    },
-    "gift_premium": {
-        "id": "gift_premium", "cat": "gift",
-        "name": "Premium sovg'a", "emoji": "💎",
-        "desc": "Do'stingizga 200 ball sovg'a qilasiz — faqat Stars!",
-        "price_ball": 0, "price_stars": 19, "max_own": 99,
-        "gift_amount": 200,
-    },
-}
-
-CAT_LABELS = {
-    "protection": "🛡 Himoya",
-    "bonus":      "⚡ Bonus",
-    "badge":      "🏅 Badge",
-    "pet":        "🐾 Hayvonlar",
-    "car":        "🚗 Avtomobillar",
-    "gift":       "🎁 Sovg'alar",
-}
 
 def load_settings():
     doc = mongo_col.find_one({"_id": "_settings"})
@@ -193,94 +84,6 @@ def user_exists(user_id):
 def count_users():
     return mongo_col.count_documents({"_id": {"$not": {"$regex": "^_"}}})
 
-def _apply_item_effect(uid, item, u):
-    """Mahsulot sotib olinganda darhol effekt qo'llash"""
-    iid = item["id"]
-    if iid == "double_ball":
-        u["bonus_2x_until"] = (datetime.now() + __import__("datetime").timedelta(days=1)).strftime("%Y-%m-%d")
-    elif iid == "mega_ball":
-        u["bonus_3x_until"] = (datetime.now() + __import__("datetime").timedelta(days=3)).strftime("%Y-%m-%d")
-    # streak_shield, badge, pet, car — inventory da saqlanadi, checkin/profil da ishlatiladi
-
-def _finish_challenge(cid, c=None):
-    """Challenge tugaganda g'olibni aniqlash va ball berish"""
-    if c is None:
-        c = load_challenge(cid)
-    if not c or c.get("status") != "active":
-        return
-    days       = c.get("days", 1)
-    start      = c.get("start_date","")
-    end        = c.get("end_date","")
-    s_log      = c.get("sender_log", {})
-    r_log      = c.get("receiver_log", {})
-    # Faqat challenge kunlarini hisoblash
-    from datetime import date as _dt, timedelta as _td
-    try:
-        start_d = _dt.fromisoformat(start)
-        end_d   = _dt.fromisoformat(end)
-    except Exception:
-        return
-    all_days = [(start_d + _td(days=i)).strftime("%Y-%m-%d") for i in range(days)]
-    s_done = sum(1 for d in all_days if s_log.get(d))
-    r_done = sum(1 for d in all_days if r_log.get(d))
-    bet    = c.get("bet", 0)
-    sid    = c.get("sender_id")
-    rid    = c.get("receiver_id")
-    # G'olibni aniqlash
-    if s_done > r_done:
-        winner_id, loser_id = sid, rid
-        w_done, l_done = s_done, r_done
-    elif r_done > s_done:
-        winner_id, loser_id = rid, sid
-        w_done, l_done = r_done, s_done
-    else:
-        # Draw — ikkalasiga ball qaytarish
-        for pid in [sid, rid]:
-            pu = load_user(pid)
-            pu["points"] = pu.get("points", 0) + bet
-            save_user(pid, pu)
-        c["status"] = "draw"
-        save_challenge(cid, c)
-        for pid in [sid, rid]:
-            try:
-                bot.send_message(pid,
-                    "\U0001F91D *Challenge tugadi \u2014 Durrang!*\n\nIkkalangiz teng bajardingliz. Balllar qaytarildi.",
-                    parse_mode="Markdown")
-            except Exception:
-                pass
-        return
-    # G'olib/yutqazuvchi
-    wu = load_user(winner_id)
-    lu = load_user(loser_id)
-    wu["points"] = wu.get("points", 0) + bet * 2
-    save_user(winner_id, wu)
-    c["status"]    = "finished"
-    c["winner_id"] = winner_id
-    save_challenge(cid, c)
-    wname = wu.get("name","?")
-    lname = lu.get("name","?")
-    try:
-        bot.send_message(winner_id,
-            "\U0001F3C6 *Challenge tugadi \u2014 Siz g\u2019olib!*\n\n\U0001F4CA " + str(w_done) + "/" + str(days) + " kun bajardingliz\n\u2B50 +" + str(bet*2) + " ball oldingliz!",
-            parse_mode="Markdown")
-    except Exception:
-        pass
-    try:
-        bot.send_message(loser_id,
-            "\U0001F614 *Challenge tugadi \u2014 " + wname + " g\u2019olib bo\u2019ldi*\n\n\U0001F4CA " + str(l_done) + "/" + str(days) + " kun bajardingliz\n\u2B50 " + str(bet) + " ball yechildi",
-            parse_mode="Markdown")
-    except Exception:
-        pass
-
-def load_challenge(cid):
-    doc = challenges_col.find_one({"_id": str(cid)})
-    if doc:
-        return {k: v for k, v in doc.items() if k != "_id"}
-    return None
-
-def save_challenge(cid, data):
-    challenges_col.update_one({"_id": str(cid)}, {"$set": data}, upsert=True)
-
 def load_group(group_id):
     doc = groups_col.find_one({"_id": str(group_id)})
     if doc:
@@ -296,84 +99,6 @@ def save_group(group_id, gdata):
 
 def delete_group(group_id):
     groups_col.delete_one({"_id": str(group_id)})
-
-# ============================================================
-#  YUTUQLAR (ACHIEVEMENTS)
-# ============================================================
-ACHIEVEMENTS = [
-    # 🔥 Streak
-    {"id": "streak_7",    "cat": "streak",  "icon": "🔥", "title": "Haftalik olov",    "desc": "7 kun streak",          "req": 7,    "key": "streak"},
-    {"id": "streak_14",   "cat": "streak",  "icon": "🔥", "title": "Ikki hafta!",      "desc": "14 kun streak",         "req": 14,   "key": "streak"},
-    {"id": "streak_30",   "cat": "streak",  "icon": "🏅", "title": "Oylik chempion",   "desc": "30 kun streak",         "req": 30,   "key": "streak"},
-    {"id": "streak_100",  "cat": "streak",  "icon": "👑", "title": "Yuz kunlik qorol", "desc": "100 kun streak",        "req": 100,  "key": "streak"},
-    # ⭐ Ball
-    {"id": "pts_100",     "cat": "points",  "icon": "⭐", "title": "Birinchi yuz",     "desc": "100 ball to'plash",     "req": 100,  "key": "points"},
-    {"id": "pts_500",     "cat": "points",  "icon": "💫", "title": "Besh yuz!",        "desc": "500 ball to'plash",     "req": 500,  "key": "points"},
-    {"id": "pts_1000",    "cat": "points",  "icon": "🌟", "title": "Ming ball",        "desc": "1000 ball to'plash",    "req": 1000, "key": "points"},
-    {"id": "pts_5000",    "cat": "points",  "icon": "💎", "title": "Olmosli chegara",  "desc": "5000 ball to'plash",    "req": 5000, "key": "points"},
-    # ✅ Jami bajarilgan
-    {"id": "done_10",     "cat": "done",    "icon": "✅", "title": "Ilk qadamlar",     "desc": "10 marta bajarish",     "req": 10,   "key": "total_done_all"},
-    {"id": "done_50",     "cat": "done",    "icon": "🎯", "title": "Ellik marta!",     "desc": "50 marta bajarish",     "req": 50,   "key": "total_done_all"},
-    {"id": "done_100",    "cat": "done",    "icon": "🏆", "title": "Yuz marta",        "desc": "100 marta bajarish",    "req": 100,  "key": "total_done_all"},
-    {"id": "done_500",    "cat": "done",    "icon": "🚀", "title": "Besh yuz marta",   "desc": "500 marta bajarish",    "req": 500,  "key": "total_done_all"},
-    # 📋 Odat soni
-    {"id": "habits_3",    "cat": "habits",  "icon": "📋", "title": "Uchlik",           "desc": "3 ta odat qo'shish",    "req": 3,    "key": "habits_count"},
-    {"id": "habits_5",    "cat": "habits",  "icon": "📚", "title": "Beshalik",         "desc": "5 ta odat qo'shish",    "req": 5,    "key": "habits_count"},
-    {"id": "habits_10",   "cat": "habits",  "icon": "🌈", "title": "O'nlik",           "desc": "10 ta odat qo'shish",   "req": 10,   "key": "habits_count"},
-    # 👥 Guruh
-    {"id": "group_join",  "cat": "group",   "icon": "👥", "title": "Jamoa a'zosi",     "desc": "Guruhga qo'shilish",    "req": 1,    "key": "groups_joined"},
-    {"id": "group_win",   "cat": "group",   "icon": "🏆", "title": "Guruh g'olibi",    "desc": "Guruhda 1-o'rin",       "req": 1,    "key": "group_wins"},
-]
-
-def get_user_stats_for_achievements(uid, udata):
-    """Foydalanuvchi yutuq tekshirish uchun ko'rsatkichlar"""
-    total_done_all = sum(h.get("total_done", 0) for h in udata.get("habits", []))
-    try:
-        groups_joined = mongo_db["groups"].count_documents({"members": str(uid)})
-    except:
-        groups_joined = 0
-    return {
-        "streak":        udata.get("streak", 0),
-        "points":        udata.get("points", 0),
-        "total_done_all": total_done_all,
-        "habits_count":  len(udata.get("habits", [])),
-        "groups_joined": groups_joined,
-        "group_wins":    udata.get("group_wins", 0),
-    }
-
-def check_achievements(uid, udata):
-    """
-    Yangi badge tekshirish va berish.
-    Qaytaradi: yangi qozonilgan badge'lar ro'yxati (notification uchun)
-    """
-    earned   = udata.get("achievements", [])  # allaqachon bor badge IDlar
-    stats    = get_user_stats_for_achievements(uid, udata)
-    new_ones = []
-
-    for ach in ACHIEVEMENTS:
-        if ach["id"] in earned:
-            continue
-        val = stats.get(ach["key"], 0)
-        if val >= ach["req"]:
-            earned.append(ach["id"])
-            new_ones.append(ach)
-
-    if new_ones:
-        udata["achievements"] = earned
-        save_user(uid, udata)
-
-    return new_ones
-
-def notify_achievements(uid, new_badges):
-    """Bot orqali foydalanuvchiga badge xabari yuborish"""
-    if not new_badges:
-        return
-    try:
-        lines = "\n".join(f"{b['icon']} *{b['title']}* — {b['desc']}" for b in new_badges)
-        text  = f"🎉 *Yangi yutuq{'lar' if len(new_badges) > 1 else ''}!*\n\n{lines}\n\nDavom eting! 💪"
-        bot.send_message(uid, text, parse_mode="Markdown")
-    except Exception:
-        pass
 
 # ============================================================
 #  KO'P TIL
@@ -1251,11 +976,6 @@ def main_menu_dict(uid=None, page=1):
         {"text": "🛒 Bozor",             "callback_data": "menu_bozor",     "style": "primary"},
         {"text": T(uid, "btn_settings"), "callback_data": "menu_settings", "style": "primary"},
     ])
-    webapp_url = os.environ.get("WEBAPP_URL", "")
-    if webapp_url:
-        rows.append([
-            {"text": "🌐 Web App", "web_app": {"url": webapp_url}},
-        ])
     rows.append([
         {"text": "🏠 2-menyu",           "callback_data": "menu2_open",     "style": "primary"},
     ])
@@ -1398,79 +1118,17 @@ def build_main_text(uid):
     return text
 
 def send_main_menu(uid, text=None):
-    """Foydalanuvchiga Web App tugmali xabar yuborish — to'g'ridan HTTP API"""
     u = load_user(uid)
-    webapp_url = os.environ.get("WEBAPP_URL", "").strip()
-
-    # Matn tayyorlash
     if text is None:
-        try:
-            today  = today_uz5()
-            habits = u.get("habits", [])
-            done   = sum(1 for h in habits if h.get("last_done") == today)
-            total  = len(habits)
-            points = u.get("points", 0)
-            jon    = u.get("jon", 100)
-            streak = max((h.get("streak", 0) for h in habits), default=0)
-            jon_e  = "\u2764\ufe0f" if jon>=80 else "\U0001f9e1" if jon>=50 else "\U0001f49b" if jon>=20 else "\U0001f5a4"
-            text = (
-                "\U0001f44b *Salom, " + str(u.get("name","Foydalanuvchi")) + "!*\n\n"
-                "\u2705 Bugun: *" + str(done) + "/" + str(total) + "* odat bajarildi\n"
-                "\u2b50 Ball: *" + str(points) + "*  |  \U0001f525 Streak: *" + str(streak) + "*\n"
-                + jon_e + " Jon: *" + str(jon) + "%*"
-            )
-        except Exception as e:
-            logger.error(f"send_main_menu text error: {e}")
-            text = "\U0001f44b Xush kelibsiz!"
-
-    # Eski xabarni o'chirish
-    old_mid = u.get("main_msg_id")
-    if old_mid:
-        try: bot.delete_message(uid, old_mid)
-        except: pass
-
-    # To'g'ridan Telegram HTTP API orqali yuborish
-    api_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    if webapp_url:
-        reply_markup = json.dumps({
-            "inline_keyboard": [[
-                {"text": "\U0001f680 Web Appni ochish", "web_app": {"url": webapp_url}}
-            ]]
-        })
-    else:
-        reply_markup = json.dumps({"inline_keyboard": []})
-
-    try:
-        resp = requests.post(api_url, data={
-            "chat_id":      uid,
-            "text":         text,
-            "parse_mode":   "Markdown",
-            "reply_markup": reply_markup,
-        }, timeout=10)
-        result = resp.json()
-        logger.info(f"send_main_menu result: ok={result.get('ok')} desc={result.get('description','')}")
-        if result.get("ok"):
-            mid = result["result"]["message_id"]
-            u["main_msg_id"] = mid
-            ids = u.get("start_msg_ids", [])
-            ids.append(mid)
-            u["start_msg_ids"] = ids
-            save_user(uid, u)
-        else:
-            # parse_mode xato bo'lsa — oddiy matn
-            resp2 = requests.post(api_url, data={
-                "chat_id":      uid,
-                "text":         text.replace("*","").replace("_","").replace("`",""),
-                "reply_markup": reply_markup,
-            }, timeout=10)
-            r2 = resp2.json()
-            logger.info(f"send_main_menu fallback: ok={r2.get('ok')} desc={r2.get('description','')}")
-            if r2.get("ok"):
-                mid = r2["result"]["message_id"]
-                u["main_msg_id"] = mid
-                save_user(uid, u)
-    except Exception as e:
-        logger.error(f"send_main_menu exception: {e}")
+        text = build_main_text(uid)
+    sent = send_message_colored(uid, text, main_menu_dict(uid))
+    if sent is None:
+        sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=main_menu(uid))
+    u["main_msg_id"] = sent.message_id
+    ids = u.get("start_msg_ids", [])
+    ids.append(sent.message_id)
+    u["start_msg_ids"] = ids
+    save_user(uid, u)
 
 
 # ============================================================
@@ -1684,7 +1342,6 @@ def cmd_test_onboard(msg):
 def cmd_start(msg):
     uid  = msg.from_user.id
     name = msg.from_user.first_name
-    logger.info(f"[START] uid={uid} name={name}")
 
     # Barcha oldingi xabarlarni o'chirish + holatni tozalash
     u_prev = load_user(uid)
@@ -1713,31 +1370,6 @@ def cmd_start(msg):
                 if not u_check.get("ref_used") and not u_check.get("phone"):
                     u_check["pending_referrer"] = referrer_id
                     save_user(uid, u_check)
-        except Exception:
-            pass
-
-    # Do'st qo'shish parametri
-    if start_param.startswith("friend_"):
-        try:
-            friend_id = int(start_param[7:])
-            if friend_id != uid:
-                u_me = load_user(uid)
-                u_fr = load_user(friend_id)
-                my_friends  = u_me.get("friends", [])
-                fr_friends  = u_fr.get("friends", [])
-                if friend_id not in my_friends:
-                    my_friends.append(friend_id)
-                    u_me["friends"] = my_friends
-                    save_user(uid, u_me)
-                if uid not in fr_friends:
-                    fr_friends.append(uid)
-                    u_fr["friends"] = fr_friends
-                    save_user(friend_id, u_fr)
-                    try:
-                        fr_name = u_me.get("name", "Kimdir")
-                        notify_text = "\U0001F91D *" + fr_name + "* siz bilan do\u2019st bo\u2019ldi!\n\nEndi umumiy streakingiz ko\u2019rsatiladi \U0001F525"
-                        bot.send_message(friend_id, notify_text, parse_mode="Markdown")
-                    except: pass
         except Exception:
             pass
 
@@ -1796,9 +1428,7 @@ def cmd_start(msg):
 
     if u.get("phone"):
         # Allaqachon ro'yxatdan o'tgan
-        sub_ok = check_subscription(uid)
-        logger.info(f"[START] uid={uid} phone=OK sub_ok={sub_ok}")
-        if not sub_ok:
+        if not check_subscription(uid):
             send_sub_required(uid)
             return
         send_main_menu(uid)
@@ -3968,13 +3598,18 @@ def callback_handler(call):
         return
 
     if cdata == "menu_stats":
-        bot.answer_callback_query(call.id, "Web App da ko'ring 👆")
-        send_main_menu(uid)
+        bot.answer_callback_query(call.id)
+        try: bot.delete_message(uid, call.message.message_id)
+        except Exception: pass
+        show_stats(uid)
         return
 
     if cdata.startswith("stats_page_"):
+        page = int(cdata[11:])
         bot.answer_callback_query(call.id)
-        send_main_menu(uid)
+        try: bot.delete_message(uid, call.message.message_id)
+        except Exception: pass
+        show_stats(uid, page=page)
         return
 
     if cdata == "menu_delete":
@@ -3985,8 +3620,10 @@ def callback_handler(call):
         return
 
     if cdata == "menu_rating":
-        bot.answer_callback_query(call.id, "Web App da ko'ring 👆")
-        send_main_menu(uid)
+        bot.answer_callback_query(call.id)
+        try: bot.delete_message(uid, call.message.message_id)
+        except Exception: pass
+        show_rating(uid)
         return
 
     if cdata == "menu_main":
@@ -4549,8 +4186,38 @@ def callback_handler(call):
     #  BOZOR
     # ============================================================
     if cdata == "menu_bozor":
-        bot.answer_callback_query(call.id, "Web App Bozor bo'limini oching 👆")
-        send_main_menu(uid)
+        bot.answer_callback_query(call.id)
+        try: bot.delete_message(uid, call.message.message_id)
+        except Exception: pass
+        balls = u.get("points", 0)
+        ref_count  = len(u.get("referrals", []))
+        bozor_text = (
+            f"🛒 *Bozor —* bu sizning ballaringiz bilan qilinadigan barcha ammalar joyi.\n\n"
+            f"*⭐ Sizning balingiz:* {balls} ball\n"
+            f"*👥 Taklif qilganlar:* {ref_count} ta do'st\n\n"
+            "*👥 Do'st taklif qilish —* +50 ball (siz), +25 ball (do'st)\n"
+            "*💸 Ballarni ayirboshlash —* yaqin insoniga ball yuborish\n"
+            "*🔴 Ballarimni 0 ga tushirish —* barcha ballarni nollash\n"
+            "*➖ Ballarimdan olib tashlash —* ma'lum miqdorni ayirish"
+        )
+        bozor_kb = {"inline_keyboard": [
+            [{"text": "👥 Do'st taklif qilish",       "callback_data": "bozor_referral",      "style": "primary"}],
+            [{"text": "💸 Ballarni ayirboshlash",     "callback_data": "bozor_transfer"}],
+            [{"text": "🔴 Ballarimni 0 ga tushirish", "callback_data": "bozor_reset_confirm", "style": "danger"}],
+            [{"text": "➖ Ballarimdan olib tashlash",  "callback_data": "bozor_subtract"}],
+            [{"text": T(uid, "btn_home"),              "callback_data": "menu_main",           "style": "primary"}],
+        ]}
+        sent = send_message_colored(uid, bozor_text, bozor_kb)
+        if sent is None:
+            kb_b = InlineKeyboardMarkup()
+            kb_b.add(InlineKeyboardButton("👥 Do'st taklif qilish",      callback_data="bozor_referral"))
+            kb_b.add(InlineKeyboardButton("💸 Ballarni ayirboshlash",    callback_data="bozor_transfer"))
+            kb_b.add(InlineKeyboardButton("🔴 Ballarimni 0 ga tushirish", callback_data="bozor_reset_confirm"))
+            kb_b.add(InlineKeyboardButton("➖ Ballarimdan olib tashlash",  callback_data="bozor_subtract"))
+            kb_b.add(cBtn(T(uid, "btn_home"),             "menu_main", "primary"))
+            sent = bot.send_message(uid, bozor_text, parse_mode="Markdown", reply_markup=kb_b)
+        u["main_msg_id"] = sent.message_id
+        save_user(uid, u)
         return
 
     if cdata == "bozor_referral":
@@ -5114,61 +4781,6 @@ def callback_handler(call):
         bot.answer_callback_query(call.id)
         return
 
-    # ── CHALLENGE CALLBACK ──
-    if cdata.startswith("ch_accept_"):
-        cid = cdata[len("ch_accept_"):]
-        bot.answer_callback_query(call.id)
-        c = load_challenge(cid)
-        if not c or c.get("status") != "pending":
-            try: bot.edit_message_text("Bu challenge allaqachon javob berilgan.", uid, call.message.message_id)
-            except: pass
-            return
-        if c.get("receiver_id") != uid:
-            return
-        # Ikkalasidan garov yechish
-        bet = c.get("bet", 0)
-        for pid in [c["sender_id"], c["receiver_id"]]:
-            pu = load_user(pid)
-            pu["points"] = max(0, pu.get("points", 0) - bet)
-            save_user(pid, pu)
-        # Challenge boshlash
-        from datetime import timezone, timedelta as _td, date as _dt
-        tz_uz    = timezone(_td(hours=5))
-        start_d  = datetime.now(tz_uz).date()
-        end_d    = start_d + _td(days=c["days"] - 1)
-        c["status"]     = "active"
-        c["start_date"] = str(start_d)
-        c["end_date"]   = str(end_d)
-        save_challenge(cid, c)
-        try: bot.delete_message(uid, call.message.message_id)
-        except: pass
-        ru = load_user(uid)
-        su = load_user(c["sender_id"])
-        for pid, other_name in [(uid, su.get("name","?")), (c["sender_id"], ru.get("name","?"))]:
-            try:
-                bot.send_message(pid,
-                    "\U0001F3AF *Challenge boshlandi!*\n\n" + "\U0001F4CC Odat: *" + c['habit_name'] + "*\n" + "\U0001F4C5 Muddat: *" + str(c['days']) + " kun* (" + str(start_d) + " \u2014 " + str(end_d) + ")\n" + "\u2B50 Garov: *" + str(bet) + " ball*\n\n" + "Raqibingiz: *" + other_name + "*\nHar kuni Web App orqali check-in qiling!",
-                    parse_mode="Markdown")
-            except: pass
-        return
-
-    if cdata.startswith("ch_reject_"):
-        cid = cdata[len("ch_reject_"):]
-        bot.answer_callback_query(call.id)
-        c = load_challenge(cid)
-        if not c or c.get("status") != "pending": return
-        if c.get("receiver_id") != uid: return
-        c["status"] = "rejected"
-        save_challenge(cid, c)
-        try: bot.delete_message(uid, call.message.message_id)
-        except: pass
-        try:
-            bot.send_message(c["sender_id"],
-                "❌ Challenge rad etildi.",
-                parse_mode="Markdown")
-        except: pass
-        return
-
     # ── Fallback: agar hech bir handler mos kelmasa ──
     try:
         bot.answer_callback_query(call.id)
@@ -5491,74 +5103,6 @@ def unschedule_habit_today(user_id, habit_id):
     schedule.clear(f"{user_id}_{habit_id}")
     print(f"[schedule] {user_id}_{habit_id} — bugunlik to'xtatildi")
 
-def send_evening_reminders():
-    """Har kuni 21:00 (UTC+5) — bajarilmagan odatlar uchun kechki eslatma"""
-    from datetime import timezone, timedelta
-    tz_uz = timezone(timedelta(hours=5))
-    today = datetime.now(tz_uz).strftime("%Y-%m-%d")
-    print("[evening] Kechki eslatmalar yuborilmoqda...")
-    sent_count = 0
-    try:
-        all_users = load_all_users()
-    except Exception as e:
-        print(f"[evening] load_all_users xato: {e}")
-        return
-    for uid_str, u in all_users.items():
-        try:
-            uid = int(uid_str)
-        except Exception:
-            continue
-        habits = u.get("habits", [])
-        if not habits:
-            continue
-        # Foydalanuvchi eslatmalarni o'chirganmi
-        if not u.get("evening_notify", True):
-            continue
-        # Bugun bajarilmagan odatlarni topish
-        undone = []
-        for h in habits:
-            # Arxivlangan yoki o'chirilgan odatni o'tkazib yuborish
-            if h.get("archived") or h.get("deleted"):
-                continue
-            last_done = h.get("last_done", "")
-            # Takrorlanuvchi odat
-            repeat_count = h.get("repeat_count", 1)
-            today_count  = h.get("today_count", {}).get(today, 0)
-            if repeat_count > 1:
-                if today_count < repeat_count:
-                    undone.append(f"{h.get('emoji','📌')} {h['name']} ({today_count}/{repeat_count})")
-            else:
-                if last_done != today:
-                    undone.append(f"{h.get('emoji','📌')} {h['name']}")
-        if not undone:
-            continue
-        # Foydalanuvchi ismini olish
-        name      = u.get("name", "").split()[0] if u.get("name") else ""
-        greeting  = f"*{name}*, " if name else ""
-        lang      = u.get("lang", "uz")
-        # Streak xavfi haqida ogohlantirish
-        max_streak = max((h.get("streak", 0) for h in habits), default=0)
-        streak_warn = ""
-        if max_streak >= 3:
-            streak_warn = "\n\n\u26A0\uFE0F " + str(max_streak) + " kunlik streakingiz xavf ostida!"
-        undone_text = "\n".join("  \u2022 " + item for item in undone[:5])
-        if len(undone) > 5:
-            undone_text += "\n  ... va yana " + str(len(undone)-5) + " ta"
-        text = (
-            "\U0001F319 " + greeting + "bugun hali bajarilmagan odatlar bor:\n\n"
-            + undone_text
-            + streak_warn + "\n\n"
-            + "_Hali vaqt bor \u2014 bugunni yoping!_ \U0001F4AA"
-        )
-        try:
-            kb = InlineKeyboardMarkup()
-            kb.add(InlineKeyboardButton("✅ Bajarilganlarni belgilash", callback_data="menu_today"))
-            bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb)
-            sent_count += 1
-        except Exception as e:
-            print(f"[evening] {uid} ga yuborishda xato: {e}")
-    print(f"[evening] {sent_count} ta foydalanuvchiga yuborildi")
-
 def group_daily_reset():
     """Har kuni 00:00 (UTC+5) da guruh progressini tozalash va eslatma yuborish"""
     print("[group_reset] Guruh progresslari tozalanmoqda...")
@@ -5791,8 +5335,6 @@ def scheduler_loop():
     # Har kuni 00:00 (UTC+5 = 19:00 UTC) da reset
     schedule.every().day.at("19:00").do(daily_reset).tag("daily_reset")
     schedule.every().day.at("19:00").do(group_daily_reset).tag("group_daily_reset")
-    # Har kuni 21:00 (UTC+5 = 16:00 UTC) kechki eslatma
-    schedule.every().day.at("16:00").do(send_evening_reminders).tag("evening_reminders")
     # Har dushanba 09:00 (UTC+5 = 04:00 UTC) da haftalik hisobot
     schedule.every().monday.at("04:00").do(send_weekly_reports).tag("weekly_report")
     # Har oyning 1-kuni 09:00 (UTC+5 = 04:00 UTC) da oylik hisobot
@@ -7007,89 +6549,30 @@ try:
     @api_app.route("/api/rating")
     def api_rating():
         from datetime import timezone, timedelta
-        tz_uz     = timezone(timedelta(hours=5))
         today_dt  = _tz_today()
         today_str = today_dt.strftime("%Y-%m-%d")
-        # Period parametri: week / month / all
-        period    = request.args.get("period", "week")
-        sort_by   = request.args.get("sort", "points")  # points / streak / active
-        # Caller uid (o'z o'rnini ko'rish uchun)
-        try:
-            caller_uid = int(request.args.get("uid", 0))
-        except Exception:
-            caller_uid = 0
-
-        # 7 kunlik dot log uchun
         days      = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
         day_lbls  = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
 
-        users_all = load_all_users()
-
-        def user_score(uid_str, udata):
-            done_log = udata.get("done_log", {})
-            if sort_by == "streak":
-                return max((h.get("streak",0) for h in udata.get("habits",[])), default=0)
-            elif sort_by == "active":
-                if period == "week":
-                    return sum(1 for d in days if done_log.get(d))
-                elif period == "month":
-                    from datetime import date as _dt
-                    month_start = today_dt.replace(day=1).strftime("%Y-%m-%d")
-                    return sum(1 for d,v in done_log.items() if v and d >= month_start)
-                else:
-                    return len([d for d,v in done_log.items() if v])
-            else:  # points
-                return udata.get("points", 0)
-
-        ranking = sorted(users_all.items(), key=lambda x: user_score(x[0], x[1]), reverse=True)
+        users   = load_all_users()
+        ranking = sorted(users.items(), key=lambda x: x[1].get("points",0), reverse=True)
 
         result = []
-        caller_entry = None
-        for i, (uid_str, udata) in enumerate(ranking):
+        for uid, udata in ranking:
             done_log  = udata.get("done_log", {})
             bot_start = min(done_log.keys()) if done_log else today_str
-            inventory = udata.get("inventory", {})
-            # Badge tanlash
-            badge = ""
-            for b in ["badge_legend","badge_champ","badge_master"]:
-                if inventory.get(b,0) > 0:
-                    badge = SHOP_ITEMS[b]["emoji"] if b in SHOP_ITEMS else ""
-                    break
-            # Pet tanlash
-            pet = ""
-            for p in ["pet_dragon","pet_cat","pet_dog"]:
-                if inventory.get(p,0) > 0:
-                    pet = SHOP_ITEMS[p]["emoji"] if p in SHOP_ITEMS else ""
-                    break
-            score    = user_score(uid_str, udata)
-            best_str = max((h.get("streak",0) for h in udata.get("habits",[])), default=0)
-            entry = {
-                "rank":      i + 1,
-                "name":      udata.get("display_name") or udata.get("name", "?"),
+            result.append({
+                "name":      udata.get("name", "?"),
                 "points":    udata.get("points", 0),
-                "streak":    best_str,
-                "score":     score,
                 "done_log":  done_log,
                 "bot_start": bot_start,
-                "badge":     badge,
-                "pet":       pet,
-                "photo_url": udata.get("photo_url", ""),
-                "is_me":     uid_str == str(caller_uid),
-            }
-            if i < 10:
-                result.append(entry)
-            if uid_str == str(caller_uid) and i >= 10:
-                caller_entry = entry
+            })
 
         return jsonify({
-            "today":        today_str,
-            "days":         days,
-            "day_labels":   day_lbls,
-            "users":        result,
-            "caller_entry": caller_entry,
-            "total_users":  len(ranking),
-            "sort_by":      sort_by,
-            "period":       period,
+            "today":      today_str,
+            "days":       days,
+            "day_labels": day_lbls,
+            "users":      result,
         })
 
     @api_app.route("/api/profile/<int:uid>")
@@ -7107,94 +6590,15 @@ try:
                 "streak": h.get("streak",0),
             })
 
-        from datetime import timezone, timedelta as _td
-        tz_uz      = timezone(_td(hours=5))
-        today_dt   = datetime.now(tz_uz)
-        days_30    = [(today_dt - _td(days=29-i)).strftime("%Y-%m-%d") for i in range(30)]
-
-        total_done_all = sum(h.get("total_done", 0) for h in u.get("habits", []))
-        best_streak    = max((h.get("streak", 0) for h in u.get("habits", [])), default=0)
-        done_log       = u.get("done_log", {})
-        active_days_30 = sum(1 for d in days_30 if done_log.get(d))
-        heatmap_30     = {d: bool(done_log.get(d)) for d in days_30}
-
-        # Yutuqlar progress
-        earned_list    = u.get("achievements", [])
-        total_ach      = len(ACHIEVEMENTS)
-        earned_ach     = len(earned_list)
-
         return jsonify({
-            "name":            u.get("name","?"),
-            "points":          u.get("points",0),
-            "streak":          u.get("streak",0),
-            "jon":             u.get("jon",100),
-            "is_vip":          u.get("is_vip",False),
-            "rank":            rank,
-            "habits":          habits,
-            "lang":            u.get("lang","uz"),
-            "joined_at":       u.get("joined_at",""),
-            "total_done_all":  total_done_all,
-            "best_streak":     best_streak,
-            "active_days_30":  active_days_30,
-            "total_users":     len(users),
-            "daily_target":    u.get("daily_target", 0),
-            "heatmap_30":      heatmap_30,
-            "days_30":         days_30,
-            "earned_ach":      earned_ach,
-            "total_ach":       total_ach,
-            "evening_notify":  u.get("evening_notify", True),
-            "inventory":       u.get("inventory", {}),
-            "active_pet":      SHOP_ITEMS.get(u.get("active_pet",""), {}).get("emoji", "") or next((SHOP_ITEMS[k]["emoji"] for k in ["pet_dragon","pet_cat","pet_dog"] if u.get("inventory",{}).get(k,0) > 0), ""),
-            "active_badge":    SHOP_ITEMS.get(u.get("active_badge",""), {}).get("emoji", "") or next((SHOP_ITEMS[k]["emoji"] for k in ["badge_legend","badge_champ","badge_master"] if u.get("inventory",{}).get(k,0) > 0), ""),
-            "active_car":      SHOP_ITEMS.get(u.get("active_car",""), {}).get("emoji", "") or next((SHOP_ITEMS[k]["emoji"] for k in ["car_luxury","car_sport"] if u.get("inventory",{}).get(k,0) > 0), ""),
-            "streak_shields":  u.get("inventory",{}).get("streak_shield", 0) + u.get("inventory",{}).get("double_shield", 0),
-            "bonus_2x_active": u.get("bonus_2x_until","") >= str(__import__("datetime").date.today()) if u.get("bonus_2x_until") else False,
-            "bonus_3x_active": u.get("bonus_3x_until","") >= str(__import__("datetime").date.today()) if u.get("bonus_3x_until") else False,
-            "photo_url":       u.get("photo_url", ""),
-            "display_name":    u.get("display_name", ""),
-            "phone":           u.get("phone", ""),
+            "name":   u.get("name","?"),
+            "points": u.get("points",0),
+            "streak": u.get("streak",0),
+            "jon":    u.get("jon",100),
+            "is_vip": u.get("is_vip",False),
+            "rank":   rank,
+            "habits": habits,
         })
-
-    @api_app.route("/api/profile/<int:uid>", methods=["PUT"])
-    def api_profile_update(uid):
-        body   = request.get_json() or {}
-        u      = load_user(uid)
-        updated = {}
-        lang = body.get("lang", "").strip()
-        if lang in ("uz", "ru", "en"):
-            u["lang"] = lang
-            updated["lang"] = lang
-        if "daily_target" in body:
-            try:
-                t = int(body["daily_target"])
-                u["daily_target"] = max(0, min(t, len(u.get("habits", []))))
-                updated["daily_target"] = u["daily_target"]
-            except (ValueError, TypeError):
-                pass
-        if "evening_notify" in body:
-            u["evening_notify"] = bool(body["evening_notify"])
-            updated["evening_notify"] = u["evening_notify"]
-        if "photo_url" in body:
-            url = str(body["photo_url"])[:500]
-            u["photo_url"] = url
-            updated["photo_url"] = url
-        if "display_name" in body:
-            n = str(body["display_name"]).strip()[:60]
-            if n:
-                u["display_name"] = n
-                updated["display_name"] = n
-        if "phone" in body:
-            p = str(body["phone"]).strip()[:20]
-            u["phone"] = p
-            updated["phone"] = p
-        if not updated:
-            return jsonify({"ok": False, "error": "Hech narsa yangilanmadi"}), 400
-        save_user(uid, u)
-        return jsonify({"ok": True, **updated})
-
-    @api_app.route("/api/profile/<int:uid>", methods=["OPTIONS"])
-    def options_profile(**kwargs):
-        return jsonify({}), 200
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
     def api_habits_get(uid):
@@ -7202,16 +6606,14 @@ try:
         habits = []
         for h in u.get("habits", []):
             habits.append({
-                "id":           h.get("id",""),
-                "name":         h.get("name",""),
-                "icon":         h.get("icon","✅"),
-                "time":         h.get("time","vaqtsiz"),
-                "times":        h.get("times", []),
-                "streak":       h.get("streak",0),
-                "total_done":   h.get("total_done",0),
-                "repeat_count": len(h.get("times", [])) or 1,
+                "id":         h.get("id",""),
+                "name":       h.get("name",""),
+                "icon":       h.get("icon","✅"),
+                "time":       h.get("time","vaqtsiz"),
+                "streak":     h.get("streak",0),
+                "total_done": h.get("total_done",0),
             })
-        return jsonify({"habits": habits, "jon": u.get("jon", 100)})
+        return jsonify({"habits": habits})
 
     @api_app.route("/api/habits/<int:uid>", methods=["POST"])
     def api_habits_add(uid):
@@ -7223,21 +6625,16 @@ try:
         if not name:
             return jsonify({"ok": False, "error": "Nom bo'sh"}), 400
         u = load_user(uid)
-        times = data.get("times", [])
-        if isinstance(times, list):
-            times = [t for t in times if t and isinstance(t, str)][:10]
         new_habit = {
-            "id":          str(uuid.uuid4())[:8],
-            "name":        name,
-            "icon":        icon,
-            "time":        time_,
-            "times":       times,
-            "type":        "daily",
-            "streak":      0,
-            "total_done":  0,
-            "last_done":   None,
-            "today_count": {},
-            "created_at":  str(datetime.now().date()),
+            "id":         str(uuid.uuid4())[:8],
+            "name":       name,
+            "icon":       icon,
+            "time":       time_,
+            "type":       "daily",
+            "streak":     0,
+            "total_done": 0,
+            "last_done":  None,
+            "created_at": str(datetime.now().date()),
         }
         habits = u.get("habits", [])
         habits.append(new_habit)
@@ -7246,9 +6643,6 @@ try:
         try:
             schedule_habit(uid, new_habit["id"], name, time_)
         except: pass
-        # Yutuqlarni tekshirish
-        new_badges = check_achievements(uid, u)
-        threading.Thread(target=notify_achievements, args=(uid, new_badges), daemon=True).start()
         return jsonify({"ok": True, "habit": new_habit})
 
     @api_app.route("/api/habits/<int:uid>/<hid>", methods=["PUT"])
@@ -7261,14 +6655,11 @@ try:
             return jsonify({"ok": False, "error": "Nom bo'sh"}), 400
         u = load_user(uid)
         habits = u.get("habits", [])
-        edit_times = data.get("times", None)
         for h in habits:
             if h.get("id") == hid:
                 h["name"] = name
                 h["icon"] = icon
                 h["time"] = time_
-                if edit_times is not None and isinstance(edit_times, list):
-                    h["times"] = [t for t in edit_times if t and isinstance(t, str)][:10]
                 break
         else:
             return jsonify({"ok": False, "error": "Topilmadi"}), 404
@@ -7287,331 +6678,6 @@ try:
         save_user(uid, u)
         return jsonify({"ok": True})
 
-    # ── ESLATMA SOZLASH ──
-    @api_app.route("/api/reminder/<int:uid>/<hid>", methods=["PUT"])
-    def api_reminder_update(uid, hid):
-        """
-        Eslatma sozlamalarini yangilash:
-          { "time": "07:30" | "vaqtsiz",
-            "enabled": true | false,
-            "repeat": "daily" | "weekdays" | "weekends" }
-        """
-        body     = request.get_json() or {}
-        time_    = (body.get("time") or "vaqtsiz").strip()
-        enabled  = body.get("enabled", True)
-        repeat   = body.get("repeat", "daily")
-
-        # Vaqt formatini tekshirish
-        if time_ not in ("vaqtsiz", "", None):
-            import re
-            if not re.match(r"^\d{2}:\d{2}$", time_):
-                return jsonify({"ok": False, "error": "Noto'g'ri vaqt formati (HH:MM)"}), 400
-            h_, m_ = map(int, time_.split(":"))
-            if not (0 <= h_ <= 23 and 0 <= m_ <= 59):
-                return jsonify({"ok": False, "error": "Vaqt chegaradan tashqari"}), 400
-
-        u      = load_user(uid)
-        habits = u.get("habits", [])
-        habit  = next((h for h in habits if h.get("id") == hid), None)
-        if not habit:
-            return jsonify({"ok": False, "error": "Odat topilmadi"}), 404
-
-        # Eski schedule ni o'chirish
-        try:
-            schedule.clear(f"{uid}_{hid}")
-        except Exception:
-            pass
-
-        # times array saqlash
-        times_list = body.get("times", None)
-        if times_list is not None and isinstance(times_list, list):
-            import re as _re
-            clean_times = []
-            for t in times_list[:10]:
-                t = str(t).strip()
-                if _re.match(r"^\d{2}:\d{2}$", t):
-                    h_, m_ = map(int, t.split(":"))
-                    if 0 <= h_ <= 23 and 0 <= m_ <= 59:
-                        clean_times.append(t)
-            habit["times"] = clean_times
-            if clean_times:
-                time_ = clean_times[0]
-
-        # Yangilash
-        habit["time"]             = time_ if time_ else "vaqtsiz"
-        habit["reminder_enabled"] = enabled
-        habit["repeat"]           = repeat
-
-        u["habits"] = habits
-        save_user(uid, u)
-
-        # Yangi schedule — har bir vaqt uchun
-        if enabled:
-            try:
-                schedule.clear(f"{uid}_{hid}")
-                for t in habit.get("times", [time_]):
-                    if t and t != "vaqtsiz":
-                        schedule_habit(uid, hid, habit.get("name",""), t)
-            except Exception:
-                pass
-
-        return jsonify({
-            "ok":      True,
-            "time":    habit["time"],
-            "times":   habit.get("times", []),
-            "enabled": enabled,
-            "repeat":  repeat,
-        })
-
-    @api_app.route("/api/reminder/<int:uid>/<hid>", methods=["OPTIONS"])
-    def options_reminder(**kwargs):
-        return jsonify({}), 200
-
-    # ── OPTIONS (CORS preflight) ──
-    @api_app.route("/api/today/<int:uid>",          methods=["OPTIONS"])
-    @api_app.route("/api/checkin/<int:uid>/<hid>",  methods=["OPTIONS"])
-    @api_app.route("/api/stats/<int:uid>",          methods=["OPTIONS"])
-    @api_app.route("/api/habits/<int:uid>",         methods=["OPTIONS"])
-    @api_app.route("/api/habits/<int:uid>/<hid>",   methods=["OPTIONS"])
-    def options_extra(**kwargs):
-        return jsonify({}), 200
-
-    # ── BUGUNGI HOLAT ──
-    @api_app.route("/api/today/<int:uid>", methods=["GET"])
-    def api_today(uid):
-        if uid == 0:
-            return jsonify({"error": "Noto'g'ri foydalanuvchi"}), 400
-        from datetime import timezone, timedelta
-        tz_uz = timezone(timedelta(hours=5))
-        today = datetime.now(tz_uz).strftime("%Y-%m-%d")
-        u = load_user(uid)
-        habits = []
-        for h in u.get("habits", []):
-            repeat_count = len(h.get("times", [])) or 1  # necha marta/kun
-            today_count  = h.get("today_count", {}).get(today, 0)
-            fully_done   = today_count >= repeat_count
-            habits.append({
-                "id":           h.get("id", ""),
-                "name":         h.get("name", ""),
-                "icon":         h.get("icon", "✅"),
-                "time":         h.get("time", "vaqtsiz"),
-                "times":        h.get("times", []),
-                "streak":       h.get("streak", 0),
-                "done":         fully_done,
-                "today_count":  today_count,
-                "repeat_count": repeat_count,
-            })
-        total      = len(habits)
-        done_count = sum(1 for h in habits if h["done"])
-        percent    = round(done_count / total * 100) if total else 0
-        return jsonify({"habits": habits, "today": today,
-                        "done_count": done_count, "total": total, "percent": percent,
-                        "points": u.get("points", 0)})
-
-    # ── CHECK-IN TOGGLE ──
-    @api_app.route("/api/checkin/<int:uid>/<hid>", methods=["POST"])
-    def api_checkin(uid, hid):
-        from datetime import timezone, timedelta
-        tz_uz     = timezone(timedelta(hours=5))
-        today     = datetime.now(tz_uz).strftime("%Y-%m-%d")
-        yesterday = (datetime.now(tz_uz) - timedelta(days=1)).strftime("%Y-%m-%d")
-        u      = load_user(uid)
-        habits = u.get("habits", [])
-        habit  = next((h for h in habits if h.get("id") == hid), None)
-        if not habit:
-            return jsonify({"ok": False, "error": "Odat topilmadi"}), 404
-
-        repeat_count = len(habit.get("times", [])) or 1
-        today_counts = habit.get("today_count", {})
-        cur_count    = today_counts.get(today, 0)
-        was_full     = cur_count >= repeat_count  # oldin to'liq bajarilganmi
-
-        if was_full:
-            # ↩️ Bir qadam orqaga (to'liq bekor)
-            today_counts[today] = 0
-            habit["today_count"] = today_counts
-            habit["last_done"]   = None
-            habit["streak"]      = max(0, habit.get("streak", 0) - 1)
-            habit["total_done"]  = max(0, habit.get("total_done", 0) - 1)
-            done_dates = habit.get("done_dates", [])
-            if today in done_dates:
-                done_dates.remove(today)
-            habit["done_dates"] = done_dates
-            u["points"]  = max(0, u.get("points", 0) - 5)
-            u["habits"]  = habits
-            save_user(uid, u)
-            return jsonify({"ok": True, "done": False,
-                            "today_count": 0, "repeat_count": repeat_count,
-                            "streak": habit["streak"], "points": u.get("points", 0),
-                            "msg": "Bekor qilindi", "all_done": False,
-                            "new_badges": []})
-        else:
-            # ✅ Bir qadam oldinga
-            new_count = cur_count + 1
-            today_counts[today] = new_count
-            habit["today_count"] = today_counts
-            habit["total_done"]  = habit.get("total_done", 0) + 1
-            fully_done = new_count >= repeat_count
-            new_badges_data = []
-
-            if fully_done:
-                # To'liq bajarildi — streak va ball
-                habit["streak"]   = habit.get("streak", 0) + 1 if habit.get("last_done") == yesterday else 1
-                habit["last_done"] = today
-                done_dates = habit.get("done_dates", [])
-                if today not in done_dates:
-                    done_dates.append(today)
-                done_dates = sorted(done_dates)[-90:]
-                habit["done_dates"] = done_dates
-                u["points"]  = u.get("points", 0) + 5
-                done_log     = u.get("done_log", {})
-                done_log[today] = True
-                u["done_log"] = done_log
-                u["habits"]   = habits
-                save_user(uid, u)
-                all_done = all(
-                    hh.get("today_count", {}).get(today, 0) >= (len(hh.get("times", [])) or 1)
-                    for hh in u.get("habits", [])
-                )
-                new_badges = check_achievements(uid, u)
-                threading.Thread(target=notify_achievements, args=(uid, new_badges), daemon=True).start()
-                new_badges_data = [{"icon": b["icon"], "title": b["title"]} for b in new_badges]
-                msg = f"Bajarildi! +5 ⭐" if repeat_count == 1 else f"{new_count}/{repeat_count} — To'liq! +5 ⭐"
-            else:
-                # Hali to'liq emas
-                u["habits"] = habits
-                save_user(uid, u)
-                all_done = False
-                msg = f"{new_count}/{repeat_count} bajarildi"
-
-            return jsonify({"ok": True, "done": fully_done,
-                            "today_count": new_count, "repeat_count": repeat_count,
-                            "streak": habit.get("streak", 0), "points": u.get("points", 0),
-                            "all_done": all_done, "msg": msg,
-                            "new_badges": new_badges_data})
-
-    # ── YUTUQLAR ──
-    @api_app.route("/api/achievements/<int:uid>", methods=["GET"])
-    def api_achievements(uid):
-        u      = load_user(uid)
-        earned = u.get("achievements", [])
-        stats  = get_user_stats_for_achievements(uid, u)
-
-        result = []
-        for ach in ACHIEVEMENTS:
-            val      = stats.get(ach["key"], 0)
-            is_done  = ach["id"] in earned
-            result.append({
-                "id":       ach["id"],
-                "cat":      ach["cat"],
-                "icon":     ach["icon"],
-                "title":    ach["title"],
-                "desc":     ach["desc"],
-                "req":      ach["req"],
-                "current":  min(val, ach["req"]),
-                "earned":   is_done,
-            })
-
-        cats = [
-            {"id": "streak",  "label": "🔥 Streak"},
-            {"id": "points",  "label": "⭐ Ball"},
-            {"id": "done",    "label": "✅ Bajarilgan"},
-            {"id": "habits",  "label": "📋 Odatlar"},
-            {"id": "group",   "label": "👥 Guruh"},
-        ]
-        return jsonify({
-            "achievements": result,
-            "cats":         cats,
-            "earned_count": len(earned),
-            "total_count":  len(ACHIEVEMENTS),
-        })
-
-    @api_app.route("/api/achievements/<int:uid>", methods=["OPTIONS"])
-    def options_achievements(uid):
-        return jsonify({}), 200
-
-    # ── STATISTIKA ──
-    @api_app.route("/api/stats/<int:uid>", methods=["GET"])
-    def api_stats(uid):
-        from datetime import timezone, timedelta
-        tz_uz = timezone(timedelta(hours=5))
-        today_dt  = datetime.now(tz_uz)
-        today_str = today_dt.strftime("%Y-%m-%d")
-
-        # So'nggi 30 kun
-        days_30 = [(today_dt - timedelta(days=29-i)).strftime("%Y-%m-%d") for i in range(30)]
-        # So'nggi 7 kun
-        days_7  = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
-        days_7_lbls = [(today_dt - timedelta(days=6-i)).strftime("%a") for i in range(7)]
-
-        u = load_user(uid)
-        habits = u.get("habits", [])
-
-        # --- Haftalik umumiy bajarilish (bar chart uchun) ---
-        weekly = []
-        for i, dstr in enumerate(days_7):
-            count = sum(1 for h in habits if dstr in h.get("done_dates", []))
-            weekly.append({"date": dstr, "label": days_7_lbls[i], "count": count, "total": len(habits)})
-
-        # --- Oylik heatmap (done_log asosida) ---
-        done_log = u.get("done_log", {})
-        heatmap  = {d: bool(done_log.get(d)) for d in days_30}
-
-        # --- Har bir odat statistikasi ---
-        habit_stats = []
-        for h in habits:
-            done_dates = h.get("done_dates", [])
-            # So'nggi 30 kun ichida nechta
-            done_30 = sum(1 for d in days_30 if d in done_dates)
-            # So'nggi 7 kun
-            done_7  = sum(1 for d in days_7 if d in done_dates)
-            # % (faqat odat qo'shilganidan beri)
-            created = h.get("created_at", days_30[0])
-            active_days = sum(1 for d in days_30 if d >= created)
-            pct = round(done_30 / active_days * 100) if active_days else 0
-
-            # Mini heatmap (7 kun) — 1/0 ro'yxat
-            week_dots = [1 if d in done_dates else 0 for d in days_7]
-
-            habit_stats.append({
-                "id":         h.get("id",""),
-                "name":       h.get("name",""),
-                "icon":       h.get("icon","✅"),
-                "streak":     h.get("streak", 0),
-                "total_done": h.get("total_done", 0),
-                "done_7":     done_7,
-                "done_30":    done_30,
-                "percent":    pct,
-                "week_dots":  week_dots,
-                "best_streak": h.get("streak", 0),
-            })
-
-        # --- Umumiy ko'rsatkichlar ---
-        total_days_active = sum(1 for d in days_30 if done_log.get(d))
-        current_streak    = u.get("streak", 0)
-        points            = u.get("points", 0)
-
-        # 30 kunlik bar chart (har kuni)
-        monthly = []
-        for dstr in days_30:
-            count = sum(1 for h in habits if dstr in h.get("done_dates", []))
-            monthly.append({"date": dstr, "count": count, "total": len(habits)})
-
-        return jsonify({
-            "today":        today_str,
-            "weekly":       weekly,
-            "monthly":      monthly,
-            "heatmap":      heatmap,
-            "days_30":      days_30,
-            "habit_stats":  habit_stats,
-            "summary": {
-                "points":         points,
-                "streak":         current_streak,
-                "active_days_30": total_days_active,
-                "total_habits":   len(habits),
-            }
-        })
-
     @api_app.route("/api/groups/<int:uid>")
     def api_groups(uid):
         try:
@@ -7627,429 +6693,19 @@ try:
                 members.append({"name": mu.get("name","?"), "points": mu.get("points",0)})
             members.sort(key=lambda x: x["points"], reverse=True)
             result.append({
-                "id":           str(g.get("_id","") or g.get("id","")),
                 "name":         g.get("name","Guruh"),
-                "habit_name":   g.get("habit_name",""),
                 "member_count": len(members_raw),
                 "members":      members[:5],
-                "is_admin":     g.get("admin_id") == uid,
-                "invite_link":  f"https://t.me/{os.environ.get('BOT_USERNAME','')}?start=grp_{g.get('_id','') or g.get('id','')}",
             })
         return jsonify({"groups": result})
-
-    @api_app.route("/api/groups/<int:uid>", methods=["POST"])
-    def api_groups_create(uid):
-        body       = request.get_json() or {}
-        name       = (body.get("name") or "").strip()
-        habit_name = (body.get("habit_name") or "").strip()
-        habit_time = (body.get("habit_time") or "vaqtsiz").strip()
-        if not name:       return jsonify({"ok": False, "error": "Guruh nomi bo'sh"}), 400
-        if not habit_name: return jsonify({"ok": False, "error": "Odat nomi bo'sh"}), 400
-        import uuid as _uuid
-        g_id  = str(_uuid.uuid4())[:8]
-        group = {
-            "id":         g_id,
-            "name":       name,
-            "habit_name": habit_name,
-            "habit_time": habit_time,
-            "admin_id":   uid,
-            "members":    [str(uid)],
-            "streak":     0,
-            "created_at": datetime.now().strftime("%Y-%m-%d"),
-        }
-        save_group(g_id, group)
-        u = load_user(uid)
-        groups = u.get("groups", [])
-        groups.append({"id": g_id, "name": name, "admin_id": uid})
-        u["groups"] = groups
-        save_user(uid, u)
-        try:
-            bot_info   = bot.get_me()
-            inv_link   = f"https://t.me/{bot_info.username}?start=grp_{g_id}"
-        except Exception:
-            inv_link   = f"https://t.me/?start=grp_{g_id}"
-        return jsonify({"ok": True, "id": g_id, "invite_link": inv_link})
-
-    @api_app.route("/api/groups/<int:uid>/<g_id>", methods=["DELETE"])
-    def api_groups_delete(uid, g_id):
-        g = load_group(g_id)
-        if not g: return jsonify({"ok": False, "error": "Guruh topilmadi"}), 404
-        if g.get("admin_id") != uid:
-            return jsonify({"ok": False, "error": "Faqat admin o'chira oladi"}), 403
-        # Guruhni o'chirish
-        try: mongo_db["groups"].delete_one({"_id": g_id})
-        except Exception: pass
-        # A'zolardan guruhni olib tashlash
-        for mid in g.get("members", []):
-            try:
-                mu = load_user(int(mid))
-                mu["groups"] = [x for x in mu.get("groups",[]) if x.get("id") != g_id]
-                save_user(int(mid), mu)
-            except Exception: pass
-        return jsonify({"ok": True})
-
-    @api_app.route("/api/groups/<int:uid>/<g_id>", methods=["OPTIONS"])
-    @api_app.route("/api/groups/<int:uid>", methods=["OPTIONS"])
-    def options_groups(**kwargs):
-        return jsonify({}), 200
-
-
-    # ── SHOP ──
-    @api_app.route("/api/shop/<int:uid>", methods=["GET"])
-    def api_shop_get(uid):
-        u = load_user(uid)
-        inventory = u.get("inventory", {})
-        items_out = []
-        for item in SHOP_ITEMS.values():
-            owned = inventory.get(item["id"], 0)
-            items_out.append({
-                "id":          item["id"],
-                "cat":         item["cat"],
-                "name":        item["name"],
-                "emoji":       item["emoji"],
-                "desc":        item["desc"],
-                "price_ball":  item["price_ball"],
-                "price_stars": item["price_stars"],
-                "max_own":     item["max_own"],
-                "owned":       owned,
-                "can_buy":     owned < item["max_own"],
-            })
-        return jsonify({
-            "items":       items_out,
-            "points":      u.get("points", 0),
-            "inventory":   inventory,
-            "active_pet":  u.get("active_pet", ""),
-            "active_badge":u.get("active_badge", ""),
-            "active_car":  u.get("active_car", ""),
-        })
-
-    @api_app.route("/api/shop/<int:uid>/buy", methods=["POST"])
-    def api_shop_buy(uid):
-        body    = request.get_json() or {}
-        item_id = body.get("item_id","")
-        method  = body.get("method","ball")  # "ball" yoki "stars"
-        gift_to = body.get("gift_to", None)  # do'st uid (gift uchun)
-        item = SHOP_ITEMS.get(item_id)
-        if not item:
-            return jsonify({"ok": False, "error": "Mahsulot topilmadi"}), 404
-        u = load_user(uid)
-        inventory = u.get("inventory", {})
-        owned = inventory.get(item_id, 0)
-        if owned >= item["max_own"]:
-            return jsonify({"ok": False, "error": "Siz bu mahsulotni allaqachon olgansiz"}), 400
-        if method == "ball":
-            price = item["price_ball"]
-            if price == 0:
-                return jsonify({"ok": False, "error": "Bu mahsulot faqat Telegram Stars bilan sotiladi"}), 400
-            if u.get("points", 0) < price:
-                return jsonify({"ok": False, "error": f"Yetarli ball yo'q. Kerak: {price} ⭐"}), 400
-            u["points"] = u.get("points", 0) - price
-            # Gift mahsulot bo'lsa — do'stga ball berish
-            if item["cat"] == "gift" and gift_to:
-                gift_u = load_user(int(gift_to))
-                gift_u["points"] = gift_u.get("points", 0) + item.get("gift_amount", 50)
-                save_user(int(gift_to), gift_u)
-                try:
-                    sender_name = u.get("name","Kimdir")
-                    bot.send_message(int(gift_to),
-                        "\U0001F381 *Sovg\u2019a oldingiz!*\n\n"
-                        + "*" + sender_name + "* sizga "
-                        + str(item.get("gift_amount",50)) + " ball sovg'a qildi! ⭐",
-                        parse_mode="Markdown")
-                except Exception:
-                    pass
-            else:
-                inventory[item_id] = owned + 1
-                u["inventory"] = inventory
-                _apply_item_effect(uid, item, u)
-            save_user(uid, u)
-            return jsonify({"ok": True, "points_left": u["points"], "owned": inventory.get(item_id,0)})
-        else:
-            return jsonify({"ok": False, "error": "Stars to'lovi hozircha botdan amalga oshiriladi"}), 400
-
-    @api_app.route("/api/shop/<int:uid>", methods=["OPTIONS"])
-    @api_app.route("/api/shop/<int:uid>/buy", methods=["OPTIONS"])
-    @api_app.route("/api/shop/<int:uid>/activate", methods=["OPTIONS"])
-    def options_shop(**kwargs):
-        return jsonify({}), 200
-
-    @api_app.route("/api/shop/<int:uid>/activate", methods=["POST"])
-    def api_shop_activate(uid):
-        body    = request.get_json() or {}
-        item_id = body.get("item_id", "")
-        item    = SHOP_ITEMS.get(item_id)
-        if not item:
-            return jsonify({"ok": False, "error": "Mahsulot topilmadi"}), 404
-        u = load_user(uid)
-        inventory = u.get("inventory", {})
-        if inventory.get(item_id, 0) < 1:
-            return jsonify({"ok": False, "error": "Bu mahsulot sizda yo'q"}), 400
-        cat = item["cat"]
-        # Bir kategoriyada faqat bitta aktiv — avvalgini o'chirish
-        if cat == "pet":
-            for k in ["pet_cat", "pet_dog", "pet_dragon"]:
-                u.pop(f"active_{k}", None)
-            u["active_pet"] = item_id
-        elif cat == "badge":
-            for k in ["badge_champ", "badge_master", "badge_legend"]:
-                u.pop(f"active_{k}", None)
-            u["active_badge"] = item_id
-        elif cat == "car":
-            for k in ["car_sport", "car_luxury"]:
-                u.pop(f"active_{k}", None)
-            u["active_car"] = item_id
-        else:
-            return jsonify({"ok": False, "error": "Bu kategoriya aktivlashtirish qo'llab quvvatlanmaydi"}), 400
-        save_user(uid, u)
-        return jsonify({"ok": True, "active": item_id})
-
-    # ── CHALLENGELAR ──
-    @api_app.route("/api/challenges/<int:uid>", methods=["GET"])
-    def api_challenges_list(uid):
-        from datetime import timezone, timedelta as _td
-        tz_uz = timezone(_td(hours=5))
-        today = datetime.now(tz_uz).strftime("%Y-%m-%d")
-        # Foydalanuvchi challenge larini topish
-        my_chs = list(challenges_col.find({
-            "$or": [{"sender_id": uid}, {"receiver_id": uid}]
-        }))
-        result = []
-        for c in my_chs:
-            cid = str(c.get("_id",""))
-            sender_id   = c.get("sender_id")
-            receiver_id = c.get("receiver_id")
-            other_id    = receiver_id if sender_id == uid else sender_id
-            other_u     = load_user(other_id)
-            # Progress hisoblash
-            start   = c.get("start_date","")
-            end     = c.get("end_date","")
-            days    = c.get("days", 0)
-            s_log   = c.get("sender_log", {})
-            r_log   = c.get("receiver_log", {})
-            my_log  = s_log if sender_id == uid else r_log
-            op_log  = r_log if sender_id == uid else s_log
-            my_done  = sum(1 for d,v in my_log.items() if v and start <= d <= today)
-            op_done  = sum(1 for d,v in op_log.items() if v and start <= d <= today)
-            elapsed  = max(1, (datetime.now(tz_uz).date() - datetime.fromisoformat(start).date()).days + 1) if start else 1
-            result.append({
-                "id":          cid,
-                "status":      c.get("status","pending"),
-                "habit_name":  c.get("habit_name",""),
-                "days":        days,
-                "bet":         c.get("bet", 0),
-                "start_date":  start,
-                "end_date":    end,
-                "other_name":  other_u.get("name","?"),
-                "other_id":    other_id,
-                "i_am_sender": sender_id == uid,
-                "my_done":     my_done,
-                "op_done":     op_done,
-                "elapsed":     min(elapsed, days),
-                "done_today":  bool(my_log.get(today)),
-            })
-        return jsonify({"challenges": result})
-
-    @api_app.route("/api/challenges/<int:uid>/send", methods=["POST"])
-    def api_challenges_send(uid):
-        import uuid as _uuid
-        from datetime import timezone, timedelta as _td
-        body        = request.get_json() or {}
-        receiver_id = int(body.get("receiver_id", 0))
-        habit_name  = (body.get("habit_name") or "").strip()
-        days        = int(body.get("days", 7))
-        bet         = int(body.get("bet", 50))
-        if not habit_name:   return jsonify({"ok": False, "error": "Odat nomi bo'sh"}), 400
-        if receiver_id == uid: return jsonify({"ok": False, "error": "O'zingizga challenge bera olmaysiz"}), 400
-        if days < 1 or days > 90: return jsonify({"ok": False, "error": "Kun 1-90 orasida bo'lishi kerak"}), 400
-        if bet < 10 or bet > 500: return jsonify({"ok": False, "error": "Garov 10-500 orasida"}), 400
-        u = load_user(uid)
-        if u.get("points", 0) < bet:
-            return jsonify({"ok": False, "error": "Yetarli ball yo'q"}), 400
-        cid = str(_uuid.uuid4())[:8]
-        challenge = {
-            "sender_id":   uid,
-            "receiver_id": receiver_id,
-            "habit_name":  habit_name,
-            "days":        days,
-            "bet":         bet,
-            "status":      "pending",
-            "created_at":  datetime.now().strftime("%Y-%m-%d"),
-            "start_date":  "",
-            "end_date":    "",
-            "sender_log":  {},
-            "receiver_log":{},
-        }
-        save_challenge(cid, challenge)
-        # Botda xabar yuborish
-        try:
-            sender_name = u.get("name", "Kimdir")
-            rec_u = load_user(receiver_id)
-            kb = InlineKeyboardMarkup()
-            kb.row(
-                InlineKeyboardButton("✅ Qabul", callback_data=f"ch_accept_{cid}"),
-                InlineKeyboardButton("❌ Rad",   callback_data=f"ch_reject_{cid}")
-            )
-            bot.send_message(receiver_id,
-                "\U0001F3AF *Challenge!*\n\n*" + sender_name + "* sizga challenge berdi:\n\n" + "\U0001F4CC Odat: *" + habit_name + "*\n" + "\U0001F4C5 Muddat: *" + str(days) + " kun*\n" + "\u2B50 Garov: *" + str(bet) + " ball*\n\n" + "Qabul qilsangiz, ikkalangizdan " + str(bet) + " ball yechiladi.\nG\u2019olib ikki baravar ball oladi!",
-            )
-        except Exception:
-            pass
-        return jsonify({"ok": True, "id": cid})
-
-    @api_app.route("/api/challenges/<int:uid>/<cid>/checkin", methods=["POST"])
-    def api_challenge_checkin(uid, cid):
-        from datetime import timezone, timedelta as _td
-        tz_uz = timezone(_td(hours=5))
-        today = datetime.now(tz_uz).strftime("%Y-%m-%d")
-        c = load_challenge(cid)
-        if not c: return jsonify({"ok": False, "error": "Topilmadi"}), 404
-        if c.get("status") != "active":
-            return jsonify({"ok": False, "error": "Challenge aktiv emas"}), 400
-        is_sender = c.get("sender_id") == uid
-        log_key   = "sender_log" if is_sender else "receiver_log"
-        log       = c.get(log_key, {})
-        if log.get(today):
-            # Bekor qilish
-            log[today] = False
-            c[log_key] = log
-            save_challenge(cid, c)
-            return jsonify({"ok": True, "done": False, "done_today": False})
-        log[today] = True
-        c[log_key] = log
-        # Muddat tugaganmi tekshirish
-        end_date = c.get("end_date","")
-        if today >= end_date:
-            _finish_challenge(cid, c)
-            c = load_challenge(cid)
-        else:
-            save_challenge(cid, c)
-        return jsonify({"ok": True, "done": True, "done_today": True, "status": c.get("status","active")})
-
-    @api_app.route("/api/challenges/<int:uid>", methods=["OPTIONS"])
-    @api_app.route("/api/challenges/<int:uid>/send", methods=["OPTIONS"])
-    @api_app.route("/api/challenges/<int:uid>/<cid>/checkin", methods=["OPTIONS"])
-    def options_challenges(**kwargs):
-        return jsonify({}), 200
-
-    # ── DO'STLAR ──
-    @api_app.route("/api/friends/<int:uid>", methods=["GET"])
-    def api_friends_get(uid):
-        from datetime import timezone, timedelta as _td
-        tz_uz   = timezone(_td(hours=5))
-        today   = datetime.now(tz_uz).strftime("%Y-%m-%d")
-        u_me    = load_user(uid)
-        friends = u_me.get("friends", [])
-        result  = []
-        for fid in friends[:20]:
-            try:
-                u_fr = load_user(int(fid))
-                # Umumiy streak: ikkalasi ham bugun bajarganmi
-                done_log_me = u_me.get("done_log", {})
-                done_log_fr = u_fr.get("done_log", {})
-                # Umumiy streak uzunligini hisoblash
-                mutual_streak = 0
-                from datetime import date as _date
-                for i in range(365):
-                    d = (datetime.now(tz_uz) - _td(days=i)).strftime("%Y-%m-%d")
-                    if done_log_me.get(d) and done_log_fr.get(d):
-                        mutual_streak += 1
-                    else:
-                        break
-                result.append({
-                    "id":             fid,
-                    "name":           u_fr.get("name", "?"),
-                    "points":         u_fr.get("points", 0),
-                    "streak":         u_fr.get("streak", 0),
-                    "mutual_streak":  mutual_streak,
-                    "done_today":     bool(done_log_fr.get(today)),
-                })
-            except Exception:
-                pass
-        try:
-            bot_info   = bot.get_me()
-            invite_link = f"https://t.me/{bot_info.username}?start=friend_{uid}"
-        except Exception:
-            invite_link = ""
-        return jsonify({
-            "friends":     result,
-            "invite_link": invite_link,
-            "my_streak":   u_me.get("streak", 0),
-            "my_done_today": bool(u_me.get("done_log", {}).get(today)),
-        })
-
-    @api_app.route("/api/friends/<int:uid>/remove/<int:fid>", methods=["DELETE"])
-    def api_friends_remove(uid, fid):
-        # Ikki tomondan ham o'chirish
-        u_me = load_user(uid)
-        u_fr = load_user(fid)
-        u_me["friends"] = [f for f in u_me.get("friends", []) if f != fid]
-        u_fr["friends"] = [f for f in u_fr.get("friends", []) if f != uid]
-        save_user(uid, u_me)
-        save_user(fid, u_fr)
-        # Aktiv challengelarni bekor qilish va ikki tomonga xabar
-        active_chs = list(challenges_col.find({
-            "status": "active",
-            "$or": [
-                {"sender_id": uid,  "receiver_id": fid},
-                {"sender_id": fid,  "receiver_id": uid},
-            ]
-        }))
-        my_name = u_me.get("name", "Do'stingiz")
-        fr_name = u_fr.get("name", "Do'stingiz")
-        for c in active_chs:
-            cid = str(c.get("_id", ""))
-            bet = c.get("bet", 0)
-            # Garovni ikkalasiga qaytarish
-            for pid in [c["sender_id"], c["receiver_id"]]:
-                pu = load_user(pid)
-                pu["points"] = pu.get("points", 0) + bet
-                save_user(pid, pu)
-            challenges_col.update_one({"_id": cid}, {"$set": {"status": "cancelled"}})
-            # Xabar yuborish
-            try:
-                bot.send_message(uid,
-                    "\u274c *Challenge bekor bo\u2019ldi*\n\n"
-                    + fr_name + " bilan do\u2019stlik tugadi, shuning uchun \""
-                    + c.get("habit_name","") + "\" challengesi bekor qilindi.\n"
-                    + "\u2B50 " + str(bet) + " ball qaytarildi.",
-                    parse_mode="Markdown")
-            except Exception:
-                pass
-            try:
-                bot.send_message(fid,
-                    "\u274c *Challenge bekor bo\u2019ldi*\n\n"
-                    + my_name + " do\u2019stlikdan chiqdi, shuning uchun \""
-                    + c.get("habit_name","") + "\" challengesi bekor qilindi.\n"
-                    + "\u2B50 " + str(bet) + " ball qaytarildi.",
-                    parse_mode="Markdown")
-            except Exception:
-                pass
-        # Do'stlikdan chiqish xabari (challenge bo'lmasa ham)
-        if not active_chs:
-            try:
-                bot.send_message(fid,
-                    "\U0001F494 *" + my_name + "* siz bilan do\u2019stlikni tugatdi.",
-                    parse_mode="Markdown")
-            except Exception:
-                pass
-        return jsonify({"ok": True})
-
-    @api_app.route("/api/friends/<int:uid>", methods=["OPTIONS"])
-    @api_app.route("/api/friends/<int:uid>/remove/<int:fid>", methods=["OPTIONS"])
-    def options_friends(**kwargs):
-        return jsonify({}), 200
 
     @api_app.route("/")
     def api_index():
         import os as _os
         html_path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "index.html")
         if _os.path.exists(html_path):
-            from flask import send_file, make_response
-            resp = make_response(send_file(html_path))
-            resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-            resp.headers["Pragma"] = "no-cache"
-            resp.headers["Expires"] = "0"
-            return resp
+            from flask import send_file
+            return send_file(html_path)
         return jsonify({"status": "ok", "bot": "Super Habits"})
 
     @api_app.route("/health")
@@ -8088,4 +6744,5 @@ if __name__ == "__main__":
     if run_api:
         threading.Thread(target=run_api, daemon=True).start()
     print("Bot tayyor! Telegramdan /start yuboring.")
-    bot.infinity_polling(timeout=60, long_polling_timeout=30, logger_level=None, allowed_updates=None, restart_on_change=False)
+    import logging
+    bot.infinity_polling(timeout=60, long_polling_timeout=30, logger_level=logging.DEBUG, allowed_updates=["message", "callback_query"], restart_on_change=False)
