@@ -6274,52 +6274,62 @@ def handle_text(msg):
 
 def _run_broadcast(admin_uid, bc_chat_id, msg_ids, state):
     """Broadcast yuborish — matn va album uchun umumiy funksiya"""
-    users      = load_all_users()
-    sent_count = 0
-    failed     = 0
-    failed_ids = []
-    prog_msg = bot.send_message(admin_uid, f"⏳ Yuborilmoqda... (0/{len(users)} ta)")
-    for target_uid_str in users:
+    try:
+        users      = load_all_users()
+        sent_count = 0
+        failed     = 0
+        failed_ids = []
+        prog_msg = bot.send_message(admin_uid, f"⏳ Yuborilmoqda... (0/{len(users)} ta)")
+        for target_uid_str in users:
+            try:
+                target_uid_int = int(target_uid_str)
+            except (ValueError, TypeError):
+                continue
+            if target_uid_int == admin_uid:
+                continue
+            try:
+                for mid in msg_ids:
+                    bot.copy_message(
+                        chat_id=target_uid_int,
+                        from_chat_id=bc_chat_id,
+                        message_id=mid
+                    )
+                # Foydalanuvchiga tugmalar
+                kb_user = InlineKeyboardMarkup()
+                kb_user.add(InlineKeyboardButton("🚀 Botni ochish", url="https://t.me/Super_habits_bot?start=bc"))
+                try:
+                    bot.send_message(target_uid_int, "👆", reply_markup=kb_user)
+                except Exception:
+                    pass
+                sent_count += 1
+                time.sleep(0.05)
+            except Exception as e:
+                err_str = str(e)
+                failed += 1
+                if "blocked" not in err_str.lower():
+                    failed_ids.append(f"{target_uid_str} ({err_str[:40]})")
+                print(f"[broadcast] {target_uid_str} ga yuborib bo'lmadi: {e}")
+        try: bot.delete_message(admin_uid, prog_msg.message_id)
+        except: pass
+        result = f"📢 Xabar yuborildi!\n✅ {sent_count} ta muvaffaqiyatli."
+        if failed:
+            result += f"\n❌ {failed} ta foydalanuvchiga yetmadi."
+        kb_bc = InlineKeyboardMarkup()
+        if failed_ids:
+            kb_bc.add(InlineKeyboardButton("🔍 Batafsil", callback_data="bc_detail"))
+        kb_bc.add(InlineKeyboardButton("✅ Tushunarli", callback_data="bc_confirm"))
+        bot.send_message(admin_uid, result, reply_markup=kb_bc)
+    except Exception as fatal_e:
+        print(f"[broadcast FATAL] {fatal_e}")
         try:
-            target_uid_int = int(target_uid_str)
-        except (ValueError, TypeError):
-            continue
-        if target_uid_int == admin_uid:
-            continue
-        try:
-            for mid in msg_ids:
-                bot.copy_message(
-                    chat_id=target_uid_int,
-                    from_chat_id=bc_chat_id,
-                    message_id=mid
-                )
-            # Foydalanuvchiga tugmalar
-            kb_user = InlineKeyboardMarkup()
-            kb_user.add(InlineKeyboardButton("🚀 Botni ochish", url="https://t.me/Super_habits_bot?start=bc"))
-            bot.send_message(target_uid_int, "👆", reply_markup=kb_user)
-            sent_count += 1
-            time.sleep(0.05)
-        except Exception as e:
-            err_str = str(e)
-            failed += 1
-            if "blocked" not in err_str.lower():
-                failed_ids.append(f"{target_uid_str} ({err_str[:40]})")
-            print(f"[broadcast] {target_uid_str} ga yuborib bo'lmadi: {e}")
-    try: bot.delete_message(admin_uid, prog_msg.message_id)
-    except: pass
-    u = load_user(admin_uid)
-    u["state"] = None
-    if failed_ids:
-        u["bc_failed_list"] = failed_ids
-    save_user(admin_uid, u)
-    result = f"📢 Xabar yuborildi!\n✅ {sent_count} ta muvaffaqiyatli."
-    if failed:
-        result += f"\n❌ {failed} ta foydalanuvchiga yetmadi."
-    kb_bc = InlineKeyboardMarkup()
-    if failed_ids:
-        kb_bc.add(InlineKeyboardButton("🔍 Batafsil", callback_data="bc_detail"))
-    kb_bc.add(InlineKeyboardButton("✅ Tushunarli", callback_data="bc_confirm"))
-    bot.send_message(admin_uid, result, reply_markup=kb_bc)
+            bot.send_message(admin_uid, f"❌ Broadcast xatolik bilan to'xtadi: {fatal_e}")
+        except: pass
+    finally:
+        u = load_user(admin_uid)
+        u["state"] = None
+        if "failed_ids" in dir() and failed_ids:
+            u["bc_failed_list"] = failed_ids
+        save_user(admin_uid, u)
 
 
 # ============================================================
