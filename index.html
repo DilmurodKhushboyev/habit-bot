@@ -858,16 +858,16 @@ body {
 <!-- STATISTIKA -->
 <div class="page" id="page-stats" style="padding:0">
   <div class="period-switch" style="margin-bottom:0;position:sticky;top:0;z-index:8;background:var(--bg);padding:12px 20px">
-    <button class="period-btn active" id="ssub-stats"   onclick="setStatSub('stats')"   type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="gStat" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><rect x="3" y="14" width="4" height="7" rx="1.5" fill="url(#gStat)" opacity="0.5"/><rect x="10" y="9" width="4" height="12" rx="1.5" fill="url(#gStat)" opacity="0.75"/><rect x="17" y="4" width="4" height="17" rx="1.5" fill="url(#gStat)"/></svg>Statistika</button>
-    <button class="period-btn"        id="ssub-rating"  onclick="setStatSub('rating')"  type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="gRate" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="url(#gRate)"/></svg>Reyting</button>
+    <button class="period-btn"        id="ssub-stats"   onclick="setStatSub('stats')"   type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="gStat" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><rect x="3" y="14" width="4" height="7" rx="1.5" fill="url(#gStat)" opacity="0.5"/><rect x="10" y="9" width="4" height="12" rx="1.5" fill="url(#gStat)" opacity="0.75"/><rect x="17" y="4" width="4" height="17" rx="1.5" fill="url(#gStat)"/></svg>Statistika</button>
+    <button class="period-btn active" id="ssub-rating"  onclick="setStatSub('rating')"  type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="gRate" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="url(#gRate)"/></svg>Reyting</button>
     <button class="period-btn"        id="ssub-friends" onclick="setStatSub('friends')" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="gFrnd" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="9" cy="8" r="4" fill="url(#gFrnd)"/><circle cx="17" cy="8" r="3" fill="url(#gFrnd)" opacity="0.6"/><path d="M1 20c0-4 3.6-7 8-7s8 3 8 7" stroke="url(#gFrnd)" stroke-width="2" fill="none"/></svg>Guruh/Do'st</button>
   </div>
-  <div id="ssub-panel-stats" style="padding:0 20px">
+  <div id="ssub-panel-stats" style="display:none;padding:0 20px">
     <div id="stats-content">
       <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
     </div>
   </div>
-  <div id="ssub-panel-rating" style="display:none;padding:0 20px">
+  <div id="ssub-panel-rating" style="padding:0 20px">
     <div id="rating-content">
       <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
     </div>
@@ -1183,7 +1183,7 @@ function renderToday(d) {
       <div class="today-sub" id="prog-sub">${done_count} / ${total} odat bajarildi</div>
     </div>
 
-    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Bugungi odatlar<button onclick="switchTab('habits',document.getElementById('nav-habits'))" type="button" style="font-size:12px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px">＋ Odat yaratish</button></div>
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Bugungi odatlar<button onclick="switchTab('habits',document.getElementById('nav-habits'));setTimeout(openAdd,120)" type="button" style="font-size:12px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px">＋ Odat yaratish</button></div>
     ${cardsHtml || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>Hali odat qo\'shilmagan</div>'}
     <div class="toast" id="toast-today"></div>`;
 }
@@ -2351,7 +2351,6 @@ function renderHabits(habits, jon = 100) {
 
   document.getElementById('habits-content').innerHTML = `
     <div>
-      <button class="add-btn" onclick="openAdd()">＋ Yangi odat</button>
       <div class="section-title">Odatlarim (${habits.length})</div>
       ${rows || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>Hozircha odat yo\'q</div>'}
     </div>
