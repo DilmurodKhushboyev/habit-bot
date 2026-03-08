@@ -1186,14 +1186,16 @@ async function checkin(hid, cardEl) {
 
     // Ring yangilash
     if (data.today) {
-      data.today.done_count += isDone ? 1 : -1;
+      const habit = (data.today.habits || []).find(h => h.id === hid);
+      const wasDone = habit ? habit.done : false;
+      if (isDone && !wasDone) data.today.done_count += 1;
+      else if (!isDone && wasDone) data.today.done_count -= 1;
       data.today.done_count = Math.max(0, Math.min(data.today.total, data.today.done_count));
       const pct = data.today.total ? Math.round(data.today.done_count / data.today.total * 100) : 0;
       const ringEl = document.getElementById('prog-ring');
       if (ringEl) ringEl.innerHTML = ringHTML(pct);
       const subEl = document.getElementById('prog-sub');
       if (subEl) subEl.textContent = `${data.today.done_count} / ${data.today.total} odat bajarildi`;
-      const habit = (data.today.habits || []).find(h => h.id === hid);
       if (habit) { habit.done = isDone; habit.streak = result.streak; }
     }
 
