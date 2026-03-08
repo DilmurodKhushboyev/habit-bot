@@ -1093,7 +1093,6 @@ async function checkin(hid, cardEl) {
     // Meta va tugmani yangilash
     const rc  = result.repeat_count || 1;
     const tc  = result.today_count  || 0;
-    const btn = document.getElementById('cbtn-' + hid);
     if (btn) {
       btn.textContent = isDone ? '✓' : (rc > 1 && tc > 0 ? tc+'/'+rc : '');
       btn.style.fontSize = (rc > 1 && !isDone && tc > 0) ? '11px' : '';
