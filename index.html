@@ -785,7 +785,7 @@ body {
 <div class="header">
   <div class="header-top">
     <div class="logo-wrap">
-      <div class="logo-icon">🌱</div>
+      <div class="logo-icon"><svg width="30" height="30" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="svgLogo" x1="0" y1="32" x2="32" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#A8E6C0"/></linearGradient></defs><path d="M16 28C16 28 6 22 6 13C6 8.582 10.477 5 16 5C21.523 5 26 8.582 26 13C26 22 16 28 16 28Z" fill="url(#svgLogo)" opacity="0.2"/><path d="M16 26C16 26 9 16 16 7C23 16 16 26 16 26Z" fill="url(#svgLogo)"/><path d="M10 14C10 14 13 11 16 14" stroke="#4CAF7D" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/></svg></div>
       <div>
         <div class="header-title">Super Habits</div>
         <div class="header-sub">@Super_habits_bot</div>
@@ -1141,7 +1141,7 @@ function renderToday(d) {
         <div class="checkin-icon">${h.icon || '✅'}</div>
         <div class="checkin-info">
           <div class="checkin-name">${h.name}</div>
-          <div class="checkin-meta">${isRepeat ? rc+' marta/kun · ' : (h.time !== 'vaqtsiz' ? '⏰ '+h.time+' · ' : '')}🔥 ${h.streak} kun</div>
+          <div class="checkin-meta">${isRepeat ? rc+' marta/kun · ' : (h.time !== 'vaqtsiz' ? `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> `+h.time+' · ' : '')}<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak} kun</div>
           ${dotsHtml}
         </div>
         <button class="checkin-btn" id="cbtn-${h.id}" style="${isRepeat && !h.done && tc>0 ? 'font-size:11px;font-weight:700' : ''}">${btnContent}</button>
@@ -1211,7 +1211,7 @@ async function checkin(hid, cardEl) {
     const metaEl = cardEl.querySelector('.checkin-meta');
     if (metaEl) {
       const isRepeat = rc > 1;
-      metaEl.innerHTML = isRepeat ? `${rc} marta/kun · 🔥 ${result.streak} kun` : `🔥 ${result.streak} kun`;
+      metaEl.innerHTML = isRepeat ? `${rc} marta/kun · <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${result.streak} kun` : `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${result.streak} kun`;
     }
 
     if (isDone && pop) {
@@ -1611,7 +1611,7 @@ function renderStats(d) {
   const sumHtml = `
     <div class="summary-grid">
       <div class="sum-card">
-        <div class="sum-icon">🔥</div>
+        <div class="sum-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireMd" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireMd)"/></svg></div>
         <div class="sum-val">${summary.streak}</div>
         <div class="sum-lbl">Streak</div>
       </div>
@@ -1682,7 +1682,7 @@ function renderStats(d) {
           <div class="hstat-icon">${h.icon}</div>
           <div class="hstat-info">
             <div class="hstat-name">${h.name}</div>
-            <div class="hstat-sub">🔥 ${h.streak} kun streak</div>
+            <div class="hstat-sub"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak} kun streak</div>
           </div>
           <div class="hstat-pct" style="color:${pctColor}">${h.percent}%</div>
         </div>
@@ -1788,7 +1788,7 @@ function renderRating(d) {
     return Math.round((u.score / maxScore) * 100);
   }
 
-  const medals  = ['🥇','🥈','🥉'];
+  const medals  = [`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgGold" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6E27A"/><stop offset="100%" stop-color="#D4963A"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#svgGold)"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">1</text></svg>`,`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgSilv" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E8E8E8"/><stop offset="100%" stop-color="#A0A8B8"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#svgSilv)"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">2</text></svg>`,`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgBronz" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E8A87C"/><stop offset="100%" stop-color="#A0522D"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#svgBronz)"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">3</text></svg>`];
   const podiumColors = ['#D4963A','#9AA0B0','#C08A40'];
 
   // ── Podium (top 3) ──
@@ -2010,7 +2010,7 @@ function renderProfile(d) {
     </div>
 
     <!-- Kunlik maqsad -->
-    <div class="section-title">🎯 Kunlik maqsad</div>
+    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgTarget" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="9" stroke="url(#svgTarget)" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="url(#svgTarget)" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="url(#svgTarget)"/></svg> Kunlik maqsad</div>
     <div class="rem-card">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
         <div style="font-size:28px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace">${target}</div>
@@ -2026,7 +2026,7 @@ function renderProfile(d) {
     </div>
 
     <!-- Mini heatmap -->
-    <div class="section-title">📅 30 kunlik faollik</div>
+    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgCal" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><rect x="3" y="5" width="18" height="16" rx="3" stroke="url(#svgCal)" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="url(#svgCal)" stroke-width="2" stroke-linecap="round"/></svg> 30 kunlik faollik</div>
     <div class="rem-card">
       <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px">${hmCells}</div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:10px;color:var(--sub)">
@@ -2037,7 +2037,7 @@ function renderProfile(d) {
     </div>
 
     <!-- Yutuqlar progress -->
-    <div class="section-title">🏅 Yutuqlar</div>
+    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgMedal" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><circle cx="12" cy="15" r="6" fill="url(#svgMedal)"/><path d="M9 3L7 8M15 3L17 8M9 3h6" stroke="url(#svgMedal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Yutuqlar</div>
     <div class="rem-card" style="cursor:pointer" onclick="switchTab('achievements',null)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <span style="font-size:13px;font-weight:700;color:var(--text)">${d.earned_ach || 0} / ${d.total_ach || 0} ta yutuq</span>
@@ -2050,25 +2050,25 @@ function renderProfile(d) {
     </div>
 
     <!-- Sozlamalar -->
-    <div class="section-title">⚙️ Sozlamalar</div>
+    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgGear" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="3.5" stroke="url(#svgGear)" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="url(#svgGear)" stroke-width="2" stroke-linecap="round"/></svg> Sozlamalar</div>
     <div style="margin-bottom:4px">
       <div class="rem-card" style="cursor:pointer;margin:0" onclick="openEditProfile()">
         <div class="rem-top" style="margin-bottom:0">
-          <div class="rem-icon">✏️</div><div class="rem-name" style="font-size:12px">Ma'lumotlarni tahrirlash</div>
+          <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgPenLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="url(#svgPenLg)" opacity="0.85"/><path d="M15 6L20 11" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/></svg></div><div class="rem-name" style="font-size:12px">Ma'lumotlarni tahrirlash</div>
           <div style="color:var(--sub);font-size:18px">›</div>
         </div>
       </div>
     </div>
     <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="openLangModal()">
       <div class="rem-top" style="margin-bottom:0">
-        <div class="rem-icon">🌐</div>
+        <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgGlobLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><circle cx="13" cy="13" r="10" stroke="url(#svgGlobLg)" stroke-width="2"/><ellipse cx="13" cy="13" rx="4.5" ry="10" stroke="url(#svgGlobLg)" stroke-width="1.5"/><path d="M3 13h20M3 9h20M3 17h20" stroke="url(#svgGlobLg)" stroke-width="1.2" opacity="0.5"/></svg></div>
         <div class="rem-name">Bot tili</div>
         <div style="color:var(--sub);font-size:18px">›</div>
       </div>
     </div>
     <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('reminders',null)">
       <div class="rem-top" style="margin-bottom:0">
-        <div class="rem-icon">🔔</div><div class="rem-name">Eslatmalar</div>
+        <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgBellLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 3C13 3 8 6 8 13v5H5l2 2h12l2-2h-3v-5c0-7-5-10-5-10z" fill="url(#svgBellLg)" opacity="0.85"/><circle cx="13" cy="22" r="1.5" fill="url(#svgBellLg)"/></svg></div><div class="rem-name">Eslatmalar</div>
         <div style="color:var(--sub);font-size:18px">›</div>
       </div>
     </div>
@@ -2076,7 +2076,7 @@ function renderProfile(d) {
     <div class="rem-card" style="margin-top:4px">
       <div class="rem-top" style="margin-bottom:0;justify-content:space-between">
         <div style="display:flex;align-items:center;gap:10px">
-          <div class="rem-icon">&#x1F319;</div>
+          <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgMoonLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M21 14.5A9 9 0 1111.5 5a7 7 0 009.5 9.5z" fill="url(#svgMoonLg)" opacity="0.9"/></svg></div>
           <div>
             <div class="rem-name">Kechki eslatma</div>
             <div style="font-size:10px;color:var(--sub)">Har kuni 21:00 &#8212; bajarilmagan odatlar</div>
@@ -2320,7 +2320,7 @@ function renderHabits(habits, jon = 100) {
           <div class="habit-card-icon">${h.icon||'✅'}</div>
           <div class="habit-card-info">
             <div class="habit-card-name">${h.name}</div>
-            <div class="habit-card-meta">⏰ ${h.time||'vaqtsiz'} &nbsp;🔥 ${h.streak} kun</div>
+            <div class="habit-card-meta"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> ${h.time||'vaqtsiz'} &nbsp;<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak} kun</div>
           </div>
           <div class="habit-card-actions">
             <button class="hbtn" onclick="openEdit('${h.id}','${h.name.replace(/'/g,"\\'")}','${h.icon||'✅'}','${h.time||'vaqtsiz'}')">✏️</button>
@@ -2466,7 +2466,7 @@ function renderGroups(d) {
     const allMembers = (g.members || []);
     const membersHtml = allMembers.map((m, i) =>
       `<div class="member-row">
-        <span>${i < 3 ? ['🥇','🥈','🥉'][i] : (i+1)+'.'} ${m.name}</span>
+        <span>${i < 3 ? [`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgGold" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6E27A"/><stop offset="100%" stop-color="#D4963A"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#svgGold)"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">1</text></svg>`,`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgSilv" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E8E8E8"/><stop offset="100%" stop-color="#A0A8B8"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#svgSilv)"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">2</text></svg>`,`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgBronz" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E8A87C"/><stop offset="100%" stop-color="#A0522D"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#svgBronz)"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">3</text></svg>`][i] : (i+1)+'.'} ${m.name}</span>
         <span style="color:var(--sub);font-size:12px">${m.points} ball</span>
       </div>`
     ).join('');
@@ -2658,7 +2658,7 @@ function renderFriends(d) {
           <div style="text-align:center">
             <div style="font-size:11px;color:var(--sub)">Umumiy</div>
             <div style="font-size:18px;font-weight:700;color:${mutualColor};font-family:'DM Mono',monospace">${f.mutual_streak}</div>
-            <div style="font-size:9px;color:var(--sub)">kun 🔥</div>
+            <div style="font-size:9px;color:var(--sub)">kun <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg></div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
@@ -2764,7 +2764,7 @@ function renderShop(d) {
       </div>`;
     }).join('');
     invHtml = `
-      <div class="section-title">📦 Inventoryim</div>
+      <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgBox" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M3 9l9-6 9 6v12a1 1 0 01-1 1H4a1 1 0 01-1-1V9z" stroke="url(#svgBox)" stroke-width="2" stroke-linejoin="round"/><path d="M9 21V12h6v9" stroke="url(#svgBox)" stroke-width="2" stroke-linecap="round"/></svg> Inventoryim</div>
       ${invCards}`;
   }
 
@@ -2819,7 +2819,7 @@ function renderShop(d) {
       </div>
     </div>
     ${invHtml}
-    <div class="section-title">🛒 Do'kon</div>
+    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgCart2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M2 3h2.5L7 15H19L21 7H5.5" stroke="url(#svgCart2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="19" r="2" fill="url(#svgCart2)"/><circle cx="17" cy="19" r="2" fill="url(#svgCart2)"/></svg> Do'kon</div>
     <div style="display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none">${catBtns}</div>
     ${html || '<div class="empty-state"><div class="icon">🛒</div>Bu kategoriyada mahsulot yo\'q</div>'}
     <div class="toast" id="toast-shop"></div>`;
