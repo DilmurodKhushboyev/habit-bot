@@ -793,6 +793,12 @@ body {
     </div>
     <div class="pts-chip" id="header-pts">⭐ —</div>
   </div>
+  <!-- Orqaga qaytish satri -->
+  <div id="back-bar" onclick="goBack()" style="display:none;align-items:center;gap:8px;
+    padding:8px 0 4px;cursor:pointer;color:var(--sub)">
+    <span style="font-size:18px;line-height:1">‹</span>
+    <span style="font-size:13px;font-weight:600">Orqaga</span>
+  </div>
 </div>
 
 <!-- PAGES -->
@@ -807,12 +813,7 @@ body {
   </div>
 </div>
 
-<!-- REYTING -->
-<div class="page" id="page-rating">
-  <div id="rating-content">
-    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
-  </div>
-</div>
+<!-- REYTING (Statistika ichida ko'rsatiladi) -->
 
 <!-- PROFIL -->
 <div class="page" id="page-profile">
@@ -849,16 +850,29 @@ body {
     <button class="period-btn"        id="ssub-rating"  onclick="setStatSub('rating')"  type="button">🏆 Reyting</button>
     <button class="period-btn"        id="ssub-friends" onclick="setStatSub('friends')" type="button">👥 Guruh/Do'st</button>
   </div>
-  <div style="padding:0 20px">
-  <div id="stats-content">
-    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  <div id="ssub-panel-stats" style="padding:0 20px">
+    <div id="stats-content">
+      <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+    </div>
   </div>
-  <div id="stats-rating-content" style="display:none">
-    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  <div id="ssub-panel-rating" style="display:none;padding:0 20px">
+    <div id="rating-content">
+      <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+    </div>
   </div>
-  <div id="stats-groups-content" style="display:none">
-    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
-  </div>
+  <div id="ssub-panel-friends" style="display:none;padding:0">
+    <div class="period-switch" style="margin:0 20px 0">
+      <button class="period-btn active" id="gsub-groups"  onclick="setGroupSub('groups')"  type="button">👥 Guruh</button>
+      <button class="period-btn"        id="gsub-friends" onclick="setGroupSub('friends')" type="button">🤝 Do'st</button>
+    </div>
+    <div style="padding:0 20px">
+      <div id="groups-content">
+        <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+      </div>
+      <div id="friends-content" style="display:none">
+        <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -869,23 +883,8 @@ body {
   </div>
 </div>
 
-<!-- GURUHLAR -->
-<div class="page" id="page-groups">
-  <div class="period-switch" style="margin-bottom:0">
-    <button class="period-btn active" id="gsub-groups"  onclick="setGroupSub('groups')"  type="button">👥 Guruh</button>
-    <button class="period-btn"        id="gsub-friends" onclick="setGroupSub('friends')" type="button">🤝 Do'st</button>
-    <button class="period-btn"        id="gsub-shop"    onclick="setGroupSub('shop')"    type="button">🛒 Shop</button>
-  </div>
-  <div id="groups-content">
-    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
-  </div>
-  <div id="friends-content" style="display:none">
-    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
-  </div>
-  <div id="shop-content" style="display:none">
-    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
-  </div>
-</div>
+<!-- GURUHLAR (Shop uchun saqlanadi, guruh/do'st Statistika ichida) -->
+<div class="page" id="page-groups" style="display:none!important"></div>
 
 <!-- CHALLENGE MODAL -->
 <div id="challenge-modal" class="modal-overlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);align-items:flex-end;justify-content:center">
@@ -971,18 +970,31 @@ const userId   = user.id || 0;
 const API      = window.location.origin + '/api';
 
 // ── STATE ──
-let loaded = { today: false, rating: false, profile: false, habits: false, groups: false, stats: false, achievements: false, reminders: false, bozor: false };
+let loaded = { today: false, profile: false, habits: false, stats: false, achievements: false, reminders: false, bozor: false };
 let data   = {};
 
 // ── TAB SWITCH ──
+let _prevTab = 'today';
+let _curTab  = 'today';
+
 function switchTab(tab, el) {
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   if (el) el.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
+  _prevTab = _curTab;
+  _curTab  = tab;
+  // Ichki sahifalarda orqa tugma
+  const backPages = ['achievements','reminders'];
+  const backBar   = document.getElementById('back-bar');
+  if (backBar) backBar.style.display = backPages.includes(tab) ? 'flex' : 'none';
   if (!loaded[tab]) loadTab(tab);
-  // Jon har safar yangilansin
   else if (tab === 'habits') refreshHabitsJon();
+}
+
+function goBack() {
+  const navEl = document.getElementById('nav-' + _prevTab);
+  switchTab(_prevTab, navEl);
 }
 
 async function loadTab(tab) {
@@ -990,15 +1002,9 @@ async function loadTab(tab) {
   if (tab === 'stats')        await loadStats();
   if (tab === 'achievements') await loadAchievements();
   if (tab === 'reminders')    await loadReminders();
-  if (tab === 'rating')       await loadRating();
   if (tab === 'profile')      await loadProfile();
   if (tab === 'habits')       await loadHabits();
-  if (tab === 'groups') {
-    await loadGroups();
-    await loadFriends();
-  }
   if (tab === 'bozor') {
-    _shopContentId = 'bozor-content';
     await loadShop();
   }
   loaded[tab] = true;
@@ -2494,30 +2500,21 @@ function showGroupToast(msg, err=false) {
 
 // ── STATISTIKA SUB-TAB ──
 let _statSub = 'stats';
+let _friendsLoaded = false;
+
 function setStatSub(sub) {
   _statSub = sub;
   ['stats','rating','friends'].forEach(s => {
-    const btnId = 'ssub-' + (s === 'friends' ? 'friends' : s);
-    document.getElementById(btnId)?.classList.toggle('active', sub === s);
+    document.getElementById('ssub-' + s)?.classList.toggle('active', sub === s);
+    document.getElementById('ssub-panel-' + s).style.display = sub === s ? '' : 'none';
   });
-  document.getElementById('stats-content').style.display         = sub === 'stats'   ? '' : 'none';
-  document.getElementById('stats-rating-content').style.display  = sub === 'rating'  ? '' : 'none';
-  document.getElementById('stats-groups-content').style.display  = sub === 'friends' ? '' : 'none';
-
-  if (sub === 'rating' && !document.getElementById('stats-rating-content').dataset.loaded) {
-    document.getElementById('stats-rating-content').dataset.loaded = '1';
-    loadRating().then(d => {
-      document.getElementById('stats-rating-content').innerHTML =
-        document.getElementById('rating-content')?.innerHTML || '';
-    });
+  if (sub === 'rating') {
+    loadRating();
   }
-  if (sub === 'friends' && !document.getElementById('stats-groups-content').dataset.loaded) {
-    document.getElementById('stats-groups-content').dataset.loaded = '1';
-    Promise.all([loadGroups(), loadFriends()]).then(() => {
-      document.getElementById('stats-groups-content').innerHTML =
-        (document.getElementById('groups-content')?.innerHTML || '') +
-        (document.getElementById('friends-content')?.innerHTML || '');
-    });
+  if (sub === 'friends' && !_friendsLoaded) {
+    _friendsLoaded = true;
+    loadGroups();
+    loadFriends();
   }
 }
 
@@ -2525,12 +2522,11 @@ function setStatSub(sub) {
 let _groupSub = 'groups';
 function setGroupSub(sub) {
   _groupSub = sub;
-  ['groups','friends','shop'].forEach(s => {
+  ['groups','friends'].forEach(s => {
     document.getElementById('gsub-'+s)?.classList.toggle('active', sub === s);
-    const el = document.getElementById(s === 'groups' ? 'groups-content' : s+'-content');
+    const el = document.getElementById(s+'-content');
     if (el) el.style.display = sub === s ? '' : 'none';
   });
-  if (sub === 'shop') loadShop();
 }
 
 async function loadFriends() {
@@ -2613,7 +2609,7 @@ async function removeFriend(fid) {
 
 // ── SHOP ──
 let _shopData = null;
-let _shopContentId = 'shop-content';
+let _shopContentId = 'bozor-content';
 let _shopCat  = 'all';
 
 async function loadShop() {
@@ -2622,7 +2618,7 @@ async function loadShop() {
     _shopData = d;
     renderShop(d);
   } catch(e) {
-    document.getElementById('shop-content').innerHTML =
+    document.getElementById('bozor-content').innerHTML =
       '<div class="empty-state"><div class="icon">⚠️</div>Ma\'lumot yuklanmadi</div>';
   }
 }
