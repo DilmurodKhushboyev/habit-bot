@@ -6771,7 +6771,7 @@ try:
             })
         total = len(habits)
         percent = round(done_count / total * 100) if total else 0
-        jon_pct = min(100, max(0, u.get("hearts", 3) * 33))
+        jon_pct = min(100, max(0, u.get("jon", 100)))
         return jsonify({
             "habits":     result,
             "today":      today,
@@ -6799,12 +6799,11 @@ try:
                     if h.get("done_date") != today:
                         done = 0
                     if done >= rep_count:
-                        # Allaqachon to'liq bajarilgan — bekor qilish
-                        done = max(0, done - 1)
-                        if done < rep_count and h.get("last_done") == today:
-                            h["last_done"] = ""
-                            h["streak"] = max(0, h.get("streak", 0) - 1)
-                            u["points"] = max(0, u.get("points", 0) - 5)
+                        # Allaqachon to'liq bajarilgan — bekor qilish (0 ga tushirish)
+                        done = 0
+                        h["last_done"] = ""
+                        h["streak"] = max(0, h.get("streak", 0) - 1)
+                        u["points"] = max(0, u.get("points", 0) - 5)
                     else:
                         done += 1
                         if done >= rep_count:
