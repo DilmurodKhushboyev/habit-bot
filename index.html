@@ -3020,147 +3020,153 @@ const TOUR_STEPS = {
   uz: [
     {
       target: 'nav-today',
-      title: "👋 Xush kelibsiz, yangi odat egasi!",
-      desc: "Super Habits — har kuni o'sib boruvchi odamlar uchun yaratilgan. Sizi 7 ta qadamda dastur bilan tanishtiramiz.",
-      tip: "Ekranning istalgan joyiga bosib yoki 'Keyingi' tugmasini bosib o'tishingiz mumkin.",
+      title: "🌱 Salom! Yangi sahifa boshlanmoqda.",
+      desc: "Siz Super Habits ga qo'shildingiz — odatlarni shakllantirish va hayotni o'zgartirish uchun yaratilgan platforma. Keling, 7 ta qadamda tanishib chiqamiz.",
+      tip: "📌 Vazifa: Ekranning istalgan joyiga bosing yoki 'Keyingi' tugmasini bosing.",
       action: () => switchTab('today', document.getElementById('nav-today'))
     },
     {
       target: 'today-content',
-      title: "☀️ Bugun — eng muhim kun",
-      desc: "Bugungi odatlaringiz shu yerda. Har birini bajargach ✅ belgisini bosing — streak uzilmaydi, ballar to'planadi.",
-      tip: "Hozir odat kartasiga bosib ko'ring — bajarilganini belgilashingiz mumkin!"
+      title: "✅ Bugungi odatlaringiz shu yerda",
+      desc: "Ro'yxatdagi har bir odat — kuchli odamga aylanish yo'lidagi bir qadam. Har kuni ✅ belgilash — streak va ball to'plashning asosi.",
+      tip: "📌 Vazifa: Hozir bitta odatni bosib, bajarilgan deb belgilang. Keyin 'Keyingi' bosing.",
+      action: undefined
     },
     {
       target: 'nav-stats',
-      title: "🏆 Reyting — o'zingizni sinang",
-      desc: "Reytingdagi o'rningizni ko'ring. Qancha ko'p odat bajarsangiz, shuncha yuqori chiqasiz.",
-      tip: "Sahifa hozir ochildi — o'z o'rningizni toping!",
+      title: "🏆 Reytingda o'z o'rningizni biling",
+      desc: "Bu sahifada barcha foydalanuvchilar orasidagi o'rningizni ko'rasiz. Har bajarilgan odat sizni yuqoriga olib chiqadi. Birinchi o'rin — maxsus maqom.",
+      tip: "📌 Vazifa: Reyting sahifasi ochildi — hozirgi o'rningizni ko'ring. Keyin 'Keyingi' bosing.",
       action: () => switchTab('stats', document.getElementById('nav-stats'))
     },
     {
       target: 'nav-habits',
-      title: "✏️ Odatlarni boshqaring",
-      desc: "Yangi odat qo'shing, mavjudlarini tahrirlang yoki o'chiring. Har bir odatga qulay vaqt va eslatma belgilang.",
-      tip: "Tahrirlash sahifasi ochildi — birinchi odatingizni yaratib ko'ring!",
+      title: "✏️ Birinchi odatingizni yarating",
+      desc: "Har katta yo'l — bitta qadam bilan boshlanadi. '+' tugmasini bosib yangi odat yarating, vaqtini belgilang — dastur o'zi eslatib turadi.",
+      tip: "📌 Vazifa: Tahrirlash sahifasi ochildi — '+' tugmasiga bosib yangi odat yarating. Keyin 'Keyingi' bosing.",
       action: () => switchTab('habits', document.getElementById('nav-habits'))
     },
     {
       target: 'nav-bozor',
-      title: "🛒 Bozor — mehnatga mukofot",
-      desc: "Har bajarilgan odat uchun ball to'playsiz. Bu ballarni maxsus imtiyozlar va mukofotlarga almashtiring.",
-      tip: "Ball qancha ko'p bo'lsa, shuncha katta mukofot olasiz. Tejab yig'ing!"
+      title: "🛒 Mehnatga yarasha mukofot",
+      desc: "Har bajarilgan odat uchun ball to'planadi. Bu ballar — real qiymatga ega. Bozorda ularni maxsus imtiyozlar va mukofotlarga almashtiring.",
+      tip: "📌 Vazifa: Bozorga qarang, nimalarga almashtirish mumkinligini bilib oling. Keyin 'Keyingi' bosing.",
+      action: undefined
     },
     {
       target: 'nav-profile',
-      title: "👤 Profilingiz — siz haqida",
-      desc: "Yutuqlaringiz, statistikangiz va shaxsiy sozlamalar shu yerda. Til tanlang va taraqqiyotingizni kuzating.",
-      tip: "Profil sahifasi ochildi — ismingiz va rasmingizni sozlang!",
+      title: "👤 Bu — siz haqingizda sahifa",
+      desc: "Yutuqlaringiz, statistikangiz, eslatmalar va sozlamalar — hammasi shu yerda. Tilni o'zgartiring, profil rasmingizni qo'ying va o'z taraqqiyotingizni kuzating.",
+      tip: "📌 Vazifa: Profil sahifasi ochildi — ismingiz to'g'ri ko'rinayaptimi? Keyin 'Keyingi' bosing.",
       action: () => switchTab('profile', document.getElementById('nav-profile'))
     },
     {
       target: null,
-      title: "🚀 Sayohat boshlanmoqda!",
-      desc: "Siz tayyor! Birinchi odatni yarating va 21 kunlik qoidani boshlang. Katta o'zgarishlar — kichik qadamlardan boshlanadi.",
-      tip: "Muvaffaqiyat siri: har kuni, hech bahona qilmay, bir qadam tashlash!",
+      title: "🚀 Tayyor! Endi haqiqiy hayot boshlanadi.",
+      desc: "Siz 7 ta qadamni o'tdingiz. Endi bitta ish qoldi — har kuni kiring va odatlarni bajaring. 21 kun davom eting — va o'zingiz sezmagan holda o'zgarasiz.",
+      tip: "📌 Vazifa: 'Boshlash' tugmasini bosing va bugungi birinchi odatingizni bajaring!",
       action: () => switchTab('today', document.getElementById('nav-today'))
     }
   ],
   ru: [
     {
       target: 'nav-today',
-      title: "👋 Добро пожаловать, будущий чемпион!",
-      desc: "Super Habits создан для людей, которые растут каждый день. Проведём вас через 7 шагов знакомства.",
-      tip: "Нажмите в любое место экрана или кнопку 'Далее', чтобы перейти.",
+      title: "🌱 Привет! Новая глава начинается.",
+      desc: "Вы присоединились к Super Habits — платформе для формирования привычек и изменения жизни. Давайте познакомимся за 7 шагов.",
+      tip: "📌 Задание: Нажмите в любое место экрана или кнопку 'Далее'.",
       action: () => switchTab('today', document.getElementById('nav-today'))
     },
     {
       target: 'today-content',
-      title: "☀️ Сегодня — самый важный день",
-      desc: "Ваши привычки на сегодня здесь. Отмечайте каждую после выполнения ✅ — streak не прервётся, очки растут.",
-      tip: "Нажмите на карточку привычки прямо сейчас — отметьте её выполнение!"
+      title: "✅ Ваши привычки на сегодня",
+      desc: "Каждая привычка в списке — шаг на пути к лучшей версии себя. Отмечайте ✅ каждый день — так накапливается streak и растут очки.",
+      tip: "📌 Задание: Нажмите на одну привычку и отметьте её выполненной. Затем нажмите 'Далее'.",
+      action: undefined
     },
     {
       target: 'nav-stats',
-      title: "🏆 Рейтинг — докажите себе",
-      desc: "Смотрите своё место среди всех пользователей. Больше привычек — выше позиция.",
-      tip: "Страница открылась — найдите своё место в рейтинге!",
+      title: "🏆 Узнайте своё место в рейтинге",
+      desc: "Здесь вы видите своё место среди всех пользователей. Каждая выполненная привычка поднимает вас выше. Первое место — особый статус.",
+      tip: "📌 Задание: Страница рейтинга открылась — посмотрите своё место. Затем нажмите 'Далее'.",
       action: () => switchTab('stats', document.getElementById('nav-stats'))
     },
     {
       target: 'nav-habits',
-      title: "✏️ Управление привычками",
-      desc: "Добавляйте новые привычки, редактируйте или удаляйте. Задайте удобное время — система напомнит.",
-      tip: "Страница открылась — создайте свою первую привычку!",
+      title: "✏️ Создайте свою первую привычку",
+      desc: "Каждый великий путь начинается с одного шага. Нажмите '+', создайте привычку, задайте время — приложение само напомнит.",
+      tip: "📌 Задание: Страница открылась — нажмите '+' и создайте первую привычку. Затем нажмите 'Далее'.",
       action: () => switchTab('habits', document.getElementById('nav-habits'))
     },
     {
       target: 'nav-bozor',
       title: "🛒 Магазин — награда за труд",
-      desc: "За каждую выполненную привычку — очки. Обменивайте их на особые привилегии и награды.",
-      tip: "Накапливайте очки — чем больше, тем ценнее награда."
+      desc: "За каждую выполненную привычку начисляются очки с реальной ценностью. Обменивайте их на особые привилегии и награды.",
+      tip: "📌 Задание: Посмотрите, на что можно обменять очки. Затем нажмите 'Далее'.",
+      action: undefined
     },
     {
       target: 'nav-profile',
-      title: "👤 Ваш профиль — ваш путь",
-      desc: "Достижения, статистика и настройки — всё здесь. Выберите язык и следите за прогрессом.",
-      tip: "Страница открылась — настройте имя и фото профиля!",
+      title: "👤 Это — страница о вас",
+      desc: "Достижения, статистика, напоминания и настройки — всё здесь. Смените язык, добавьте фото и следите за своим прогрессом.",
+      tip: "📌 Задание: Страница открылась — проверьте, правильно ли отображается ваше имя. Затем нажмите 'Далее'.",
       action: () => switchTab('profile', document.getElementById('nav-profile'))
     },
     {
       target: null,
-      title: "🚀 Путь начинается!",
-      desc: "Вы готовы! Создайте первую привычку и запустите правило 21 дня. Великие перемены — с маленьких шагов.",
-      tip: "Секрет успеха: каждый день, без исключений, один маленький шаг!",
+      title: "🚀 Готово! Теперь начинается настоящая жизнь.",
+      desc: "Вы прошли 7 шагов. Осталось одно — заходить каждый день и выполнять привычки. 21 день подряд — и вы изменитесь незаметно для себя.",
+      tip: "📌 Задание: Нажмите 'Начать' и выполните первую привычку прямо сейчас!",
       action: () => switchTab('today', document.getElementById('nav-today'))
     }
   ],
   en: [
     {
       target: 'nav-today',
-      title: "👋 Welcome, future champion!",
-      desc: "Super Habits is built for people who grow every single day. We'll walk you through 7 steps.",
-      tip: "Tap anywhere on the screen or press 'Next' to continue.",
+      title: "🌱 Hello! A new chapter begins.",
+      desc: "You've joined Super Habits — a platform built to help you form habits and transform your life. Let's explore it together in 7 steps.",
+      tip: "📌 Task: Tap anywhere on the screen or press 'Next' to continue.",
       action: () => switchTab('today', document.getElementById('nav-today'))
     },
     {
       target: 'today-content',
-      title: "☀️ Today is the most important day",
-      desc: "Your habits for today are right here. Tap ✅ after each one — your streak stays alive and points grow.",
-      tip: "Tap a habit card right now — mark it as done!"
+      title: "✅ Your habits for today",
+      desc: "Each habit on the list is a step toward becoming a better version of yourself. Mark ✅ every day — that's how streaks grow and points accumulate.",
+      tip: "📌 Task: Tap one habit and mark it as done. Then press 'Next'.",
+      action: undefined
     },
     {
       target: 'nav-stats',
-      title: "🏆 Leaderboard — prove yourself",
-      desc: "See where you stand among all users. The more habits you complete, the higher you climb.",
-      tip: "Page opened — find your position on the leaderboard!",
+      title: "🏆 Find your place on the leaderboard",
+      desc: "Here you see your ranking among all users. Every completed habit moves you higher. First place comes with a special status.",
+      tip: "📌 Task: The leaderboard is open — check your current position. Then press 'Next'.",
       action: () => switchTab('stats', document.getElementById('nav-stats'))
     },
     {
       target: 'nav-habits',
-      title: "✏️ Manage your habits",
-      desc: "Add, edit or delete habits. Set a convenient time — the app will remind you automatically.",
-      tip: "Page opened — try creating your first habit!",
+      title: "✏️ Create your first habit",
+      desc: "Every great journey begins with a single step. Tap '+', create a habit, set a time — the app will remind you automatically.",
+      tip: "📌 Task: This page is open — tap '+' and create your first habit. Then press 'Next'.",
       action: () => switchTab('habits', document.getElementById('nav-habits'))
     },
     {
       target: 'nav-bozor',
-      title: "🛒 Shop — rewards for your effort",
-      desc: "Every completed habit earns you points. Redeem them for special perks and rewards.",
-      tip: "Save up your points — the bigger the balance, the better the reward."
+      title: "🛒 Shop — reward for your effort",
+      desc: "Every completed habit earns you points with real value. Redeem them for special perks and rewards in the Shop.",
+      tip: "📌 Task: Browse the Shop and see what you can redeem points for. Then press 'Next'.",
+      action: undefined
     },
     {
       target: 'nav-profile',
-      title: "👤 Your profile — your journey",
-      desc: "Achievements, stats and settings — all in one place. Choose your language and track progress.",
-      tip: "Page opened — set up your name and profile photo!",
+      title: "👤 This page is about you",
+      desc: "Achievements, statistics, reminders and settings — all here. Change language, add a photo and track your progress.",
+      tip: "📌 Task: This page is open — check that your name looks correct. Then press 'Next'.",
       action: () => switchTab('profile', document.getElementById('nav-profile'))
     },
     {
       target: null,
-      title: "🚀 Your journey begins now!",
-      desc: "You're all set! Create your first habit and kick off the 21-day rule. Great changes start with small steps.",
-      tip: "The secret to success: one small step every single day, no excuses!",
+      title: "🚀 Done! Now real life begins.",
+      desc: "You completed 7 steps. One thing left — come back every day and complete your habits. 21 days straight and you'll transform without even noticing.",
+      tip: "📌 Task: Press 'Start' and complete your very first habit right now!",
       action: () => switchTab('today', document.getElementById('nav-today'))
     }
   ]
