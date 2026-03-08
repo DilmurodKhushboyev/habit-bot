@@ -842,7 +842,25 @@ body {
 
 <!-- STATISTIKA -->
 <div class="page" id="page-stats">
+  <div class="period-switch" style="margin-bottom:0">
+    <button class="period-btn active" id="ssub-stats"   onclick="setStatSub('stats')"   type="button">📊 Statistika</button>
+    <button class="period-btn"        id="ssub-rating"  onclick="setStatSub('rating')"  type="button">🏆 Reyting</button>
+    <button class="period-btn"        id="ssub-friends" onclick="setStatSub('friends')" type="button">👥 Guruh/Do'st</button>
+  </div>
   <div id="stats-content">
+    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
+  <div id="stats-rating-content" style="display:none">
+    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
+  <div id="stats-groups-content" style="display:none">
+    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
+</div>
+
+<!-- BOZOR -->
+<div class="page" id="page-bozor">
+  <div id="bozor-content">
     <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
   </div>
 </div>
@@ -909,9 +927,8 @@ body {
   </button>
   <button class="nav-item" id="nav-stats" onclick="switchTab('stats', this)">
     <span class="nav-icon">📊</span>
-    <span class="nav-label">Stat</span>
+    <span class="nav-label">Statistika</span>
   </button>
-  <!-- Floating ➕ -->
   <button class="nav-item" id="nav-habits" onclick="switchTab('habits', this)" type="button"
     style="padding:4px 8px">
     <span style="display:flex;align-items:center;justify-content:center;
@@ -921,9 +938,9 @@ body {
       font-size:26px;color:#fff;font-weight:300;line-height:1">＋</span>
     <span class="nav-label" style="margin-top:2px">Qo'sh</span>
   </button>
-  <button class="nav-item" id="nav-groups" onclick="switchTab('groups', this)">
-    <span class="nav-icon">👥</span>
-    <span class="nav-label">Do'stlar</span>
+  <button class="nav-item" id="nav-bozor" onclick="switchTab('bozor', this)">
+    <span class="nav-icon">🛒</span>
+    <span class="nav-label">Bozor</span>
   </button>
   <button class="nav-item" id="nav-profile" onclick="switchTab('profile', this)">
     <span class="nav-icon">👤</span>
@@ -950,7 +967,7 @@ const userId   = user.id || 0;
 const API      = window.location.origin + '/api';
 
 // ── STATE ──
-let loaded = { today: false, rating: false, profile: false, habits: false, groups: false, stats: false, achievements: false, reminders: false };
+let loaded = { today: false, rating: false, profile: false, habits: false, groups: false, stats: false, achievements: false, reminders: false, bozor: false };
 let data   = {};
 
 // ── TAB SWITCH ──
@@ -973,6 +990,10 @@ async function loadTab(tab) {
   if (tab === 'groups') {
     await loadGroups();
     await loadFriends();
+  }
+  if (tab === 'bozor') {
+    _shopContentId = 'bozor-content';
+    await loadShop();
   }
   loaded[tab] = true;
 }
@@ -2302,6 +2323,35 @@ function showGroupToast(msg, err=false) {
   setTimeout(() => t.className = 'toast', 2500);
 }
 
+// ── STATISTIKA SUB-TAB ──
+let _statSub = 'stats';
+function setStatSub(sub) {
+  _statSub = sub;
+  ['stats','rating','friends'].forEach(s => {
+    const btnId = 'ssub-' + (s === 'friends' ? 'friends' : s);
+    document.getElementById(btnId)?.classList.toggle('active', sub === s);
+  });
+  document.getElementById('stats-content').style.display         = sub === 'stats'   ? '' : 'none';
+  document.getElementById('stats-rating-content').style.display  = sub === 'rating'  ? '' : 'none';
+  document.getElementById('stats-groups-content').style.display  = sub === 'friends' ? '' : 'none';
+
+  if (sub === 'rating' && !document.getElementById('stats-rating-content').dataset.loaded) {
+    document.getElementById('stats-rating-content').dataset.loaded = '1';
+    loadRating().then(d => {
+      document.getElementById('stats-rating-content').innerHTML =
+        document.getElementById('rating-content')?.innerHTML || '';
+    });
+  }
+  if (sub === 'friends' && !document.getElementById('stats-groups-content').dataset.loaded) {
+    document.getElementById('stats-groups-content').dataset.loaded = '1';
+    Promise.all([loadGroups(), loadFriends()]).then(() => {
+      document.getElementById('stats-groups-content').innerHTML =
+        (document.getElementById('groups-content')?.innerHTML || '') +
+        (document.getElementById('friends-content')?.innerHTML || '');
+    });
+  }
+}
+
 // ── DO'STLAR ──
 let _groupSub = 'groups';
 function setGroupSub(sub) {
@@ -2394,6 +2444,7 @@ async function removeFriend(fid) {
 
 // ── SHOP ──
 let _shopData = null;
+let _shopContentId = 'shop-content';
 let _shopCat  = 'all';
 
 async function loadShop() {
@@ -2452,7 +2503,7 @@ function renderShop(d) {
     </div>`;
   }).join('');
 
-  document.getElementById('shop-content').innerHTML = `
+  document.getElementById(_shopContentId || 'shop-content').innerHTML = `
     <div style="background:linear-gradient(135deg,#5B8DEF22,#4CAF7D22);border-radius:16px;padding:14px 16px;margin-bottom:4px;display:flex;align-items:center;gap:10px">
       <div style="font-size:28px">⭐</div>
       <div>
