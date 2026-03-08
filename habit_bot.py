@@ -6978,30 +6978,88 @@ try:
     @api_app.route("/api/rating")
     def api_rating():
         from datetime import timezone, timedelta
+        tz_uz     = timezone(timedelta(hours=5))
         today_dt  = _tz_today()
         today_str = today_dt.strftime("%Y-%m-%d")
+        # Period parametri: week / month / all
+        period    = request.args.get("period", "week")
+        sort_by   = request.args.get("sort", "points")  # points / streak / active
+        # Caller uid (o'z o'rnini ko'rish uchun)
+        try:
+            caller_uid = int(request.args.get("uid", 0))
+        except Exception:
+            caller_uid = 0
+
+        # 7 kunlik dot log uchun
         days      = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
         day_lbls  = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
 
-        users   = load_all_users()
-        ranking = sorted(users.items(), key=lambda x: x[1].get("points",0), reverse=True)
+        users_all = load_all_users()
+
+        def user_score(uid_str, udata):
+            done_log = udata.get("done_log", {})
+            if sort_by == "streak":
+                return max((h.get("streak",0) for h in udata.get("habits",[])), default=0)
+            elif sort_by == "active":
+                if period == "week":
+                    return sum(1 for d in days if done_log.get(d))
+                elif period == "month":
+                    from datetime import date as _dt
+                    month_start = today_dt.replace(day=1).strftime("%Y-%m-%d")
+                    return sum(1 for d,v in done_log.items() if v and d >= month_start)
+                else:
+                    return len([d for d,v in done_log.items() if v])
+            else:  # points
+                return udata.get("points", 0)
+
+        ranking = sorted(users_all.items(), key=lambda x: user_score(x[0], x[1]), reverse=True)
 
         result = []
-        for uid, udata in ranking:
+        caller_entry = None
+        for i, (uid_str, udata) in enumerate(ranking):
             done_log  = udata.get("done_log", {})
             bot_start = min(done_log.keys()) if done_log else today_str
-            result.append({
+            inventory = udata.get("inventory", {})
+            # Badge tanlash
+            badge = ""
+            for b in ["badge_legend","badge_champ","badge_master"]:
+                if inventory.get(b,0) > 0:
+                    badge = SHOP_ITEMS[b]["emoji"] if b in SHOP_ITEMS else ""
+                    break
+            # Pet tanlash
+            pet = ""
+            for p in ["pet_dragon","pet_cat","pet_dog"]:
+                if inventory.get(p,0) > 0:
+                    pet = SHOP_ITEMS[p]["emoji"] if p in SHOP_ITEMS else ""
+                    break
+            score    = user_score(uid_str, udata)
+            best_str = max((h.get("streak",0) for h in udata.get("habits",[])), default=0)
+            entry = {
+                "rank":      i + 1,
                 "name":      udata.get("name", "?"),
                 "points":    udata.get("points", 0),
+                "streak":    best_str,
+                "score":     score,
                 "done_log":  done_log,
                 "bot_start": bot_start,
-            })
+                "badge":     badge,
+                "pet":       pet,
+                "is_me":     uid_str == str(caller_uid),
+            }
+            if i < 10:
+                result.append(entry)
+            if uid_str == str(caller_uid) and i >= 10:
+                caller_entry = entry
 
         return jsonify({
-            "today":      today_str,
-            "days":       days,
-            "day_labels": day_lbls,
-            "users":      result,
+            "today":        today_str,
+            "days":         days,
+            "day_labels":   day_lbls,
+            "users":        result,
+            "caller_entry": caller_entry,
+            "total_users":  len(ranking),
+            "sort_by":      sort_by,
+            "period":       period,
         })
 
     @api_app.route("/api/profile/<int:uid>")

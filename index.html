@@ -1643,60 +1643,128 @@ function setPeriod(p) {
 }
 
 // ── REYTING ──
+// ── REYTING STATE ──
+let _ratSort   = 'points';
+let _ratPeriod = 'week';
+
 async function loadRating() {
   try {
-    const d = await apiFetch('rating');
+    const d = await apiFetch(`rating?sort=${_ratSort}&period=${_ratPeriod}&uid=${userId}`);
     data.rating = d;
     renderRating(d);
   } catch(e) {
     document.getElementById('rating-content').innerHTML =
-      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.<br><small>${e}</small></div>`;
+      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
   }
 }
 
-function renderRating(d) {
-  const { today, days, day_labels: lbls, users } = d;
-  const rankColors = ['#D4963A','#9AA0B0','#C08A40'];
-  let daysHtml = lbls.map(l => `<div class="gh-day">${l}</div>`).join('');
-  let rowsHtml = '';
+function setRatSort(s)   { _ratSort   = s; loadRating(); }
+function setRatPeriod(p) { _ratPeriod = p; loadRating(); }
 
-  users.forEach((u, i) => {
-    const rc = rankColors[i] || '#8A8D9A';
-    const rankClass = i < 3 ? `rank-${i+1}` : '';
-    const medal = ['🥇','🥈','🥉'][i] || (i+1);
-    let dots = '';
-    days.forEach(dstr => {
-      if (dstr > today || dstr < u.bot_start) dots += `<div class="dot empty"></div>`;
-      else if (u.done_log && u.done_log[dstr]) dots += `<div class="dot done"></div>`;
-      else dots += `<div class="dot miss"></div>`;
-    });
-    rowsHtml += `
-      <div class="user-row ${rankClass}">
-        <div class="rank-badge">${medal}</div>
-        <div class="user-info">
-          <div class="user-name">${u.name}</div>
-          <div class="user-pts">${u.points} ball</div>
+function renderRating(d) {
+  const { today, days, day_labels: lbls, users, caller_entry, total_users, sort_by, period } = d;
+  const maxScore = users.length ? Math.max(...users.map(u => u.score), 1) : 1;
+
+  const medals  = ['🥇','🥈','🥉'];
+  const podiumColors = ['#D4963A','#9AA0B0','#C08A40'];
+
+  // ── Podium (top 3) ──
+  const top3 = users.slice(0, 3);
+  const podiumOrder = [1, 0, 2]; // 2nd, 1st, 3rd visually
+  let podiumHtml = '<div style="display:flex;align-items:flex-end;justify-content:center;gap:8px;padding:20px 8px 8px">';
+  podiumOrder.forEach(idx => {
+    const u = top3[idx];
+    if (!u) return;
+    const h  = idx === 0 ? 90 : idx === 1 ? 70 : 56;
+    const col = podiumColors[idx];
+    const isMe = u.is_me;
+    podiumHtml += `
+      <div style="flex:1;max-width:110px;text-align:center">
+        <div style="font-size:${idx===0?'28px':'22px'};margin-bottom:4px">${u.pet || u.badge || medals[idx]}</div>
+        <div style="font-size:${idx===0?'13px':'11px'};font-weight:700;color:var(--text);margin-bottom:2px;
+          ${isMe?'color:#5B8DEF':''}">${u.name.split(' ')[0]}</div>
+        ${u.badge && u.pet ? `<div style="font-size:10px">${u.badge}</div>` : ''}
+        <div style="font-size:10px;color:${col};font-weight:700;margin-bottom:6px">
+          ${sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+' 🔥':u.score+' kun'}
         </div>
-        <div class="day-dots">${dots}</div>
+        <div style="height:${h}px;background:linear-gradient(180deg,${col}44,${col}22);
+          border-radius:10px 10px 0 0;border:2px solid ${col}44;
+          display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px">
+          <div style="font-size:20px">${medals[idx]}</div>
+        </div>
+      </div>`;
+  });
+  podiumHtml += '</div>';
+
+  // ── 4–10 qator ──
+  let rowsHtml = '';
+  users.slice(3).forEach((u, i) => {
+    const rank   = i + 4;
+    const pct    = Math.round((u.score / maxScore) * 100);
+    const isMe   = u.is_me;
+    const subLbl = sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+' 🔥':u.score+' kun';
+    rowsHtml += `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+        border-radius:14px;margin-bottom:4px;background:var(--card);
+        box-shadow:${isMe?'0 0 0 2px #5B8DEF':' var(--sh)'}">
+        <div style="font-size:13px;font-weight:700;color:var(--sub);width:20px;text-align:center">${rank}</div>
+        <div style="font-size:22px">${u.pet || u.badge || '👤'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:${isMe?'#5B8DEF':'var(--text)'};
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            ${u.name}${u.badge?' '+u.badge:''}
+          </div>
+          <div style="height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-top:5px;overflow:hidden">
+            <div style="height:100%;border-radius:2px;background:#5B8DEF;width:${pct}%;transition:width .4s"></div>
+          </div>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--sub);text-align:right">${subLbl}</div>
       </div>`;
   });
 
-  const oy = ['','Yan','Fev','Mar','Apr','May','Iyn','Iyl','Avg','Sen','Okt','Noy','Dek'];
-  const now = new Date();
-  const monthLbl = oy[now.getMonth()+1] + ' ' + now.getFullYear();
+  // ── O'zim (top10 dan tashqarida) ──
+  let myRowHtml = '';
+  if (caller_entry) {
+    const u   = caller_entry;
+    const pct = Math.round((u.score / maxScore) * 100);
+    const sub = sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+' 🔥':u.score+' kun';
+    myRowHtml = `
+      <div style="margin-top:4px;border-top:1px solid var(--bg);padding-top:8px">
+        <div style="font-size:10px;color:var(--sub);margin-bottom:4px;padding-left:4px">Sizning o'rningiz:</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+          border-radius:14px;background:var(--card);box-shadow:0 0 0 2px #5B8DEF">
+          <div style="font-size:13px;font-weight:700;color:#5B8DEF;width:20px;text-align:center">${u.rank}</div>
+          <div style="font-size:22px">${u.pet || u.badge || '👤'}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#5B8DEF">${u.name}</div>
+            <div style="height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-top:5px;overflow:hidden">
+              <div style="height:100%;border-radius:2px;background:#5B8DEF;width:${pct}%"></div>
+            </div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#5B8DEF">${sub}</div>
+        </div>
+      </div>`;
+  }
+
+  // ── Sort va Period switch ──
+  const sorts   = [['points','⭐ Ball'],['streak','🔥 Streak'],['active','📅 Faollik']];
+  const periods = [['week','Hafta'],['month','Oy'],['all','Barchasi']];
+  const sortBtns = sorts.map(([k,l]) =>
+    `<button onclick="setRatSort('${k}')" class="period-btn${sort_by===k?' active':''}"
+      style="font-size:11px;padding:6px 10px" type="button">${l}</button>`).join('');
+  const perBtns = periods.map(([k,l]) =>
+    `<button onclick="setRatPeriod('${k}')" class="period-btn${period===k?' active':''}"
+      style="font-size:11px;padding:6px 10px" type="button">${l}</button>`).join('');
 
   document.getElementById('rating-content').innerHTML = `
-    <div class="section-title">Top 10 · ${monthLbl}</div>
-    <div class="legend">
-      <div class="leg-item"><div class="leg-dot leg-green"></div>Bajarildi</div>
-      <div class="leg-item"><div class="leg-dot leg-red"></div>Bajarilmadi</div>
-      <div class="leg-item"><div class="leg-dot leg-empty"></div>Ma'lumot yo'q</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px">${sortBtns}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">${perBtns}</div>
+    <div style="font-size:10px;color:var(--sub);text-align:right;margin-bottom:4px">
+      Jami ${total_users} foydalanuvchi
     </div>
-    <div class="grid-header">
-      <div class="gh-name">Foydalanuvchi</div>
-      <div class="gh-days">${daysHtml}</div>
-    </div>
-    ${rowsHtml}`;
+    ${users.length >= 3 ? podiumHtml : ''}
+    ${rowsHtml}
+    ${myRowHtml}`;
 }
 
 // ── PROFIL ──
