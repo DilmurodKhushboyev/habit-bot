@@ -1730,17 +1730,26 @@ function setRatPeriod(p) { _ratPeriod = p; loadRating(); }
 
 function userAvatarHTML(u, size = 32) {
   const initial = (u.name || '?')[0].toUpperCase();
+  const clickStyle = u.is_me ? 'cursor:pointer;' : '';
+  const clickAttr  = u.is_me ? " onclick=\"switchTab('profile',document.getElementById('nav-profile'))\"" : '';
   if (u.photo_url) {
-    return `<img src="${u.photo_url}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0"
-      onerror="this.outerHTML='<div style=\\'width:${size}px;height:${size}px;border-radius:50%;background:var(--bg);box-shadow:var(--sh-sm);display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.4)}px;font-weight:700;color:var(--text);flex-shrink:0\\'>${initial}</div>'">`;
+    return `<img src="${u.photo_url}"${clickAttr} style="${clickStyle}width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0"
+      onerror="this.outerHTML='<div style=\\'${clickStyle}width:${size}px;height:${size}px;border-radius:50%;background:var(--bg);box-shadow:var(--sh-sm);display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.4)}px;font-weight:700;color:var(--text);flex-shrink:0\\'>${initial}</div>'">`;
   }
-  return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:var(--bg);box-shadow:var(--sh-sm);
+  return `<div${clickAttr} style="${clickStyle}width:${size}px;height:${size}px;border-radius:50%;background:var(--bg);box-shadow:var(--sh-sm);
     display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.4)}px;font-weight:700;color:var(--text);flex-shrink:0">${initial}</div>`;
 }
 
 function renderRating(d) {
   const { today, days, day_labels: lbls, users, caller_entry, total_users, sort_by, period } = d;
-  const maxScore = users.length ? Math.max(...users.map(u => u.score), 1) : 1;
+  const maxScore  = users.length ? Math.max(...users.map(u => u.score), 1) : 1;
+  const maxPoints = users.length ? Math.max(...users.map(u => u.points), 1) : 1;
+  const maxStreak = users.length ? Math.max(...users.map(u => u.streak), 1) : 1;
+  function calcPct(u) {
+    if (sort_by === 'points') return Math.round((u.points / maxPoints) * 100);
+    if (sort_by === 'streak') return Math.round((u.streak / maxStreak) * 100);
+    return Math.round((u.score / maxScore) * 100);
+  }
 
   const medals  = ['🥇','🥈','🥉'];
   const podiumColors = ['#D4963A','#9AA0B0','#C08A40'];
@@ -1779,7 +1788,7 @@ function renderRating(d) {
   let rowsHtml = '';
   users.slice(3).forEach((u, i) => {
     const rank   = i + 4;
-    const pct    = Math.round((u.score / maxScore) * 100);
+    const pct    = calcPct(u);
     const isMe   = u.is_me;
     const subLbl = sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+' 🔥':u.score+' kun';
     rowsHtml += `
@@ -1805,7 +1814,7 @@ function renderRating(d) {
   let myRowHtml = '';
   if (caller_entry) {
     const u   = caller_entry;
-    const pct = Math.round((u.score / maxScore) * 100);
+    const pct = calcPct(u);
     const sub = sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+' 🔥':u.score+' kun';
     myRowHtml = `
       <div style="margin-top:4px;border-top:1px solid var(--bg);padding-top:8px">

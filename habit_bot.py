@@ -6577,6 +6577,7 @@ try:
                 "points":    udata.get("points", 0),
                 "streak":    udata.get("streak", 0),
                 "score":     score,
+                "photo_url": udata.get("photo_url", ""),
                 "done_log":  done_log,
                 "bot_start": bot_start,
             })
