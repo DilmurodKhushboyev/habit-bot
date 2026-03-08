@@ -2390,32 +2390,51 @@ async function loadGroups() {
   }
 }
 
+function toggleGroup(id) {
+  const detail = document.getElementById('gdetail-' + id);
+  const arrow  = document.getElementById('garrow-' + id);
+  if (!detail) return;
+  const open = detail.style.display === 'block';
+  detail.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.textContent = open ? '▾' : '▴';
+}
+
 function renderGroups(d) {
   const groups = d.groups || [];
   let html = '';
   groups.forEach(g => {
-    const membersHtml = (g.members || []).slice(0,5).map((m,i) =>
+    const allMembers = (g.members || []);
+    const membersHtml = allMembers.map((m, i) =>
       `<div class="member-row">
-        <span>${['🥇','🥈','🥉','4️⃣','5️⃣'][i]} ${m.name}</span>
+        <span>${i < 3 ? ['🥇','🥈','🥉'][i] : (i+1)+'.'} ${m.name}</span>
         <span style="color:var(--sub);font-size:12px">${m.points} ball</span>
       </div>`
     ).join('');
 
     html += `
-      <div class="rem-card" id="gcard-${g.id}">
-        <div class="rem-top">
+      <div class="rem-card" id="gcard-${g.id}" style="cursor:pointer">
+        <div class="rem-top" onclick="toggleGroup('${g.id}')">
           <div class="rem-icon">👥</div>
           <div style="flex:1">
             <div style="font-size:14px;font-weight:700;color:var(--text)">${g.name}</div>
             <div style="font-size:11px;color:var(--sub);margin-top:2px">📌 ${g.habit_name} · ${g.member_count} a'zo ${g.is_admin ? '· 👑 Admin' : ''}</div>
           </div>
-          ${g.is_admin ? `<button class="hbtn" onclick="deleteGroup('${g.id}')" title="O'chirish">🗑️</button>` : ''}
+          <span id="garrow-${g.id}" style="font-size:16px;color:var(--sub);padding:0 4px">▾</span>
+          ${g.is_admin ? `<button class="hbtn" onclick="event.stopPropagation();deleteGroup('${g.id}')" title="O'chirish">🗑️</button>` : ''}
         </div>
-        ${membersHtml ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">${membersHtml}</div>` : ''}
-        ${g.invite_link ? `
-        <button class="rem-save-btn" style="margin-top:10px" onclick="copyInvite('${g.invite_link}')" type="button">
-          🔗 Invite link nusxalash
-        </button>` : ''}
+        <div id="gdetail-${g.id}" style="display:none">
+          ${membersHtml ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">${membersHtml}</div>` : '<div style="font-size:12px;color:var(--sub);margin-top:8px;text-align:center">A'zolar yo'q</div>'}
+          ${g.invite_link ? `
+          <button class="rem-save-btn" style="margin-top:10px" onclick="copyInvite('${g.invite_link}')" type="button">
+            🔗 Invite link nusxalash
+          </button>` : ''}
+        </div>
+        <div style="margin-top:8px;border-top:1px solid var(--bg);padding-top:8px;text-align:center">
+          <button onclick="event.stopPropagation();openGroupHabitAdd('${g.id}')" type="button"
+            style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;padding:2px 8px">
+            ＋ Odat qo'shish
+          </button>
+        </div>
       </div>`;
   });
 
@@ -2449,6 +2468,20 @@ function renderGroups(d) {
 
 function openGroupAdd() {
   document.getElementById('group-modal').classList.add('open');
+}
+function openGroupHabitAdd(gid) {
+  // Guruhga odat qo'shish — hozircha invite link ochadi
+  const card = document.getElementById('gcard-' + gid);
+  if (!card) return;
+  const detail = document.getElementById('gdetail-' + gid);
+  if (detail && detail.style.display !== 'block') toggleGroup(gid);
+  showToastGroup('Odat qo'shish funksiyasi tez orada!');
+}
+function showToastGroup(msg) {
+  const t = document.getElementById('toast-group');
+  if (!t) return;
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 function closeGroupModal() {
   document.getElementById('group-modal').classList.remove('open');
