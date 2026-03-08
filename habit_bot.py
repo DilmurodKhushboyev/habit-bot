@@ -1140,6 +1140,11 @@ def cmd_start(msg):
     uid  = msg.from_user.id
     name = msg.from_user.first_name
 
+    # Admin broadcast state da bo'lsa /start ni e'tiborsiz qoldirish
+    u_prev = load_user(uid)
+    if uid == ADMIN_ID and u_prev.get("state") in ("admin_bc_private", "admin_bc_groups", "admin_bc_all"):
+        return
+
     # Barcha oldingi xabarlarni o'chirish + holatni tozalash
     u_prev = load_user(uid)
     old_start_ids = list(u_prev.get("start_msg_ids", []))
