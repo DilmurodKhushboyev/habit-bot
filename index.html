@@ -1963,8 +1963,7 @@ function renderProfile(d) {
 
       <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-top:14px">
         <div class="stat-box"><div class="stat-val">${d.points || 0}</div><div class="stat-lbl">Ball</div></div>
-        <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div class="stat-lbl">Streak</div></div>
-        <div class="stat-box"><div class="stat-val">${d.best_streak || 0}</div><div class="stat-lbl">Best</div></div>
+        <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">eng: ${d.best_streak || 0}</div><div class="stat-lbl">Streak</div></div>
         <div class="stat-box"><div class="stat-val">${d.total_done_all || 0}</div><div class="stat-lbl">Jami</div></div>
       </div>
 
