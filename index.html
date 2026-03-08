@@ -902,7 +902,7 @@ body {
 </div>
 
 <!-- BOTTOM NAV -->
-<nav class="bottom-nav" style="position:relative">
+<nav class="bottom-nav">
   <button class="nav-item active" id="nav-today" onclick="switchTab('today', this)">
     <span class="nav-icon">☀️</span>
     <span class="nav-label">Odatlar</span>
@@ -912,18 +912,15 @@ body {
     <span class="nav-label">Stat</span>
   </button>
   <!-- Floating ➕ -->
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;top:-14px">
-    <button id="nav-habits" onclick="switchTab('habits', this)"
-      style="width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;
-        background:linear-gradient(135deg,#5B8DEF,#4CAF7D);
-        box-shadow:0 4px 18px rgba(91,141,239,.45);
-        font-size:30px;line-height:1;color:#fff;display:flex;align-items:center;justify-content:center;
-        font-weight:300;transition:transform .15s" type="button"
-      onmousedown="this.style.transform='scale(.93)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(.93)'" ontouchend="this.style.transform=''">
-      ＋
-    </button>
-    <span style="font-size:9px;font-weight:600;color:var(--sub);margin-top:3px;letter-spacing:.3px">Qo'sh</span>
-  </div>
+  <button class="nav-item" id="nav-habits" onclick="switchTab('habits', this)" type="button"
+    style="padding:4px 8px">
+    <span style="display:flex;align-items:center;justify-content:center;
+      width:42px;height:42px;border-radius:50%;
+      background:linear-gradient(135deg,#5B8DEF,#4CAF7D);
+      box-shadow:0 3px 12px rgba(91,141,239,.4);
+      font-size:26px;color:#fff;font-weight:300;line-height:1">＋</span>
+    <span class="nav-label" style="margin-top:2px">Qo'sh</span>
+  </button>
   <button class="nav-item" id="nav-groups" onclick="switchTab('groups', this)">
     <span class="nav-icon">👥</span>
     <span class="nav-label">Do'stlar</span>
