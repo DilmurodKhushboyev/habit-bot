@@ -775,7 +775,7 @@ body {
   box-shadow: var(--sh-sm);
   color: var(--text);
 }
-.nav-icon { font-size: 18px; line-height: 1; }
+.nav-icon { display:flex; align-items:center; justify-content:center; width:24px; height:24px; }
 .nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.3px; }
 </style>
 </head>
@@ -925,23 +925,63 @@ body {
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <button class="nav-item active" id="nav-today" onclick="switchTab('today', this)">
-    <span class="nav-icon">☀️</span>
+    <span class="nav-icon">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
+        <defs><linearGradient id="ni1" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs>
+        <circle cx="13" cy="13" r="5.5" fill="url(#ni1)"/>
+        <line x1="13" y1="2" x2="13" y2="5" stroke="url(#ni1)" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="13" y1="21" x2="13" y2="24" stroke="url(#ni1)" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="2" y1="13" x2="5" y2="13" stroke="url(#ni1)" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="21" y1="13" x2="24" y2="13" stroke="url(#ni1)" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="4.8" y1="4.8" x2="7" y2="7" stroke="url(#ni1)" stroke-width="2" stroke-linecap="round"/>
+        <line x1="19" y1="19" x2="21.2" y2="21.2" stroke="url(#ni1)" stroke-width="2" stroke-linecap="round"/>
+        <line x1="4.8" y1="21.2" x2="7" y2="19" stroke="url(#ni1)" stroke-width="2" stroke-linecap="round"/>
+        <line x1="19" y1="7" x2="21.2" y2="4.8" stroke="url(#ni1)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </span>
     <span class="nav-label">Odatlar</span>
   </button>
   <button class="nav-item" id="nav-stats" onclick="switchTab('stats', this)">
-    <span class="nav-icon">📊</span>
+    <span class="nav-icon">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
+        <defs><linearGradient id="ni2" x1="0" y1="26" x2="26" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs>
+        <rect x="3" y="16" width="5" height="8" rx="2" fill="url(#ni2)" opacity="0.5"/>
+        <rect x="10.5" y="10" width="5" height="14" rx="2" fill="url(#ni2)" opacity="0.75"/>
+        <rect x="18" y="4" width="5" height="20" rx="2" fill="url(#ni2)"/>
+      </svg>
+    </span>
     <span class="nav-label">Statistika</span>
   </button>
   <button class="nav-item" id="nav-habits" onclick="switchTab('habits', this)" type="button">
-    <span class="nav-icon">✏️</span>
+    <span class="nav-icon">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
+        <defs><linearGradient id="ni3" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs>
+        <path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="url(#ni3)" opacity="0.85"/>
+        <path d="M15 6L20 11" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+        <path d="M5 16L10 21" stroke="white" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+      </svg>
+    </span>
     <span class="nav-label">Tahrirlash</span>
   </button>
   <button class="nav-item" id="nav-bozor" onclick="switchTab('bozor', this)">
-    <span class="nav-icon">🛒</span>
+    <span class="nav-icon">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
+        <defs><linearGradient id="ni4" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs>
+        <path d="M3 4H5.5L8 16H20L22 8H6.5" stroke="url(#ni4)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="10" cy="20" r="1.8" fill="url(#ni4)"/>
+        <circle cx="18" cy="20" r="1.8" fill="url(#ni4)"/>
+      </svg>
+    </span>
     <span class="nav-label">Bozor</span>
   </button>
   <button class="nav-item" id="nav-profile" onclick="switchTab('profile', this)">
-    <span class="nav-icon">👤</span>
+    <span class="nav-icon">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
+        <defs><linearGradient id="ni5" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs>
+        <circle cx="13" cy="9" r="4.5" fill="url(#ni5)"/>
+        <path d="M4 22C4 17.582 8.029 14 13 14C17.971 14 22 17.582 22 22" stroke="url(#ni5)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      </svg>
+    </span>
     <span class="nav-label">Profil</span>
   </button>
 </nav>
