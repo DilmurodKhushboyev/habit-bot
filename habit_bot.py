@@ -6798,13 +6798,21 @@ try:
                     done = h.get("done_today_count", 0)
                     if h.get("done_date") != today:
                         done = 0
-                    done += 1
+                    if done >= rep_count:
+                        # Allaqachon to'liq bajarilgan — bekor qilish
+                        done = max(0, done - 1)
+                        if done < rep_count and h.get("last_done") == today:
+                            h["last_done"] = ""
+                            h["streak"] = max(0, h.get("streak", 0) - 1)
+                            u["points"] = max(0, u.get("points", 0) - 5)
+                    else:
+                        done += 1
+                        if done >= rep_count:
+                            h["last_done"] = today
+                            h["streak"] = h.get("streak", 0) + 1
+                            u["points"] = u.get("points", 0) + 5
                     h["done_today_count"] = done
                     h["done_date"] = today
-                    if done >= rep_count:
-                        h["last_done"] = today
-                        h["streak"] = h.get("streak", 0) + 1
-                        u["points"] = u.get("points", 0) + 10
                     is_done = done >= rep_count
                     today_count = done
                 else:
@@ -6880,15 +6888,27 @@ try:
             done_7  = sum(1 for i in range(7)  if history.get((now_uz-timedelta(days=i)).strftime("%Y-%m-%d"),{}).get("habits",{}).get(h["id"]))
             done_30 = sum(1 for i in range(30) if history.get((now_uz-timedelta(days=i)).strftime("%Y-%m-%d"),{}).get("habits",{}).get(h["id"]))
             week_dots = [bool(history.get((now_uz-timedelta(days=6-i)).strftime("%Y-%m-%d"),{}).get("habits",{}).get(h["id"])) for i in range(7)]
+            # Jami: botga qo'shilgandan beri
+            joined = u.get("joined_at", "")
+            if joined:
+                try:
+                    from datetime import datetime as _dt
+                    days_since = (now_uz.date() - _dt.strptime(joined, "%Y-%m-%d").date()).days + 1
+                except:
+                    days_since = 30
+            else:
+                days_since = 30
+            done_all = sum(1 for i in range(days_since) if history.get((now_uz-timedelta(days=i)).strftime("%Y-%m-%d"),{}).get("habits",{}).get(h["id"]))
             habit_stats.append({
-                "id":       h["id"],
-                "name":     h["name"],
-                "icon":     h.get("icon", "✅"),
-                "streak":   h.get("streak", 0),
-                "percent":  round(done_30 / 30 * 100),
-                "done_7":   done_7,
-                "done_30":  done_30,
-                "week_dots": week_dots,
+                "id":         h["id"],
+                "name":       h["name"],
+                "icon":       h.get("icon", "✅"),
+                "streak":     h.get("streak", 0),
+                "percent":    round(done_30 / 30 * 100),
+                "done_7":     done_7,
+                "done_30":    done_30,
+                "total_done": done_all,
+                "week_dots":  week_dots,
             })
         return jsonify({
             "today":   today,
@@ -6935,6 +6955,16 @@ try:
         active_pet   = u.get("active_pet", "")
         active_badge = u.get("active_badge", "")
         active_car   = u.get("active_car", "")
+        # can_buy va owned fieldlarini har bir item ga qo'shish
+        one_time = ["badge_fire","badge_star","pet_cat","pet_dog","pet_rabbit","car_sport"]
+        for item in shop_items:
+            owned_qty = inventory.get(item["id"], 0)
+            item["owned"] = owned_qty
+            # Bir martalik narsalar: allaqachon olingan bo'lsa can_buy=False
+            if item["id"] in one_time:
+                item["can_buy"] = owned_qty == 0
+            else:
+                item["can_buy"] = True
         return jsonify({
             "points":       u.get("points", 0),
             "items":        shop_items,
