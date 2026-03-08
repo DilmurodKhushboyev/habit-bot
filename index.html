@@ -789,9 +789,90 @@ body {
 }
 .nav-icon { display:flex; align-items:center; justify-content:center; width:24px; height:24px; }
 .nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.3px; }
+/* ── TOUR ── */
+#tour-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  pointer-events: none;
+}
+#tour-overlay.active { pointer-events: all; }
+#tour-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.55);
+  transition: opacity .3s;
+}
+#tour-spotlight {
+  position: absolute;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
+  transition: all .35s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+#tour-card {
+  position: absolute;
+  background: var(--card);
+  border-radius: 18px;
+  padding: 18px 18px 14px;
+  max-width: 310px;
+  width: calc(100vw - 48px);
+  box-shadow: 0 8px 32px rgba(0,0,0,.28);
+  transition: all .35s cubic-bezier(.4,0,.2,1);
+  z-index: 10000;
+}
+#tour-card .tour-step-num {
+  font-size: 11px; font-weight: 700;
+  color: var(--accent); margin-bottom: 6px;
+  letter-spacing: .5px; text-transform: uppercase;
+}
+#tour-card .tour-title {
+  font-size: 15px; font-weight: 700;
+  color: var(--text); margin-bottom: 7px;
+}
+#tour-card .tour-desc {
+  font-size: 13px; color: var(--sub);
+  line-height: 1.55; margin-bottom: 14px;
+}
+#tour-card .tour-btns {
+  display: flex; gap: 8px; justify-content: flex-end; align-items: center;
+}
+#tour-card .tour-skip {
+  font-size: 12px; color: var(--sub);
+  background: none; border: none; cursor: pointer;
+  padding: 6px 4px; font-family: inherit; margin-right: auto;
+}
+#tour-card .tour-next {
+  font-size: 13px; font-weight: 700;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 10px;
+  padding: 8px 18px; cursor: pointer; font-family: inherit;
+}
+#tour-card .tour-dots {
+  display: flex; gap: 5px; align-items: center; margin-right: 8px;
+}
+#tour-card .tour-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--sub); opacity: .4; transition: all .2s;
+}
+#tour-card .tour-dot.active {
+  background: var(--accent); opacity: 1; width: 16px; border-radius: 3px;
+}
 </style>
 </head>
 <body>
+
+<!-- TOUR OVERLAY -->
+<div id="tour-overlay">
+  <div id="tour-spotlight"></div>
+  <div id="tour-card">
+    <div class="tour-step-num" id="tour-step-num"></div>
+    <div class="tour-title"    id="tour-title"></div>
+    <div class="tour-desc"     id="tour-desc"></div>
+    <div class="tour-btns">
+      <button class="tour-skip" onclick="endTour()" type="button" id="tour-skip-btn"></button>
+      <div class="tour-dots"  id="tour-dots"></div>
+      <button class="tour-next" onclick="tourNext()" type="button" id="tour-next-btn"></button>
+    </div>
+  </div>
+</div>
 
 <!-- HEADER -->
 <div class="header">
@@ -2926,8 +3007,226 @@ async function sendChallenge() {
   }
 }
 
+// ── TOUR ──
+const TOUR_STEPS = {
+  uz: [
+    {
+      target: 'nav-today',
+      title: "👋 Xush kelibsiz!",
+      desc: "Bu Super Habits — odatlarni shakllantirish va kuzatish uchun eng qulay ilova. Keling, asosiy funksiyalar bilan tanishamiz!"
+    },
+    {
+      target: 'today-content',
+      title: "📋 Bugungi odatlar",
+      desc: "Bu yerda bugungi odatlaringiz ko'rinadi. Har birini bajarganingizdan so'ng belgilang — streak va ballar to'planadi!"
+    },
+    {
+      target: 'nav-stats',
+      title: "🏆 Reyting",
+      desc: "Bu yerda barcha foydalanuvchilar orasidagi reytingingizni ko'rasiz. Odatlarni bajarib, yuqoriga chiqing!"
+    },
+    {
+      target: 'nav-habits',
+      title: "✏️ Tahrirlash",
+      desc: "Odatlarni qo'shish, o'zgartirish va o'chirish uchun. Yangi odat yaratib, vaqtini belgilang."
+    },
+    {
+      target: 'nav-bozor',
+      title: "🛒 Bozor",
+      desc: "To'plangan ballaringizni sarflab, maxsus mukofotlar va imtiyozlar sotib oling."
+    },
+    {
+      target: 'nav-profile',
+      title: "👤 Profil",
+      desc: "Profilingiz, yutuqlaringiz, eslatmalar va til sozlamalarini bu yerda boshqaring."
+    },
+    {
+      target: null,
+      title: "🎉 Hammasi tayyor!",
+      desc: "Endi Super Habits dan to'liq foydalanishingiz mumkin. Birinchi odatni yarating va yo'lni boshlang!"
+    }
+  ],
+  ru: [
+    {
+      target: 'nav-today',
+      title: "👋 Добро пожаловать!",
+      desc: "Это Super Habits — лучшее приложение для формирования привычек. Давайте познакомимся с основными функциями!"
+    },
+    {
+      target: 'today-content',
+      title: "📋 Привычки на сегодня",
+      desc: "Здесь отображаются ваши привычки на сегодня. Отмечайте выполненные — накапливайте streak и очки!"
+    },
+    {
+      target: 'nav-stats',
+      title: "🏆 Рейтинг",
+      desc: "Здесь вы видите свой рейтинг среди всех пользователей. Выполняйте привычки и поднимайтесь выше!"
+    },
+    {
+      target: 'nav-habits',
+      title: "✏️ Редактирование",
+      desc: "Добавляйте, изменяйте и удаляйте привычки. Создайте новую привычку и задайте время напоминания."
+    },
+    {
+      target: 'nav-bozor',
+      title: "🛒 Магазин",
+      desc: "Тратьте накопленные очки на особые награды и привилегии."
+    },
+    {
+      target: 'nav-profile',
+      title: "👤 Профиль",
+      desc: "Управляйте своим профилем, достижениями, напоминаниями и настройками языка."
+    },
+    {
+      target: null,
+      title: "🎉 Всё готово!",
+      desc: "Теперь вы можете полноценно пользоваться Super Habits. Создайте первую привычку и начните путь!"
+    }
+  ],
+  en: [
+    {
+      target: 'nav-today',
+      title: "👋 Welcome!",
+      desc: "This is Super Habits — the best app for building habits. Let's get familiar with the main features!"
+    },
+    {
+      target: 'today-content',
+      title: "📋 Today's Habits",
+      desc: "Your habits for today are shown here. Check them off when done — build streaks and earn points!"
+    },
+    {
+      target: 'nav-stats',
+      title: "🏆 Leaderboard",
+      desc: "See your ranking among all users. Complete habits and climb to the top!"
+    },
+    {
+      target: 'nav-habits',
+      title: "✏️ Edit Habits",
+      desc: "Add, edit, and delete habits here. Create a new habit and set your reminder time."
+    },
+    {
+      target: 'nav-bozor',
+      title: "🛒 Shop",
+      desc: "Spend your earned points on special rewards and privileges."
+    },
+    {
+      target: 'nav-profile',
+      title: "👤 Profile",
+      desc: "Manage your profile, achievements, reminders, and language settings here."
+    },
+    {
+      target: null,
+      title: "🎉 All set!",
+      desc: "You're ready to use Super Habits to the fullest. Create your first habit and start your journey!"
+    }
+  ]
+};
+
+const TOUR_SKIP_LABELS = { uz: "O'tkazib yuborish", ru: "Пропустить", en: "Skip" };
+const TOUR_NEXT_LABELS = { uz: "Keyingi →",        ru: "Далее →",      en: "Next →" };
+const TOUR_DONE_LABELS = { uz: "Boshlash! 🚀",      ru: "Начать! 🚀",   en: "Start! 🚀" };
+const TOUR_OF_LABELS   = { uz: "dan",               ru: "из",           en: "of" };
+
+let _tourStep = 0;
+let _tourSteps = [];
+let _tourLang = 'uz';
+
+function startTourIfNew() {
+  const key = 'sh_tour_done_v1';
+  if (localStorage.getItem(key)) return;
+  // Lang: use currentLang if set, else fallback to uz
+  // We start tour after small delay so UI is painted
+  setTimeout(() => {
+    _tourLang = (currentLang && TOUR_STEPS[currentLang]) ? currentLang : 'uz';
+    _tourSteps = TOUR_STEPS[_tourLang];
+    _tourStep = 0;
+    showTourStep();
+    document.getElementById('tour-overlay').classList.add('active');
+  }, 800);
+}
+
+function showTourStep() {
+  const steps = _tourSteps;
+  const step  = steps[_tourStep];
+  const total = steps.length;
+  const lang  = _tourLang;
+  const overlay = document.getElementById('tour-overlay');
+  const spotlight = document.getElementById('tour-spotlight');
+  const card = document.getElementById('tour-card');
+
+  // Step label
+  document.getElementById('tour-step-num').textContent =
+    `${_tourStep + 1} ${TOUR_OF_LABELS[lang]} ${total}`;
+  document.getElementById('tour-title').textContent = step.title;
+  document.getElementById('tour-desc').textContent  = step.desc;
+
+  // Skip / Next button labels
+  document.getElementById('tour-skip-btn').textContent =
+    TOUR_SKIP_LABELS[lang];
+  document.getElementById('tour-next-btn').textContent =
+    _tourStep === total - 1 ? TOUR_DONE_LABELS[lang] : TOUR_NEXT_LABELS[lang];
+
+  // Dots
+  const dotsEl = document.getElementById('tour-dots');
+  dotsEl.innerHTML = steps.map((_, i) =>
+    `<div class="tour-dot${i === _tourStep ? ' active' : ''}"></div>`
+  ).join('');
+
+  // Spotlight
+  if (step.target) {
+    const el = document.getElementById(step.target);
+    if (el) {
+      const r = el.getBoundingClientRect();
+      const pad = 8;
+      spotlight.style.cssText =
+        `left:${r.left - pad}px;top:${r.top - pad}px;` +
+        `width:${r.width + pad*2}px;height:${r.height + pad*2}px;` +
+        `border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.55);`;
+      spotlight.style.display = 'block';
+
+      // Position card: above or below the element
+      const cardH = 180;
+      let cardTop;
+      if (r.top > cardH + 24) {
+        cardTop = r.top - cardH - 16;
+      } else {
+        cardTop = r.bottom + 16;
+      }
+      const cardW = Math.min(310, window.innerWidth - 48);
+      let cardLeft = Math.max(16, r.left + r.width/2 - cardW/2);
+      if (cardLeft + cardW > window.innerWidth - 16) cardLeft = window.innerWidth - cardW - 16;
+      card.style.cssText =
+        `left:${cardLeft}px;top:${cardTop}px;width:${cardW}px;position:absolute;`;
+    }
+  } else {
+    // Final step: center card, hide spotlight
+    spotlight.style.display = 'none';
+    const cardW = Math.min(310, window.innerWidth - 48);
+    card.style.cssText =
+      `left:${(window.innerWidth - cardW)/2}px;` +
+      `top:${(window.innerHeight - 220)/2}px;width:${cardW}px;position:absolute;`;
+  }
+}
+
+function tourNext() {
+  if (_tourStep < _tourSteps.length - 1) {
+    _tourStep++;
+    showTourStep();
+  } else {
+    endTour();
+  }
+}
+
+function endTour() {
+  localStorage.setItem('sh_tour_done_v1', '1');
+  const overlay = document.getElementById('tour-overlay');
+  overlay.classList.remove('active');
+  overlay.style.opacity = '0';
+  setTimeout(() => { overlay.style.display = 'none'; }, 300);
+}
+
 // ── START ──
-window.onload = function() { loadToday(); };
+window.onload = function() { loadToday(); startTourIfNew(); };
 </script>
 </body>
 </html>
