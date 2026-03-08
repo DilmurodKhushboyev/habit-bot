@@ -878,7 +878,7 @@ def main_menu_dict(uid=None, page=1):
     """Faqat Web App tugmasi"""
     webapp_url = os.environ.get("WEBAPP_URL", "https://worker-production-3492.up.railway.app")
     return {"inline_keyboard": [[
-        {"text": "🌐 Web App", "web_app": {"url": webapp_url}}
+        {"text": "🌱 Kirish", "web_app": {"url": webapp_url}}
     ]]}
 
 def main_menu(uid=None, page=1):
@@ -902,120 +902,15 @@ def done_keyboard(uid, habit_id):
     return kb
 
 def build_main_text(uid):
-    u      = load_user(uid)
-    habits = u.get("habits", [])
-    groups = u.get("groups", [])
-    if not habits and not groups:
-        return T(uid, "no_habits")
-    if not habits:
-        # Faqat guruh odatlari bor
-        today    = today_uz5()
-        text     = "👥 *Guruh odatlari:*\n"
-        text    += "━" * 16 + "\n"
-        for g_info in groups:
-            g_data = load_group(g_info["id"])
-            if not g_data: continue
-            done_today_g = g_data.get("done_today", {})
-            if g_data.get("done_date") != today:
-                done_today_g = {}
-            g_habits = g_data.get("habits", [])
-            if not g_habits and g_data.get("habit_name"):
-                g_habits = [{"id": "main", "name": g_data["habit_name"]}]
-            members_count = len(g_data.get("members", []))
-            for h in g_habits:
-                h_id   = h["id"]
-                h_name = h["name"]
-                dt_val = done_today_g.get(str(uid), {})
-                if isinstance(dt_val, dict):
-                    i_done = dt_val.get(h_id, False)
-                else:
-                    i_done = bool(dt_val) if h_id == "main" else False
-                done_count_g = sum(
-                    1 for mid in g_data.get("members",[])
-                    if (done_today_g.get(str(mid),{}).get(h_id,False)
-                        if isinstance(done_today_g.get(str(mid),{}), dict)
-                        else (bool(done_today_g.get(str(mid),False)) and h_id=="main"))
-                )
-                status = "☑️" if i_done else "✅"
-                text  += f"{status} *{g_info['name']}: {h_name}*  👥 {done_count_g}/{members_count}\n"
-        text += "━" * 16
-        return text
-    total_points = u.get("points", 0)
-    today      = today_uz5()
-    done_count = sum(1 for h in habits if h.get("last_done") == today)
-    percent    = round(done_count / len(habits) * 100) if habits else 0
-    header     = T(uid, 'welcome_back').replace('📊 *', '').replace('*', '').strip()
-    pct_text   = T(uid, 'done_percent', p=percent)
-    jon   = u.get("jon", 100)
-    jon   = max(0, min(100, jon))
-    if jon >= 80:   jon_emoji = "❤️"
-    elif jon >= 50: jon_emoji = "🧡"
-    elif jon >= 20: jon_emoji = "💛"
-    else:           jon_emoji = "🖤"
-    text  = f"📊 *{header} | {pct_text}*\n"
-    text += f"*{jon_emoji} Jon:* {jon}%\n"
-    text += "━" * 16 + "\n"
-    text += T(uid, "stats_ball", ball=total_points) + "\n"
-    text += T(uid, "stats_rank", rank=get_rank(uid, total_points)) + "\n"
-    text += "━" * 16 + "\n"
-    text += "\n👤 *Shaxsiy odatlar:*\n"
-    text += "\n"
-    today = today_uz5()
-    # Odatlarni vaqt bo'yicha tartiblash
-    def habit_sort_key(h):
-        t = h.get("time", "23:59")
-        try:
-            hh, mm = t.split(":")
-            return int(hh) * 60 + int(mm)
-        except:
-            return 9999
-    sorted_habits = sorted(habits, key=habit_sort_key)
-    for h in sorted_habits:
-        streak     = h.get("streak", 0)
-        total_done = h.get("total_done", 0)
-        if streak >= 30:   medal = "🥇"
-        elif streak >= 14: medal = "🥈"
-        elif streak >= 7:  medal = "🥉"
-        else:              medal = "🌱"
-        text += f"{medal} *{h['name']}* — {total_done} marta\n"
-    text += "\n" + "━" * 16
-    # Guruh odatlari bo'limi
-    groups = u.get("groups", [])
-    if groups:
-        text += "\n\n👥 *Guruh odatlari:*\n"
-        text += "\n"
-        for g_info in groups:
-            g_data = load_group(g_info["id"])
-            if not g_data:
-                continue
-            done_today_g = g_data.get("done_today", {})
-            if g_data.get("done_date") != today:
-                done_today_g = {}
-            g_habits = g_data.get("habits", [])
-            if not g_habits and g_data.get("habit_name"):
-                g_habits = [{"id": "main", "name": g_data["habit_name"]}]
-            members_count = len(g_data.get("members", []))
-            for h in g_habits:
-                h_id   = h["id"]
-                h_name = h["name"]
-                dt_val = done_today_g.get(str(uid), {})
-                if isinstance(dt_val, dict):
-                    i_done = dt_val.get(h_id, False)
-                else:
-                    i_done = bool(dt_val) if h_id == "main" else False
-                done_count_g = 0
-                for mid in g_data.get("members", []):
-                    v = done_today_g.get(str(mid), {})
-                    if isinstance(v, dict):
-                        if v.get(h_id, False):
-                            done_count_g += 1
-                    else:
-                        if bool(v) and h_id == "main":
-                            done_count_g += 1
-                medal = "☑️" if i_done else "🌱"
-                text  += f"{medal} {h_name}  👥 {done_count_g}/{members_count}\n"
-        text += "\n" + "━" * 16
-    return text
+    u    = load_user(uid)
+    name = u.get("name", "Do'stim")
+    return (
+        f"🌱 *Salom, {name}!*\n\n"
+        f"Super Habits — odatlaringizni kuzatib boring,\n"
+        f"o'sib boring, g'olib bo'ling! 🏆\n\n"
+        f"👇 Kirish uchun tugmani bosing:"
+    )
+
 
 def send_main_menu(uid, text=None):
     u = load_user(uid)
