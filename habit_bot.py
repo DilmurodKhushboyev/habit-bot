@@ -6630,13 +6630,15 @@ try:
             })
 
         return jsonify({
-            "name":   u.get("name","?"),
-            "points": u.get("points",0),
-            "streak": u.get("streak",0),
-            "jon":    u.get("jon",100),
-            "is_vip": u.get("is_vip",False),
-            "rank":   rank,
-            "habits": habits,
+            "name":        u.get("name","?"),
+            "points":      u.get("points",0),
+            "streak":      u.get("streak",0),
+            "jon":         u.get("jon",100),
+            "is_vip":      u.get("is_vip",False),
+            "rank":        rank,
+            "total_users": len(users),
+            "joined_at":   u.get("joined_at",""),
+            "habits":      habits,
         })
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
