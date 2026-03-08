@@ -903,12 +903,14 @@ def done_keyboard(uid, habit_id):
 
 def build_main_text(uid):
     u    = load_user(uid)
-    name = u.get("name", "Do'stim")
+    name = u.get("name", "ism")
     return (
-        f"🌱 *Salom, {name}!*\n\n"
-        f"Super Habits — odatlaringizni kuzatib boring,\n"
-        f"o'sib boring, g'olib bo'ling! 🏆\n\n"
-        f"👇 Kirish uchun tugmani bosing:"
+        f"👋 *Assalomu alaykum, {name}!*\n\n"
+        f"🌱 _Odatlaringizni barpo etish, rivojlantirish, "
+        f"kuzatib borish, qiziqarli raqobat, oson va tez "
+        f"shakillantirish uchun, eng to\'g\'ri joydasiz!_\n\n"
+        f"Ushbu sayohatni boshlash uchun:\n"
+        f"« 🌱 *Kirish*» tugmasini bosing\! 👇"
     )
 
 
