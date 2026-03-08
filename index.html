@@ -2270,16 +2270,6 @@ function renderHabits(habits, jon = 100) {
   document.getElementById('habits-content').innerHTML = `
     <div>
       <button class="add-btn" onclick="openAdd()">＋ Yangi odat</button>
-      <div style="display:flex;justify-content:flex-end;gap:12px;margin-bottom:8px;padding:0 4px">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-          <div style="font-size:10px;font-weight:600;color:var(--sub)">BAJARILISH</div>
-          ${ringHTML(habits.length ? Math.round(habits.filter(h=>h.total_done>0).length/habits.length*100) : 0, 72)}
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-          <div style="font-size:10px;font-weight:600;color:var(--sub)">JON</div>
-          <div id="habits-jon-ring">${jonDoira}</div>
-        </div>
-      </div>
       <div class="section-title">Odatlarim (${habits.length})</div>
       ${rows || '<div class="empty-state"><div class="icon">📋</div>Hozircha odat yo\'q</div>'}
     </div>
