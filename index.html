@@ -329,16 +329,28 @@ body {
 .field input::placeholder { color: var(--sub); }
 
 .icon-grid {
-  display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 6px;
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 8px;
 }
 .icon-opt {
-  aspect-ratio: 1; border-radius: 10px;
+  aspect-ratio: 1; border-radius: 14px;
   background: var(--bg); box-shadow: var(--sh-sm);
-  font-size: 18px;
+  font-size: 22px;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all .15s;
+  cursor: pointer; transition: all .18s cubic-bezier(.34,1.56,.64,1);
+  position: relative; overflow: hidden;
 }
-.icon-opt.selected { box-shadow: var(--sh-press); background: var(--bg2); }
+.icon-opt:active { transform: scale(0.88); }
+.icon-opt.selected {
+  background: linear-gradient(135deg, #5B8DEF22, #A78BFA22);
+  box-shadow: 0 0 0 2.5px #5B8DEF, var(--sh-sm);
+  transform: scale(1.10);
+}
+.icon-opt.selected::after {
+  content: '';
+  position: absolute; bottom: 3px; right: 3px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: linear-gradient(135deg, #5B8DEF, #A78BFA);
+}
 
 .save-btn {
   width: 100%; padding: 16px; border-radius: 16px;
