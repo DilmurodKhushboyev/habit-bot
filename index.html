@@ -902,26 +902,31 @@ body {
 </div>
 
 <!-- BOTTOM NAV -->
-<nav class="bottom-nav">
+<nav class="bottom-nav" style="position:relative">
   <button class="nav-item active" id="nav-today" onclick="switchTab('today', this)">
     <span class="nav-icon">☀️</span>
-    <span class="nav-label">Bugun</span>
+    <span class="nav-label">Odatlar</span>
   </button>
   <button class="nav-item" id="nav-stats" onclick="switchTab('stats', this)">
     <span class="nav-icon">📊</span>
     <span class="nav-label">Stat</span>
   </button>
-  <button class="nav-item" id="nav-habits" onclick="switchTab('habits', this)">
-    <span class="nav-icon">📋</span>
-    <span class="nav-label">Odatlar</span>
-  </button>
+  <!-- Floating ➕ -->
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;top:-14px">
+    <button id="nav-habits" onclick="switchTab('habits', this)"
+      style="width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;
+        background:linear-gradient(135deg,#5B8DEF,#4CAF7D);
+        box-shadow:0 4px 18px rgba(91,141,239,.45);
+        font-size:30px;line-height:1;color:#fff;display:flex;align-items:center;justify-content:center;
+        font-weight:300;transition:transform .15s" type="button"
+      onmousedown="this.style.transform='scale(.93)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(.93)'" ontouchend="this.style.transform=''">
+      ＋
+    </button>
+    <span style="font-size:9px;font-weight:600;color:var(--sub);margin-top:3px;letter-spacing:.3px">Qo'sh</span>
+  </div>
   <button class="nav-item" id="nav-groups" onclick="switchTab('groups', this)">
     <span class="nav-icon">👥</span>
     <span class="nav-label">Do'stlar</span>
-  </button>
-  <button class="nav-item" id="nav-rating" onclick="switchTab('rating', this)">
-    <span class="nav-icon">🏆</span>
-    <span class="nav-label">Reyting</span>
   </button>
   <button class="nav-item" id="nav-profile" onclick="switchTab('profile', this)">
     <span class="nav-icon">👤</span>
@@ -1898,6 +1903,20 @@ function renderProfile(d) {
 
     <!-- Sozlamalar -->
     <div class="section-title">⚙️ Sozlamalar</div>
+    <div style="display:flex;gap:6px;margin-bottom:4px">
+      <div class="rem-card" style="flex:1;cursor:pointer;margin:0" onclick="switchTab('rating',null)">
+        <div class="rem-top" style="margin-bottom:0">
+          <div class="rem-icon">🏆</div><div class="rem-name" style="font-size:12px">Reyting</div>
+          <div style="color:var(--sub);font-size:18px">›</div>
+        </div>
+      </div>
+      <div class="rem-card" style="flex:1;cursor:pointer;margin:0" onclick="switchTab('groups',null);setGroupSub('shop')">
+        <div class="rem-top" style="margin-bottom:0">
+          <div class="rem-icon">🛒</div><div class="rem-name" style="font-size:12px">Bozor</div>
+          <div style="color:var(--sub);font-size:18px">›</div>
+        </div>
+      </div>
+    </div>
     <div class="rem-card">
       <div class="rem-top"><div class="rem-icon">🌐</div><div class="rem-name">Bot tili</div></div>
       <div class="repeat-opts" style="gap:6px;display:flex">${langBtns}</div>
@@ -2049,7 +2068,7 @@ function renderHabits(habits) {
 
   document.getElementById('habits-content').innerHTML = `
     <div>
-      <button class="add-btn" onclick="openAdd()">＋ Yangi odat qo'shish</button>
+      <button class="add-btn" onclick="openAdd()">＋ Yangi odat</button>
       <div class="section-title">Odatlarim (${habits.length})</div>
       ${rows || '<div class="empty-state"><div class="icon">📋</div>Hozircha odat yo\'q</div>'}
     </div>
