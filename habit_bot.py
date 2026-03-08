@@ -979,6 +979,11 @@ def main_menu_dict(uid=None, page=1):
     rows.append([
         {"text": "🏠 2-menyu",           "callback_data": "menu2_open",     "style": "primary"},
     ])
+    webapp_url = os.environ.get("WEBAPP_URL", "")
+    if webapp_url:
+        rows.append([
+            {"text": "🌐 Web App", "web_app": {"url": webapp_url}}
+        ])
     return {"inline_keyboard": rows}
 
 def main_menu(uid=None, page=1):
