@@ -1397,17 +1397,47 @@ def build_main_text(uid):
     return text
 
 def send_main_menu(uid, text=None):
+    """Foydalanuvchiga Web App tugmali xabar yuborish"""
     u = load_user(uid)
+    webapp_url = os.environ.get("WEBAPP_URL", "")
+
+    # Qisqa matn — faqat asosiy holat
     if text is None:
-        text = build_main_text(uid)
-    sent = send_message_colored(uid, text, main_menu_dict(uid))
-    if sent is None:
-        sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=main_menu(uid))
-    u["main_msg_id"] = sent.message_id
-    ids = u.get("start_msg_ids", [])
-    ids.append(sent.message_id)
-    u["start_msg_ids"] = ids
-    save_user(uid, u)
+        today   = today_uz5()
+        habits  = u.get("habits", [])
+        done    = sum(1 for h in habits if h.get("last_done") == today)
+        total   = len(habits)
+        points  = u.get("points", 0)
+        jon     = u.get("jon", 100)
+        streak  = max((h.get("streak",0) for h in habits), default=0)
+        jon_e   = "❤️" if jon>=80 else "🧡" if jon>=50 else "💛" if jon>=20 else "🖤"
+        text = (
+            f"👋 *Salom, {u.get('name','Foydalanuvchi')}!*\n\n"
+            f"✅ Bugun: *{done}/{total}* odat bajarildi\n"
+            f"⭐ Ball: *{points}*  |  🔥 Streak: *{streak}*\n"
+            f"{jon_e} Jon: *{jon}%*"
+        )
+
+    # Klaviatura: faqat Web App tugmasi
+    kb = InlineKeyboardMarkup()
+    if webapp_url:
+        kb.add(InlineKeyboardButton("🚀 Web Appni ochish", web_app={"url": webapp_url}))
+
+    try:
+        # Eski main_msg ni o'chirish
+        old_mid = u.get("main_msg_id")
+        if old_mid:
+            try: bot.delete_message(uid, old_mid)
+            except: pass
+
+        sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb)
+        u["main_msg_id"] = sent.message_id
+        ids = u.get("start_msg_ids", [])
+        ids.append(sent.message_id)
+        u["start_msg_ids"] = ids
+        save_user(uid, u)
+    except Exception as e:
+        logger.error(f"send_main_menu error: {e}")
 
 
 # ============================================================
@@ -3902,18 +3932,13 @@ def callback_handler(call):
         return
 
     if cdata == "menu_stats":
-        bot.answer_callback_query(call.id)
-        try: bot.delete_message(uid, call.message.message_id)
-        except Exception: pass
-        show_stats(uid)
+        bot.answer_callback_query(call.id, "Web App da ko'ring 👆")
+        send_main_menu(uid)
         return
 
     if cdata.startswith("stats_page_"):
-        page = int(cdata[11:])
         bot.answer_callback_query(call.id)
-        try: bot.delete_message(uid, call.message.message_id)
-        except Exception: pass
-        show_stats(uid, page=page)
+        send_main_menu(uid)
         return
 
     if cdata == "menu_delete":
@@ -3924,10 +3949,8 @@ def callback_handler(call):
         return
 
     if cdata == "menu_rating":
-        bot.answer_callback_query(call.id)
-        try: bot.delete_message(uid, call.message.message_id)
-        except Exception: pass
-        show_rating(uid)
+        bot.answer_callback_query(call.id, "Web App da ko'ring 👆")
+        send_main_menu(uid)
         return
 
     if cdata == "menu_main":
@@ -4490,38 +4513,8 @@ def callback_handler(call):
     #  BOZOR
     # ============================================================
     if cdata == "menu_bozor":
-        bot.answer_callback_query(call.id)
-        try: bot.delete_message(uid, call.message.message_id)
-        except Exception: pass
-        balls = u.get("points", 0)
-        ref_count  = len(u.get("referrals", []))
-        bozor_text = (
-            f"🛒 *Bozor —* bu sizning ballaringiz bilan qilinadigan barcha ammalar joyi.\n\n"
-            f"*⭐ Sizning balingiz:* {balls} ball\n"
-            f"*👥 Taklif qilganlar:* {ref_count} ta do'st\n\n"
-            "*👥 Do'st taklif qilish —* +50 ball (siz), +25 ball (do'st)\n"
-            "*💸 Ballarni ayirboshlash —* yaqin insoniga ball yuborish\n"
-            "*🔴 Ballarimni 0 ga tushirish —* barcha ballarni nollash\n"
-            "*➖ Ballarimdan olib tashlash —* ma'lum miqdorni ayirish"
-        )
-        bozor_kb = {"inline_keyboard": [
-            [{"text": "👥 Do'st taklif qilish",       "callback_data": "bozor_referral",      "style": "primary"}],
-            [{"text": "💸 Ballarni ayirboshlash",     "callback_data": "bozor_transfer"}],
-            [{"text": "🔴 Ballarimni 0 ga tushirish", "callback_data": "bozor_reset_confirm", "style": "danger"}],
-            [{"text": "➖ Ballarimdan olib tashlash",  "callback_data": "bozor_subtract"}],
-            [{"text": T(uid, "btn_home"),              "callback_data": "menu_main",           "style": "primary"}],
-        ]}
-        sent = send_message_colored(uid, bozor_text, bozor_kb)
-        if sent is None:
-            kb_b = InlineKeyboardMarkup()
-            kb_b.add(InlineKeyboardButton("👥 Do'st taklif qilish",      callback_data="bozor_referral"))
-            kb_b.add(InlineKeyboardButton("💸 Ballarni ayirboshlash",    callback_data="bozor_transfer"))
-            kb_b.add(InlineKeyboardButton("🔴 Ballarimni 0 ga tushirish", callback_data="bozor_reset_confirm"))
-            kb_b.add(InlineKeyboardButton("➖ Ballarimdan olib tashlash",  callback_data="bozor_subtract"))
-            kb_b.add(cBtn(T(uid, "btn_home"),             "menu_main", "primary"))
-            sent = bot.send_message(uid, bozor_text, parse_mode="Markdown", reply_markup=kb_b)
-        u["main_msg_id"] = sent.message_id
-        save_user(uid, u)
+        bot.answer_callback_query(call.id, "Web App Bozor bo'limini oching 👆")
+        send_main_menu(uid)
         return
 
     if cdata == "bozor_referral":
