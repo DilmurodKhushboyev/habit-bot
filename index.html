@@ -1961,10 +1961,10 @@ function renderProfile(d) {
         ${d.bonus_3x_active ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px">🔥 <span style="color:#E07040;font-weight:700">3× bonus</span></div>` : ''}
       </div>` : ''}
 
-      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-top:14px">
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-top:14px">
         <div class="stat-box"><div class="stat-val">${d.points || 0}</div><div class="stat-lbl">Ball</div></div>
-        <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">eng: ${d.best_streak || 0}</div><div class="stat-lbl">Streak</div></div>
-        <div class="stat-box"><div class="stat-val">${d.total_done_all || 0}</div><div class="stat-lbl">Jami</div></div>
+        <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">rekord: ${d.best_streak || 0}</div><div class="stat-lbl">Streak</div></div>
+        <div class="stat-box"><div class="stat-val">${d.total_done_all || 0}</div><div class="stat-lbl" style="font-size:8px">Bajarildi</div></div>
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:6px">
