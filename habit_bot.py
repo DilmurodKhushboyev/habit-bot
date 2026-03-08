@@ -6709,24 +6709,53 @@ try:
         today = today_uz5()
         habits = u.get("habits", [])
         result = []
+        done_count = 0
         for h in habits:
             hab_type  = h.get("type", "simple")
             rep_count = h.get("repeat_count", 1)
+            today_count = 0
             if hab_type == "repeat" and rep_count > 1:
-                done_today = h.get("done_today_count", 0)
-                is_done = done_today >= rep_count
+                if h.get("done_date") == today:
+                    today_count = h.get("done_today_count", 0)
+                is_done = today_count >= rep_count
             else:
                 is_done = h.get("last_done") == today
-            result.append({"id": h["id"], "name": h["name"], "done": is_done})
-        return jsonify({"habits": result, "date": today})
+            if is_done:
+                done_count += 1
+            result.append({
+                "id":           h["id"],
+                "name":         h["name"],
+                "icon":         h.get("icon", "✅"),
+                "time":         h.get("time", "vaqtsiz"),
+                "done":         is_done,
+                "streak":       h.get("streak", 0),
+                "repeat_count": rep_count,
+                "today_count":  today_count,
+                "type":         hab_type,
+            })
+        total = len(habits)
+        percent = round(done_count / total * 100) if total else 0
+        jon_pct = min(100, max(0, u.get("hearts", 3) * 33))
+        return jsonify({
+            "habits":     result,
+            "today":      today,
+            "done_count": done_count,
+            "total":      total,
+            "percent":    percent,
+            "jon":        jon_pct,
+            "points":     u.get("points", 0),
+            "streak":     u.get("streak", 0),
+        })
 
     @api_app.route("/api/checkin/<int:uid>/<hid>", methods=["POST"])
     def api_checkin(uid, hid):
         u = load_user(uid)
         today = today_uz5()
         habits = u.get("habits", [])
+        found_h = None
         for h in habits:
             if h["id"] == hid:
+                found_h = h
                 hab_type  = h.get("type", "simple")
                 rep_count = h.get("repeat_count", 1)
                 if hab_type == "repeat" and rep_count > 1:
@@ -6738,46 +6767,104 @@ try:
                     h["done_date"] = today
                     if done >= rep_count:
                         h["last_done"] = today
+                        h["streak"] = h.get("streak", 0) + 1
+                        u["points"] = u.get("points", 0) + 10
+                    is_done = done >= rep_count
+                    today_count = done
                 else:
                     if h.get("last_done") == today:
                         h["last_done"] = ""
+                        is_done = False
                     else:
                         h["last_done"] = today
+                        h["streak"] = h.get("streak", 0) + 1
                         u["points"] = u.get("points", 0) + 10
-                        streak = u.get("streak", 0)
-                        u["streak"] = streak + 1
+                        u["streak"] = u.get("streak", 0) + 1
+                        is_done = True
+                    today_count = 1 if is_done else 0
                 break
         u["habits"] = habits
         save_user(uid, u)
-        return jsonify({"ok": True})
+        if not found_h:
+            return jsonify({"ok": False, "error": "Odat topilmadi"})
+        # done_count hisoblash
+        done_count = sum(1 for hh in habits if hh.get("last_done") == today)
+        total = len(habits)
+        all_done = done_count == total and total > 0
+        return jsonify({
+            "ok":          True,
+            "done":        is_done,
+            "streak":      found_h.get("streak", 0),
+            "repeat_count": found_h.get("repeat_count", 1),
+            "today_count": today_count,
+            "points":      u.get("points", 0),
+            "all_done":    all_done,
+            "done_count":  done_count,
+            "total":       total,
+        })
 
     @api_app.route("/api/stats/<int:uid>")
     def api_stats(uid):
+        from datetime import datetime, timedelta
         u = load_user(uid)
         habits = u.get("habits", [])
         today = today_uz5()
+        now_uz = datetime.now() + timedelta(hours=5)
         done_today = sum(1 for h in habits if h.get("last_done") == today)
         total = len(habits)
         history = u.get("history", {})
-        last30 = []
-        from datetime import datetime, timedelta
+        # 30 kunlik sanalar
+        days_30 = []
         for i in range(29, -1, -1):
-            d = (datetime.now() + timedelta(hours=5) - timedelta(days=i)).strftime("%Y-%m-%d")
+            d = (now_uz - timedelta(days=i)).strftime("%Y-%m-%d")
+            days_30.append(d)
+        # Heatmap
+        heatmap = {}
+        for d in days_30:
             day_data = history.get(d, {})
-            last30.append({
-                "date": d,
-                "done": day_data.get("done", 0),
-                "total": day_data.get("total", total)
+            heatmap[d] = day_data.get("done", 0) > 0
+        # Haftalik (oxirgi 7 kun)
+        weekly = []
+        for i in range(6, -1, -1):
+            d = (now_uz - timedelta(days=i)).strftime("%Y-%m-%d")
+            day_data = history.get(d, {})
+            weekly.append({
+                "date":  d,
+                "count": day_data.get("done", 0),
+                "total": day_data.get("total", total) or total,
+            })
+        # Faol kunlar (30)
+        active_days_30 = sum(1 for d in days_30 if heatmap.get(d))
+        # Har bir odat statistikasi
+        habit_stats = []
+        for h in habits:
+            done_7  = sum(1 for i in range(7)  if history.get((now_uz-timedelta(days=i)).strftime("%Y-%m-%d"),{}).get("habits",{}).get(h["id"]))
+            done_30 = sum(1 for i in range(30) if history.get((now_uz-timedelta(days=i)).strftime("%Y-%m-%d"),{}).get("habits",{}).get(h["id"]))
+            week_dots = [bool(history.get((now_uz-timedelta(days=6-i)).strftime("%Y-%m-%d"),{}).get("habits",{}).get(h["id"])) for i in range(7)]
+            habit_stats.append({
+                "id":       h["id"],
+                "name":     h["name"],
+                "icon":     h.get("icon", "✅"),
+                "streak":   h.get("streak", 0),
+                "percent":  round(done_30 / 30 * 100),
+                "done_7":   done_7,
+                "done_30":  done_30,
+                "week_dots": week_dots,
             })
         return jsonify({
-            "points":    u.get("points", 0),
-            "streak":    u.get("streak", 0),
-            "hearts":    u.get("hearts", 3),
-            "done_today": done_today,
-            "total":     total,
-            "last30":    last30,
-            "level":     u.get("level", 1),
-            "xp":        u.get("xp", 0),
+            "today":   today,
+            "summary": {
+                "streak":        u.get("streak", 0),
+                "points":        u.get("points", 0),
+                "active_days_30": active_days_30,
+                "total_habits":  total,
+            },
+            "weekly":      weekly,
+            "heatmap":     heatmap,
+            "days_30":     days_30,
+            "habit_stats": habit_stats,
+            "points":      u.get("points", 0),
+            "streak":      u.get("streak", 0),
         })
 
     @api_app.route("/api/achievements/<int:uid>")
@@ -6790,14 +6877,22 @@ try:
     def api_shop(uid):
         u = load_user(uid)
         shop_items = [
-            {"id": "pet_cat",    "name": "🐱 Mushuk",     "type": "pet",   "price": 500,  "description": "Sevimli mushukcha"},
-            {"id": "pet_dog",    "name": "🐶 It",         "type": "pet",   "price": 700,  "description": "Sodiq do'st"},
-            {"id": "pet_rabbit", "name": "🐰 Quyon",      "type": "pet",   "price": 600,  "description": "Tez-tez sakrashi"},
-            {"id": "badge_fire", "name": "🔥 Olov badge", "type": "badge", "price": 300,  "description": "Issiq badge"},
-            {"id": "badge_star", "name": "⭐ Yulduz",     "type": "badge", "price": 400,  "description": "Yulduz badge"},
-            {"id": "car_sport",  "name": "🏎️ Sport mashina","type": "car", "price": 1000, "description": "Tez mashina"},
+            {"id": "shield_1",   "name": "Streak himoyasi", "cat": "protection", "emoji": "🛡",  "price_ball": 200,  "price_stars": 0, "desc": "1 kunlik streak himoyasi"},
+            {"id": "bonus_2x",   "name": "2x Ball bonus",   "cat": "bonus",      "emoji": "⚡",  "price_ball": 300,  "price_stars": 0, "desc": "1 kun uchun 2x ball"},
+            {"id": "badge_fire", "name": "Olov badge",      "cat": "badge",      "emoji": "🔥",  "price_ball": 400,  "price_stars": 0, "desc": "Profilda ko'rsatiladi"},
+            {"id": "badge_star", "name": "Yulduz badge",    "cat": "badge",      "emoji": "⭐",  "price_ball": 500,  "price_stars": 0, "desc": "Profilda ko'rsatiladi"},
+            {"id": "pet_cat",    "name": "Mushuk",          "cat": "pet",        "emoji": "🐱",  "price_ball": 600,  "price_stars": 0, "desc": "Sevimli mushukcha"},
+            {"id": "pet_dog",    "name": "It",              "cat": "pet",        "emoji": "🐶",  "price_ball": 700,  "price_stars": 0, "desc": "Sodiq do'st"},
+            {"id": "pet_rabbit", "name": "Quyon",           "cat": "pet",        "emoji": "🐰",  "price_ball": 600,  "price_stars": 0, "desc": "Tez-tez sakrashi"},
+            {"id": "car_sport",  "name": "Sport mashina",   "cat": "car",        "emoji": "🏎️", "price_ball": 1000, "price_stars": 0, "desc": "Tez mashina"},
+            {"id": "gift_box",   "name": "Sovga qutisi",    "cat": "gift",       "emoji": "🎁",  "price_ball": 0,    "price_stars": 10, "desc": "Tasodifiy mukofot"},
         ]
-        inventory = u.get("inventory", [])
+        raw_inventory = u.get("inventory", [])
+        # inventory: list -> dict formatiga
+        if isinstance(raw_inventory, list):
+            inventory = {item_id: 1 for item_id in raw_inventory}
+        else:
+            inventory = raw_inventory
         active_pet   = u.get("active_pet", "")
         active_badge = u.get("active_badge", "")
         active_car   = u.get("active_car", "")
@@ -6813,22 +6908,30 @@ try:
     @api_app.route("/api/shop/<int:uid>/buy", methods=["POST"])
     def api_shop_buy(uid):
         data = request.get_json() or {}
-        item_id = data.get("item_id", "")
+        item_id   = data.get("item_id", "")
+        pay_type  = data.get("type", "ball")  # "ball" yoki "stars"
         prices = {
-            "pet_cat": 500, "pet_dog": 700, "pet_rabbit": 600,
-            "badge_fire": 300, "badge_star": 400, "car_sport": 1000
+            "shield_1": 200, "bonus_2x": 300, "badge_fire": 400, "badge_star": 500,
+            "pet_cat": 600, "pet_dog": 700, "pet_rabbit": 600, "car_sport": 1000,
         }
         price = prices.get(item_id, 0)
-        if not price:
+        if not price and item_id != "gift_box":
             return jsonify({"ok": False, "error": "Noma'lum mahsulot"})
         u = load_user(uid)
-        inventory = u.get("inventory", [])
-        if item_id in inventory:
+        raw_inv = u.get("inventory", [])
+        if isinstance(raw_inv, list):
+            inventory = {i: 1 for i in raw_inv}
+        else:
+            inventory = raw_inv
+        # Faqat badge/pet/car bir marta sotib olinadi
+        one_time = ["badge_fire","badge_star","pet_cat","pet_dog","pet_rabbit","car_sport"]
+        if item_id in one_time and inventory.get(item_id, 0) > 0:
             return jsonify({"ok": False, "error": "Allaqachon sotib olingan"})
-        if u.get("points", 0) < price:
-            return jsonify({"ok": False, "error": "Ball yetarli emas"})
-        u["points"] = u.get("points", 0) - price
-        inventory.append(item_id)
+        if pay_type == "ball":
+            if u.get("points", 0) < price:
+                return jsonify({"ok": False, "error": "Ball yetarli emas"})
+            u["points"] = u.get("points", 0) - price
+        inventory[item_id] = inventory.get(item_id, 0) + 1
         u["inventory"] = inventory
         save_user(uid, u)
         return jsonify({"ok": True, "points": u["points"]})
@@ -6851,18 +6954,27 @@ try:
     def api_friends(uid):
         u = load_user(uid)
         friends_ids = u.get("friends", [])
+        today = today_uz5()
         friends = []
         for fid in friends_ids[:20]:
             fu = load_user(fid)
             if fu:
+                # done_today: bugun kamida bitta odat bajarilganmi
+                fhabits = fu.get("habits", [])
+                f_done_today = any(h.get("last_done") == today for h in fhabits)
                 friends.append({
-                    "id":     fid,
-                    "name":   fu.get("name", "?"),
-                    "points": fu.get("points", 0),
-                    "streak": fu.get("streak", 0),
-                    "photo":  fu.get("photo_url", ""),
+                    "id":           fid,
+                    "name":         fu.get("name", "?"),
+                    "points":       fu.get("points", 0),
+                    "streak":       fu.get("streak", 0),
+                    "photo":        fu.get("photo_url", ""),
+                    "done_today":   f_done_today,
+                    "mutual_streak": min(u.get("streak", 0), fu.get("streak", 0)),
                 })
-        return jsonify({"friends": friends})
+        # Invite link
+        bot_username = "Super_habits_bot"
+        invite_link = f"https://t.me/{bot_username}?start=ref_{uid}"
+        return jsonify({"friends": friends, "invite_link": invite_link})
 
     @api_app.route("/api/friends/<int:uid>/remove/<int:fid>", methods=["DELETE"])
     def api_friends_remove(uid, fid):
