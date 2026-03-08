@@ -762,8 +762,8 @@ body {
   z-index: 20;
 }
 .nav-item {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  cursor: pointer; padding: 8px 14px; border-radius: 16px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  cursor: pointer; padding: 6px 8px; border-radius: 14px;
   transition: all .2s; border: none; background: transparent;
   font-family: inherit;
   color: var(--sub);
@@ -773,8 +773,8 @@ body {
   box-shadow: var(--sh-sm);
   color: var(--text);
 }
-.nav-icon { font-size: 20px; line-height: 1; }
-.nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; }
+.nav-icon { font-size: 18px; line-height: 1; }
+.nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.3px; }
 </style>
 </head>
 <body>
@@ -909,15 +909,19 @@ body {
   </button>
   <button class="nav-item" id="nav-stats" onclick="switchTab('stats', this)">
     <span class="nav-icon">📊</span>
-    <span class="nav-label">Statistika</span>
+    <span class="nav-label">Stat</span>
   </button>
   <button class="nav-item" id="nav-habits" onclick="switchTab('habits', this)">
     <span class="nav-icon">📋</span>
     <span class="nav-label">Odatlar</span>
   </button>
   <button class="nav-item" id="nav-groups" onclick="switchTab('groups', this)">
-    <span class="nav-icon">🛒</span>
+    <span class="nav-icon">👥</span>
     <span class="nav-label">Do'stlar</span>
+  </button>
+  <button class="nav-item" id="nav-rating" onclick="switchTab('rating', this)">
+    <span class="nav-icon">🏆</span>
+    <span class="nav-label">Reyting</span>
   </button>
   <button class="nav-item" id="nav-profile" onclick="switchTab('profile', this)">
     <span class="nav-icon">👤</span>
