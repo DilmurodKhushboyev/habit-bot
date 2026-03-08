@@ -7569,10 +7569,59 @@ try:
 
     @api_app.route("/api/friends/<int:uid>/remove/<int:fid>", methods=["DELETE"])
     def api_friends_remove(uid, fid):
+        # Ikki tomondan ham o'chirish
         u_me = load_user(uid)
-        friends = [f for f in u_me.get("friends", []) if f != fid]
-        u_me["friends"] = friends
+        u_fr = load_user(fid)
+        u_me["friends"] = [f for f in u_me.get("friends", []) if f != fid]
+        u_fr["friends"] = [f for f in u_fr.get("friends", []) if f != uid]
         save_user(uid, u_me)
+        save_user(fid, u_fr)
+        # Aktiv challengelarni bekor qilish va ikki tomonga xabar
+        active_chs = list(challenges_col.find({
+            "status": "active",
+            "$or": [
+                {"sender_id": uid,  "receiver_id": fid},
+                {"sender_id": fid,  "receiver_id": uid},
+            ]
+        }))
+        my_name = u_me.get("name", "Do'stingiz")
+        fr_name = u_fr.get("name", "Do'stingiz")
+        for c in active_chs:
+            cid = str(c.get("_id", ""))
+            bet = c.get("bet", 0)
+            # Garovni ikkalasiga qaytarish
+            for pid in [c["sender_id"], c["receiver_id"]]:
+                pu = load_user(pid)
+                pu["points"] = pu.get("points", 0) + bet
+                save_user(pid, pu)
+            challenges_col.update_one({"_id": cid}, {"$set": {"status": "cancelled"}})
+            # Xabar yuborish
+            try:
+                bot.send_message(uid,
+                    "\u274c *Challenge bekor bo\u2019ldi*\n\n"
+                    + fr_name + " bilan do\u2019stlik tugadi, shuning uchun \""
+                    + c.get("habit_name","") + "\" challengesi bekor qilindi.\n"
+                    + "\u2B50 " + str(bet) + " ball qaytarildi.",
+                    parse_mode="Markdown")
+            except Exception:
+                pass
+            try:
+                bot.send_message(fid,
+                    "\u274c *Challenge bekor bo\u2019ldi*\n\n"
+                    + my_name + " do\u2019stlikdan chiqdi, shuning uchun \""
+                    + c.get("habit_name","") + "\" challengesi bekor qilindi.\n"
+                    + "\u2B50 " + str(bet) + " ball qaytarildi.",
+                    parse_mode="Markdown")
+            except Exception:
+                pass
+        # Do'stlikdan chiqish xabari (challenge bo'lmasa ham)
+        if not active_chs:
+            try:
+                bot.send_message(fid,
+                    "\U0001F494 *" + my_name + "* siz bilan do\u2019stlikni tugatdi.",
+                    parse_mode="Markdown")
+            except Exception:
+                pass
         return jsonify({"ok": True})
 
     @api_app.route("/api/friends/<int:uid>", methods=["OPTIONS"])
