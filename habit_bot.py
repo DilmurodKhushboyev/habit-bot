@@ -6552,31 +6552,65 @@ try:
 
     @api_app.route("/api/rating")
     def api_rating():
-        from datetime import timezone, timedelta
+        from datetime import timedelta
+        sort_by = request.args.get("sort", "points")   # points | streak | score
+        period  = request.args.get("period", "month")  # month | week | all
+        uid_arg = request.args.get("uid", "0")
+
         today_dt  = _tz_today()
         today_str = today_dt.strftime("%Y-%m-%d")
         days      = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
         day_lbls  = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
 
-        users   = load_all_users()
-        ranking = sorted(users.items(), key=lambda x: x[1].get("points",0), reverse=True)
+        all_users = load_all_users()
+        total_users = len(all_users)
 
-        result = []
-        for uid, udata in ranking:
+        entries = []
+        for uid, udata in all_users.items():
             done_log  = udata.get("done_log", {})
             bot_start = min(done_log.keys()) if done_log else today_str
-            result.append({
+            # score = oxirgi 30 kunda faol kunlar soni
+            score = sum(1 for d, v in done_log.items() if v and d >= (today_dt - timedelta(days=30)).strftime("%Y-%m-%d"))
+            entries.append({
+                "uid":       uid,
                 "name":      udata.get("name", "?"),
                 "points":    udata.get("points", 0),
+                "streak":    udata.get("streak", 0),
+                "score":     score,
                 "done_log":  done_log,
                 "bot_start": bot_start,
             })
 
+        # Saralash
+        if sort_by == "streak":
+            entries.sort(key=lambda x: x["streak"], reverse=True)
+        elif sort_by == "score":
+            entries.sort(key=lambda x: x["score"], reverse=True)
+        else:
+            entries.sort(key=lambda x: x["points"], reverse=True)
+
+        top = entries[:10]
+
+        # Caller entry
+        caller_entry = None
+        try:
+            caller_uid = str(int(uid_arg))
+            caller_idx = next((i for i, e in enumerate(entries) if e["uid"] == caller_uid), None)
+            if caller_idx is not None:
+                caller_entry = dict(entries[caller_idx])
+                caller_entry["rank"] = caller_idx + 1
+        except Exception:
+            pass
+
         return jsonify({
-            "today":      today_str,
-            "days":       days,
-            "day_labels": day_lbls,
-            "users":      result,
+            "today":        today_str,
+            "days":         days,
+            "day_labels":   day_lbls,
+            "users":        top,
+            "total_users":  total_users,
+            "sort_by":      sort_by,
+            "period":       period,
+            "caller_entry": caller_entry,
         })
 
     @api_app.route("/api/profile/<int:uid>")
@@ -6698,8 +6732,10 @@ try:
             members.sort(key=lambda x: x["points"], reverse=True)
             result.append({
                 "name":         g.get("name","Guruh"),
+                "habit_name":   g.get("habit_name", "—"),
                 "member_count": len(members_raw),
                 "members":      members[:5],
+                "is_admin":     g.get("admin_id") == str(uid),
             })
         return jsonify({"groups": result})
 
@@ -6774,11 +6810,14 @@ try:
                 else:
                     if h.get("last_done") == today:
                         h["last_done"] = ""
+                        h["streak"] = max(0, h.get("streak", 0) - 1)
+                        u["points"] = max(0, u.get("points", 0) - 5)
+                        u["streak"] = max(0, u.get("streak", 0) - 1)
                         is_done = False
                     else:
                         h["last_done"] = today
                         h["streak"] = h.get("streak", 0) + 1
-                        u["points"] = u.get("points", 0) + 10
+                        u["points"] = u.get("points", 0) + 5
                         u["streak"] = u.get("streak", 0) + 1
                         is_done = True
                     today_count = 1 if is_done else 0
