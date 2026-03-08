@@ -3175,8 +3175,19 @@ function showTourStep() {
   // Spotlight
   if (step.target) {
     const el = document.getElementById(step.target);
+    if (!el) {
+      _tourStep++;
+      if (_tourStep < _tourSteps.length) { showTourStep(); } else { endTour(); }
+      return;
+    }
     if (el) {
       const r = el.getBoundingClientRect();
+      // If element is invisible or zero-size, skip this step
+      if (r.width === 0 && r.height === 0) {
+        _tourStep++;
+        if (_tourStep < _tourSteps.length) { showTourStep(); } else { endTour(); }
+        return;
+      }
       const pad = 8;
       spotlight.style.cssText =
         `left:${r.left - pad}px;top:${r.top - pad}px;` +
