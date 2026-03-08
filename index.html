@@ -2022,10 +2022,12 @@ function renderProfile(d) {
         </div>
       </div>
     </div>
-    <div class="rem-card">
-      <div class="rem-top"><div class="rem-icon">🌐</div><div class="rem-name">Bot tili</div></div>
-      <div class="repeat-opts" style="gap:6px;display:flex">${langBtns}</div>
-      <button class="rem-save-btn" style="margin-top:12px" onclick="saveLang()" type="button" id="lang-save-btn">💾 Saqlash</button>
+    <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="openLangModal()">
+      <div class="rem-top" style="margin-bottom:0">
+        <div class="rem-icon">🌐</div>
+        <div class="rem-name">Bot tili</div>
+        <div style="color:var(--sub);font-size:18px">›</div>
+      </div>
     </div>
     <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('reminders',null)">
       <div class="rem-top" style="margin-bottom:0">
@@ -2051,6 +2053,17 @@ function renderProfile(d) {
       </div>
     </div>
     <div class="toast" id="toast-profile"></div>
+
+    <!-- Bot tili modal -->
+    <div class="modal-overlay" id="lang-modal">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <button class="modal-close" onclick="closeLangModal()">✕</button>
+        <div class="modal-title">🌐 Bot tili</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px" id="lang-modal-btns"></div>
+        <button class="rem-save-btn" style="margin-top:16px" onclick="saveLang()" type="button" id="lang-save-btn">💾 Saqlash</button>
+      </div>
+    </div>
 
     <!-- Ma'lumotlarni tahrirlash modal -->
     <div class="modal-overlay" id="edit-profile-modal">
@@ -2178,6 +2191,7 @@ async function saveTarget() {
     const r = await res.json();
     if (!r.ok) throw new Error(r.error);
     if (btn) { btn.textContent = '✅ Saqlandi!'; btn.classList.add('saved'); }
+    setTimeout(() => closeLangModal(), 1500);
     setTimeout(() => { if (btn) { btn.textContent = '💾 Saqlash'; btn.classList.remove('saved'); btn.disabled = false; } }, 2000);
     const t = document.getElementById('toast-profile');
     if (t) { t.textContent = '🎯 Maqsad saqlandi!'; t.className = 'toast show'; setTimeout(()=>t.className='toast',2500); }
@@ -2195,6 +2209,24 @@ function setLang(val) {
   });
 }
 
+function openLangModal() {
+  const langs = [
+    {id:'uz', label:"🇺🇿 O'zbek"},
+    {id:'ru', label:'🇷🇺 Русский'},
+    {id:'en', label:'🇬🇧 English'},
+  ];
+  const current = document.querySelector('[id^="lang-"].active')?.id?.replace('lang-','') || currentLang || 'uz';
+  const btns = langs.map(l => `
+    <button class="rep-btn ${current===l.id?'active':''}" id="lang-${l.id}"
+      onclick="document.querySelectorAll('#lang-modal-btns .rep-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');setLang('${l.id}')"
+      type="button" style="width:100%;padding:12px;font-size:14px">${l.label}</button>
+  `).join('');
+  document.getElementById('lang-modal-btns').innerHTML = btns;
+  document.getElementById('lang-modal').classList.add('open');
+}
+function closeLangModal() {
+  document.getElementById('lang-modal').classList.remove('open');
+}
 async function saveLang() {
   if (!selectedLang) return;
   const btn = document.getElementById('lang-save-btn');
