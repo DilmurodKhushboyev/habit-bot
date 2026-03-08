@@ -7115,9 +7115,9 @@ try:
             "total_ach":       total_ach,
             "evening_notify":  u.get("evening_notify", True),
             "inventory":       u.get("inventory", {}),
-            "active_pet":      next((SHOP_ITEMS[k]["emoji"] for k in ["pet_dragon","pet_cat","pet_dog"] if u.get("inventory",{}).get(k,0) > 0), ""),
-            "active_badge":    next((SHOP_ITEMS[k]["emoji"] for k in ["badge_legend","badge_champ","badge_master"] if u.get("inventory",{}).get(k,0) > 0), ""),
-            "active_car":      next((SHOP_ITEMS[k]["emoji"] for k in ["car_luxury","car_sport"] if u.get("inventory",{}).get(k,0) > 0), ""),
+            "active_pet":      SHOP_ITEMS.get(u.get("active_pet",""), {}).get("emoji", "") or next((SHOP_ITEMS[k]["emoji"] for k in ["pet_dragon","pet_cat","pet_dog"] if u.get("inventory",{}).get(k,0) > 0), ""),
+            "active_badge":    SHOP_ITEMS.get(u.get("active_badge",""), {}).get("emoji", "") or next((SHOP_ITEMS[k]["emoji"] for k in ["badge_legend","badge_champ","badge_master"] if u.get("inventory",{}).get(k,0) > 0), ""),
+            "active_car":      SHOP_ITEMS.get(u.get("active_car",""), {}).get("emoji", "") or next((SHOP_ITEMS[k]["emoji"] for k in ["car_luxury","car_sport"] if u.get("inventory",{}).get(k,0) > 0), ""),
             "streak_shields":  u.get("inventory",{}).get("streak_shield", 0) + u.get("inventory",{}).get("double_shield", 0),
             "bonus_2x_active": u.get("bonus_2x_until","") >= str(__import__("datetime").date.today()) if u.get("bonus_2x_until") else False,
             "bonus_3x_active": u.get("bonus_3x_until","") >= str(__import__("datetime").date.today()) if u.get("bonus_3x_until") else False,
@@ -7686,9 +7686,12 @@ try:
                 "can_buy":     owned < item["max_own"],
             })
         return jsonify({
-            "items":  items_out,
-            "points": u.get("points", 0),
-            "inventory": inventory,
+            "items":       items_out,
+            "points":      u.get("points", 0),
+            "inventory":   inventory,
+            "active_pet":  u.get("active_pet", ""),
+            "active_badge":u.get("active_badge", ""),
+            "active_car":  u.get("active_car", ""),
         })
 
     @api_app.route("/api/shop/<int:uid>/buy", methods=["POST"])
@@ -7737,8 +7740,39 @@ try:
 
     @api_app.route("/api/shop/<int:uid>", methods=["OPTIONS"])
     @api_app.route("/api/shop/<int:uid>/buy", methods=["OPTIONS"])
+    @api_app.route("/api/shop/<int:uid>/activate", methods=["OPTIONS"])
     def options_shop(**kwargs):
         return jsonify({}), 200
+
+    @api_app.route("/api/shop/<int:uid>/activate", methods=["POST"])
+    def api_shop_activate(uid):
+        body    = request.get_json() or {}
+        item_id = body.get("item_id", "")
+        item    = SHOP_ITEMS.get(item_id)
+        if not item:
+            return jsonify({"ok": False, "error": "Mahsulot topilmadi"}), 404
+        u = load_user(uid)
+        inventory = u.get("inventory", {})
+        if inventory.get(item_id, 0) < 1:
+            return jsonify({"ok": False, "error": "Bu mahsulot sizda yo'q"}), 400
+        cat = item["cat"]
+        # Bir kategoriyada faqat bitta aktiv — avvalgini o'chirish
+        if cat == "pet":
+            for k in ["pet_cat", "pet_dog", "pet_dragon"]:
+                u.pop(f"active_{k}", None)
+            u["active_pet"] = item_id
+        elif cat == "badge":
+            for k in ["badge_champ", "badge_master", "badge_legend"]:
+                u.pop(f"active_{k}", None)
+            u["active_badge"] = item_id
+        elif cat == "car":
+            for k in ["car_sport", "car_luxury"]:
+                u.pop(f"active_{k}", None)
+            u["active_car"] = item_id
+        else:
+            return jsonify({"ok": False, "error": "Bu kategoriya aktivlashtirish qo'llab quvvatlanmaydi"}), 400
+        save_user(uid, u)
+        return jsonify({"ok": True, "active": item_id})
 
     # ── CHALLENGELAR ──
     @api_app.route("/api/challenges/<int:uid>", methods=["GET"])

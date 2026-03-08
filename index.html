@@ -2628,9 +2628,49 @@ async function loadShop() {
 }
 
 function renderShop(d) {
-  const items  = (d.items || []).filter(i => _shopCat === 'all' || i.cat === _shopCat);
-  const points = d.points || 0;
+  const items    = (d.items || []);
+  const points   = d.points || 0;
+  const inventory = d.inventory || {};
 
+  // Inventory bo'limi — faqat sotib olinganlar
+  const owned_items = items.filter(i => (inventory[i.id] || 0) > 0);
+  const activePet   = d.active_pet   || '';
+  const activeBadge = d.active_badge || '';
+  const activeCar   = d.active_car   || '';
+
+  let invHtml = '';
+  if (owned_items.length > 0) {
+    const invCards = owned_items.map(item => {
+      const qty     = inventory[item.id] || 0;
+      const canAct  = ['pet','badge','car'].includes(item.cat);
+      const isActive = (item.cat==='pet' && activePet===item.id)
+                    || (item.cat==='badge' && activeBadge===item.id)
+                    || (item.cat==='car' && activeCar===item.id);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+        background:var(--card);border-radius:14px;box-shadow:${isActive?'0 0 0 2px #4CAF7D':'var(--sh)'};margin-bottom:6px">
+        <div style="font-size:28px;line-height:1">${item.emoji}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${item.name}</div>
+          <div style="font-size:10px;color:var(--sub);margin-top:1px">${qty} ta</div>
+        </div>
+        ${isActive
+          ? `<div style="font-size:11px;font-weight:700;color:#4CAF7D">✅ Aktiv</div>`
+          : canAct
+            ? `<button onclick="activateItem('${item.id}')" type="button"
+                style="padding:6px 12px;border:none;border-radius:10px;font-size:11px;font-weight:700;
+                  cursor:pointer;background:var(--bg);box-shadow:var(--sh);color:var(--text)">
+                Aktiv qil
+              </button>`
+            : `<div style="font-size:10px;color:var(--sub)">${item.cat==='protection'?'🛡 Himoya':item.cat==='bonus'?'⚡ Bonus':'🎁 Sovg\'a'}</div>`
+        }
+      </div>`;
+    }).join('');
+    invHtml = `
+      <div class="section-title">📦 Inventoryim</div>
+      ${invCards}`;
+  }
+
+  const visItems = items.filter(i => _shopCat === 'all' || i.cat === _shopCat);
   const cats = [
     ['all','🌟 Barchasi'],['protection','🛡 Himoya'],['bonus','⚡ Bonus'],
     ['badge','🏅 Badge'],['pet','🐾 Hayvon'],['car','🚗 Avto'],['gift','🎁 Sovg\'a']
@@ -2640,7 +2680,7 @@ function renderShop(d) {
       style="font-size:11px;padding:6px 10px" type="button">${l}</button>`
   ).join('');
 
-  let html = items.map(item => {
+  let html = visItems.map(item => {
     const hasBall  = item.price_ball  > 0;
     const hasStars = item.price_stars > 0;
     const cantBuy  = !item.can_buy;
@@ -2680,7 +2720,9 @@ function renderShop(d) {
         <div style="font-size:22px;font-weight:700;color:var(--text)">${points.toLocaleString()} ball</div>
       </div>
     </div>
-    <div style="display:flex;gap:6px;overflow-x:auto;padding:8px 0;scrollbar-width:none">${catBtns}</div>
+    ${invHtml}
+    <div class="section-title">🛒 Do'kon</div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none">${catBtns}</div>
     ${html || '<div class="empty-state"><div class="icon">🛒</div>Bu kategoriyada mahsulot yo\'q</div>'}
     <div class="toast" id="toast-shop"></div>`;
 }
@@ -2713,6 +2755,30 @@ async function buyItem(itemId, method) {
     }
     const toast = document.getElementById('toast-shop');
     if (toast) { toast.textContent = '✅ Muvaffaqiyatli sotib olindi!'; toast.className = 'toast show'; setTimeout(()=>toast.className='toast',2500); }
+  } catch(e) { alert('Tarmoq xatosi'); }
+}
+
+async function activateItem(itemId) {
+  try {
+    const res = await fetch(`${API}/shop/${userId}/activate`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','X-User-Id':userId},
+      body: JSON.stringify({ item_id: itemId })
+    });
+    const r = await res.json();
+    if (!r.ok) { alert(r.error || 'Xato'); return; }
+    // Local state yangilash
+    if (_shopData) {
+      const item = _shopData.items.find(i => i.id === itemId);
+      if (item) {
+        if (item.cat === 'pet')   _shopData.active_pet   = itemId;
+        if (item.cat === 'badge') _shopData.active_badge = itemId;
+        if (item.cat === 'car')   _shopData.active_car   = itemId;
+      }
+      renderShop(_shopData);
+    }
+    const toast = document.getElementById('toast-shop');
+    if (toast) { toast.textContent = '✅ Aktivlashtirildi!'; toast.className = 'toast show'; setTimeout(()=>toast.className='toast',2000); }
   } catch(e) { alert('Tarmoq xatosi'); }
 }
 
