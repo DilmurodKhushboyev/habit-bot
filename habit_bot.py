@@ -878,7 +878,7 @@ def main_menu_dict(uid=None, page=1):
     """Faqat Web App tugmasi"""
     webapp_url = os.environ.get("WEBAPP_URL", "https://worker-production-3492.up.railway.app")
     return {"inline_keyboard": [[
-        {"text": "🌱 Kirish", "web_app": {"url": webapp_url}}
+        {"text": "📃 Kirish", "web_app": {"url": webapp_url}}
     ]]}
 
 def main_menu(uid=None, page=1):
@@ -910,7 +910,7 @@ def build_main_text(uid):
         f"kuzatib borish, qiziqarli raqobat, oson va tez "
         f"shakillantirish uchun, eng to\'g\'ri joydasiz!_\n\n"
         f"Ushbu sayohatni boshlash uchun:\n"
-        f"« 🌱 *Kirish*» tugmasini bosing\! 👇"
+        f"« 📃 *Kirish*» tugmasini bosing\! 👇"
     )
 
 
