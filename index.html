@@ -981,6 +981,8 @@ function switchTab(tab, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
   if (!loaded[tab]) loadTab(tab);
+  // Jon har safar yangilansin
+  else if (tab === 'habits') refreshHabitsJon();
 }
 
 async function loadTab(tab) {
@@ -1821,16 +1823,26 @@ function renderRating(d) {
   const sorts   = [['points','⭐ Ball'],['streak','🔥 Streak'],['active','📅 Faollik']];
   const periods = [['week','Hafta'],['month','Oy'],['all','Barchasi']];
   const sortBtns = sorts.map(([k,l]) =>
-    `<button onclick="setRatSort('${k}')" class="period-btn${sort_by===k?' active':''}"
-      style="font-size:11px;padding:6px 10px" type="button">${l}</button>`).join('');
+    `<button onclick="setRatSort('${k}')" type="button"
+      style="flex:1;padding:7px 4px;border:none;cursor:pointer;font-size:11px;font-weight:${sort_by===k?'700':'500'};
+        background:${sort_by===k?'var(--bg)':'transparent'};
+        box-shadow:${sort_by===k?'var(--sh-sm)':'none'};
+        border-radius:10px;color:${sort_by===k?'var(--text)':'var(--sub)'};
+        transition:all .2s;white-space:nowrap">${l}</button>`).join('');
   const perBtns = periods.map(([k,l]) =>
-    `<button onclick="setRatPeriod('${k}')" class="period-btn${period===k?' active':''}"
-      style="font-size:11px;padding:6px 10px" type="button">${l}</button>`).join('');
+    `<button onclick="setRatPeriod('${k}')" type="button"
+      style="flex:1;padding:7px 4px;border:none;cursor:pointer;font-size:11px;font-weight:${period===k?'700':'500'};
+        background:${period===k?'var(--bg)':'transparent'};
+        box-shadow:${period===k?'var(--sh-sm)':'none'};
+        border-radius:10px;color:${period===k?'var(--text)':'var(--sub)'};
+        transition:all .2s;white-space:nowrap">${l}</button>`).join('');
 
   document.getElementById('rating-content').innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px">
-      <div style="display:flex;gap:4px">${sortBtns}</div>
-      <div style="display:flex;gap:4px">${perBtns}</div>
+    <div style="display:flex;align-items:center;gap:6px;background:var(--card);border-radius:14px;
+      box-shadow:var(--sh-in);padding:4px;margin-bottom:8px">
+      ${sortBtns}
+      <div style="width:1px;height:20px;background:var(--sub);opacity:.2;flex-shrink:0"></div>
+      ${perBtns}
     </div>
     <div style="font-size:10px;color:var(--sub);text-align:right;margin-bottom:4px">
       Jami ${total_users} foydalanuvchi
@@ -1991,14 +2003,6 @@ function renderProfile(d) {
       <div class="rem-card" style="cursor:pointer;margin:0" onclick="openEditProfile()">
         <div class="rem-top" style="margin-bottom:0">
           <div class="rem-icon">✏️</div><div class="rem-name" style="font-size:12px">Ma'lumotlarni tahrirlash</div>
-          <div style="color:var(--sub);font-size:18px">›</div>
-        </div>
-      </div>
-    </div>
-    <div style="margin-bottom:4px">
-      <div class="rem-card" style="cursor:pointer;margin:0" onclick="switchTab('stats',null);setStatSub('rating')">
-        <div class="rem-top" style="margin-bottom:0">
-          <div class="rem-icon">🏆</div><div class="rem-name" style="font-size:12px">Reyting</div>
           <div style="color:var(--sub);font-size:18px">›</div>
         </div>
       </div>
@@ -2203,6 +2207,15 @@ async function saveLang() {
 const ICONS = ['✅','📚','🏃','💪','🧘','🍎','💧','😴','✍️','🎯','🎸','🌿','🧹','💊','🙏','🧠','🚴','🏋️','📝','🌅'];
 let editingHabitId = null;
 
+async function refreshHabitsJon() {
+  try {
+    const d = await apiFetch(`habits/${userId}`);
+    const jonPct = Math.round(d.jon ?? 100);
+    const jonEl = document.getElementById('habits-jon-ring');
+    if (jonEl) jonEl.innerHTML = jonRingHTML(jonPct, 72);
+  } catch(e) {}
+}
+
 async function loadHabits() {
   try {
     const d = await apiFetch(`habits/${userId}`);
@@ -2249,7 +2262,7 @@ function renderHabits(habits, jon = 100) {
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
           <div style="font-size:10px;font-weight:600;color:var(--sub)">JON</div>
-          ${jonDoira}
+          <div id="habits-jon-ring">${jonDoira}</div>
         </div>
       </div>
       <div class="section-title">Odatlarim (${habits.length})</div>
