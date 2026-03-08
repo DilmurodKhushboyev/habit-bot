@@ -1839,9 +1839,51 @@ function renderProfile(d) {
       </div>
     </div>
 
+    <div class="rem-card" style="margin-top:4px">
+      <div class="rem-top" style="margin-bottom:0;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="rem-icon">&#x1F319;</div>
+          <div>
+            <div class="rem-name">Kechki eslatma</div>
+            <div style="font-size:10px;color:var(--sub)">Har kuni 21:00 &#8212; bajarilmagan odatlar</div>
+          </div>
+        </div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+          <input type="checkbox" id="evening-toggle" onchange="saveEveningNotify(this.checked)" style="opacity:0;width:0;height:0">
+          <span id="evening-slider" style="position:absolute;inset:0;border-radius:24px;background:var(--bg);box-shadow:var(--sh-in);transition:.3s"></span>
+          <span id="evening-knob" style="position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:var(--sub);box-shadow:var(--sh);transition:.3s"></span>
+        </label>
+      </div>
+    </div>
     <div class="toast" id="toast-profile"></div>`;
+  setTimeout(function() {
+    var tog = document.getElementById("evening-toggle");
+    if (tog) { tog.checked = (d.evening_notify !== false); updateToggleVisual(tog.checked); }
+  }, 30);
 }
 
+
+function updateToggleVisual(checked) {
+  const slider = document.getElementById('evening-slider');
+  const knob   = document.getElementById('evening-knob');
+  if (!slider || !knob) return;
+  slider.style.background = checked ? 'var(--green)' : 'var(--bg)';
+  knob.style.background   = checked ? '#fff' : 'var(--sub)';
+  knob.style.left         = checked ? '23px' : '3px';
+}
+
+async function saveEveningNotify(val) {
+  updateToggleVisual(val);
+  try {
+    await fetch(`${API}/profile/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
+      body: JSON.stringify({ evening_notify: val })
+    });
+    const t = document.getElementById('toast-profile');
+    if (t) { t.textContent = val ? '🌙 Kechki eslatma yoqildi' : '🔕 Kechki eslatma o\'chirildi'; t.className = 'toast show'; setTimeout(()=>t.className='toast',2500); }
+  } catch(e) {}
+}
 
 async function saveTarget() {
   const sel = document.getElementById('target-select');

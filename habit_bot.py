@@ -5462,6 +5462,74 @@ def unschedule_habit_today(user_id, habit_id):
     schedule.clear(f"{user_id}_{habit_id}")
     print(f"[schedule] {user_id}_{habit_id} — bugunlik to'xtatildi")
 
+def send_evening_reminders():
+    """Har kuni 21:00 (UTC+5) — bajarilmagan odatlar uchun kechki eslatma"""
+    from datetime import timezone, timedelta
+    tz_uz = timezone(timedelta(hours=5))
+    today = datetime.now(tz_uz).strftime("%Y-%m-%d")
+    print("[evening] Kechki eslatmalar yuborilmoqda...")
+    sent_count = 0
+    try:
+        all_users = load_all_users()
+    except Exception as e:
+        print(f"[evening] load_all_users xato: {e}")
+        return
+    for uid_str, u in all_users.items():
+        try:
+            uid = int(uid_str)
+        except Exception:
+            continue
+        habits = u.get("habits", [])
+        if not habits:
+            continue
+        # Foydalanuvchi eslatmalarni o'chirganmi
+        if not u.get("evening_notify", True):
+            continue
+        # Bugun bajarilmagan odatlarni topish
+        undone = []
+        for h in habits:
+            # Arxivlangan yoki o'chirilgan odatni o'tkazib yuborish
+            if h.get("archived") or h.get("deleted"):
+                continue
+            last_done = h.get("last_done", "")
+            # Takrorlanuvchi odat
+            repeat_count = h.get("repeat_count", 1)
+            today_count  = h.get("today_count", {}).get(today, 0)
+            if repeat_count > 1:
+                if today_count < repeat_count:
+                    undone.append(f"{h.get('emoji','📌')} {h['name']} ({today_count}/{repeat_count})")
+            else:
+                if last_done != today:
+                    undone.append(f"{h.get('emoji','📌')} {h['name']}")
+        if not undone:
+            continue
+        # Foydalanuvchi ismini olish
+        name      = u.get("name", "").split()[0] if u.get("name") else ""
+        greeting  = f"*{name}*, " if name else ""
+        lang      = u.get("lang", "uz")
+        # Streak xavfi haqida ogohlantirish
+        max_streak = max((h.get("streak", 0) for h in habits), default=0)
+        streak_warn = ""
+        if max_streak >= 3:
+            streak_warn = "\n\n\u26A0\uFE0F " + str(max_streak) + " kunlik streakingiz xavf ostida!"
+        undone_text = "\n".join("  \u2022 " + item for item in undone[:5])
+        if len(undone) > 5:
+            undone_text += "\n  ... va yana " + str(len(undone)-5) + " ta"
+        text = (
+            "\U0001F319 " + greeting + "bugun hali bajarilmagan odatlar bor:\n\n"
+            + undone_text
+            + streak_warn + "\n\n"
+            + "_Hali vaqt bor \u2014 bugunni yoping!_ \U0001F4AA"
+        )
+        try:
+            kb = InlineKeyboardMarkup()
+            kb.add(InlineKeyboardButton("✅ Bajarilganlarni belgilash", callback_data="menu_today"))
+            bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb)
+            sent_count += 1
+        except Exception as e:
+            print(f"[evening] {uid} ga yuborishda xato: {e}")
+    print(f"[evening] {sent_count} ta foydalanuvchiga yuborildi")
+
 def group_daily_reset():
     """Har kuni 00:00 (UTC+5) da guruh progressini tozalash va eslatma yuborish"""
     print("[group_reset] Guruh progresslari tozalanmoqda...")
@@ -5694,6 +5762,8 @@ def scheduler_loop():
     # Har kuni 00:00 (UTC+5 = 19:00 UTC) da reset
     schedule.every().day.at("19:00").do(daily_reset).tag("daily_reset")
     schedule.every().day.at("19:00").do(group_daily_reset).tag("group_daily_reset")
+    # Har kuni 21:00 (UTC+5 = 16:00 UTC) kechki eslatma
+    schedule.every().day.at("16:00").do(send_evening_reminders).tag("evening_reminders")
     # Har dushanba 09:00 (UTC+5 = 04:00 UTC) da haftalik hisobot
     schedule.every().monday.at("04:00").do(send_weekly_reports).tag("weekly_report")
     # Har oyning 1-kuni 09:00 (UTC+5 = 04:00 UTC) da oylik hisobot
@@ -6984,6 +7054,7 @@ try:
             "days_30":         days_30,
             "earned_ach":      earned_ach,
             "total_ach":       total_ach,
+            "evening_notify":  u.get("evening_notify", True),
         })
 
     @api_app.route("/api/profile/<int:uid>", methods=["PUT"])
@@ -7002,6 +7073,9 @@ try:
                 updated["daily_target"] = u["daily_target"]
             except (ValueError, TypeError):
                 pass
+        if "evening_notify" in body:
+            u["evening_notify"] = bool(body["evening_notify"])
+            updated["evening_notify"] = u["evening_notify"]
         if not updated:
             return jsonify({"ok": False, "error": "Hech narsa yangilanmadi"}), 400
         save_user(uid, u)
