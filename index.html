@@ -891,7 +891,7 @@ body {
   <div style="background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;box-shadow:0 -4px 30px rgba(0,0,0,.3)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
       <div style="font-size:16px;font-weight:700;color:var(--text)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:6px"><defs><linearGradient id="svgTgtH" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="9" stroke="url(#svgTgtH)" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="url(#svgTgtH)" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="url(#svgTgtH)"/></svg>Challenge yuborish</div>
-      <button onclick="closeChallengeModal()" style="background:none;border:none;font-size:20px;color:var(--sub);cursor:pointer" type="button">✕</button>
+      <button onclick="closeChallengeModal()" style="background:none;border:none;font-size:20px;color:var(--sub);cursor:pointer" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
     </div>
     <div style="font-size:12px;color:var(--sub);margin-bottom:16px">Raqib: <b id="ch-receiver-name" style="color:var(--text)"></b></div>
     <input type="hidden" id="ch-receiver-id">
@@ -1126,8 +1126,8 @@ function renderToday(d) {
     const rc  = h.repeat_count || 1;
     const tc  = h.today_count  || 0;
     const isRepeat = rc > 1;
-    // Tugma: bitta bo'lsa ✓, ko'p bo'lsa 3/5
-    const btnContent = h.done ? '✓' : (isRepeat && tc > 0 ? tc+'/'+rc : '');
+    // Tugma: bitta bo'lsa SVG-tick, ko'p bo'lsa 3/5
+    const btnContent = h.done ? '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgTick" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M4 10l5 5 7-8" stroke="url(#svgTick)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : (isRepeat && tc > 0 ? tc+'/'+rc : '');
     // Progress dots (repeat uchun)
     let dotsHtml = '';
     if (isRepeat) {
@@ -1138,7 +1138,7 @@ function renderToday(d) {
     }
     cardsHtml += `
       <div class="checkin-card ${h.done ? 'done' : ''}" id="ccard-${h.id}" onclick="checkin('${h.id}', this)">
-        <div class="checkin-icon">${h.icon || '✅'}</div>
+        <div class="checkin-icon">${h.icon || '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDefIcon" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgDefIcon)" opacity="0.2"/><path d="M7 12l4 4 6-7" stroke="url(#svgDefIcon)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</div>
         <div class="checkin-info">
           <div class="checkin-name">${h.name}</div>
           <div class="checkin-meta">${isRepeat ? rc+' marta/kun · ' : (h.time !== 'vaqtsiz' ? `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> `+h.time+' · ' : '')}<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak} kun</div>
@@ -1190,13 +1190,13 @@ async function checkin(hid, cardEl) {
     const isDone = result.done;
 
     cardEl.classList.toggle('done', isDone);
-    if (btn) { btn.textContent = isDone ? '✓' : ''; }
+    if (btn) { btn.innerHTML = isDone ? '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgTick" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M4 10l5 5 7-8" stroke="url(#svgTick)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''; }
 
     // Meta va tugmani yangilash
     const rc  = result.repeat_count || 1;
     const tc  = result.today_count  || 0;
     if (btn) {
-      btn.textContent = isDone ? '✓' : (rc > 1 && tc > 0 ? tc+'/'+rc : '');
+      btn.innerHTML = isDone ? '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgTick" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M4 10l5 5 7-8" stroke="url(#svgTick)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : (rc > 1 && tc > 0 ? tc+'/'+rc : '');
       btn.style.fontSize = (rc > 1 && !isDone && tc > 0) ? '11px' : '';
     }
     // Progress dots yangilash
@@ -1305,13 +1305,13 @@ function renderReminders(habits) {
       <div class="time-row" id="trow-${h.id}-${i}">
         <span class="time-lbl">${i+1}-vaqt</span>
         <input class="time-input" type="time" id="tval-${h.id}-${i}" value="${t}">
-        <button class="time-clear" onclick="removeTime('${h.id}',${i})" type="button" title="O'chirish">✕</button>
+        <button class="time-clear" onclick="removeTime('${h.id}',${i})" type="button" title="O'chirish"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
       </div>`).join('');
 
     return `
       <div class="rem-card ${!enabled ? 'disabled' : ''}" id="remcard-${h.id}">
         <div class="rem-top">
-          <div class="rem-icon">${h.icon || '✅'}</div>
+          <div class="rem-icon">${h.icon || '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDefIcon" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgDefIcon)" opacity="0.2"/><path d="M7 12l4 4 6-7" stroke="url(#svgDefIcon)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</div>
           <div style="flex:1">
             <div class="rem-name">${h.name}</div>
             <div style="font-size:11px;color:var(--sub);margin-top:2px">${repeatCount} marta / kun</div>
@@ -1396,7 +1396,7 @@ function addTime(hid) {
   div.id = 'trow-' + hid + '-' + i;
   div.innerHTML = `<span class="time-lbl">${i+1}-vaqt</span>
     <input class="time-input" type="time" id="tval-${hid}-${i}">
-    <button class="time-clear" onclick="removeTime('${hid}',${i})" type="button" title="O'chirish">✕</button>`;
+    <button class="time-clear" onclick="removeTime('${hid}',${i})" type="button" title="O'chirish"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>`;
   list.appendChild(div);
 }
 
@@ -1541,7 +1541,7 @@ function renderAchievements(d, filter = 'all') {
       <div class="ach-card ${a.earned ? 'earned' : 'locked'}">
         <div class="ach-badge">
           ${a.icon}
-          ${a.earned ? '<div class="ach-badge-check">✓</div>' : ''}
+          ${a.earned ? '<div class="ach-badge-check"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgTick" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M4 10l5 5 7-8" stroke="url(#svgTick)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' : ''}
         </div>
         <div class="ach-info">
           <div class="ach-title">${a.title}</div>
@@ -1583,7 +1583,7 @@ function nextPopup() {
   const {icon, title, desc} = popupQueue.shift();
   const el = document.getElementById('badge-popup');
   document.getElementById('bp-icon').textContent  = icon;
-  document.getElementById('bp-title').textContent = '🎉 ' + title;
+  document.getElementById('bp-title').innerHTML = '<svg width="16" height="16" viewBox="0 0 32 32" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgPartyJ" x1="0" y1="32" x2="32" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M4 28L14 4l14 14L4 28z" fill="url(#svgPartyJ)" opacity="0.85"/><circle cx="24" cy="6" r="2" fill="#F6C93E"/><circle cx="28" cy="12" r="1.5" fill="#A78BFA"/><circle cx="20" cy="4" r="1" fill="#4CAF7D"/></svg>' + title;
   document.getElementById('bp-sub').textContent   = desc;
   el.classList.add('show');
   setTimeout(() => {
@@ -2095,7 +2095,7 @@ function renderProfile(d) {
     <div class="modal-overlay" id="lang-modal">
       <div class="modal">
         <div class="modal-handle"></div>
-        <button class="modal-close" onclick="closeLangModal()">✕</button>
+        <button class="modal-close" onclick="closeLangModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
         <div class="modal-title"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" style="display:inline;vertical-align:middle;margin-right:6px"><defs><linearGradient id="svgGlobH" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><circle cx="13" cy="13" r="10" stroke="url(#svgGlobH)" stroke-width="2"/><ellipse cx="13" cy="13" rx="4.5" ry="10" stroke="url(#svgGlobH)" stroke-width="1.5"/><path d="M3 13h20M3 9h20M3 17h20" stroke="url(#svgGlobH)" stroke-width="1.2" opacity="0.5"/></svg>Bot tili</div>
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px" id="lang-modal-btns"></div>
         <button class="rem-save-btn" style="margin-top:16px" onclick="saveLang()" type="button" id="lang-save-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgSave" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 21v-8H7v8M7 3v5h8" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Saqlash</button>
@@ -2106,7 +2106,7 @@ function renderProfile(d) {
     <div class="modal-overlay" id="edit-profile-modal">
       <div class="modal">
         <div class="modal-handle"></div>
-        <button class="modal-close" onclick="closeEditProfile()">✕</button>
+        <button class="modal-close" onclick="closeEditProfile()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
         <div class="modal-title">Ma'lumotlarni tahrirlash</div>
         <div class="field" style="text-align:center;margin-bottom:16px">
           <div id="ep-avatar-wrap" style="display:inline-block;position:relative;cursor:pointer" onclick="document.getElementById('ep-photo-input').click()">
@@ -2317,7 +2317,7 @@ function renderHabits(habits, jon = 100) {
     rows += `
       <div class="habit-card" id="hcard-${h.id}">
         <div class="habit-card-top">
-          <div class="habit-card-icon">${h.icon||'✅'}</div>
+          <div class="habit-card-icon">${h.icon||'<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDefIcon" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgDefIcon)" opacity="0.2"/><path d="M7 12l4 4 6-7" stroke="url(#svgDefIcon)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</div>
           <div class="habit-card-info">
             <div class="habit-card-name">${h.name}</div>
             <div class="habit-card-meta"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> ${h.time||'vaqtsiz'} &nbsp;<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak} kun</div>
@@ -2349,7 +2349,7 @@ function renderHabits(habits, jon = 100) {
     <div class="modal-overlay" id="habit-modal">
       <div class="modal">
         <div class="modal-handle"></div>
-        <button class="modal-close" onclick="closeModal()">✕</button>
+        <button class="modal-close" onclick="closeModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
         <div class="modal-title" id="modal-title">Yangi odat</div>
         <div class="field">
           <label>Nomi</label>
@@ -2507,7 +2507,7 @@ function renderGroups(d) {
     <div class="modal-overlay" id="group-modal">
       <div class="modal">
         <div class="modal-handle"></div>
-        <button class="modal-close" onclick="closeGroupModal()">✕</button>
+        <button class="modal-close" onclick="closeGroupModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
         <div class="modal-title">Yangi guruh</div>
         <div class="field">
           <label>Guruh nomi</label>
@@ -2669,7 +2669,7 @@ function renderFriends(d) {
         </div>
         <div style="display:flex;gap:6px;margin-top:10px">
           <button class="rem-save-btn" style="flex:1" onclick="openChallenge(${f.id},'${f.name}')" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgTgtBtn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="9" stroke="url(#svgTgtBtn)" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="url(#svgTgtBtn)" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="url(#svgTgtBtn)"/></svg>Challenge</button>
-          <button class="rem-save-btn" style="flex:1;background:var(--bg);color:var(--sub);box-shadow:var(--sh-in)" onclick="removeFriend(${f.id})" type="button">✕ Chiqarish</button>
+          <button class="rem-save-btn" style="flex:1;background:var(--bg);color:var(--sub);box-shadow:var(--sh-in)" onclick="removeFriend(${f.id})" type="button"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>Chiqarish</button>
         </div>
       </div>`;
   });
