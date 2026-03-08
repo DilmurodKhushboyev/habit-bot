@@ -906,9 +906,9 @@ def build_main_text(uid):
     name = u.get("name", "ism")
     return (
         f"👋 *Assalomu alaykum, {name}!*\n\n"
-        f"🌱 _Odatlaringizni barpo etish, rivojlantirish, "
+        f"🌱 Odatlaringizni barpo etish, rivojlantirish, "
         f"kuzatib borish, qiziqarli raqobat, oson va tez "
-        f"shakillantirish uchun, eng to\'g\'ri joydasiz!_\n\n"
+        f"shakillantirish uchun, eng to\'g\'ri joydasiz!\n\n"
         f"Ushbu sayohatni boshlash uchun:\n"
         f"« 📃 *Kirish*» tugmasini bosing\! 👇"
     )
