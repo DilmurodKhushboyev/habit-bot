@@ -59,6 +59,113 @@ def save_user(user_id, udata):
         upsert=True
     )
 
+# ============================================================
+#  SHOP KATALOGI
+# ============================================================
+SHOP_ITEMS = {
+    # ── HIMOYA ──
+    "streak_shield": {
+        "id": "streak_shield", "cat": "protection",
+        "name": "Streak himoyasi", "emoji": "🛡",
+        "desc": "Bir kun odat bajarmay qolsangiz streakingiz saqlanadi",
+        "price_ball": 100, "price_stars": 0, "max_own": 3,
+    },
+    "double_shield": {
+        "id": "double_shield", "cat": "protection",
+        "name": "Ikki kunlik himoya", "emoji": "🛡🛡",
+        "desc": "Ikki kun ketma-ket bajarmay qolsangiz ham streak saqlanadi",
+        "price_ball": 220, "price_stars": 0, "max_own": 1,
+    },
+    # ── BONUS ──
+    "double_ball": {
+        "id": "double_ball", "cat": "bonus",
+        "name": "2× ball bonusi", "emoji": "⚡",
+        "desc": "1 kun davomida barcha odat ballaringiz 2 baravar ko'payadi",
+        "price_ball": 150, "price_stars": 0, "max_own": 5,
+    },
+    "mega_ball": {
+        "id": "mega_ball", "cat": "bonus",
+        "name": "Mega bonus", "emoji": "🔥",
+        "desc": "3 kun davomida 3× ball — faqat Stars bilan",
+        "price_ball": 0, "price_stars": 25, "max_own": 2,
+    },
+    # ── BADGE ──
+    "badge_champ": {
+        "id": "badge_champ", "cat": "badge",
+        "name": "Chempion 🏆", "emoji": "🥇",
+        "desc": "Profilingizda maxsus Chempion belgisi ko'rsatiladi",
+        "price_ball": 500, "price_stars": 0, "max_own": 1,
+    },
+    "badge_legend": {
+        "id": "badge_legend", "cat": "badge",
+        "name": "Afsona 🌀", "emoji": "🌀",
+        "desc": "Eng noyob unvon — faqat Stars bilan olish mumkin",
+        "price_ball": 0, "price_stars": 99, "max_own": 1,
+    },
+    "badge_master": {
+        "id": "badge_master", "cat": "badge",
+        "name": "Ustoz 🧠", "emoji": "🧠",
+        "desc": "30 kunlik streak egalariga maxsus unvon",
+        "price_ball": 300, "price_stars": 0, "max_own": 1,
+    },
+    # ── HAYVONLAR ──
+    "pet_cat": {
+        "id": "pet_cat", "cat": "pet",
+        "name": "Mushuk", "emoji": "🐱",
+        "desc": "Sizning virtual hamrohingiz. Har kuni bajarganingizda xursand bo'ladi!",
+        "price_ball": 200, "price_stars": 0, "max_own": 1,
+    },
+    "pet_dog": {
+        "id": "pet_dog", "cat": "pet",
+        "name": "It", "emoji": "🐕",
+        "desc": "Sodiq do'st. Streak uzilsa xafa bo'ladi...",
+        "price_ball": 200, "price_stars": 0, "max_own": 1,
+    },
+    "pet_dragon": {
+        "id": "pet_dragon", "cat": "pet",
+        "name": "Ajdaho", "emoji": "🐉",
+        "desc": "Eng kuchli hayvon — faqat Stars bilan!",
+        "price_ball": 0, "price_stars": 49, "max_own": 1,
+    },
+    # ── AVTOMOBILLAR ──
+    "car_sport": {
+        "id": "car_sport", "cat": "car",
+        "name": "Sport mashinа", "emoji": "🏎",
+        "desc": "Profilingizda sport mashina ko'rsatiladi",
+        "price_ball": 800, "price_stars": 0, "max_own": 1,
+    },
+    "car_luxury": {
+        "id": "car_luxury", "cat": "car",
+        "name": "Lyuks avto", "emoji": "🚗",
+        "desc": "Eng hashamatli avto — faqat Stars!",
+        "price_ball": 0, "price_stars": 79, "max_own": 1,
+    },
+    # ── SOVGʻALAR ──
+    "gift_star": {
+        "id": "gift_star", "cat": "gift",
+        "name": "Yulduz sovg'a", "emoji": "🎁",
+        "desc": "Do'stingizga 50 ball sovg'a qilasiz",
+        "price_ball": 75, "price_stars": 0, "max_own": 99,
+        "gift_amount": 50,
+    },
+    "gift_premium": {
+        "id": "gift_premium", "cat": "gift",
+        "name": "Premium sovg'a", "emoji": "💎",
+        "desc": "Do'stingizga 200 ball sovg'a qilasiz — faqat Stars!",
+        "price_ball": 0, "price_stars": 19, "max_own": 99,
+        "gift_amount": 200,
+    },
+}
+
+CAT_LABELS = {
+    "protection": "🛡 Himoya",
+    "bonus":      "⚡ Bonus",
+    "badge":      "🏅 Badge",
+    "pet":        "🐾 Hayvonlar",
+    "car":        "🚗 Avtomobillar",
+    "gift":       "🎁 Sovg'alar",
+}
+
 def load_settings():
     doc = mongo_col.find_one({"_id": "_settings"})
     if doc:
@@ -84,6 +191,15 @@ def user_exists(user_id):
 
 def count_users():
     return mongo_col.count_documents({"_id": {"$not": {"$regex": "^_"}}})
+
+def _apply_item_effect(uid, item, u):
+    """Mahsulot sotib olinganda darhol effekt qo'llash"""
+    iid = item["id"]
+    if iid == "double_ball":
+        u["bonus_2x_until"] = (datetime.now() + __import__("datetime").timedelta(days=1)).strftime("%Y-%m-%d")
+    elif iid == "mega_ball":
+        u["bonus_3x_until"] = (datetime.now() + __import__("datetime").timedelta(days=3)).strftime("%Y-%m-%d")
+    # streak_shield, badge, pet, car — inventory da saqlanadi, checkin/profil da ishlatiladi
 
 def _finish_challenge(cid, c=None):
     """Challenge tugaganda g'olibni aniqlash va ball berish"""
@@ -7392,6 +7508,81 @@ try:
     def options_groups(**kwargs):
         return jsonify({}), 200
 
+
+    # ── SHOP ──
+    @api_app.route("/api/shop/<int:uid>", methods=["GET"])
+    def api_shop_get(uid):
+        u = load_user(uid)
+        inventory = u.get("inventory", {})
+        items_out = []
+        for item in SHOP_ITEMS.values():
+            owned = inventory.get(item["id"], 0)
+            items_out.append({
+                "id":          item["id"],
+                "cat":         item["cat"],
+                "name":        item["name"],
+                "emoji":       item["emoji"],
+                "desc":        item["desc"],
+                "price_ball":  item["price_ball"],
+                "price_stars": item["price_stars"],
+                "max_own":     item["max_own"],
+                "owned":       owned,
+                "can_buy":     owned < item["max_own"],
+            })
+        return jsonify({
+            "items":  items_out,
+            "points": u.get("points", 0),
+            "inventory": inventory,
+        })
+
+    @api_app.route("/api/shop/<int:uid>/buy", methods=["POST"])
+    def api_shop_buy(uid):
+        body    = request.get_json() or {}
+        item_id = body.get("item_id","")
+        method  = body.get("method","ball")  # "ball" yoki "stars"
+        gift_to = body.get("gift_to", None)  # do'st uid (gift uchun)
+        item = SHOP_ITEMS.get(item_id)
+        if not item:
+            return jsonify({"ok": False, "error": "Mahsulot topilmadi"}), 404
+        u = load_user(uid)
+        inventory = u.get("inventory", {})
+        owned = inventory.get(item_id, 0)
+        if owned >= item["max_own"]:
+            return jsonify({"ok": False, "error": "Siz bu mahsulotni allaqachon olgansiz"}), 400
+        if method == "ball":
+            price = item["price_ball"]
+            if price == 0:
+                return jsonify({"ok": False, "error": "Bu mahsulot faqat Telegram Stars bilan sotiladi"}), 400
+            if u.get("points", 0) < price:
+                return jsonify({"ok": False, "error": f"Yetarli ball yo'q. Kerak: {price} ⭐"}), 400
+            u["points"] = u.get("points", 0) - price
+            # Gift mahsulot bo'lsa — do'stga ball berish
+            if item["cat"] == "gift" and gift_to:
+                gift_u = load_user(int(gift_to))
+                gift_u["points"] = gift_u.get("points", 0) + item.get("gift_amount", 50)
+                save_user(int(gift_to), gift_u)
+                try:
+                    sender_name = u.get("name","Kimdir")
+                    bot.send_message(int(gift_to),
+                        "\U0001F381 *Sovg\u2019a oldingiz!*\n\n"
+                        + "*" + sender_name + "* sizga "
+                        + str(item.get("gift_amount",50)) + " ball sovg'a qildi! ⭐",
+                        parse_mode="Markdown")
+                except Exception:
+                    pass
+            else:
+                inventory[item_id] = owned + 1
+                u["inventory"] = inventory
+                _apply_item_effect(uid, item, u)
+            save_user(uid, u)
+            return jsonify({"ok": True, "points_left": u["points"], "owned": inventory.get(item_id,0)})
+        else:
+            return jsonify({"ok": False, "error": "Stars to'lovi hozircha botdan amalga oshiriladi"}), 400
+
+    @api_app.route("/api/shop/<int:uid>", methods=["OPTIONS"])
+    @api_app.route("/api/shop/<int:uid>/buy", methods=["OPTIONS"])
+    def options_shop(**kwargs):
+        return jsonify({}), 200
 
     # ── CHALLENGELAR ──
     @api_app.route("/api/challenges/<int:uid>", methods=["GET"])

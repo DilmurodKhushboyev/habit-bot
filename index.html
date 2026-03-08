@@ -850,13 +850,17 @@ body {
 <!-- GURUHLAR -->
 <div class="page" id="page-groups">
   <div class="period-switch" style="margin-bottom:0">
-    <button class="period-btn active" id="gsub-groups"  onclick="setGroupSub('groups')"  type="button">👥 Guruhlar</button>
-    <button class="period-btn"        id="gsub-friends" onclick="setGroupSub('friends')" type="button">🤝 Do'stlar</button>
+    <button class="period-btn active" id="gsub-groups"  onclick="setGroupSub('groups')"  type="button">👥 Guruh</button>
+    <button class="period-btn"        id="gsub-friends" onclick="setGroupSub('friends')" type="button">🤝 Do'st</button>
+    <button class="period-btn"        id="gsub-shop"    onclick="setGroupSub('shop')"    type="button">🛒 Shop</button>
   </div>
   <div id="groups-content">
     <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
   </div>
   <div id="friends-content" style="display:none">
+    <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
+  <div id="shop-content" style="display:none">
     <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
   </div>
 </div>
@@ -912,8 +916,8 @@ body {
     <span class="nav-label">Odatlar</span>
   </button>
   <button class="nav-item" id="nav-groups" onclick="switchTab('groups', this)">
-    <span class="nav-icon">👥</span>
-    <span class="nav-label">Guruhlar</span>
+    <span class="nav-icon">🛒</span>
+    <span class="nav-label">Do'stlar</span>
   </button>
   <button class="nav-item" id="nav-profile" onclick="switchTab('profile', this)">
     <span class="nav-icon">👤</span>
@@ -2164,10 +2168,12 @@ function showGroupToast(msg, err=false) {
 let _groupSub = 'groups';
 function setGroupSub(sub) {
   _groupSub = sub;
-  document.getElementById('gsub-groups')?.classList.toggle('active', sub === 'groups');
-  document.getElementById('gsub-friends')?.classList.toggle('active', sub === 'friends');
-  document.getElementById('groups-content').style.display  = sub === 'groups'  ? '' : 'none';
-  document.getElementById('friends-content').style.display = sub === 'friends' ? '' : 'none';
+  ['groups','friends','shop'].forEach(s => {
+    document.getElementById('gsub-'+s)?.classList.toggle('active', sub === s);
+    const el = document.getElementById(s === 'groups' ? 'groups-content' : s+'-content');
+    if (el) el.style.display = sub === s ? '' : 'none';
+  });
+  if (sub === 'shop') loadShop();
 }
 
 async function loadFriends() {
@@ -2246,6 +2252,110 @@ async function removeFriend(fid) {
     });
     await loadFriends();
   } catch(e) {}
+}
+
+// ── SHOP ──
+let _shopData = null;
+let _shopCat  = 'all';
+
+async function loadShop() {
+  try {
+    const d = await apiFetch(`shop/${userId}`);
+    _shopData = d;
+    renderShop(d);
+  } catch(e) {
+    document.getElementById('shop-content').innerHTML =
+      '<div class="empty-state"><div class="icon">⚠️</div>Ma\'lumot yuklanmadi</div>';
+  }
+}
+
+function renderShop(d) {
+  const items  = (d.items || []).filter(i => _shopCat === 'all' || i.cat === _shopCat);
+  const points = d.points || 0;
+
+  const cats = [
+    ['all','🌟 Barchasi'],['protection','🛡 Himoya'],['bonus','⚡ Bonus'],
+    ['badge','🏅 Badge'],['pet','🐾 Hayvon'],['car','🚗 Avto'],['gift','🎁 Sovg\'a']
+  ];
+  const catBtns = cats.map(([k,l]) =>
+    `<button onclick="setShopCat('${k}')" class="period-btn${_shopCat===k?' active':''}"
+      style="font-size:11px;padding:6px 10px" type="button">${l}</button>`
+  ).join('');
+
+  let html = items.map(item => {
+    const hasBall  = item.price_ball  > 0;
+    const hasStars = item.price_stars > 0;
+    const cantBuy  = !item.can_buy;
+    const noMoney  = hasBall && points < item.price_ball;
+
+    return `<div class="rem-card" style="position:relative${cantBuy?';opacity:.6':''}">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="font-size:36px;line-height:1">${item.emoji}</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:var(--text)">${item.name}</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:3px;line-height:1.4">${item.desc}</div>
+          ${item.owned > 0 ? `<div style="font-size:10px;color:var(--green);margin-top:4px">✅ Sizda: ${item.owned} ta</div>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+        ${hasBall ? `<button onclick="buyItem('${item.id}','ball')" ${cantBuy||noMoney?'disabled':''} type="button"
+          style="flex:1;padding:9px 6px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:${cantBuy||noMoney?'not-allowed':'pointer'};
+          background:${cantBuy?'var(--bg)':noMoney?'var(--bg)':'linear-gradient(135deg,#5B8DEF,#4CAF7D)'};
+          color:${cantBuy||noMoney?'var(--sub)':'#fff'};box-shadow:${cantBuy||noMoney?'var(--sh-in)':'none'}">
+          ${cantBuy?'✅ Olindi':'⭐ '+item.price_ball+' ball'}
+        </button>` : ''}
+        ${hasStars ? `<button onclick="buyItem('${item.id}','stars')" ${cantBuy?'disabled':''} type="button"
+          style="flex:1;padding:9px 6px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:${cantBuy?'not-allowed':'pointer'};
+          background:${cantBuy?'var(--bg)':'linear-gradient(135deg,#F6C93E,#E07040)'};
+          color:${cantBuy?'var(--sub)':'#fff'};box-shadow:${cantBuy?'var(--sh-in)':'none'}">
+          ${cantBuy?'✅ Olindi':'⭐ '+item.price_stars+' Stars'}
+        </button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('shop-content').innerHTML = `
+    <div style="background:linear-gradient(135deg,#5B8DEF22,#4CAF7D22);border-radius:16px;padding:14px 16px;margin-bottom:4px;display:flex;align-items:center;gap:10px">
+      <div style="font-size:28px">⭐</div>
+      <div>
+        <div style="font-size:11px;color:var(--sub)">Sizning balingiz</div>
+        <div style="font-size:22px;font-weight:700;color:var(--text)">${points.toLocaleString()} ball</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding:8px 0;scrollbar-width:none">${catBtns}</div>
+    ${html || '<div class="empty-state"><div class="icon">🛒</div>Bu kategoriyada mahsulot yo\'q</div>'}
+    <div class="toast" id="toast-shop"></div>`;
+}
+
+function setShopCat(cat) {
+  _shopCat = cat;
+  if (_shopData) renderShop(_shopData);
+}
+
+async function buyItem(itemId, method) {
+  if (method === 'stars') {
+    const toast = document.getElementById('toast-shop');
+    if (toast) { toast.textContent = '⭐ Stars bilan sotib olish uchun botga /shop yozing'; toast.className = 'toast show'; setTimeout(()=>toast.className='toast',3500); }
+    return;
+  }
+  try {
+    const res = await fetch(`${API}/shop/${userId}/buy`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','X-User-Id':userId},
+      body: JSON.stringify({ item_id: itemId, method })
+    });
+    const r = await res.json();
+    if (!r.ok) { alert(r.error || 'Xato'); return; }
+    // Ma'lumotlarni yangilash
+    if (_shopData) {
+      _shopData.points = r.points_left;
+      const item = _shopData.items.find(i => i.id === itemId);
+      if (item) { item.owned = r.owned; item.can_buy = item.owned < item.max_own; }
+      renderShop(_shopData);
+    }
+    const toast = document.getElementById('toast-shop');
+    if (toast) { toast.textContent = '✅ Muvaffaqiyatli sotib olindi!'; toast.className = 'toast show'; setTimeout(()=>toast.className='toast',2500); }
+  } catch(e) { alert('Tarmoq xatosi'); }
 }
 
 // ── CHALLENGE ──
