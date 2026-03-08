@@ -7113,6 +7113,13 @@ try:
             "earned_ach":      earned_ach,
             "total_ach":       total_ach,
             "evening_notify":  u.get("evening_notify", True),
+            "inventory":       u.get("inventory", {}),
+            "active_pet":      next((SHOP_ITEMS[k]["emoji"] for k in ["pet_dragon","pet_cat","pet_dog"] if u.get("inventory",{}).get(k,0) > 0), ""),
+            "active_badge":    next((SHOP_ITEMS[k]["emoji"] for k in ["badge_legend","badge_champ","badge_master"] if u.get("inventory",{}).get(k,0) > 0), ""),
+            "active_car":      next((SHOP_ITEMS[k]["emoji"] for k in ["car_luxury","car_sport"] if u.get("inventory",{}).get(k,0) > 0), ""),
+            "streak_shields":  u.get("inventory",{}).get("streak_shield", 0) + u.get("inventory",{}).get("double_shield", 0),
+            "bonus_2x_active": u.get("bonus_2x_until","") >= str(__import__("datetime").date.today()) if u.get("bonus_2x_until") else False,
+            "bonus_3x_active": u.get("bonus_3x_until","") >= str(__import__("datetime").date.today()) if u.get("bonus_3x_until") else False,
         })
 
     @api_app.route("/api/profile/<int:uid>", methods=["PUT"])

@@ -1838,11 +1838,20 @@ function renderProfile(d) {
       <div class="profile-top">
         ${avatarHtml}
         <div style="flex:1;min-width:0">
-          <div class="profile-name">${d.name || 'Foydalanuvchi'}${vipBadge}</div>
+          <div class="profile-name">${d.name || 'Foydalanuvchi'}${vipBadge}${d.active_badge ? ' <span title="Badge">'+d.active_badge+'</span>' : ''}</div>
           <div style="font-size:11px;color:var(--sub);margin-top:2px">🏆 ${rankTxt} o'rinda</div>
           <div style="font-size:10px;color:var(--sub);margin-top:2px">📅 ${joinedStr} dan beri</div>
         </div>
+        ${d.active_pet ? `<div style="font-size:36px;line-height:1" title="Pet">${d.active_pet}</div>` : ''}
       </div>
+
+      ${(d.active_car || d.streak_shields > 0 || d.bonus_2x_active || d.bonus_3x_active) ? `
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+        ${d.active_car ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px">${d.active_car} <span style="color:var(--sub)">Avto</span></div>` : ''}
+        ${d.streak_shields > 0 ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px">🛡 <span style="color:var(--sub)">${d.streak_shields}x himoya</span></div>` : ''}
+        ${d.bonus_2x_active ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px">⚡ <span style="color:#5B8DEF;font-weight:700">2× bonus</span></div>` : ''}
+        ${d.bonus_3x_active ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px">🔥 <span style="color:#E07040;font-weight:700">3× bonus</span></div>` : ''}
+      </div>` : ''}
 
       <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-top:14px">
         <div class="stat-box"><div class="stat-val">${d.points || 0}</div><div class="stat-lbl">Ball</div></div>
