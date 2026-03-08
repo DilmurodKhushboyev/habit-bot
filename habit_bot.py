@@ -1714,8 +1714,8 @@ def cmd_start(msg):
                     save_user(friend_id, u_fr)
                     try:
                         fr_name = u_me.get("name", "Kimdir")
-                        msg = "\U0001F91D *" + fr_name + "* siz bilan do\u2019st bo\u2019ldi!\n\nEndi umumiy streakingiz ko\u2019rsatiladi \U0001F525"
-                        bot.send_message(friend_id, msg, parse_mode="Markdown")
+                        notify_text = "\U0001F91D *" + fr_name + "* siz bilan do\u2019st bo\u2019ldi!\n\nEndi umumiy streakingiz ko\u2019rsatiladi \U0001F525"
+                        bot.send_message(friend_id, notify_text, parse_mode="Markdown")
                     except: pass
         except Exception:
             pass
