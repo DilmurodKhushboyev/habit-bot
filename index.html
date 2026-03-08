@@ -464,7 +464,9 @@ body {
   border-radius: 20px; padding: 18px; margin-bottom: 12px;
 }
 .bar-chart-title { font-size: 12px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
-.bars { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+.bars { display: flex; align-items: flex-end; gap: 4px; height: 80px; overflow-x: auto; scrollbar-width: none; }
+.bars::-webkit-scrollbar { display: none; }
+.bar-col { min-width: 22px; }
 .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
 .bar-fill {
   width: 100%; border-radius: 8px 8px 4px 4px;
@@ -841,12 +843,13 @@ body {
 </div>
 
 <!-- STATISTIKA -->
-<div class="page" id="page-stats">
-  <div class="period-switch" style="margin-bottom:0">
+<div class="page" id="page-stats" style="padding:0">
+  <div class="period-switch" style="margin-bottom:0;position:sticky;top:0;z-index:8;background:var(--bg);padding:12px 20px">
     <button class="period-btn active" id="ssub-stats"   onclick="setStatSub('stats')"   type="button">📊 Statistika</button>
     <button class="period-btn"        id="ssub-rating"  onclick="setStatSub('rating')"  type="button">🏆 Reyting</button>
     <button class="period-btn"        id="ssub-friends" onclick="setStatSub('friends')" type="button">👥 Guruh/Do'st</button>
   </div>
+  <div style="padding:0 20px">
   <div id="stats-content">
     <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
   </div>
@@ -855,6 +858,7 @@ body {
   </div>
   <div id="stats-groups-content" style="display:none">
     <div class="loading"><div class="spinner"></div>Yuklanmoqda...</div>
+  </div>
   </div>
 </div>
 
@@ -933,9 +937,9 @@ body {
     style="padding:4px 8px">
     <span style="display:flex;align-items:center;justify-content:center;
       width:42px;height:42px;border-radius:50%;
-      background:linear-gradient(135deg,#5B8DEF,#4CAF7D);
-      box-shadow:0 3px 12px rgba(91,141,239,.4);
-      font-size:26px;color:#fff;font-weight:300;line-height:1">＋</span>
+      background:var(--bg);
+      box-shadow:var(--sh);
+      font-size:28px;color:var(--text);font-weight:300;line-height:1">＋</span>
     <span class="nav-label" style="margin-top:2px">Qo'sh</span>
   </button>
   <button class="nav-item" id="nav-bozor" onclick="switchTab('bozor', this)">
@@ -1026,6 +1030,24 @@ function ringHTML(percent, size = 80) {
   </svg>`;
 }
 
+function jonRingHTML(jon, size = 80) {
+  const r = (size - 12) / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = circ * Math.min(jon, 100) / 100;
+  const gap  = circ - dash;
+  const color = jon >= 60 ? '#4CAF7D' : jon >= 30 ? '#E0A040' : '#E05050';
+  const offset = circ * 0.25;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#C8CBD8" stroke-width="7"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="7"
+      stroke-dasharray="${dash} ${gap}"
+      stroke-dashoffset="${offset}"
+      stroke-linecap="round"/>
+    <text x="${size/2}" y="${size/2 + 6}" text-anchor="middle"
+      font-family="DM Mono,monospace" font-size="18" font-weight="600" fill="#3A3D4A">${jon}%</text>
+  </svg>`;
+}
+
 // ── BUGUN ──
 async function loadToday() {
   try {
@@ -1049,6 +1071,7 @@ async function loadToday() {
 
 function renderToday(d) {
   const { habits, done_count, total, percent, today } = d;
+  const currentJon = d.jon ?? 100;
   const dt = new Date(today);
   const dayNames = ['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
   const months   = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
@@ -1092,7 +1115,16 @@ function renderToday(d) {
 
     <div class="today-hero">
       <div class="today-date">${dateStr}</div>
-      <div class="prog-ring-wrap" id="prog-ring">${ringHTML(percent)}</div>
+      <div style="display:flex;justify-content:center;gap:24px;align-items:center;margin:16px 0 4px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="prog-ring-wrap" style="margin:0" id="prog-ring">${ringHTML(percent)}</div>
+          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">ODAT</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="prog-ring-wrap" style="margin:0" id="jon-ring">${jonRingHTML(currentJon)}</div>
+          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">JON</div>
+        </div>
+      </div>
       <div class="today-sub" id="prog-sub">${done_count} / ${total} odat bajarildi</div>
     </div>
 
@@ -1650,13 +1682,14 @@ function setPeriod(p) {
   if (!data.stats) return;
   const d = data.stats;
   const days = p === 7 ? d.weekly : (d.monthly || d.weekly);
-  const dayLabels = ['Ya','Du','Se','Ch','Pa','Ju','Sh'];
-  const barsHtml = days.map(w => {
+  const barsHtml = days.map((w, i) => {
     const pct   = w.total ? Math.round(w.count / w.total * 100) : 0;
     const hPx   = Math.max(4, Math.round(pct * 0.7));
     const color = pct >= 80 ? '#4CAF7D' : pct >= 40 ? '#5B8DEF' : pct > 0 ? '#E07040' : '#C8CBD8';
     const isToday = w.date === d.today;
-    const lbl = p === 7 ? dayLabels[new Date(w.date).getDay()] : new Date(w.date).getDate();
+    const dayNum = new Date(w.date).getDate();
+    const lbl = p === 7 ? ['Ya','Du','Se','Ch','Pa','Ju','Sh'][new Date(w.date).getDay()]
+                        : (dayNum % 5 === 0 || i === 0 || i === days.length - 1 ? dayNum : '');
     return '<div class="bar-col">'
       + '<div class="bar-num">' + (w.count > 0 ? w.count : '') + '</div>'
       + '<div class="bar-fill" style="height:' + hPx + 'px;background:' + color + ';' + (isToday ? 'box-shadow:0 0 0 2px ' + color + '44' : '') + '"></div>'
@@ -2063,14 +2096,14 @@ let editingHabitId = null;
 async function loadHabits() {
   try {
     const d = await apiFetch(`habits/${userId}`);
-    renderHabits(d.habits || []);
+    renderHabits(d.habits || [], d.jon ?? 100);
   } catch(e) {
     document.getElementById('habits-content').innerHTML =
       `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
   }
 }
 
-function renderHabits(habits) {
+function renderHabits(habits, jon = 100) {
   let rows = '';
   habits.forEach(h => {
     rows += `
@@ -2089,6 +2122,9 @@ function renderHabits(habits) {
       </div>`;
   });
 
+  const jonPct = Math.round(jon);
+  const jonDoira = jonRingHTML(jonPct, 72);
+
   const iconGrid = ICONS.map(ic =>
     `<div class="icon-opt" data-icon="${ic}" onclick="selectIcon(this)">${ic}</div>`
   ).join('');
@@ -2096,6 +2132,16 @@ function renderHabits(habits) {
   document.getElementById('habits-content').innerHTML = `
     <div>
       <button class="add-btn" onclick="openAdd()">＋ Yangi odat</button>
+      <div style="display:flex;justify-content:flex-end;gap:12px;margin-bottom:8px;padding:0 4px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="font-size:10px;font-weight:600;color:var(--sub)">BAJARILISH</div>
+          ${ringHTML(habits.length ? Math.round(habits.filter(h=>h.total_done>0).length/habits.length*100) : 0, 72)}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="font-size:10px;font-weight:600;color:var(--sub)">JON</div>
+          ${jonDoira}
+        </div>
+      </div>
       <div class="section-title">Odatlarim (${habits.length})</div>
       ${rows || '<div class="empty-state"><div class="icon">📋</div>Hozircha odat yo\'q</div>'}
     </div>

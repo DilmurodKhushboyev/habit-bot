@@ -7165,7 +7165,7 @@ try:
                 "total_done":   h.get("total_done",0),
                 "repeat_count": len(h.get("times", [])) or 1,
             })
-        return jsonify({"habits": habits})
+        return jsonify({"habits": habits, "jon": u.get("jon", 100)})
 
     @api_app.route("/api/habits/<int:uid>", methods=["POST"])
     def api_habits_add(uid):
