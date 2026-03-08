@@ -6274,6 +6274,13 @@ def handle_text(msg):
 
 def _run_broadcast(admin_uid, bc_chat_id, msg_ids, state):
     """Broadcast yuborish — matn va album uchun umumiy funksiya"""
+    # State ni darhol tozalaymiz — restart bo'lsa ham qotib qolmasin
+    try:
+        u0 = load_user(admin_uid)
+        u0["state"] = None
+        save_user(admin_uid, u0)
+    except Exception:
+        pass
     try:
         users      = load_all_users()
         sent_count = 0
@@ -6327,7 +6334,7 @@ def _run_broadcast(admin_uid, bc_chat_id, msg_ids, state):
     finally:
         u = load_user(admin_uid)
         u["state"] = None
-        if "failed_ids" in dir() and failed_ids:
+        if failed_ids:
             u["bc_failed_list"] = failed_ids
         save_user(admin_uid, u)
 
