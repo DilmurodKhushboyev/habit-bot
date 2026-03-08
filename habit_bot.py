@@ -1663,6 +1663,7 @@ def cmd_test_onboard(msg):
 def cmd_start(msg):
     uid  = msg.from_user.id
     name = msg.from_user.first_name
+    logger.info(f"[START] uid={uid} name={name}")
 
     # Barcha oldingi xabarlarni o'chirish + holatni tozalash
     u_prev = load_user(uid)
@@ -6137,7 +6138,7 @@ def _save_group_habit(uid, u):
 # ============================================================
 #  MATN HANDLER
 # ============================================================
-@bot.message_handler(func=lambda m: True, content_types=["text", "photo", "document", "video", "audio", "voice", "sticker", "animation"])
+@bot.message_handler(func=lambda m: not (m.text and m.text.startswith("/")), content_types=["text", "photo", "document", "video", "audio", "voice", "sticker", "animation"])
 def handle_text(msg):
     import re
     uid   = msg.from_user.id
