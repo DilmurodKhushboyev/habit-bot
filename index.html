@@ -890,7 +890,7 @@ body {
 <div id="challenge-modal" class="modal-overlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);align-items:flex-end;justify-content:center">
   <div style="background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;box-shadow:0 -4px 30px rgba(0,0,0,.3)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <div style="font-size:16px;font-weight:700;color:var(--text)">🎯 Challenge yuborish</div>
+      <div style="font-size:16px;font-weight:700;color:var(--text)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:6px"><defs><linearGradient id="svgTgtH" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="9" stroke="url(#svgTgtH)" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="url(#svgTgtH)" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="url(#svgTgtH)"/></svg>Challenge yuborish</div>
       <button onclick="closeChallengeModal()" style="background:none;border:none;font-size:20px;color:var(--sub);cursor:pointer" type="button">✕</button>
     </div>
     <div style="font-size:12px;color:var(--sub);margin-bottom:16px">Raqib: <b id="ch-receiver-name" style="color:var(--text)"></b></div>
@@ -917,7 +917,7 @@ body {
     </div>
     <button id="ch-send-btn" onclick="sendChallenge()" 
       style="width:100%;padding:14px;background:linear-gradient(135deg,#5B8DEF,#4CAF7D);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer" type="button">
-      🎯 Yuborish
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgTgtBtn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="9" stroke="url(#svgTgtBtn)" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="url(#svgTgtBtn)" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="url(#svgTgtBtn)"/></svg>Yuborish
     </button>
   </div>
 </div>
@@ -988,7 +988,7 @@ body {
 
 <!-- Badge popup -->
 <div class="badge-popup" id="badge-popup">
-  <div class="bp-icon" id="bp-icon">🏆</div>
+  <div class="bp-icon" id="bp-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="svgTrophyLg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6E27A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 28h12M16 22v6M6 4h20v11a10 10 0 01-20 0V4z" stroke="url(#svgTrophyLg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M6 8H2v4a4 4 0 004 4M26 8h4v4a4 4 0 01-4 4" stroke="url(#svgTrophyLg)" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg></div>
   <div class="bp-text">
     <div class="bp-title" id="bp-title">Yangi yutuq!</div>
     <div class="bp-sub"  id="bp-sub">Tabriklaymiz!</div>
@@ -1104,7 +1104,7 @@ async function loadToday() {
   } catch(e) {
     document.getElementById('today-content').innerHTML =
       `<div class="empty-state">
-        <div class="icon">⚠️</div>
+        <div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>
         <div>Ma'lumot yuklanmadi</div>
         <small style="color:var(--sub);margin-top:8px;display:block">${e}</small>
         <button onclick="loaded.today=false;loadToday()" style="margin-top:14px;padding:10px 20px;border-radius:12px;border:none;background:var(--bg);box-shadow:var(--sh-sm);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">🔄 Qayta urinish</button>
@@ -1151,9 +1151,9 @@ function renderToday(d) {
 
   document.getElementById('today-content').innerHTML = `
     <div class="all-done-banner ${allDone ? 'show' : ''}" id="all-done-banner">
-      <div class="bd-icon">🎉</div>
+      <div class="bd-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="svgParty" x1="0" y1="32" x2="32" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M4 28L14 4l14 14L4 28z" fill="url(#svgParty)" opacity="0.85"/><circle cx="24" cy="6" r="2" fill="#F6C93E"/><circle cx="28" cy="12" r="1.5" fill="#A78BFA"/><circle cx="20" cy="4" r="1" fill="#4CAF7D"/><path d="M22 10l2-3M26 8l3-1M24 14l3 1" stroke="#F6C93E" stroke-width="1.5" stroke-linecap="round"/></svg></div>
       <div class="bd-title">Barchasi bajarildi!</div>
-      <div class="bd-sub">Ajoyib! Streak davom etmoqda 🔥</div>
+      <div class="bd-sub">Ajoyib! Streak davom etmoqda <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg></div>
     </div>
 
     <div class="today-hero">
@@ -1172,7 +1172,7 @@ function renderToday(d) {
     </div>
 
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Bugungi odatlar<button onclick="switchTab('habits',document.getElementById('nav-habits'))" type="button" style="font-size:12px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px">＋ Odat yaratish</button></div>
-    ${cardsHtml || '<div class="empty-state"><div class="icon">📋</div>Hali odat qo\'shilmagan</div>'}
+    ${cardsHtml || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>Hali odat qo\'shilmagan</div>'}
     <div class="toast" id="toast-today"></div>`;
 }
 
@@ -1278,14 +1278,14 @@ async function loadReminders() {
     renderReminders(d.habits || []);
   } catch(e) {
     document.getElementById('reminders-content').innerHTML =
-      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>Ma'lumot yuklanmadi.</div>`;
   }
 }
 
 function renderReminders(habits) {
   if (!habits.length) {
     document.getElementById('reminders-content').innerHTML =
-      `<div class="empty-state"><div class="icon">📋</div>Hali odat qo'shilmagan.<br>Avval odat qo'shing!</div>`;
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>Hali odat qo'shilmagan.<br>Avval odat qo'shing!</div>`;
     return;
   }
 
@@ -1489,7 +1489,7 @@ async function loadAchievements() {
     renderAchievements(d, achFilter);
   } catch(e) {
     document.getElementById('achievements-content').innerHTML =
-      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>Ma'lumot yuklanmadi.</div>`;
   }
 }
 
@@ -1560,7 +1560,7 @@ function renderAchievements(d, filter = 'all') {
   document.getElementById('achievements-content').innerHTML = `
     ${sumHtml}
     <div class="ach-cat-tabs">${catTabsHtml}</div>
-    ${cardsHtml || '<div class="empty-state"><div class="icon">🔒</div>Bu kategoriyada hali yutuq yo\'q</div>'}`;
+    ${cardsHtml || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgLock" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><rect x="5" y="11" width="14" height="10" rx="2" stroke="url(#svgLock)" stroke-width="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="url(#svgLock)" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="url(#svgLock)"/></svg></div>Bu kategoriyada hali yutuq yo\'q</div>'}`;
 }
 
 function filterAch(cat) {
@@ -1600,7 +1600,7 @@ async function loadStats() {
     renderStats(d);
   } catch(e) {
     document.getElementById('stats-content').innerHTML =
-      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.<br><small>${e}</small></div>`;
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>Ma'lumot yuklanmadi.<br><small>${e}</small></div>`;
   }
 }
 
@@ -1621,12 +1621,12 @@ function renderStats(d) {
         <div class="sum-lbl">Ball</div>
       </div>
       <div class="sum-card">
-        <div class="sum-icon">✅</div>
+        <div class="sum-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgChkSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgChkSm)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgChkSm)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <div class="sum-val">${summary.active_days_30}</div>
         <div class="sum-lbl">Faol kun (30)</div>
       </div>
       <div class="sum-card">
-        <div class="sum-icon">📋</div>
+        <div class="sum-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClipSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClipSm)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClipSm)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClipSm)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
         <div class="sum-val">${summary.total_habits}</div>
         <div class="sum-lbl">Odat</div>
       </div>
@@ -1758,7 +1758,7 @@ async function loadRating() {
     renderRating(d);
   } catch(e) {
     document.getElementById('rating-content').innerHTML =
-      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>Ma'lumot yuklanmadi.</div>`;
   }
 }
 
@@ -1810,7 +1810,7 @@ function renderRating(d) {
         <div style="font-size:${idx===0?'13px':'11px'};font-weight:700;color:${isMe?'#5B8DEF':'var(--text)'};margin-bottom:2px">${u.name.split(' ')[0]}</div>
         ${u.badge ? `<div style="font-size:10px">${u.badge}</div>` : ''}
         <div style="font-size:10px;color:${col};font-weight:700;margin-bottom:6px">
-          ${sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+' 🔥':u.score+' kun'}
+          ${sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg>`:u.score+' kun'}
         </div>
         <div style="height:${h}px;background:linear-gradient(180deg,${col}44,${col}22);
           border-radius:10px 10px 0 0;border:2px solid ${col}44;
@@ -1827,7 +1827,7 @@ function renderRating(d) {
     const rank   = i + 4;
     const pct    = calcPct(u);
     const isMe   = u.is_me;
-    const subLbl = sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+' 🔥':u.score+' kun';
+    const subLbl = sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg>`:u.score+' kun';
     rowsHtml += `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
         border-radius:14px;margin-bottom:4px;background:var(--card);
@@ -1852,7 +1852,7 @@ function renderRating(d) {
   if (caller_entry) {
     const u   = caller_entry;
     const pct = calcPct(u);
-    const sub = sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+' 🔥':u.score+' kun';
+    const sub = sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg>`:u.score+' kun';
     myRowHtml = `
       <div style="margin-top:4px;border-top:1px solid var(--bg);padding-top:8px">
         <div style="font-size:10px;color:var(--sub);margin-bottom:4px;padding-left:4px">Sizning o'rningiz:</div>
@@ -1920,7 +1920,7 @@ async function loadProfile() {
     renderProfile(d);
   } catch(e) {
     document.getElementById('profile-content').innerHTML =
-      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>Ma'lumot yuklanmadi.</div>`;
   }
 }
 
@@ -1991,9 +1991,9 @@ function renderProfile(d) {
       ${(d.active_car || d.streak_shields > 0 || d.bonus_2x_active || d.bonus_3x_active) ? `
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
         ${d.active_car ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px">${d.active_car} <span style="color:var(--sub)">Avto</span></div>` : ''}
-        ${d.streak_shields > 0 ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px">🛡 <span style="color:var(--sub)">${d.streak_shields}x himoya</span></div>` : ''}
-        ${d.bonus_2x_active ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px">⚡ <span style="color:#5B8DEF;font-weight:700">2× bonus</span></div>` : ''}
-        ${d.bonus_3x_active ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px">🔥 <span style="color:#E07040;font-weight:700">3× bonus</span></div>` : ''}
+        ${d.streak_shields > 0 ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgShield" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShield)" opacity="0.85"/></svg><span style="color:var(--sub)">${d.streak_shields}x himoya</span></div>` : ''}
+        ${d.bonus_2x_active ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgBolt" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBolt)"/></svg><span style="color:#5B8DEF;font-weight:700">2× bonus</span></div>` : ''}
+        ${d.bonus_3x_active ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgFireB" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireB)"/></svg><span style="color:#E07040;font-weight:700">3× bonus</span></div>` : ''}
       </div>` : ''}
 
       <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-top:14px">
@@ -2003,7 +2003,7 @@ function renderProfile(d) {
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:700;color:var(--sub)">❤️ JON</span>
+        <span style="font-size:12px;font-weight:700;color:var(--sub)"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgHeart" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 17C10 17 2 12 2 6.5A4.5 4.5 0 0110 4a4.5 4.5 0 018 2.5C18 12 10 17 10 17z" fill="url(#svgHeart)"/></svg> JON</span>
         <span style="font-size:12px;font-weight:700;color:${jonColor}">${jon}%</span>
       </div>
       <div class="jon-bar-bg"><div class="jon-bar-fill" style="width:${jon}%;background:${jonColor}"></div></div>
@@ -2096,7 +2096,7 @@ function renderProfile(d) {
       <div class="modal">
         <div class="modal-handle"></div>
         <button class="modal-close" onclick="closeLangModal()">✕</button>
-        <div class="modal-title">🌐 Bot tili</div>
+        <div class="modal-title"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" style="display:inline;vertical-align:middle;margin-right:6px"><defs><linearGradient id="svgGlobH" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><circle cx="13" cy="13" r="10" stroke="url(#svgGlobH)" stroke-width="2"/><ellipse cx="13" cy="13" rx="4.5" ry="10" stroke="url(#svgGlobH)" stroke-width="1.5"/><path d="M3 13h20M3 9h20M3 17h20" stroke="url(#svgGlobH)" stroke-width="1.2" opacity="0.5"/></svg>Bot tili</div>
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px" id="lang-modal-btns"></div>
         <button class="rem-save-btn" style="margin-top:16px" onclick="saveLang()" type="button" id="lang-save-btn">💾 Saqlash</button>
       </div>
@@ -2111,7 +2111,7 @@ function renderProfile(d) {
         <div class="field" style="text-align:center;margin-bottom:16px">
           <div id="ep-avatar-wrap" style="display:inline-block;position:relative;cursor:pointer" onclick="document.getElementById('ep-photo-input').click()">
             <div id="ep-avatar" style="width:72px;height:72px;border-radius:50%;background:var(--bg);box-shadow:var(--sh);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--text);overflow:hidden;margin:0 auto"></div>
-            <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:var(--text);display:flex;align-items:center;justify-content:center;font-size:12px">✏️</div>
+            <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:var(--text);display:flex;align-items:center;justify-content:center;font-size:12px"><svg width="12" height="12" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgPenB" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#E0E0E0"/></linearGradient></defs><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="url(#svgPenB)" opacity="0.95"/></svg></div>
           </div>
           <input type="file" id="ep-photo-input" accept="image/*" style="display:none" onchange="previewEpPhoto(this)">
           <div style="font-size:10px;color:var(--sub);margin-top:6px">Rasmga bosing</div>
@@ -2307,7 +2307,7 @@ async function loadHabits() {
     renderHabits(d.habits || [], d.jon ?? 100);
   } catch(e) {
     document.getElementById('habits-content').innerHTML =
-      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>Ma'lumot yuklanmadi.</div>`;
   }
 }
 
@@ -2324,7 +2324,7 @@ function renderHabits(habits, jon = 100) {
           </div>
           <div class="habit-card-actions">
             <button class="hbtn" onclick="openEdit('${h.id}','${h.name.replace(/'/g,"\\'")}','${h.icon||'✅'}','${h.time||'vaqtsiz'}')">✏️</button>
-            <button class="hbtn" onclick="deleteHabit('${h.id}')">🗑️</button>
+            <button class="hbtn" onclick="deleteHabit('${h.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgTrash" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="url(#svgTrash)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="url(#svgTrash)" stroke-width="2" stroke-linecap="round"/></svg></button>
           </div>
         </div>
       </div>`;
@@ -2341,7 +2341,7 @@ function renderHabits(habits, jon = 100) {
     <div>
       <button class="add-btn" onclick="openAdd()">＋ Yangi odat</button>
       <div class="section-title">Odatlarim (${habits.length})</div>
-      ${rows || '<div class="empty-state"><div class="icon">📋</div>Hozircha odat yo\'q</div>'}
+      ${rows || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>Hozircha odat yo\'q</div>'}
     </div>
 
     <div class="toast" id="toast"></div>
@@ -2446,7 +2446,7 @@ async function loadGroups() {
     renderGroups(d);
   } catch(e) {
     document.getElementById('groups-content').innerHTML =
-      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>Ma'lumot yuklanmadi.</div>`;
   }
 }
 
@@ -2477,16 +2477,16 @@ function renderGroups(d) {
           <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgUsers" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="9" r="4" fill="url(#svgUsers)"/><circle cx="18" cy="10" r="3" fill="url(#svgUsers)" opacity="0.6"/><path d="M2 22c0-4 3.6-7 8-7s8 3 8 7" stroke="url(#svgUsers)" stroke-width="2" fill="none"/><path d="M18 15c2.5.5 5 2.5 5 5" stroke="url(#svgUsers)" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/></svg></div>
           <div style="flex:1">
             <div style="font-size:14px;font-weight:700;color:var(--text)">${g.name}</div>
-            <div style="font-size:11px;color:var(--sub);margin-top:2px">📌 ${g.habit_name} · ${g.member_count} a'zo ${g.is_admin ? '· 👑 Admin' : ''}</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgPin" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 2a5 5 0 015 5c0 4-5 10-5 10S7 11 7 7a5 5 0 015-5z" fill="url(#svgPin)" opacity="0.85"/><circle cx="12" cy="7" r="2" fill="white" opacity="0.8"/></svg> ${g.habit_name} · ${g.member_count} a'zo ${g.is_admin ? '· 👑 Admin' : ''}</div>
           </div>
           <span id="garrow-${g.id}" style="font-size:16px;color:var(--sub);padding:0 4px">▾</span>
-          ${g.is_admin ? `<button class="hbtn" onclick="event.stopPropagation();deleteGroup('${g.id}')" title="O'chirish">🗑️</button>` : ''}
+          ${g.is_admin ? `<button class="hbtn" onclick="event.stopPropagation();deleteGroup('${g.id}')" title="O'chirish"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgTrash" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="url(#svgTrash)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="url(#svgTrash)" stroke-width="2" stroke-linecap="round"/></svg></button>` : ''}
         </div>
         <div id="gdetail-${g.id}" style="display:none">
           ${membersHtml ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">${membersHtml}</div>` : `<div style="font-size:12px;color:var(--sub);margin-top:8px;text-align:center">A’zolar yo’q</div>`}
           ${g.invite_link ? `
           <button class="rem-save-btn" style="margin-top:10px" onclick="copyInvite('${g.invite_link}')" type="button">
-            🔗 Invite link nusxalash
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgLink" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M10 14a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="url(#svgLink)" stroke-width="2" stroke-linecap="round"/><path d="M14 10a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="url(#svgLink)" stroke-width="2" stroke-linecap="round"/></svg>Invite link nusxalash
           </button>` : ''}
         </div>
         <div style="margin-top:8px;border-top:1px solid var(--bg);padding-top:8px;text-align:center">
@@ -2501,7 +2501,7 @@ function renderGroups(d) {
   document.getElementById('groups-content').innerHTML = `
     <button class="add-btn" onclick="openGroupAdd()">＋ Yangi guruh yaratish</button>
     <div class="section-title">Guruhlarim (${groups.length})</div>
-    ${html || '<div class="empty-state"><div class="icon">👥</div>Hozircha guruh yo\'q</div>'}
+    ${html || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgUsrEm" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="9" r="4" fill="url(#svgUsrEm)"/><circle cx="18" cy="10" r="3" fill="url(#svgUsrEm)" opacity="0.6"/><path d="M2 22c0-4 3.6-7 8-7s8 3 8 7" stroke="url(#svgUsrEm)" stroke-width="2" fill="none"/><path d="M18 15c2.5.5 5 2.5 5 5" stroke="url(#svgUsrEm)" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/></svg></div>Hozircha guruh yo\'q</div>'}
     <div class="toast" id="toast-group"></div>
 
     <div class="modal-overlay" id="group-modal">
@@ -2637,7 +2637,7 @@ async function loadFriends() {
     renderFriends(d);
   } catch(e) {
     document.getElementById('friends-content').innerHTML =
-      `<div class="empty-state"><div class="icon">⚠️</div>Ma'lumot yuklanmadi.</div>`;
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>Ma'lumot yuklanmadi.</div>`;
   }
 }
 
@@ -2668,7 +2668,7 @@ function renderFriends(d) {
           <span style="font-size:10px;color:var(--sub)">${f.done_today ? '\u2705 Bugun' : '\u23f3 Bajarilmadi'}</span>
         </div>
         <div style="display:flex;gap:6px;margin-top:10px">
-          <button class="rem-save-btn" style="flex:1" onclick="openChallenge(${f.id},'${f.name}')" type="button">🎯 Challenge</button>
+          <button class="rem-save-btn" style="flex:1" onclick="openChallenge(${f.id},'${f.name}')" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgTgtBtn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="9" stroke="url(#svgTgtBtn)" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="url(#svgTgtBtn)" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="url(#svgTgtBtn)"/></svg>Challenge</button>
           <button class="rem-save-btn" style="flex:1;background:var(--bg);color:var(--sub);box-shadow:var(--sh-in)" onclick="removeFriend(${f.id})" type="button">✕ Chiqarish</button>
         </div>
       </div>`;
@@ -2684,7 +2684,7 @@ function renderFriends(d) {
         </div>
       </div>
       <button class="rem-save-btn" style="margin-top:12px" onclick="copyFriendLink('${d.invite_link}')" type="button">
-        🔗 Invite link nusxalash
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgLnkSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M10 14a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="url(#svgLnkSm)" stroke-width="2" stroke-linecap="round"/><path d="M14 10a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="url(#svgLnkSm)" stroke-width="2" stroke-linecap="round"/></svg>Invite link nusxalash
       </button>
     </div>
     <div class="section-title">Do'stlarim (${friends.length})</div>
@@ -2721,7 +2721,7 @@ async function loadShop() {
     renderShop(d);
   } catch(e) {
     document.getElementById('bozor-content').innerHTML =
-      '<div class="empty-state"><div class="icon">⚠️</div>Ma\'lumot yuklanmadi</div>';
+      '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>Ma\'lumot yuklanmadi</div>';
   }
 }
 
@@ -2821,7 +2821,7 @@ function renderShop(d) {
     ${invHtml}
     <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgCart2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M2 3h2.5L7 15H19L21 7H5.5" stroke="url(#svgCart2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="19" r="2" fill="url(#svgCart2)"/><circle cx="17" cy="19" r="2" fill="url(#svgCart2)"/></svg> Do'kon</div>
     <div style="display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none">${catBtns}</div>
-    ${html || '<div class="empty-state"><div class="icon">🛒</div>Bu kategoriyada mahsulot yo\'q</div>'}
+    ${html || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgCartEm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M2 3h2.5L7 15H19L21 7H5.5" stroke="url(#svgCartEm)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="19" r="2" fill="url(#svgCartEm)"/><circle cx="17" cy="19" r="2" fill="url(#svgCartEm)"/></svg></div>Bu kategoriyada mahsulot yo\'q</div>'}
     <div class="toast" id="toast-shop"></div>`;
 }
 
