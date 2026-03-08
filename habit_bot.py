@@ -875,115 +875,11 @@ def edit_message_colored(chat_id, message_id, text, reply_markup_dict, parse_mod
         requests.post(url, data=data2)
 
 def main_menu_dict(uid=None, page=1):
-    """Bot API 9.4 rangli tugmalar uchun dict formatida keyboard"""
-    rows = []
-    rows.append([
-        {"text": T(uid, "btn_add"),    "callback_data": "menu_add",    "style": "primary"},
-        {"text": T(uid, "btn_delete"), "callback_data": "menu_delete", "style": "danger"},
-    ])
-    rows.append([
-        {"text": T(uid, "btn_stats"),  "callback_data": "menu_stats",  "style": "primary"},
-        {"text": T(uid, "btn_rating"), "callback_data": "menu_rating", "style": "primary"},
-    ])
-    if uid:
-        u      = load_user(uid)
-        today  = today_uz5()
-        habits = u.get("habits", [])
-        per_page    = 10
-        total_pages = (len(habits) + per_page - 1) // per_page if habits else 1
-        page        = max(1, min(page, total_pages))
-        # Odatlarni vaqt bo'yicha tartiblash
-        def _sort_key(h):
-            t = h.get("time", "23:59")
-            try:
-                hh, mm = t.split(":")
-                return int(hh) * 60 + int(mm)
-            except:
-                return 9999
-        habits = sorted(habits, key=_sort_key)
-        page_habits = habits[(page - 1) * per_page : page * per_page]
-        # Bajarilmaganlar avval (yashil), bajarilganlar oxirga (rangsiz)
-        not_done = []
-        done_list = []
-        for h in page_habits:
-            hab_type  = h.get("type", "simple")
-            rep_count = h.get("repeat_count", 1)
-            if hab_type == "repeat" and rep_count > 1:
-                done_today = h.get("done_today_count", 0)
-                if done_today >= rep_count:
-                    label = f"☑️ {h['name']} {done_today}/{rep_count}"
-                    done_list.append({"text": label, "callback_data": f"toggle_{h['id']}"})
-                else:
-                    label = f"✅ {h['name']} {done_today}/{rep_count}"
-                    not_done.append({"text": label, "callback_data": f"toggle_{h['id']}", "style": "success"})
-            else:
-                is_done = h.get("last_done") == today
-                if is_done:
-                    label = f"☑️ {h['name']}"
-                    done_list.append({"text": label, "callback_data": f"toggle_{h['id']}"})
-                else:
-                    label = f"✅ {h['name']}"
-                    not_done.append({"text": label, "callback_data": f"toggle_{h['id']}", "style": "success"})
-        for btn in not_done + done_list:
-            rows.append([btn])
-        if total_pages > 1:
-            nav = []
-            if page > 1:
-                nav.append({"text": f"⬅️ {page-1}", "callback_data": f"main_page_{page-1}", "style": "primary"})
-            nav.append({"text": f"📄 {page}/{total_pages}", "callback_data": "noop", "style": "primary"})
-            if page < total_pages:
-                nav.append({"text": f"{page+1} ➡️", "callback_data": f"main_page_{page+1}", "style": "primary"})
-            rows.append(nav)
-    # Guruh odatlari — shaxsiy odatlardan keyin
-    if uid:
-        u2     = load_user(uid)
-        today2 = today_uz5()
-        groups = u2.get("groups", [])
-        if groups:
-            for g_info in groups:
-                g_id2  = g_info.get("id", "")
-                g_data = load_group(g_id2)
-                if not g_data:
-                    continue
-                is_admin2    = (g_data.get("admin_id") == uid)
-                done_today_g = g_data.get("done_today", {})
-                if g_data.get("done_date") != today2:
-                    done_today_g = {}
-                g_habits = g_data.get("habits", [])
-                if not g_habits and g_data.get("habit_name"):
-                    g_habits = [{"id": "main", "name": g_data["habit_name"]}]
-                # Ajratgich tugma — guruh nomi + sozlamalar ichida
-                # Guruh nomi — bosish = guruh ichiga kirish
-                rows.append([
-                    {"text": f"━━ 👥 {g_info['name']} ━━", "callback_data": f"group_view_{g_id2}"}
-                ])
-                # Har bir guruh odati
-                for h in g_habits:
-                    h_id   = h["id"]
-                    h_name = h["name"]
-                    dt_val = done_today_g.get(str(uid), {})
-                    if isinstance(dt_val, dict):
-                        i_done = dt_val.get(h_id, False)
-                    else:
-                        i_done = bool(dt_val) if h_id == "main" else False
-                    if i_done:
-                        label = f"☑️ {h_name}"
-                        rows.append([{"text": label, "callback_data": f"group_done_{g_id2}_{h_id}"}])
-                    else:
-                        label = f"✅ {h_name}"
-                        rows.append([{"text": label, "callback_data": f"group_done_{g_id2}_{h_id}", "style": "success"}])
-    rows.append([
-        {"text": "🛒 Bozor",             "callback_data": "menu_bozor",     "style": "primary"},
-        {"text": T(uid, "btn_settings"), "callback_data": "menu_settings", "style": "primary"},
-    ])
-    rows.append([
-        {"text": "🏠 2-menyu",           "callback_data": "menu2_open",     "style": "primary"},
-    ])
+    """Faqat Web App tugmasi"""
     webapp_url = os.environ.get("WEBAPP_URL", "https://worker-production-3492.up.railway.app")
-    rows.append([
+    return {"inline_keyboard": [[
         {"text": "🌐 Web App", "web_app": {"url": webapp_url}}
-    ])
-    return {"inline_keyboard": rows}
+    ]]}
 
 def main_menu(uid=None, page=1):
     """Eski kod bilan moslik uchun (ba'zi joylarda hali ishlatiladi)"""
