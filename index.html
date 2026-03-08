@@ -3022,25 +3022,28 @@ const TOUR_STEPS = {
       target: 'nav-today',
       title: "👋 Xush kelibsiz, yangi odat egasi!",
       desc: "Super Habits — har kuni o'sib boruvchi odamlar uchun yaratilgan. Sizi 7 ta qadamda dastur bilan tanishtiramiz.",
-      tip: "Ekranning istalgan joyiga bosib yoki 'Keyingi' tugmasini bosib o'tishingiz mumkin."
+      tip: "Ekranning istalgan joyiga bosib yoki 'Keyingi' tugmasini bosib o'tishingiz mumkin.",
+      action: () => switchTab('today', document.getElementById('nav-today'))
     },
     {
       target: 'today-content',
       title: "☀️ Bugun — eng muhim kun",
       desc: "Bugungi odatlaringiz shu yerda. Har birini bajargach ✅ belgisini bosing — streak uzilmaydi, ballar to'planadi.",
-      tip: "Bir kunni o'tkazib yuborsangiz streak nolga tushadi. Har kuni kiring!"
+      tip: "Hozir odat kartasiga bosib ko'ring — bajarilganini belgilashingiz mumkin!"
     },
     {
       target: 'nav-stats',
       title: "🏆 Reyting — o'zingizni sinang",
-      desc: "Barcha foydalanuvchilar orasidagi o'rningizni ko'ring. Qancha ko'p odat bajarsangiz, shuncha yuqori chiqasiz.",
-      tip: "Reyting haftalik yangilanadi. Birinchi o'ringa chiqing — maxsus badge sizniki!"
+      desc: "Reytingdagi o'rningizni ko'ring. Qancha ko'p odat bajarsangiz, shuncha yuqori chiqasiz.",
+      tip: "Sahifa hozir ochildi — o'z o'rningizni toping!",
+      action: () => switchTab('stats', document.getElementById('nav-stats'))
     },
     {
       target: 'nav-habits',
       title: "✏️ Odatlarni boshqaring",
       desc: "Yangi odat qo'shing, mavjudlarini tahrirlang yoki o'chiring. Har bir odatga qulay vaqt va eslatma belgilang.",
-      tip: "Kuniga 3-5 ta odat ideal. Ko'p boshlasangiz, barini bajarish qiyinlashadi."
+      tip: "Tahrirlash sahifasi ochildi — birinchi odatingizni yaratib ko'ring!",
+      action: () => switchTab('habits', document.getElementById('nav-habits'))
     },
     {
       target: 'nav-bozor',
@@ -3052,13 +3055,15 @@ const TOUR_STEPS = {
       target: 'nav-profile',
       title: "👤 Profilingiz — siz haqida",
       desc: "Yutuqlaringiz, statistikangiz va shaxsiy sozlamalar shu yerda. Til tanlang va taraqqiyotingizni kuzating.",
-      tip: "Profil rasmingizni qo'ying — reytingda ajralib turasan!"
+      tip: "Profil sahifasi ochildi — ismingiz va rasmingizni sozlang!",
+      action: () => switchTab('profile', document.getElementById('nav-profile'))
     },
     {
       target: null,
       title: "🚀 Sayohat boshlanmoqda!",
       desc: "Siz tayyor! Birinchi odatni yarating va 21 kunlik qoidani boshlang. Katta o'zgarishlar — kichik qadamlardan boshlanadi.",
-      tip: "Muvaffaqiyat siri: har kuni, hech bahona qilmay, bir qadam tashlash!"
+      tip: "Muvaffaqiyat siri: har kuni, hech bahona qilmay, bir qadam tashlash!",
+      action: () => switchTab('today', document.getElementById('nav-today'))
     }
   ],
   ru: [
@@ -3066,25 +3071,28 @@ const TOUR_STEPS = {
       target: 'nav-today',
       title: "👋 Добро пожаловать, будущий чемпион!",
       desc: "Super Habits создан для людей, которые растут каждый день. Проведём вас через 7 шагов знакомства.",
-      tip: "Нажмите в любое место экрана или кнопку 'Далее', чтобы перейти."
+      tip: "Нажмите в любое место экрана или кнопку 'Далее', чтобы перейти.",
+      action: () => switchTab('today', document.getElementById('nav-today'))
     },
     {
       target: 'today-content',
       title: "☀️ Сегодня — самый важный день",
       desc: "Ваши привычки на сегодня здесь. Отмечайте каждую после выполнения ✅ — streak не прервётся, очки растут.",
-      tip: "Пропустите один день — streak обнулится. Заходите каждый день!"
+      tip: "Нажмите на карточку привычки прямо сейчас — отметьте её выполнение!"
     },
     {
       target: 'nav-stats',
       title: "🏆 Рейтинг — докажите себе",
       desc: "Смотрите своё место среди всех пользователей. Больше привычек — выше позиция.",
-      tip: "Рейтинг обновляется еженедельно. Первое место даёт особый значок!"
+      tip: "Страница открылась — найдите своё место в рейтинге!",
+      action: () => switchTab('stats', document.getElementById('nav-stats'))
     },
     {
       target: 'nav-habits',
       title: "✏️ Управление привычками",
       desc: "Добавляйте новые привычки, редактируйте или удаляйте. Задайте удобное время — система напомнит.",
-      tip: "3-5 привычек в день — идеально. Не перегружайте себя с первого дня."
+      tip: "Страница открылась — создайте свою первую привычку!",
+      action: () => switchTab('habits', document.getElementById('nav-habits'))
     },
     {
       target: 'nav-bozor',
@@ -3096,13 +3104,15 @@ const TOUR_STEPS = {
       target: 'nav-profile',
       title: "👤 Ваш профиль — ваш путь",
       desc: "Достижения, статистика и настройки — всё здесь. Выберите язык и следите за прогрессом.",
-      tip: "Добавьте фото профиля — выделяйтесь в рейтинге!"
+      tip: "Страница открылась — настройте имя и фото профиля!",
+      action: () => switchTab('profile', document.getElementById('nav-profile'))
     },
     {
       target: null,
       title: "🚀 Путь начинается!",
       desc: "Вы готовы! Создайте первую привычку и запустите правило 21 дня. Великие перемены — с маленьких шагов.",
-      tip: "Секрет успеха: каждый день, без исключений, один маленький шаг!"
+      tip: "Секрет успеха: каждый день, без исключений, один маленький шаг!",
+      action: () => switchTab('today', document.getElementById('nav-today'))
     }
   ],
   en: [
@@ -3110,25 +3120,28 @@ const TOUR_STEPS = {
       target: 'nav-today',
       title: "👋 Welcome, future champion!",
       desc: "Super Habits is built for people who grow every single day. We'll walk you through 7 steps.",
-      tip: "Tap anywhere on the screen or press 'Next' to continue."
+      tip: "Tap anywhere on the screen or press 'Next' to continue.",
+      action: () => switchTab('today', document.getElementById('nav-today'))
     },
     {
       target: 'today-content',
       title: "☀️ Today is the most important day",
       desc: "Your habits for today are right here. Tap ✅ after each one — your streak stays alive and points grow.",
-      tip: "Miss one day and your streak resets to zero. Check in every day!"
+      tip: "Tap a habit card right now — mark it as done!"
     },
     {
       target: 'nav-stats',
       title: "🏆 Leaderboard — prove yourself",
       desc: "See where you stand among all users. The more habits you complete, the higher you climb.",
-      tip: "The leaderboard updates weekly. First place earns a special badge!"
+      tip: "Page opened — find your position on the leaderboard!",
+      action: () => switchTab('stats', document.getElementById('nav-stats'))
     },
     {
       target: 'nav-habits',
       title: "✏️ Manage your habits",
       desc: "Add, edit or delete habits. Set a convenient time — the app will remind you automatically.",
-      tip: "3-5 habits per day is ideal. Don't overwhelm yourself from day one."
+      tip: "Page opened — try creating your first habit!",
+      action: () => switchTab('habits', document.getElementById('nav-habits'))
     },
     {
       target: 'nav-bozor',
@@ -3140,13 +3153,15 @@ const TOUR_STEPS = {
       target: 'nav-profile',
       title: "👤 Your profile — your journey",
       desc: "Achievements, stats and settings — all in one place. Choose your language and track progress.",
-      tip: "Add a profile photo — stand out on the leaderboard!"
+      tip: "Page opened — set up your name and profile photo!",
+      action: () => switchTab('profile', document.getElementById('nav-profile'))
     },
     {
       target: null,
       title: "🚀 Your journey begins now!",
       desc: "You're all set! Create your first habit and kick off the 21-day rule. Great changes start with small steps.",
-      tip: "The secret to success: one small step every single day, no excuses!"
+      tip: "The secret to success: one small step every single day, no excuses!",
+      action: () => switchTab('today', document.getElementById('nav-today'))
     }
   ]
 };
@@ -3201,6 +3216,11 @@ function showTourStep() {
     TOUR_SKIP_LABELS[lang];
   document.getElementById('tour-next-btn').textContent =
     _tourStep === total - 1 ? TOUR_DONE_LABELS[lang] : TOUR_NEXT_LABELS[lang];
+
+  // Execute step action
+  if (step.action) {
+    try { step.action(); } catch(e) {}
+  }
 
   // Dots
   const dotsEl = document.getElementById('tour-dots');
