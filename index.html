@@ -792,7 +792,7 @@ body {
 /* ── TOUR ── */
 #tour-overlay {
   position: fixed; inset: 0; z-index: 9999;
-  pointer-events: none;
+  pointer-events: none; transition: opacity .3s;
 }
 #tour-overlay.active { pointer-events: all; }
 #tour-backdrop {
@@ -3202,9 +3202,10 @@ function showTourStep() {
     // Final step: center card, hide spotlight
     spotlight.style.display = 'none';
     const cardW = Math.min(310, window.innerWidth - 48);
+    const cardTop = Math.max(80, (window.innerHeight - 260) / 2);
     card.style.cssText =
       `left:${(window.innerWidth - cardW)/2}px;` +
-      `top:${(window.innerHeight - 220)/2}px;width:${cardW}px;position:absolute;`;
+      `top:${cardTop}px;width:${cardW}px;position:absolute;display:block;`;
   }
 }
 
