@@ -2423,7 +2423,7 @@ function renderGroups(d) {
           ${g.is_admin ? `<button class="hbtn" onclick="event.stopPropagation();deleteGroup('${g.id}')" title="O'chirish">🗑️</button>` : ''}
         </div>
         <div id="gdetail-${g.id}" style="display:none">
-          ${membersHtml ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">${membersHtml}</div>` : '<div style="font-size:12px;color:var(--sub);margin-top:8px;text-align:center">A'zolar yo'q</div>'}
+          ${membersHtml ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">${membersHtml}</div>` : `<div style="font-size:12px;color:var(--sub);margin-top:8px;text-align:center">A’zolar yo’q</div>`}
           ${g.invite_link ? `
           <button class="rem-save-btn" style="margin-top:10px" onclick="copyInvite('${g.invite_link}')" type="button">
             🔗 Invite link nusxalash
@@ -2475,7 +2475,7 @@ function openGroupHabitAdd(gid) {
   if (!card) return;
   const detail = document.getElementById('gdetail-' + gid);
   if (detail && detail.style.display !== 'block') toggleGroup(gid);
-  showToastGroup('Odat qo'shish funksiyasi tez orada!');
+  showToastGroup('Odat qoʻshish funksiyasi tez orada!');
 }
 function showToastGroup(msg) {
   const t = document.getElementById('toast-group');
