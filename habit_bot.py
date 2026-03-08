@@ -1399,45 +1399,57 @@ def build_main_text(uid):
 def send_main_menu(uid, text=None):
     """Foydalanuvchiga Web App tugmali xabar yuborish"""
     u = load_user(uid)
-    webapp_url = os.environ.get("WEBAPP_URL", "")
+    webapp_url = os.environ.get("WEBAPP_URL", "").strip()
 
     # Qisqa matn — faqat asosiy holat
     if text is None:
-        today   = today_uz5()
-        habits  = u.get("habits", [])
-        done    = sum(1 for h in habits if h.get("last_done") == today)
-        total   = len(habits)
-        points  = u.get("points", 0)
-        jon     = u.get("jon", 100)
-        streak  = max((h.get("streak",0) for h in habits), default=0)
-        jon_e   = "❤️" if jon>=80 else "🧡" if jon>=50 else "💛" if jon>=20 else "🖤"
-        text = (
-            f"👋 *Salom, {u.get('name','Foydalanuvchi')}!*\n\n"
-            f"✅ Bugun: *{done}/{total}* odat bajarildi\n"
-            f"⭐ Ball: *{points}*  |  🔥 Streak: *{streak}*\n"
-            f"{jon_e} Jon: *{jon}%*"
-        )
+        try:
+            today   = today_uz5()
+            habits  = u.get("habits", [])
+            done    = sum(1 for h in habits if h.get("last_done") == today)
+            total   = len(habits)
+            points  = u.get("points", 0)
+            jon     = u.get("jon", 100)
+            streak  = max((h.get("streak",0) for h in habits), default=0)
+            jon_e   = "\u2764\ufe0f" if jon>=80 else "\U0001f9e1" if jon>=50 else "\U0001f49b" if jon>=20 else "\U0001f5a4"
+            text = (
+                "\U0001f44b *Salom, " + str(u.get("name","Foydalanuvchi")) + "!*\n\n"
+                "\u2705 Bugun: *" + str(done) + "/" + str(total) + "* odat bajarildi\n"
+                "\u2b50 Ball: *" + str(points) + "*  |  \U0001f525 Streak: *" + str(streak) + "*\n"
+                + jon_e + " Jon: *" + str(jon) + "%*"
+            )
+        except Exception as e:
+            logger.error(f"send_main_menu text build error: {e}")
+            text = "\U0001f44b Xush kelibsiz!"
 
-    # Klaviatura: faqat Web App tugmasi
-    kb = InlineKeyboardMarkup()
-    if webapp_url:
-        kb.add(InlineKeyboardButton("🚀 Web Appni ochish", web_app={"url": webapp_url}))
+    # Eski main_msg ni o'chirish
+    old_mid = u.get("main_msg_id")
+    if old_mid:
+        try: bot.delete_message(uid, old_mid)
+        except: pass
 
+    # Xabar yuborish
     try:
-        # Eski main_msg ni o'chirish
-        old_mid = u.get("main_msg_id")
-        if old_mid:
-            try: bot.delete_message(uid, old_mid)
-            except: pass
-
-        sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb)
+        if webapp_url:
+            kb = InlineKeyboardMarkup()
+            kb.add(InlineKeyboardButton("\U0001f680 Web Appni ochish", web_app={"url": webapp_url}))
+            sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb)
+        else:
+            sent = bot.send_message(uid, text, parse_mode="Markdown")
         u["main_msg_id"] = sent.message_id
         ids = u.get("start_msg_ids", [])
         ids.append(sent.message_id)
         u["start_msg_ids"] = ids
         save_user(uid, u)
     except Exception as e:
-        logger.error(f"send_main_menu error: {e}")
+        logger.error(f"send_main_menu send error: {e}")
+        # Markdown xato bo'lsa — oddiy matn bilan qayta urinish
+        try:
+            sent = bot.send_message(uid, "Xush kelibsiz! Web Appni oching.")
+            u["main_msg_id"] = sent.message_id
+            save_user(uid, u)
+        except Exception as e2:
+            logger.error(f"send_main_menu fallback error: {e2}")
 
 
 # ============================================================
@@ -1762,7 +1774,9 @@ def cmd_start(msg):
 
     if u.get("phone"):
         # Allaqachon ro'yxatdan o'tgan
-        if not check_subscription(uid):
+        sub_ok = check_subscription(uid)
+        logger.info(f"[START] uid={uid} phone=OK sub_ok={sub_ok}")
+        if not sub_ok:
             send_sub_required(uid)
             return
         send_main_menu(uid)
