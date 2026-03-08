@@ -6629,16 +6629,22 @@ try:
                 "streak": h.get("streak",0),
             })
 
+        # best_streak va total_done_all hisoblash
+        best_streak    = max((h.get("streak", 0) for h in u.get("habits", [])), default=0)
+        total_done_all = sum(h.get("total_done", 0) for h in u.get("habits", []))
+
         return jsonify({
-            "name":        u.get("name","?"),
-            "points":      u.get("points",0),
-            "streak":      u.get("streak",0),
-            "jon":         u.get("jon",100),
-            "is_vip":      u.get("is_vip",False),
-            "rank":        rank,
-            "total_users": len(users),
-            "joined_at":   u.get("joined_at",""),
-            "habits":      habits,
+            "name":           u.get("name","?"),
+            "points":         u.get("points",0),
+            "streak":         u.get("streak",0),
+            "jon":            u.get("jon",100),
+            "is_vip":         u.get("is_vip",False),
+            "rank":           rank,
+            "total_users":    len(users),
+            "joined_at":      u.get("joined_at",""),
+            "best_streak":    best_streak,
+            "total_done_all": total_done_all,
+            "habits":         habits,
         })
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
