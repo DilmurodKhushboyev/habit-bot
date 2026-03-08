@@ -22,7 +22,8 @@ from datetime import datetime, date
 from PIL import Image, ImageDraw, ImageFont
 from telebot.types import (
     InlineKeyboardMarkup, InlineKeyboardButton,
-    ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+    ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove,
+    WebAppInfo
 )
 from pymongo import MongoClient
 
@@ -1432,7 +1433,7 @@ def send_main_menu(uid, text=None):
     try:
         if webapp_url:
             kb = InlineKeyboardMarkup()
-            kb.add(InlineKeyboardButton("\U0001f680 Web Appni ochish", web_app={"url": webapp_url}))
+            kb.add(InlineKeyboardButton("\U0001f680 Web Appni ochish", web_app=WebAppInfo(url=webapp_url)))
             sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb)
         else:
             sent = bot.send_message(uid, text, parse_mode="Markdown")
