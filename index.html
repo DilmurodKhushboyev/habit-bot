@@ -2528,6 +2528,11 @@ let _returnToToday = false;
 async function openAddFromToday() {
   _returnToToday = true;
   await loadHabits();
+  // habit-modal ni body ga ko'chirish — page-today ustida ko'rinsin
+  const modal = document.getElementById('habit-modal');
+  if (modal && modal.parentElement !== document.body) {
+    document.body.appendChild(modal);
+  }
   openAdd();
 }
 
