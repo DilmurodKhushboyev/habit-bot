@@ -3993,33 +3993,67 @@ def callback_handler(call):
         except Exception: pass
         balls = u.get("points", 0)
         ref_count  = len(u.get("referrals", []))
+        jon_val = round(u.get("jon", 100.0))
         bozor_text = (
             f"🛒 *Bozor —* bu sizning ballaringiz bilan qilinadigan barcha ammalar joyi.\n\n"
             f"*⭐ Sizning balingiz:* {balls} ball\n"
-            f"*👥 Taklif qilganlar:* {ref_count} ta do'st\n\n"
+            f"*👥 Taklif qilganlar:* {ref_count} ta do'st\n"
+            f"*❤️ Jon:* {jon_val}%\n\n"
+            "*❤️ Jon sotib olish —* 50 ball evaziga jonni 100% ga tiklash\n"
             "*👥 Do'st taklif qilish —* +50 ball (siz), +25 ball (do'st)\n"
             "*💸 Ballarni ayirboshlash —* yaqin insoniga ball yuborish\n"
             "*🔴 Ballarimni 0 ga tushirish —* barcha ballarni nollash\n"
             "*➖ Ballarimdan olib tashlash —* ma'lum miqdorni ayirish"
         )
         bozor_kb = {"inline_keyboard": [
-            [{"text": "👥 Do'st taklif qilish",       "callback_data": "bozor_referral",      "style": "primary"}],
-            [{"text": "💸 Ballarni ayirboshlash",     "callback_data": "bozor_transfer"}],
-            [{"text": "🔴 Ballarimni 0 ga tushirish", "callback_data": "bozor_reset_confirm", "style": "danger"}],
-            [{"text": "➖ Ballarimdan olib tashlash",  "callback_data": "bozor_subtract"}],
-            [{"text": T(uid, "btn_home"),              "callback_data": "menu_main",           "style": "primary"}],
+            [{"text": "❤️ Jon sotib olish (50 ball)",  "callback_data": "bozor_buy_jon",       "style": "primary"}],
+            [{"text": "👥 Do'st taklif qilish",        "callback_data": "bozor_referral",      "style": "primary"}],
+            [{"text": "💸 Ballarni ayirboshlash",       "callback_data": "bozor_transfer"}],
+            [{"text": "🔴 Ballarimni 0 ga tushirish",   "callback_data": "bozor_reset_confirm", "style": "danger"}],
+            [{"text": "➖ Ballarimdan olib tashlash",    "callback_data": "bozor_subtract"}],
+            [{"text": T(uid, "btn_home"),                "callback_data": "menu_main",           "style": "primary"}],
         ]}
         sent = send_message_colored(uid, bozor_text, bozor_kb)
         if sent is None:
             kb_b = InlineKeyboardMarkup()
+            kb_b.add(InlineKeyboardButton("❤️ Jon sotib olish (50 ball)", callback_data="bozor_buy_jon"))
             kb_b.add(InlineKeyboardButton("👥 Do'st taklif qilish",      callback_data="bozor_referral"))
-            kb_b.add(InlineKeyboardButton("💸 Ballarni ayirboshlash",    callback_data="bozor_transfer"))
+            kb_b.add(InlineKeyboardButton("💸 Ballarni ayirboshlash",     callback_data="bozor_transfer"))
             kb_b.add(InlineKeyboardButton("🔴 Ballarimni 0 ga tushirish", callback_data="bozor_reset_confirm"))
             kb_b.add(InlineKeyboardButton("➖ Ballarimdan olib tashlash",  callback_data="bozor_subtract"))
             kb_b.add(cBtn(T(uid, "btn_home"),             "menu_main", "primary"))
             sent = bot.send_message(uid, bozor_text, parse_mode="Markdown", reply_markup=kb_b)
         u["main_msg_id"] = sent.message_id
         save_user(uid, u)
+        return
+
+    if cdata == "bozor_buy_jon":
+        bot.answer_callback_query(call.id)
+        balls = u.get("points", 0)
+        jon_val = round(u.get("jon", 100.0))
+        if jon_val >= 100:
+            bot.send_message(uid,
+                "❤️ *Joningiz allaqachon 100% da!*\n\nSotib olishning hojati yo'q.",
+                parse_mode="Markdown"
+            )
+            return
+        if balls < 50:
+            bot.send_message(uid,
+                f"⭐ *Balingiz yetarli emas!*\n\nJon sotib olish uchun *50 ball* kerak.\n"
+                f"Sizda hozir: *{balls} ball*\n\n"
+                "Har kuni odatlarni bajaring — ball to'playsiz! 💪",
+                parse_mode="Markdown"
+            )
+            return
+        u["points"] = balls - 50
+        u["jon"]    = 100.0
+        save_user(uid, u)
+        bot.send_message(uid,
+            "❤️ *Jon tiklandi!*\n\n"
+            "50 ball sarflandi — joningiz *100%* ga qaytdi!\n"
+            "Endi odatlarni davom ettiring! 💪",
+            parse_mode="Markdown"
+        )
         return
 
     if cdata == "bozor_referral":
@@ -5036,12 +5070,16 @@ def daily_reset():
             if jon <= 0 and jon_before > 0:
                 try:
                     user_id_int = int(uid)
+                    kb_jon = InlineKeyboardMarkup()
+                    kb_jon.add(InlineKeyboardButton("❤️ Bozordan jon sotib olish (50 ball)", callback_data="bozor_buy_jon"))
                     bot.send_message(
                         user_id_int,
                         "*💀 Joningiz 0% ga yetdi!*\n\n"
-                        "Kecha barcha odatlaringiz bajarilmadi.\n"
-                        "Bugun barcha odatlaringizni bajarsangiz jon tiklanadi!",
-                        parse_mode="Markdown"
+                        "Kecha barcha odatlaringiz bajarilmadi.\n\n"
+                        "Bugun barcha odatlaringizni bajarsangiz jon tiklanadi!\n"
+                        "Yoki bozordan *50 ball* evaziga jonni tiklashingiz mumkin.",
+                        parse_mode="Markdown",
+                        reply_markup=kb_jon
                     )
                 except Exception:
                     pass
