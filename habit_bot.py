@@ -4031,9 +4031,11 @@ def callback_handler(call):
         bot.answer_callback_query(call.id)
         balls = u.get("points", 0)
         jon_val = round(u.get("jon", 100.0))
-        if jon_val >= 100:
+        if jon_val > 20:
             bot.send_message(uid,
-                "❤️ *Joningiz allaqachon 100% da!*\n\nSotib olishning hojati yo'q.",
+                f"❤️ *Jon sotib olish mumkin emas!*\n\n"
+                f"Jon faqat *20% va undan kam* bo'lganda sotib olinadi.\n"
+                f"Hozirgi joningiz: *{jon_val}%*",
                 parse_mode="Markdown"
             )
             return
