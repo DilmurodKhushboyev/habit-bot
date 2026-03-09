@@ -6295,19 +6295,23 @@ def _run_broadcast(admin_uid, bc_chat_id, msg_ids, state):
             if target_uid_int == admin_uid:
                 continue
             try:
-                for mid in msg_ids:
-                    bot.copy_message(
-                        chat_id=target_uid_int,
-                        from_chat_id=bc_chat_id,
-                        message_id=mid
-                    )
-                # Foydalanuvchiga tugmalar
                 kb_user = InlineKeyboardMarkup()
-                kb_user.add(InlineKeyboardButton("🚀 Botni ochish", url="https://t.me/Super_habits_bot?start=bc"))
-                try:
-                    bot.send_message(target_uid_int, "👆", reply_markup=kb_user)
-                except Exception:
-                    pass
+                kb_user.add(InlineKeyboardButton("▶️ Start", url="https://t.me/Super_habits_bot?start=bc"))
+                for i_mid, mid in enumerate(msg_ids):
+                    # Tugmani faqat oxirgi xabarga biriktirish
+                    if i_mid == len(msg_ids) - 1:
+                        bot.copy_message(
+                            chat_id=target_uid_int,
+                            from_chat_id=bc_chat_id,
+                            message_id=mid,
+                            reply_markup=kb_user
+                        )
+                    else:
+                        bot.copy_message(
+                            chat_id=target_uid_int,
+                            from_chat_id=bc_chat_id,
+                            message_id=mid
+                        )
                 sent_count += 1
                 time.sleep(0.05)
             except Exception as e:
@@ -6484,19 +6488,24 @@ try:
         name  = (data.get("name") or "").strip()
         icon  = (data.get("icon") or "✅").strip()
         time_ = (data.get("time") or "vaqtsiz").strip()
+        hab_type     = data.get("type", "simple")
+        repeat_count = int(data.get("repeat_count", 1))
+        if repeat_count < 1: repeat_count = 1
         if not name:
             return jsonify({"ok": False, "error": "Nom bo'sh"}), 400
         u = load_user(uid)
         new_habit = {
-            "id":         str(uuid.uuid4())[:8],
-            "name":       name,
-            "icon":       icon,
-            "time":       time_,
-            "type":       "daily",
-            "streak":     0,
-            "total_done": 0,
-            "last_done":  None,
-            "created_at": str(datetime.now().date()),
+            "id":           str(uuid.uuid4())[:8],
+            "name":         name,
+            "icon":         icon,
+            "time":         time_,
+            "type":         "repeat" if hab_type == "repeat" else "simple",
+            "repeat_count": repeat_count if hab_type == "repeat" else 1,
+            "streak":       0,
+            "total_done":   0,
+            "done_today_count": 0,
+            "last_done":    None,
+            "created_at":   str(datetime.now().date()),
         }
         habits = u.get("habits", [])
         habits.append(new_habit)
