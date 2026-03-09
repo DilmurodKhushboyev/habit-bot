@@ -2184,7 +2184,7 @@ function renderProfile(d) {
 
       <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-top:14px">
         <div class="stat-box"><div class="stat-val">${d.points || 0}</div><div class="stat-lbl">Ball</div></div>
-        <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">rekord: ${d.best_streak || 0}</div><div class="stat-lbl">Streak</div></div>
+        <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div class="stat-lbl">Streak</div><div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">rekord: ${d.best_streak || 0}</div></div>
         <div class="stat-box"><div class="stat-val">${d.total_done_all || 0}</div><div class="stat-lbl" style="font-size:8px">Bajarildi</div></div>
       </div>
 
@@ -2276,7 +2276,7 @@ function renderProfile(d) {
       </div>
     </div>
     <div style="margin:8px 0 4px;text-align:center">
-      <button type="button" onclick="localStorage.removeItem('sh_ob_v2');maybeShowOnboard()" style="background:none;border:none;font-size:12px;color:var(--sub);cursor:pointer;padding:6px 12px;font-family:inherit;text-decoration:underline">🔄 Onboarding'ni qayta ko'rish</button>
+      <button type="button" onclick="localStorage.removeItem('sh_ob_v3');maybeShowOnboard()" style="background:none;border:none;font-size:12px;color:var(--sub);cursor:pointer;padding:6px 12px;font-family:inherit;text-decoration:underline;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg> Onboarding'ni qayta ko'rish</button>
     </div>
     <div class="toast" id="toast-profile"></div>
 
@@ -3061,9 +3061,13 @@ function renderShop(d) {
           ${item.owned > 0 ? `<div style="font-size:10px;color:var(--green);margin-top:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgChkI" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgChkI)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgChkI)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Sizda: ${item.owned} ta</div>` : ''}
         </div>
       </div>
-      <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
-        ${hasBall ? `<button onclick="buyItem('${item.id}','ball')" ${cantBuy||noMoney?'disabled':''} type="button"
-          style="flex:1;padding:9px 6px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:${cantBuy||noMoney?'not-allowed':'pointer'};
+      <div style="margin-top:10px">
+        ${hasBall ? `
+          ${!cantBuy ? `<div style="width:100%;background:var(--bg);border-radius:8px;overflow:hidden;margin-bottom:6px;box-shadow:var(--sh-in)">
+            <div style="height:6px;border-radius:8px;background:linear-gradient(90deg,#5B8DEF,#4CAF7D);width:${Math.min(100,Math.round(points/item.price_ball*100))}%;transition:width .4s"></div>
+          </div>` : ''}
+          <button onclick="buyItem('${item.id}','ball')" ${cantBuy||noMoney?'disabled':''} type="button"
+          style="width:100%;padding:9px 6px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:${cantBuy||noMoney?'not-allowed':'pointer'};
           background:${cantBuy?'var(--bg)':noMoney?'var(--bg)':'linear-gradient(135deg,#5B8DEF,#4CAF7D)'};
           color:${cantBuy||noMoney?'var(--sub)':'#fff'};box-shadow:${cantBuy||noMoney?'var(--sh-in)':'none'}">
           ${cantBuy?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgChkI" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgChkI)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgChkI)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Olindi':'⭐ '+item.price_ball+' ball'}
