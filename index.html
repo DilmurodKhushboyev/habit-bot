@@ -3013,7 +3013,7 @@ async function sendChallenge() {
 }
 
 // ── ONBOARDING ──
-const OB_KEY = 'sh_ob_v1'; // localStorage key: JSON {habit,reminder,stats}
+const OB_KEY = 'sh_ob_v2'; // localStorage key: JSON {habit,reminder,stats,_done}
 
 const OB_TEXT = {
   uz: {
@@ -3115,6 +3115,10 @@ function closeOnboard(permanent) {
 function maybeShowOnboard() {
   const state = getObState();
   if (state._done) return;
+  // Also skip if all steps already completed
+  const lang = (currentLang && OB_TEXT[currentLang]) ? currentLang : 'uz';
+  const allDone = OB_TEXT[lang].steps.every(s => state[s.key]);
+  if (allDone) { closeOnboard(true); return; }
   renderOnboard();
   document.getElementById('onboard-modal').style.display   = 'block';
   document.getElementById('onboard-backdrop').style.display = 'block';
