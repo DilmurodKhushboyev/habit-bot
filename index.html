@@ -2527,11 +2527,7 @@ let _returnToToday = false;
 
 async function openAddFromToday() {
   _returnToToday = true;
-  // habits tab silent yuklanmagan bo'lsa yuklaymiz
-  if (!loaded.habits) {
-    await loadHabits();
-    loaded.habits = true;
-  }
+  await loadHabits();
   openAdd();
 }
 
