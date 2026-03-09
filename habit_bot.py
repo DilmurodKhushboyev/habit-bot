@@ -6816,6 +6816,7 @@ try:
             {"id": "pet_dog",    "name": "It",              "cat": "pet",        "emoji": "🐶",  "price_ball": 700,  "price_stars": 0, "desc": "Sodiq do'st"},
             {"id": "pet_rabbit", "name": "Quyon",           "cat": "pet",        "emoji": "🐰",  "price_ball": 600,  "price_stars": 0, "desc": "Tez-tez sakrashi"},
             {"id": "car_sport",  "name": "Sport mashina",   "cat": "car",        "emoji": "🏎️", "price_ball": 1000, "price_stars": 0, "desc": "Tez mashina"},
+            {"id": "jon_restore", "name": "Jon tiklash",   "cat": "bonus",      "emoji": "❤️", "price_ball": 50,   "price_stars": 0, "desc": "Jonni 100% ga tiklash (faqat 20% va kam holda)"},
             {"id": "gift_box",   "name": "Sovga qutisi",    "cat": "gift",       "emoji": "🎁",  "price_ball": 0,    "price_stars": 10, "desc": "Tasodifiy mukofot"},
         ]
         raw_inventory = u.get("inventory", [])
@@ -6854,6 +6855,7 @@ try:
         prices = {
             "shield_1": 200, "bonus_2x": 300, "badge_fire": 400, "badge_star": 500,
             "pet_cat": 600, "pet_dog": 700, "pet_rabbit": 600, "car_sport": 1000,
+            "jon_restore": 50,
         }
         price = prices.get(item_id, 0)
         if not price and item_id != "gift_box":
@@ -6868,6 +6870,16 @@ try:
         one_time = ["badge_fire","badge_star","pet_cat","pet_dog","pet_rabbit","car_sport"]
         if item_id in one_time and inventory.get(item_id, 0) > 0:
             return jsonify({"ok": False, "error": "Allaqachon sotib olingan"})
+        if item_id == "jon_restore":
+            jon_val = round(u.get("jon", 100.0))
+            if jon_val > 20:
+                return jsonify({"ok": False, "error": f"Jon faqat 20% va undan kam bo'lganda tiklanadi. Hozir: {jon_val}%"})
+            if u.get("points", 0) < 50:
+                return jsonify({"ok": False, "error": "Ball yetarli emas"})
+            u["points"] = u.get("points", 0) - 50
+            u["jon"] = 100.0
+            save_user(uid, u)
+            return jsonify({"ok": True, "points": u["points"]})
         if pay_type == "ball":
             if u.get("points", 0) < price:
                 return jsonify({"ok": False, "error": "Ball yetarli emas"})
