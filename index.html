@@ -1315,7 +1315,7 @@ function renderToday(d) {
       <div class="today-sub" id="prog-sub">${done_count} / ${total} odat bajarildi</div>
     </div>
 
-    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Bugungi odatlar<button onclick="switchTab('habits',document.getElementById('nav-habits'));setTimeout(openAdd,120)" type="button" style="font-size:12px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px">＋ Odat yaratish</button></div>
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Bugungi odatlar<button onclick="openAddFromToday()" type="button" style="font-size:12px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px">＋ Odat yaratish</button></div>
     ${cardsHtml || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>Hali odat qo\'shilmagan</div>'}
     <div class="toast" id="toast-today"></div>`;
 }
@@ -2523,6 +2523,18 @@ function selectIcon(el) {
   document.querySelectorAll('.icon-opt').forEach(e => e.classList.remove('selected'));
   el.classList.add('selected');
 }
+let _returnToToday = false;
+
+async function openAddFromToday() {
+  _returnToToday = true;
+  // habits tab silent yuklanmagan bo'lsa yuklaymiz
+  if (!loaded.habits) {
+    await loadHabits();
+    loaded.habits = true;
+  }
+  openAdd();
+}
+
 function openAdd() {
   editingHabitId = null;
   document.getElementById('modal-title').textContent = 'Yangi odat';
@@ -2542,7 +2554,13 @@ function openEdit(id, name, icon, time) {
   });
   document.getElementById('habit-modal').classList.add('open');
 }
-function closeModal() { document.getElementById('habit-modal').classList.remove('open'); }
+function closeModal() {
+  document.getElementById('habit-modal').classList.remove('open');
+  if (_returnToToday) {
+    _returnToToday = false;
+    switchTab('today', document.getElementById('nav-today'));
+  }
+}
 
 function showToast(msg, err=false) {
   const t = document.getElementById('toast');
