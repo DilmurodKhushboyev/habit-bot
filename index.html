@@ -1401,7 +1401,7 @@ async function checkin(hid, cardEl) {
     const wasFullyDone = cardEl.classList.contains('done');
     if (isDone) {
       showToast('🎉 +5 ball qo\'shildi!');
-    } else if (tc === 0) {
+    } else if (tc === 0 && wasFullyDone) {
       showToast('↩️ -5 ball ayirildi');
     }
 
