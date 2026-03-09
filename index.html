@@ -789,98 +789,91 @@ body {
 }
 .nav-icon { display:flex; align-items:center; justify-content:center; width:24px; height:24px; }
 .nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.3px; }
-/* ── TOUR ── */
-#tour-overlay {
-  position: fixed; inset: 0; z-index: 9999;
-  pointer-events: none; transition: opacity .3s;
+/* nothing */
+/* ── ONBOARDING ── */
+#onboard-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.55); z-index: 9998;
 }
-#tour-overlay.active { pointer-events: all; }
-#tour-backdrop {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,0.55);
-  transition: opacity .3s;
+#onboard-modal {
+  display: none; position: fixed; z-index: 9999;
+  left: 50%; top: 50%; transform: translate(-50%,-50%);
+  background: #fff; border-radius: 22px;
+  padding: 24px 20px 20px; width: calc(100vw - 40px);
+  max-width: 340px; box-shadow: 0 12px 40px rgba(0,0,0,.22);
 }
-#tour-spotlight {
-  position: absolute;
-  border-radius: 14px;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
-  transition: all .35s cubic-bezier(.4,0,.2,1);
-  pointer-events: none;
+#onboard-modal .ob-title {
+  font-size: 18px; font-weight: 800; color: #1a1a2e;
+  margin-bottom: 4px;
 }
-#tour-card {
-  position: absolute;
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 18px 18px 14px;
-  max-width: 310px;
-  width: calc(100vw - 48px);
-  box-shadow: 0 8px 32px rgba(0,0,0,.28);
-  transition: all .35s cubic-bezier(.4,0,.2,1);
-  z-index: 10000;
+#onboard-modal .ob-sub {
+  font-size: 12.5px; color: #8888aa; margin-bottom: 16px;
 }
-#tour-card .tour-step-num {
-  font-size: 11px; font-weight: 700;
-  color: var(--accent); margin-bottom: 6px;
-  letter-spacing: .5px; text-transform: uppercase;
+#onboard-modal .ob-progress-wrap {
+  background: #f0f0f5; border-radius: 99px;
+  height: 7px; margin-bottom: 20px; overflow: hidden;
 }
-#tour-card .tour-title {
-  font-size: 15px; font-weight: 700;
-  color: #1a1a2e; margin-bottom: 7px;
+#onboard-modal .ob-progress-bar {
+  height: 100%; border-radius: 99px;
+  background: var(--accent);
+  transition: width .4s cubic-bezier(.4,0,.2,1);
 }
-#tour-card .tour-desc {
-  font-size: 13px; color: #555770;
-  line-height: 1.55; margin-bottom: 14px;
+#onboard-modal .ob-steps { display: flex; flex-direction: column; gap: 10px; }
+#onboard-modal .ob-step {
+  display: flex; align-items: center; gap: 12px;
+  background: #f7f7fc; border-radius: 14px;
+  padding: 12px 14px; cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: border-color .2s, background .2s;
 }
-#tour-card .tour-btns {
-  display: flex; gap: 8px; justify-content: flex-end; align-items: center;
+#onboard-modal .ob-step:active { background: #f0f0f5; }
+#onboard-modal .ob-step.done {
+  background: #f0faf3; border-color: #4caf7d;
 }
-#tour-card .tour-skip {
-  font-size: 12px; color: #8888aa;
-  background: none; border: none; cursor: pointer;
-  padding: 6px 4px; font-family: inherit; margin-right: auto;
+#onboard-modal .ob-step .ob-check {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: #e8e8f0; display: flex; align-items: center;
+  justify-content: center; font-size: 14px;
+  transition: background .2s;
 }
-#tour-card .tour-next {
-  font-size: 13px; font-weight: 700;
-  background: var(--accent); color: #fff;
-  border: none; border-radius: 10px;
-  padding: 8px 18px; cursor: pointer; font-family: inherit;
+#onboard-modal .ob-step.done .ob-check {
+  background: #4caf7d; color: #fff;
 }
-#tour-card .tour-dots {
-  display: flex; gap: 5px; align-items: center; margin-right: 8px;
+#onboard-modal .ob-step .ob-text { flex: 1; }
+#onboard-modal .ob-step .ob-step-title {
+  font-size: 13.5px; font-weight: 700; color: #1a1a2e;
 }
-#tour-card .tour-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--sub); opacity: .4; transition: all .2s;
+#onboard-modal .ob-step.done .ob-step-title { color: #4caf7d; }
+#onboard-modal .ob-step .ob-step-desc {
+  font-size: 11.5px; color: #8888aa; margin-top: 2px;
 }
-#tour-card .tour-dot.active {
-  background: var(--accent); opacity: 1; width: 16px; border-radius: 3px;
+#onboard-modal .ob-step .ob-arrow {
+  font-size: 16px; color: #c0c0d0;
 }
-#tour-card .tour-tip {
-  font-size: 11.5px; color: #e07040;
-  background: #fff4ed; border-left: 3px solid #e07040;
-  border-radius: 0 8px 8px 0;
-  padding: 7px 10px; margin-bottom: 14px;
-  line-height: 1.5; font-weight: 500;
+#onboard-modal .ob-step.done .ob-arrow { display: none; }
+#onboard-modal .ob-close {
+  width: 100%; margin-top: 16px; padding: 11px;
+  border: none; border-radius: 12px;
+  background: #f0f0f5; color: #8888aa;
+  font-size: 13px; font-weight: 600;
+  font-family: inherit; cursor: pointer;
 }
 </style>
 </head>
 <body>
 
-<!-- TOUR OVERLAY -->
-<div id="tour-overlay" onclick="tourNext()">
-  <div id="tour-spotlight"></div>
-  <div id="tour-card" onclick="event.stopPropagation()">
-    <div class="tour-step-num" id="tour-step-num"></div>
-    <div class="tour-title"    id="tour-title"></div>
-    <div class="tour-desc"     id="tour-desc"></div>
-    <div class="tour-tip"      id="tour-tip"></div>
-    <div class="tour-btns">
-      <button class="tour-skip" onclick="endTour()" type="button" id="tour-skip-btn"></button>
-      <div class="tour-dots"  id="tour-dots"></div>
-      <button class="tour-next" onclick="tourNext()" type="button" id="tour-next-btn"></button>
-    </div>
+<!-- ONBOARDING MODAL -->
+<div id="onboard-backdrop" onclick="closeOnboard()"></div>
+<div id="onboard-modal">
+  <div class="ob-title" id="ob-title"></div>
+  <div class="ob-sub"   id="ob-sub"></div>
+  <div class="ob-progress-wrap">
+    <div class="ob-progress-bar" id="ob-progress-bar" style="width:0%"></div>
   </div>
+  <div class="ob-steps" id="ob-steps"></div>
+  <button class="ob-close" id="ob-close" onclick="closeOnboard()"></button>
 </div>
+
 
 <!-- HEADER -->
 <div class="header">
@@ -3015,293 +3008,111 @@ async function sendChallenge() {
   }
 }
 
-// ── TOUR ──
-const TOUR_STEPS = {
-  uz: [
-    {
-      target: 'nav-today',
-      title: "🌱 Salom! Yangi sahifa boshlanmoqda.",
-      desc: "Siz Super Habits ga qo'shildingiz — odatlarni shakllantirish va hayotni o'zgartirish uchun yaratilgan platforma. Keling, 7 ta qadamda tanishib chiqamiz.",
-      tip: "📌 Vazifa: Ekranning istalgan joyiga bosing yoki 'Keyingi' tugmasini bosing.",
-      action: () => switchTab('today', document.getElementById('nav-today'))
-    },
-    {
-      target: 'today-content',
-      title: "✅ Bugungi odatlaringiz shu yerda",
-      desc: "Ro'yxatdagi har bir odat — kuchli odamga aylanish yo'lidagi bir qadam. Har kuni ✅ belgilash — streak va ball to'plashning asosi.",
-      tip: "📌 Vazifa: Hozir bitta odatni bosib, bajarilgan deb belgilang. Keyin 'Keyingi' bosing.",
-      action: undefined
-    },
-    {
-      target: 'nav-stats',
-      title: "🏆 Reytingda o'z o'rningizni biling",
-      desc: "Bu sahifada barcha foydalanuvchilar orasidagi o'rningizni ko'rasiz. Har bajarilgan odat sizni yuqoriga olib chiqadi. Birinchi o'rin — maxsus maqom.",
-      tip: "📌 Vazifa: Reyting sahifasi ochildi — hozirgi o'rningizni ko'ring. Keyin 'Keyingi' bosing.",
-      action: () => switchTab('stats', document.getElementById('nav-stats'))
-    },
-    {
-      target: 'nav-habits',
-      title: "✏️ Birinchi odatingizni yarating",
-      desc: "Har katta yo'l — bitta qadam bilan boshlanadi. '+' tugmasini bosib yangi odat yarating, vaqtini belgilang — dastur o'zi eslatib turadi.",
-      tip: "📌 Vazifa: Tahrirlash sahifasi ochildi — '+' tugmasiga bosib yangi odat yarating. Keyin 'Keyingi' bosing.",
-      action: () => switchTab('habits', document.getElementById('nav-habits'))
-    },
-    {
-      target: 'nav-bozor',
-      title: "🛒 Mehnatga yarasha mukofot",
-      desc: "Har bajarilgan odat uchun ball to'planadi. Bu ballar — real qiymatga ega. Bozorda ularni maxsus imtiyozlar va mukofotlarga almashtiring.",
-      tip: "📌 Vazifa: Bozorga qarang, nimalarga almashtirish mumkinligini bilib oling. Keyin 'Keyingi' bosing.",
-      action: undefined
-    },
-    {
-      target: 'nav-profile',
-      title: "👤 Bu — siz haqingizda sahifa",
-      desc: "Yutuqlaringiz, statistikangiz, eslatmalar va sozlamalar — hammasi shu yerda. Tilni o'zgartiring, profil rasmingizni qo'ying va o'z taraqqiyotingizni kuzating.",
-      tip: "📌 Vazifa: Profil sahifasi ochildi — ismingiz to'g'ri ko'rinayaptimi? Keyin 'Keyingi' bosing.",
-      action: () => switchTab('profile', document.getElementById('nav-profile'))
-    },
-    {
-      target: null,
-      title: "🚀 Tayyor! Endi haqiqiy hayot boshlanadi.",
-      desc: "Siz 7 ta qadamni o'tdingiz. Endi bitta ish qoldi — har kuni kiring va odatlarni bajaring. 21 kun davom eting — va o'zingiz sezmagan holda o'zgarasiz.",
-      tip: "📌 Vazifa: 'Boshlash' tugmasini bosing va bugungi birinchi odatingizni bajaring!",
-      action: () => switchTab('today', document.getElementById('nav-today'))
-    }
-  ],
-  ru: [
-    {
-      target: 'nav-today',
-      title: "🌱 Привет! Новая глава начинается.",
-      desc: "Вы присоединились к Super Habits — платформе для формирования привычек и изменения жизни. Давайте познакомимся за 7 шагов.",
-      tip: "📌 Задание: Нажмите в любое место экрана или кнопку 'Далее'.",
-      action: () => switchTab('today', document.getElementById('nav-today'))
-    },
-    {
-      target: 'today-content',
-      title: "✅ Ваши привычки на сегодня",
-      desc: "Каждая привычка в списке — шаг на пути к лучшей версии себя. Отмечайте ✅ каждый день — так накапливается streak и растут очки.",
-      tip: "📌 Задание: Нажмите на одну привычку и отметьте её выполненной. Затем нажмите 'Далее'.",
-      action: undefined
-    },
-    {
-      target: 'nav-stats',
-      title: "🏆 Узнайте своё место в рейтинге",
-      desc: "Здесь вы видите своё место среди всех пользователей. Каждая выполненная привычка поднимает вас выше. Первое место — особый статус.",
-      tip: "📌 Задание: Страница рейтинга открылась — посмотрите своё место. Затем нажмите 'Далее'.",
-      action: () => switchTab('stats', document.getElementById('nav-stats'))
-    },
-    {
-      target: 'nav-habits',
-      title: "✏️ Создайте свою первую привычку",
-      desc: "Каждый великий путь начинается с одного шага. Нажмите '+', создайте привычку, задайте время — приложение само напомнит.",
-      tip: "📌 Задание: Страница открылась — нажмите '+' и создайте первую привычку. Затем нажмите 'Далее'.",
-      action: () => switchTab('habits', document.getElementById('nav-habits'))
-    },
-    {
-      target: 'nav-bozor',
-      title: "🛒 Магазин — награда за труд",
-      desc: "За каждую выполненную привычку начисляются очки с реальной ценностью. Обменивайте их на особые привилегии и награды.",
-      tip: "📌 Задание: Посмотрите, на что можно обменять очки. Затем нажмите 'Далее'.",
-      action: undefined
-    },
-    {
-      target: 'nav-profile',
-      title: "👤 Это — страница о вас",
-      desc: "Достижения, статистика, напоминания и настройки — всё здесь. Смените язык, добавьте фото и следите за своим прогрессом.",
-      tip: "📌 Задание: Страница открылась — проверьте, правильно ли отображается ваше имя. Затем нажмите 'Далее'.",
-      action: () => switchTab('profile', document.getElementById('nav-profile'))
-    },
-    {
-      target: null,
-      title: "🚀 Готово! Теперь начинается настоящая жизнь.",
-      desc: "Вы прошли 7 шагов. Осталось одно — заходить каждый день и выполнять привычки. 21 день подряд — и вы изменитесь незаметно для себя.",
-      tip: "📌 Задание: Нажмите 'Начать' и выполните первую привычку прямо сейчас!",
-      action: () => switchTab('today', document.getElementById('nav-today'))
-    }
-  ],
-  en: [
-    {
-      target: 'nav-today',
-      title: "🌱 Hello! A new chapter begins.",
-      desc: "You've joined Super Habits — a platform built to help you form habits and transform your life. Let's explore it together in 7 steps.",
-      tip: "📌 Task: Tap anywhere on the screen or press 'Next' to continue.",
-      action: () => switchTab('today', document.getElementById('nav-today'))
-    },
-    {
-      target: 'today-content',
-      title: "✅ Your habits for today",
-      desc: "Each habit on the list is a step toward becoming a better version of yourself. Mark ✅ every day — that's how streaks grow and points accumulate.",
-      tip: "📌 Task: Tap one habit and mark it as done. Then press 'Next'.",
-      action: undefined
-    },
-    {
-      target: 'nav-stats',
-      title: "🏆 Find your place on the leaderboard",
-      desc: "Here you see your ranking among all users. Every completed habit moves you higher. First place comes with a special status.",
-      tip: "📌 Task: The leaderboard is open — check your current position. Then press 'Next'.",
-      action: () => switchTab('stats', document.getElementById('nav-stats'))
-    },
-    {
-      target: 'nav-habits',
-      title: "✏️ Create your first habit",
-      desc: "Every great journey begins with a single step. Tap '+', create a habit, set a time — the app will remind you automatically.",
-      tip: "📌 Task: This page is open — tap '+' and create your first habit. Then press 'Next'.",
-      action: () => switchTab('habits', document.getElementById('nav-habits'))
-    },
-    {
-      target: 'nav-bozor',
-      title: "🛒 Shop — reward for your effort",
-      desc: "Every completed habit earns you points with real value. Redeem them for special perks and rewards in the Shop.",
-      tip: "📌 Task: Browse the Shop and see what you can redeem points for. Then press 'Next'.",
-      action: undefined
-    },
-    {
-      target: 'nav-profile',
-      title: "👤 This page is about you",
-      desc: "Achievements, statistics, reminders and settings — all here. Change language, add a photo and track your progress.",
-      tip: "📌 Task: This page is open — check that your name looks correct. Then press 'Next'.",
-      action: () => switchTab('profile', document.getElementById('nav-profile'))
-    },
-    {
-      target: null,
-      title: "🚀 Done! Now real life begins.",
-      desc: "You completed 7 steps. One thing left — come back every day and complete your habits. 21 days straight and you'll transform without even noticing.",
-      tip: "📌 Task: Press 'Start' and complete your very first habit right now!",
-      action: () => switchTab('today', document.getElementById('nav-today'))
-    }
-  ]
+// ── ONBOARDING ──
+const OB_KEY = 'sh_ob_v1'; // localStorage key: JSON {habit,reminder,stats}
+
+const OB_TEXT = {
+  uz: {
+    title: '👋 Xush kelibsiz!',
+    sub: 'Boshlash uchun 3 ta qadamni bajaring',
+    close: 'Keyinroq',
+    steps: [
+      { key:'habit',    icon:'✏️', title:'Birinchi odatni yarating',   desc:'Tahrirlash sahifasiga o\'ting va + bosing', tab:'habits' },
+      { key:'reminder', icon:'⏰', title:'Eslatma vaqtini belgilang',  desc:'Odat uchun qulay vaqt tanlang',            tab:'reminders' },
+      { key:'stats',    icon:'🏆', title:'Reytingga qarang',           desc:'O\'z o\'rningizni biling',                 tab:'stats' },
+    ]
+  },
+  ru: {
+    title: '👋 Добро пожаловать!',
+    sub: 'Выполните 3 шага для начала',
+    close: 'Позже',
+    steps: [
+      { key:'habit',    icon:'✏️', title:'Создайте первую привычку',    desc:'Перейдите в Редактирование и нажмите +', tab:'habits' },
+      { key:'reminder', icon:'⏰', title:'Установите время напоминания', desc:'Выберите удобное время для привычки',    tab:'reminders' },
+      { key:'stats',    icon:'🏆', title:'Посмотрите рейтинг',          desc:'Узнайте своё место среди всех',          tab:'stats' },
+    ]
+  },
+  en: {
+    title: '👋 Welcome!',
+    sub: 'Complete 3 steps to get started',
+    close: 'Later',
+    steps: [
+      { key:'habit',    icon:'✏️', title:'Create your first habit',    desc:'Go to Edit tab and tap +',              tab:'habits' },
+      { key:'reminder', icon:'⏰', title:'Set a reminder time',        desc:'Pick a convenient time for your habit', tab:'reminders' },
+      { key:'stats',    icon:'🏆', title:'Check the leaderboard',      desc:'Find your place among all users',       tab:'stats' },
+    ]
+  }
 };
 
-const TOUR_SKIP_LABELS = { uz: "O'tkazib yuborish", ru: "Пропустить", en: "Skip" };
-const TOUR_NEXT_LABELS = { uz: "Keyingi →",        ru: "Далее →",      en: "Next →" };
-const TOUR_DONE_LABELS = { uz: "Boshlash! 🚀",      ru: "Начать! 🚀",   en: "Start! 🚀" };
-const TOUR_OF_LABELS   = { uz: "dan",               ru: "из",           en: "of" };
-
-let _tourStep = 0;
-let _tourSteps = [];
-let _tourLang = 'uz';
-
-function startTourIfNew() {
-  const key = 'sh_tour_done_v1';
-  if (localStorage.getItem(key)) return;
-  // Lang: use currentLang if set, else fallback to uz
-  // We start tour after small delay so UI is painted
-  setTimeout(() => {
-    _tourLang = (currentLang && TOUR_STEPS[currentLang]) ? currentLang : 'uz';
-    _tourSteps = TOUR_STEPS[_tourLang];
-    _tourStep = 0;
-    showTourStep();
-    document.getElementById('tour-overlay').classList.add('active');
-  }, 800);
+function getObState() {
+  try { return JSON.parse(localStorage.getItem(OB_KEY)) || {}; } catch(e) { return {}; }
+}
+function saveObState(state) {
+  localStorage.setItem(OB_KEY, JSON.stringify(state));
 }
 
-function showTourStep() {
-  const steps = _tourSteps;
-  const step  = steps[_tourStep];
-  const total = steps.length;
-  const lang  = _tourLang;
-  const overlay = document.getElementById('tour-overlay');
-  const spotlight = document.getElementById('tour-spotlight');
-  const card = document.getElementById('tour-card');
+function renderOnboard() {
+  const lang = (currentLang && OB_TEXT[currentLang]) ? currentLang : 'uz';
+  const txt = OB_TEXT[lang];
+  const state = getObState();
+  const done = txt.steps.filter(s => state[s.key]).length;
+  const total = txt.steps.length;
 
-  // Step label
-  document.getElementById('tour-step-num').textContent =
-    `${_tourStep + 1} ${TOUR_OF_LABELS[lang]} ${total}`;
-  document.getElementById('tour-title').textContent = step.title;
-  document.getElementById('tour-desc').textContent  = step.desc;
-  const tipEl = document.getElementById('tour-tip');
-  if (step.tip) {
-    tipEl.textContent = '💡 ' + step.tip;
-    tipEl.style.display = 'block';
-  } else {
-    tipEl.style.display = 'none';
+  document.getElementById('ob-title').textContent = txt.title;
+  document.getElementById('ob-sub').textContent   = txt.sub;
+  document.getElementById('ob-close').textContent = txt.close;
+  document.getElementById('ob-progress-bar').style.width = Math.round(done / total * 100) + '%';
+
+  const stepsEl = document.getElementById('ob-steps');
+  stepsEl.innerHTML = txt.steps.map(s => {
+    const isDone = !!state[s.key];
+    return `<div class="ob-step${isDone ? ' done' : ''}" onclick="obStepClick('${s.key}','${s.tab}')">
+      <div class="ob-check">${isDone ? '✓' : s.icon}</div>
+      <div class="ob-text">
+        <div class="ob-step-title">${s.title}</div>
+        <div class="ob-step-desc">${s.desc}</div>
+      </div>
+      <div class="ob-arrow">›</div>
+    </div>`;
+  }).join('');
+}
+
+function obStepClick(key, tab) {
+  const state = getObState();
+  state[key] = true;
+  saveObState(state);
+  renderOnboard();
+  // Check if all done
+  const lang = (currentLang && OB_TEXT[currentLang]) ? currentLang : 'uz';
+  const allDone = OB_TEXT[lang].steps.every(s => state[s.key]);
+  if (allDone) {
+    setTimeout(() => closeOnboard(true), 600);
   }
+  // Navigate to tab
+  const navEl = document.getElementById('nav-' + tab);
+  if (navEl) switchTab(tab, navEl);
+}
 
-  // Skip / Next button labels
-  document.getElementById('tour-skip-btn').textContent =
-    TOUR_SKIP_LABELS[lang];
-  document.getElementById('tour-next-btn').textContent =
-    _tourStep === total - 1 ? TOUR_DONE_LABELS[lang] : TOUR_NEXT_LABELS[lang];
-
-  // Execute step action
-  if (step.action) {
-    try { step.action(); } catch(e) {}
-  }
-
-  // Dots
-  const dotsEl = document.getElementById('tour-dots');
-  dotsEl.innerHTML = steps.map((_, i) =>
-    `<div class="tour-dot${i === _tourStep ? ' active' : ''}"></div>`
-  ).join('');
-
-  // Spotlight
-  if (step.target) {
-    const el = document.getElementById(step.target);
-    if (!el) {
-      _tourStep++;
-      if (_tourStep < _tourSteps.length) { showTourStep(); } else { endTour(); }
-      return;
-    }
-    if (el) {
-      const r = el.getBoundingClientRect();
-      // If element is invisible or zero-size, skip this step
-      if (r.width === 0 && r.height === 0) {
-        _tourStep++;
-        if (_tourStep < _tourSteps.length) { showTourStep(); } else { endTour(); }
-        return;
-      }
-      const pad = 8;
-      spotlight.style.cssText =
-        `left:${r.left - pad}px;top:${r.top - pad}px;` +
-        `width:${r.width + pad*2}px;height:${r.height + pad*2}px;` +
-        `border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.55);`;
-      spotlight.style.display = 'block';
-
-      // Position card: above or below the element
-      const cardH = card.offsetHeight || 260;
-      let cardTop;
-      if (r.top > cardH + 24) {
-        cardTop = r.top - cardH - 16;
-      } else {
-        cardTop = r.bottom + 16;
-      }
-      cardTop = Math.max(16, Math.min(cardTop, window.innerHeight - cardH - 16));
-      const cardW = Math.min(310, window.innerWidth - 48);
-      let cardLeft = Math.max(16, r.left + r.width/2 - cardW/2);
-      if (cardLeft + cardW > window.innerWidth - 16) cardLeft = window.innerWidth - cardW - 16;
-      card.style.cssText =
-        `left:${cardLeft}px;top:${cardTop}px;width:${cardW}px;position:absolute;`;
-    }
-  } else {
-    // Final step: center card, hide spotlight
-    spotlight.style.display = 'none';
-    const cardW = Math.min(310, window.innerWidth - 48);
-    const cardTop = Math.max(80, (window.innerHeight - 260) / 2);
-    card.style.cssText =
-      `left:${(window.innerWidth - cardW)/2}px;` +
-      `top:${cardTop}px;width:${cardW}px;position:absolute;display:block;`;
+function closeOnboard(permanent) {
+  document.getElementById('onboard-modal').style.display   = 'none';
+  document.getElementById('onboard-backdrop').style.display = 'none';
+  if (permanent) {
+    const state = getObState();
+    state._done = true;
+    saveObState(state);
   }
 }
 
-function tourNext() {
-  if (_tourStep < _tourSteps.length - 1) {
-    _tourStep++;
-    showTourStep();
-  } else {
-    endTour();
-  }
-}
-
-function endTour() {
-  localStorage.setItem('sh_tour_done_v1', '1');
-  const overlay = document.getElementById('tour-overlay');
-  overlay.classList.remove('active');
-  overlay.style.opacity = '0';
-  setTimeout(() => { overlay.style.display = 'none'; }, 300);
+function maybeShowOnboard() {
+  const state = getObState();
+  if (state._done) return;
+  renderOnboard();
+  document.getElementById('onboard-modal').style.display   = 'block';
+  document.getElementById('onboard-backdrop').style.display = 'block';
 }
 
 // ── START ──
-window.onload = function() { loadToday(); startTourIfNew(); };
+window.onload = function() { loadToday(); setTimeout(maybeShowOnboard, 700); };
 </script>
 </body>
 </html>
