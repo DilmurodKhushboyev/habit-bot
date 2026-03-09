@@ -2117,6 +2117,7 @@ function renderProfile(d) {
   const initial = (d.name || '?')[0].toUpperCase();
   const lang = d.lang || 'uz';
   currentLang = lang;
+  updateNavLabels();
   const photoUrl = user.photo_url || '';
 
   // Avatar: rasm yoki harf
@@ -2183,9 +2184,9 @@ function renderProfile(d) {
       </div>` : ''}
 
       <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-top:14px">
-        <div class="stat-box"><div class="stat-val">${d.points || 0}</div><div class="stat-lbl">Ball</div></div>
-        <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div class="stat-lbl">Streak</div><div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">rekord: ${d.best_streak || 0}</div></div>
-        <div class="stat-box"><div class="stat-val">${d.total_done_all || 0}</div><div class="stat-lbl" style="font-size:8px">Bajarildi</div></div>
+        <div class="stat-box"><div class="stat-val">${d.points || 0}</div><div class="stat-lbl">${S('profile','ball')}</div></div>
+        <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div class="stat-lbl">${S('profile','streak')}</div><div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">${S('profile','rekord')}: ${d.best_streak || 0}</div></div>
+        <div class="stat-box"><div class="stat-val">${d.total_done_all || 0}</div><div class="stat-lbl" style="font-size:8px">${S('profile','done')}</div></div>
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:6px">
@@ -2196,12 +2197,12 @@ function renderProfile(d) {
     </div>
 
     <!-- Kunlik maqsad -->
-    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgTarget" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="9" stroke="url(#svgTarget)" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="url(#svgTarget)" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="url(#svgTarget)"/></svg> Kunlik maqsad</div>
+    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgTarget" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="9" stroke="url(#svgTarget)" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="url(#svgTarget)" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="url(#svgTarget)"/></svg> ${S('profile','daily_goal')}</div>
     <div class="rem-card">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
         <div style="font-size:28px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace">${target}</div>
         <div style="flex:1">
-          <div style="font-size:13px;font-weight:600;color:var(--text)">ta odat / kun</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${S('profile','per_day')}</div>
           <div style="font-size:11px;color:var(--sub)">${habitCount} ta odatdan ${targetPct}%</div>
         </div>
       </div>
@@ -2212,18 +2213,18 @@ function renderProfile(d) {
     </div>
 
     <!-- Mini heatmap -->
-    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgCal" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><rect x="3" y="5" width="18" height="16" rx="3" stroke="url(#svgCal)" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="url(#svgCal)" stroke-width="2" stroke-linecap="round"/></svg> 30 kunlik faollik</div>
+    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgCal" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><rect x="3" y="5" width="18" height="16" rx="3" stroke="url(#svgCal)" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="url(#svgCal)" stroke-width="2" stroke-linecap="round"/></svg> ${S('profile','activity')}</div>
     <div class="rem-card">
       <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px">${hmCells}</div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:10px;color:var(--sub)">
-        <div style="width:10px;height:10px;border-radius:2px;background:var(--green)"></div> Bajarildi
-        <div style="width:10px;height:10px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-left:8px"></div> Bajarilmadi
+        <div style="width:10px;height:10px;border-radius:2px;background:var(--green)"></div> ${S('profile','done_label')}
+        <div style="width:10px;height:10px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-left:8px"></div> ${S('profile','not_done')}
         <span style="margin-left:auto">${d.active_days_30 || 0} / 30 kun</span>
       </div>
     </div>
 
     <!-- Yutuqlar progress -->
-    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgMedal" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><circle cx="12" cy="15" r="6" fill="url(#svgMedal)"/><path d="M9 3L7 8M15 3L17 8M9 3h6" stroke="url(#svgMedal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Yutuqlar</div>
+    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgMedal" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><circle cx="12" cy="15" r="6" fill="url(#svgMedal)"/><path d="M9 3L7 8M15 3L17 8M9 3h6" stroke="url(#svgMedal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> ${S('profile','achievements')}</div>
     <div class="rem-card" style="cursor:pointer" onclick="switchTab('achievements',null)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <span style="font-size:13px;font-weight:700;color:var(--text)">${d.earned_ach || 0} / ${d.total_ach || 0} ta yutuq</span>
@@ -2232,15 +2233,15 @@ function renderProfile(d) {
       <div class="hstat-progress-bar">
         <div class="hstat-progress-fill" style="width:${achPct}%;background:${achColor}"></div>
       </div>
-      <div style="font-size:11px;color:var(--sub);margin-top:8px">Barchasini ko'rish ›</div>
+      <div style="font-size:11px;color:var(--sub);margin-top:8px">${S('profile','see_all')}</div>
     </div>
 
     <!-- Sozlamalar -->
-    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgGear" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="3.5" stroke="url(#svgGear)" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="url(#svgGear)" stroke-width="2" stroke-linecap="round"/></svg> Sozlamalar</div>
+    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgGear" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="3.5" stroke="url(#svgGear)" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="url(#svgGear)" stroke-width="2" stroke-linecap="round"/></svg> ${S('profile','settings')}</div>
     <div style="margin-bottom:4px">
       <div class="rem-card" style="cursor:pointer;margin:0" onclick="openEditProfile()">
         <div class="rem-top" style="margin-bottom:0">
-          <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgPenLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="url(#svgPenLg)" opacity="0.85"/><path d="M15 6L20 11" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/></svg></div><div class="rem-name" style="font-size:12px">Ma'lumotlarni tahrirlash</div>
+          <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgPenLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="url(#svgPenLg)" opacity="0.85"/><path d="M15 6L20 11" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/></svg></div><div class="rem-name" style="font-size:12px">${S('profile','edit_profile')}</div>
           <div style="color:var(--sub);font-size:18px">›</div>
         </div>
       </div>
@@ -2248,13 +2249,13 @@ function renderProfile(d) {
     <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="openLangModal()">
       <div class="rem-top" style="margin-bottom:0">
         <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgGlobLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><circle cx="13" cy="13" r="10" stroke="url(#svgGlobLg)" stroke-width="2"/><ellipse cx="13" cy="13" rx="4.5" ry="10" stroke="url(#svgGlobLg)" stroke-width="1.5"/><path d="M3 13h20M3 9h20M3 17h20" stroke="url(#svgGlobLg)" stroke-width="1.2" opacity="0.5"/></svg></div>
-        <div class="rem-name">Bot tili</div>
+        <div class="rem-name">${S('profile','bot_lang')}</div>
         <div style="color:var(--sub);font-size:18px">›</div>
       </div>
     </div>
     <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('reminders',null)">
       <div class="rem-top" style="margin-bottom:0">
-        <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgBellLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 3C13 3 8 6 8 13v5H5l2 2h12l2-2h-3v-5c0-7-5-10-5-10z" fill="url(#svgBellLg)" opacity="0.85"/><circle cx="13" cy="22" r="1.5" fill="url(#svgBellLg)"/></svg></div><div class="rem-name">Eslatmalar</div>
+        <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgBellLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 3C13 3 8 6 8 13v5H5l2 2h12l2-2h-3v-5c0-7-5-10-5-10z" fill="url(#svgBellLg)" opacity="0.85"/><circle cx="13" cy="22" r="1.5" fill="url(#svgBellLg)"/></svg></div><div class="rem-name">${S('profile','reminders')}</div>
         <div style="color:var(--sub);font-size:18px">›</div>
       </div>
     </div>
@@ -2264,8 +2265,8 @@ function renderProfile(d) {
         <div style="display:flex;align-items:center;gap:10px">
           <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgMoonLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M21 14.5A9 9 0 1111.5 5a7 7 0 009.5 9.5z" fill="url(#svgMoonLg)" opacity="0.9"/></svg></div>
           <div>
-            <div class="rem-name">Kechki eslatma</div>
-            <div style="font-size:10px;color:var(--sub)">Har kuni 21:00 &#8212; bajarilmagan odatlar</div>
+            <div class="rem-name">${S('profile','evening')}</div>
+            <div style="font-size:10px;color:var(--sub)">${S('profile','evening_sub')}</div>
           </div>
         </div>
         <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
@@ -2276,7 +2277,7 @@ function renderProfile(d) {
       </div>
     </div>
     <div style="margin:8px 0 4px;text-align:center">
-      <button type="button" onclick="localStorage.removeItem('sh_ob_v3');maybeShowOnboard()" style="background:none;border:none;font-size:12px;color:var(--sub);cursor:pointer;padding:6px 12px;font-family:inherit;text-decoration:underline;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg> Onboarding'ni qayta ko'rish</button>
+      <button type="button" onclick="localStorage.removeItem('sh_ob_v3');maybeShowOnboard()" style="background:none;border:none;font-size:12px;color:var(--sub);cursor:pointer;padding:6px 12px;font-family:inherit;text-decoration:underline;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg> ${S('profile','onboarding')}</button>
     </div>
     <div class="toast" id="toast-profile"></div>
 
@@ -2428,6 +2429,80 @@ async function saveTarget() {
 
 let selectedLang = null;
 let currentLang = 'uz';
+const STRINGS = {
+  uz: {
+    nav: { today:'Odatlar', stats:'Reyting', habits:'Tahrirlash', bozor:'Bozor', profile:'Profil' },
+    profile: {
+      ball:'Ball', streak:'Streak', done:'Bajarildi', rekord:'rekord',
+      done_label:'Bajarildi', not_done:'Bajarilmadi', kun:'kun',
+      per_day:'ta odat / kun', of_habits:'ta odatdan',
+      see_all:"Barchasini ko'rish ›",
+      settings:'SOZLAMALAR', achievements:'YUTUQLAR', activity:'30 KUNLIK FAOLLIK',
+      edit_profile:"Ma'lumotlarni tahrirlash",
+      bot_lang:'Bot tili',
+      reminders:'Eslatmalar',
+      evening:'Kechki eslatma',
+      evening_sub:'Har kuni 21:00 — bajarilmagan odatlar',
+      onboarding:"Onboarding'ni qayta ko'rish",
+      daily_goal:'KUNLIK MAQSAD',
+      save:'Saqlash', saving:'⏳ Saqlanmoqda...', saved:'✅ Saqlandi!',
+      lang_title:'Bot tili', edit_title:"Ma'lumotlarni tahrirlash",
+      avto:'Avto', jon_label:'JON',
+    }
+  },
+  ru: {
+    nav: { today:'Привычки', stats:'Рейтинг', habits:'Редактор', bozor:'Магазин', profile:'Профиль' },
+    profile: {
+      ball:'Очки', streak:'Стрик', done:'Выполнено', rekord:'рекорд',
+      done_label:'Выполнено', not_done:'Не выполнено', kun:'дней',
+      per_day:'привычек / день', of_habits:'из',
+      see_all:'Смотреть все ›',
+      settings:'НАСТРОЙКИ', achievements:'ДОСТИЖЕНИЯ', activity:'АКТИВНОСТЬ 30 ДНЕЙ',
+      edit_profile:'Редактировать данные',
+      bot_lang:'Язык бота',
+      reminders:'Напоминания',
+      evening:'Вечернее напоминание',
+      evening_sub:'Каждый день 21:00 — невыполненные привычки',
+      onboarding:'Посмотреть онбординг снова',
+      daily_goal:'ЕЖЕДНЕВНАЯ ЦЕЛЬ',
+      save:'Сохранить', saving:'⏳ Сохраняем...', saved:'✅ Сохранено!',
+      lang_title:'Язык бота', edit_title:'Редактировать данные',
+      avto:'Авто', jon_label:'ЖИЗНЬ',
+    }
+  },
+  en: {
+    nav: { today:'Habits', stats:'Ranking', habits:'Edit', bozor:'Store', profile:'Profile' },
+    profile: {
+      ball:'Points', streak:'Streak', done:'Done', rekord:'record',
+      done_label:'Done', not_done:'Not done', kun:'days',
+      per_day:'habits / day', of_habits:'of',
+      see_all:'See all ›',
+      settings:'SETTINGS', achievements:'ACHIEVEMENTS', activity:'30-DAY ACTIVITY',
+      edit_profile:'Edit profile',
+      bot_lang:'Bot language',
+      reminders:'Reminders',
+      evening:'Evening reminder',
+      evening_sub:'Every day 21:00 — unfinished habits',
+      onboarding:'View onboarding again',
+      daily_goal:'DAILY GOAL',
+      save:'Save', saving:'⏳ Saving...', saved:'✅ Saved!',
+      lang_title:'Bot language', edit_title:'Edit profile',
+      avto:'Car', jon_label:'LIFE',
+    }
+  }
+};
+function S(key, sub) {
+  const l = (currentLang && STRINGS[currentLang]) ? currentLang : 'uz';
+  return sub ? (STRINGS[l][key]?.[sub] ?? STRINGS['uz'][key]?.[sub] ?? '') : (STRINGS[l][key] ?? STRINGS['uz'][key] ?? '');
+}
+function updateNavLabels() {
+  const ids = ['today','stats','habits','bozor','profile'];
+  ids.forEach(id => {
+    const el = document.querySelector('#nav-' + id + ' .nav-label');
+    if (el) el.textContent = S('nav', id);
+  });
+}
+
 function setLang(val) {
   selectedLang = val;
   ['uz','ru','en'].forEach(l => {
