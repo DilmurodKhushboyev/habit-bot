@@ -1366,6 +1366,7 @@ async function checkin(hid, cardEl) {
     const result = await res.json();
     if (!result.ok) throw new Error(result.error);
     const isDone = result.done;
+    const wasFullyDone = cardEl.classList.contains('done');
 
     cardEl.classList.toggle('done', isDone);
     if (btn) { btn.innerHTML = isDone ? '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgTick" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M4 10l5 5 7-8" stroke="url(#svgTick)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''; }
@@ -1398,7 +1399,6 @@ async function checkin(hid, cardEl) {
     }
 
     // Ball xabari
-    const wasFullyDone = cardEl.classList.contains('done');
     if (isDone) {
       showToast('🎉 +5 ball qo\'shildi!');
     } else if (tc === 0 && wasFullyDone) {
