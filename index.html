@@ -296,6 +296,8 @@ body {
   padding: 24px 20px 40px; width: 100%;
   animation: slideUp .28s cubic-bezier(.32,1.2,.5,1);
   position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .modal-handle {
@@ -1435,6 +1437,23 @@ async function checkin(hid, cardEl) {
       showTodayToast(isDone ? `✅ Bajarildi! ${diffTxt}` : `↩️ Bekor qilindi ${diffTxt}`);
     }
     loaded.profile = false; loaded.rating = false; loaded.achievements = false;
+    // Bajarilgan odat pastga, bekor qilingan odat tepaga
+    const container = cardEl.parentNode;
+    if (container) {
+      if (isDone) {
+        // Pastga: barcha done bo'lmagan kartalardan keyin qo'y
+        const undoneCards = [...container.querySelectorAll('.checkin-card:not(.done)')];
+        if (undoneCards.length > 0) {
+          setTimeout(() => container.appendChild(cardEl), 300);
+        }
+      } else if (isUndo) {
+        // Tepaga: birinchi done kartadan oldin qo'y
+        const firstDone = container.querySelector('.checkin-card.done');
+        if (firstDone && firstDone !== cardEl) {
+          setTimeout(() => container.insertBefore(cardEl, firstDone), 300);
+        }
+      }
+    }
     // Yangi badge popup
     if (isDone && result.new_badges && result.new_badges.length) {
       result.new_badges.forEach(b => showBadgePopup(b.icon, b.title, 'Yangi yutuq qozonildi!'));
@@ -1974,7 +1993,11 @@ function renderRating(d) {
     return Math.round((u.score / maxScore) * 100);
   }
 
-  const medals  = [`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgGold" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6E27A"/><stop offset="100%" stop-color="#D4963A"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#svgGold)"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">1</text></svg>`,`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgSilv" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E8E8E8"/><stop offset="100%" stop-color="#A0A8B8"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#svgSilv)"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">2</text></svg>`,`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgBronz" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E8A87C"/><stop offset="100%" stop-color="#A0522D"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#svgBronz)"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">3</text></svg>`];
+  const medals = [
+    `<svg width="28" height="32" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mgRib1a" x1="0" y1="0" x2="28" y2="8" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C94E"/><stop offset="100%" stop-color="#E8A020"/></linearGradient><linearGradient id="mgGold" x1="0" y1="14" x2="28" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="100%" stop-color="#C8820A"/></linearGradient><linearGradient id="mgGoldS" x1="4" y1="16" x2="24" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFF0A0"/><stop offset="100%" stop-color="#E8A020"/></linearGradient></defs><rect x="9" y="0" width="5" height="14" rx="2" fill="url(#mgRib1a)" transform="rotate(-15 9 0)"/><rect x="14" y="0" width="5" height="14" rx="2" fill="#E8A020" transform="rotate(15 18 0)"/><circle cx="14" cy="22" r="9" fill="url(#mgGold)"/><circle cx="14" cy="22" r="7" fill="url(#mgGoldS)"/><text x="14" y="27" text-anchor="middle" font-size="9" font-weight="800" fill="#7A4A00" font-family="sans-serif">1</text></svg>`,
+    `<svg width="28" height="32" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mgRib2a" x1="0" y1="0" x2="28" y2="8" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#C8D0E0"/><stop offset="100%" stop-color="#8898B0"/></linearGradient><linearGradient id="mgSilv" x1="0" y1="14" x2="28" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E8EEF8"/><stop offset="100%" stop-color="#8898B0"/></linearGradient><linearGradient id="mgSilvS" x1="4" y1="16" x2="24" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F4F8FF"/><stop offset="100%" stop-color="#A0B0C8"/></linearGradient></defs><rect x="9" y="0" width="5" height="14" rx="2" fill="url(#mgRib2a)" transform="rotate(-15 9 0)"/><rect x="14" y="0" width="5" height="14" rx="2" fill="#8898B0" transform="rotate(15 18 0)"/><circle cx="14" cy="22" r="9" fill="url(#mgSilv)"/><circle cx="14" cy="22" r="7" fill="url(#mgSilvS)"/><text x="14" y="27" text-anchor="middle" font-size="9" font-weight="800" fill="#445566" font-family="sans-serif">2</text></svg>`,
+    `<svg width="28" height="32" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mgRib3a" x1="0" y1="0" x2="28" y2="8" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#D4956A"/><stop offset="100%" stop-color="#8B4513"/></linearGradient><linearGradient id="mgBronz" x1="0" y1="14" x2="28" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E8A87C"/><stop offset="100%" stop-color="#7A3A10"/></linearGradient><linearGradient id="mgBronzS" x1="4" y1="16" x2="24" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F4C8A0"/><stop offset="100%" stop-color="#A0522D"/></linearGradient></defs><rect x="9" y="0" width="5" height="14" rx="2" fill="url(#mgRib3a)" transform="rotate(-15 9 0)"/><rect x="14" y="0" width="5" height="14" rx="2" fill="#8B4513" transform="rotate(15 18 0)"/><circle cx="14" cy="22" r="9" fill="url(#mgBronz)"/><circle cx="14" cy="22" r="7" fill="url(#mgBronzS)"/><text x="14" y="27" text-anchor="middle" font-size="9" font-weight="800" fill="#4A1A00" font-family="sans-serif">3</text></svg>`
+  ];
   const podiumColors = ['#D4963A','#9AA0B0','#C08A40'];
 
   // ── Podium (top 3) ──
@@ -1991,7 +2014,7 @@ function renderRating(d) {
       <div style="flex:1;max-width:110px;text-align:center">
         <div style="display:flex;justify-content:center;margin-bottom:6px;position:relative">
           ${userAvatarHTML(u, idx===0?48:38)}
-          <span style="position:absolute;bottom:-4px;right:calc(50% - ${idx===0?36:29}px);font-size:${idx===0?'16px':'13px'}">${u.pet || medals[idx]}</span>
+          <span style="position:absolute;bottom:-8px;right:calc(50% - ${idx===0?40:32}px)">${u.pet || medals[idx]}</span>
         </div>
         <div style="font-size:${idx===0?'13px':'11px'};font-weight:700;color:${isMe?'#5B8DEF':'var(--text)'};margin-bottom:2px">${u.name.split(' ')[0]}</div>
         ${u.badge ? `<div style="font-size:10px">${u.badge}</div>` : ''}
@@ -2703,6 +2726,10 @@ function openAdd() {
   document.querySelector('.icon-opt')?.classList.add('selected');
   setHabitType('simple');
   document.getElementById('habit-modal').classList.add('open');
+  setTimeout(() => {
+    const inp = document.getElementById('h-name');
+    if (inp) inp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 320);
 }
 function openEdit(id, name, icon, time) {
   editingHabitId = id;
@@ -2713,6 +2740,10 @@ function openEdit(id, name, icon, time) {
     e.classList.toggle('selected', e.dataset.icon === icon);
   });
   document.getElementById('habit-modal').classList.add('open');
+  setTimeout(() => {
+    const inp = document.getElementById('h-name');
+    if (inp) inp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 320);
 }
 function closeModal() {
   document.getElementById('habit-modal').classList.remove('open');
@@ -3400,6 +3431,15 @@ function maybeShowOnboard() {
 }
 
 // ── START ──
+// Klaviatura chiqganda aktiv input ko'rinsin
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+      setTimeout(() => active.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+    }
+  });
+}
 window.onload = function() { loadToday(); setTimeout(maybeShowOnboard, 700); };
 </script>
 </body>
