@@ -3182,20 +3182,13 @@ function hideObHint() {
 function closeOnboard(permanent) {
   document.getElementById('onboard-modal').style.display   = 'none';
   document.getElementById('onboard-backdrop').style.display = 'none';
-  if (permanent) {
-    const state = getObState();
-    state._done = true;
-    saveObState(state);
-  }
 }
 
 function maybeShowOnboard() {
-  const state = getObState();
-  if (state._done) return;
-  // Also skip if all steps already completed
   const lang = (currentLang && OB_TEXT[currentLang]) ? currentLang : 'uz';
+  const state = getObState();
   const allDone = OB_TEXT[lang].steps.every(s => state[s.key]);
-  if (allDone) { closeOnboard(true); return; }
+  if (allDone) return;
   renderOnboard();
   document.getElementById('onboard-modal').style.display   = 'block';
   document.getElementById('onboard-backdrop').style.display = 'block';
