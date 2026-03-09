@@ -858,9 +858,55 @@ body {
   font-size: 13px; font-weight: 600;
   font-family: inherit; cursor: pointer;
 }
+/* ── OB HINT ── */
+#ob-hint {
+  display: none; position: fixed; top: 16px;
+  left: 50%; transform: translateX(-50%);
+  z-index: 9990; width: calc(100vw - 32px); max-width: 340px;
+  background: #fff8ec; border: 1.5px solid #f0b840;
+  border-radius: 16px; padding: 13px 14px 13px 14px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.13);
+  animation: obHintIn .3s cubic-bezier(.4,0,.2,1);
+}
+@keyframes obHintIn {
+  from { opacity:0; transform: translateX(-50%) translateY(-12px); }
+  to   { opacity:1; transform: translateX(-50%) translateY(0); }
+}
+#ob-hint .obh-top {
+  display: flex; align-items: flex-start; gap: 10px;
+}
+#ob-hint .obh-icon { font-size: 22px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+#ob-hint .obh-body { flex: 1; }
+#ob-hint .obh-title {
+  font-size: 13.5px; font-weight: 700; color: #1a1a2e; margin-bottom: 3px;
+}
+#ob-hint .obh-desc {
+  font-size: 12px; color: #555770; line-height: 1.5;
+}
+#ob-hint .obh-close {
+  background: none; border: none; font-size: 17px;
+  color: #bbb; cursor: pointer; padding: 0 0 0 6px; line-height: 1; flex-shrink: 0;
+}
+#ob-hint .obh-arrow {
+  margin-top: 8px; font-size: 11.5px; color: #e07040;
+  font-weight: 600; display: flex; align-items: center; gap: 4px;
+}
 </style>
 </head>
 <body>
+
+<!-- OB HINT -->
+<div id="ob-hint">
+  <div class="obh-top">
+    <div class="obh-icon" id="obh-icon"></div>
+    <div class="obh-body">
+      <div class="obh-title" id="obh-title"></div>
+      <div class="obh-desc"  id="obh-desc"></div>
+      <div class="obh-arrow" id="obh-arrow"></div>
+    </div>
+    <button class="obh-close" onclick="hideObHint()">✕</button>
+  </div>
+</div>
 
 <!-- ONBOARDING MODAL -->
 <div id="onboard-backdrop" onclick="closeOnboard()"></div>
@@ -3021,9 +3067,12 @@ const OB_TEXT = {
     sub: 'Boshlash uchun 3 ta qadamni bajaring',
     close: 'Keyinroq',
     steps: [
-      { key:'habit',    icon:'✏️', title:'Birinchi odatni yarating',   desc:'Tahrirlash sahifasiga o\'ting va + bosing', tab:'habits' },
-      { key:'reminder', icon:'⏰', title:'Eslatma vaqtini belgilang',  desc:'Odat uchun qulay vaqt tanlang',            tab:'reminders' },
-      { key:'stats',    icon:'🏆', title:'Reytingga qarang',           desc:'O\'z o\'rningizni biling',                 tab:'stats' },
+      { key:'habit',    icon:'✏️', title:'Birinchi odatni yarating',   desc:'Tahrirlash sahifasiga o\'ting va + bosing', tab:'habits',
+        hint: { icon:'✏️', title:'Yangi odat yarating', desc:'Quyidagi "+ Yangi odat" tugmasini bosing, nom va vaqt kiriting, keyin "Saqlash" bosing.', arrow:'👇 "+ Yangi odat" tugmasini bosing' } },
+      { key:'reminder', icon:'⏰', title:'Eslatma vaqtini belgilang',  desc:'Odat uchun qulay vaqt tanlang',            tab:'reminders',
+        hint: { icon:'⏰', title:'Eslatma vaqtini o\'rnating', desc:'Odat kartasidagi soat maydoniga bosing, qulay vaqtni tanlang va "Saqlash" bosing.', arrow:'👆 Odat kartasidagi vaqt maydonini o\'zgartiring' } },
+      { key:'stats',    icon:'🏆', title:'Reytingga qarang',           desc:'O\'z o\'rningizni biling',                 tab:'stats',
+        hint: { icon:'🏆', title:'Reytingdagi o\'rningiz', desc:'Bu sahifada barcha foydalanuvchilar orasidagi o\'rningizni ko\'rasiz. Har kuni odat bajaring — yuqorilashing!', arrow:'👇 O\'z o\'rningizni toping' } },
     ]
   },
   ru: {
@@ -3031,9 +3080,12 @@ const OB_TEXT = {
     sub: 'Выполните 3 шага для начала',
     close: 'Позже',
     steps: [
-      { key:'habit',    icon:'✏️', title:'Создайте первую привычку',    desc:'Перейдите в Редактирование и нажмите +', tab:'habits' },
-      { key:'reminder', icon:'⏰', title:'Установите время напоминания', desc:'Выберите удобное время для привычки',    tab:'reminders' },
-      { key:'stats',    icon:'🏆', title:'Посмотрите рейтинг',          desc:'Узнайте своё место среди всех',          tab:'stats' },
+      { key:'habit',    icon:'✏️', title:'Создайте первую привычку',    desc:'Перейдите в Редактирование и нажмите +', tab:'habits',
+        hint: { icon:'✏️', title:'Создайте привычку', desc:'Нажмите кнопку "+ Новая привычка", введите название и время, затем нажмите "Сохранить".', arrow:'👇 Нажмите кнопку "+ Новая привычка"' } },
+      { key:'reminder', icon:'⏰', title:'Установите время напоминания', desc:'Выберите удобное время для привычки',    tab:'reminders',
+        hint: { icon:'⏰', title:'Настройте напоминание', desc:'Нажмите на поле времени в карточке привычки, выберите удобное время и сохраните.', arrow:'👆 Измените поле времени в карточке' } },
+      { key:'stats',    icon:'🏆', title:'Посмотрите рейтинг',          desc:'Узнайте своё место среди всех',          tab:'stats',
+        hint: { icon:'🏆', title:'Ваше место в рейтинге', desc:'На этой странице вы видите своё место среди всех пользователей. Выполняйте привычки — поднимайтесь выше!', arrow:'👇 Найдите своё место в списке' } },
     ]
   },
   en: {
@@ -3041,9 +3093,12 @@ const OB_TEXT = {
     sub: 'Complete 3 steps to get started',
     close: 'Later',
     steps: [
-      { key:'habit',    icon:'✏️', title:'Create your first habit',    desc:'Go to Edit tab and tap +',              tab:'habits' },
-      { key:'reminder', icon:'⏰', title:'Set a reminder time',        desc:'Pick a convenient time for your habit', tab:'reminders' },
-      { key:'stats',    icon:'🏆', title:'Check the leaderboard',      desc:'Find your place among all users',       tab:'stats' },
+      { key:'habit',    icon:'✏️', title:'Create your first habit',    desc:'Go to Edit tab and tap +',              tab:'habits',
+        hint: { icon:'✏️', title:'Create a habit', desc:'Tap the "+ New habit" button below, enter a name and time, then tap "Save".', arrow:'👇 Tap "+ New habit" button' } },
+      { key:'reminder', icon:'⏰', title:'Set a reminder time',        desc:'Pick a convenient time for your habit', tab:'reminders',
+        hint: { icon:'⏰', title:'Set your reminder', desc:'Tap the time field on a habit card, pick a convenient time and save.', arrow:'👆 Edit the time field on a habit card' } },
+      { key:'stats',    icon:'🏆', title:'Check the leaderboard',      desc:'Find your place among all users',       tab:'stats',
+        hint: { icon:'🏆', title:'Your leaderboard rank', desc:'This page shows your position among all users. Complete habits daily to climb higher!', arrow:'👇 Find your position in the list' } },
     ]
   }
 };
@@ -3097,9 +3152,31 @@ function renderOnboard() {
 }
 
 function obStepClick(key, tab) {
-  // Only navigate — marking happens when real action is completed
+  // Close modal first
+  closeOnboard(false);
+  // Navigate to tab
   const navEl = document.getElementById('nav-' + tab);
   if (navEl) switchTab(tab, navEl);
+  // Show hint for this step
+  const lang = (currentLang && OB_TEXT[currentLang]) ? currentLang : 'uz';
+  const step = OB_TEXT[lang].steps.find(s => s.key === key);
+  if (step && step.hint) showObHint(step.hint);
+}
+
+let _obHintTimer = null;
+function showObHint(hint) {
+  document.getElementById('obh-icon').textContent  = hint.icon;
+  document.getElementById('obh-title').textContent = hint.title;
+  document.getElementById('obh-desc').textContent  = hint.desc;
+  document.getElementById('obh-arrow').textContent = hint.arrow;
+  const el = document.getElementById('ob-hint');
+  el.style.display = 'block';
+  if (_obHintTimer) clearTimeout(_obHintTimer);
+  _obHintTimer = setTimeout(hideObHint, 8000);
+}
+function hideObHint() {
+  document.getElementById('ob-hint').style.display = 'none';
+  if (_obHintTimer) { clearTimeout(_obHintTimer); _obHintTimer = null; }
 }
 
 function closeOnboard(permanent) {
