@@ -1460,8 +1460,6 @@ async function loadReminders() {
     const d = await apiFetch(`habits/${userId}`);
     data.reminders = d.habits || [];
     renderReminders(d.habits || []);
-    const hasReminder = (d.habits || []).some(h => h.time && h.time !== 'vaqtsiz');
-    if (hasReminder) obMarkDone('reminder');
   } catch(e) {
     document.getElementById('reminders-content').innerHTML =
       `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>Ma'lumot yuklanmadi.</div>`;
@@ -3181,46 +3179,40 @@ async function sendChallenge() {
 }
 
 // ── ONBOARDING ──
-const OB_KEY = 'sh_ob_v2'; // localStorage key: JSON {habit,reminder,stats,_done}
+const OB_KEY = 'sh_ob_v3'; // localStorage key: JSON {habit,stats}
 
 const OB_TEXT = {
   uz: {
     title: '👋 Xush kelibsiz!',
-    sub: 'Boshlash uchun 3 ta qadamni bajaring',
+    sub: 'Boshlash uchun 2 ta qadamni bajaring.',
     close: 'Keyinroq',
     steps: [
-      { key:'habit',    icon:'✏️', title:'Birinchi odatni yarating',   desc:'Tahrirlash sahifasiga o\'ting va + bosing', tab:'habits',
-        hint: { icon:'✏️', title:'Yangi odat yarating', desc:'Quyidagi "+ Yangi odat" tugmasini bosing, nom va vaqt kiriting, keyin "Saqlash" bosing.', arrow:'👇 "+ Yangi odat" tugmasini bosing' } },
-      { key:'reminder', icon:'⏰', title:'Eslatma vaqtini belgilang',  desc:'Odat uchun qulay vaqt tanlang',            tab:'reminders',
-        hint: { icon:'⏰', title:'Eslatma vaqtini o\'rnating', desc:'Odat kartasidagi soat maydoniga bosing, qulay vaqtni tanlang va "Saqlash" bosing.', arrow:'👆 Odat kartasidagi vaqt maydonini o\'zgartiring' } },
-      { key:'stats',    icon:'🏆', title:'Reytingga qarang',           desc:'O\'z o\'rningizni biling',                 tab:'stats',
-        hint: { icon:'🏆', title:'Reytingdagi o\'rningiz', desc:'Bu sahifada barcha foydalanuvchilar orasidagi o\'rningizni ko\'rasiz. Har kuni odat bajaring — yuqorilashing!', arrow:'👇 O\'z o\'rningizni toping' } },
+      { key:'habit', icon:'☀️', title:'Birinchi odatni yarating!', desc:'Yuqoridagi "+ Odat yaratish" tugmasini bosing.', tab:'today',
+        hint: { icon:'☀️', title:'Yangi odat yarating!', desc:'Sahifaning yuqori qismidagi "+ Odat yaratish" tugmasini bosing, nom va vaqt kiriting, keyin "Saqlash" bosing.', arrow:'👆 "+ Odat yaratish" tugmasini bosing.' } },
+      { key:'stats', icon:'⭐', title:'Reytingga qarang!', desc:'Reytingdagi o\'z darajangizni kuzatib boring.', tab:'stats',
+        hint: { icon:'⭐', title:'Reytingdagi o\'rningiz!', desc:'Bu sahifada barcha foydalanuvchilar orasidagi o\'rningizni ko\'rasiz. Har kuni odat bajaring — yuqorilashing!', arrow:'👇 O\'z o\'rningizni toping.' } },
     ]
   },
   ru: {
     title: '👋 Добро пожаловать!',
-    sub: 'Выполните 3 шага для начала',
+    sub: 'Выполните 2 шага для начала.',
     close: 'Позже',
     steps: [
-      { key:'habit',    icon:'✏️', title:'Создайте первую привычку',    desc:'Перейдите в Редактирование и нажмите +', tab:'habits',
-        hint: { icon:'✏️', title:'Создайте привычку', desc:'Нажмите кнопку "+ Новая привычка", введите название и время, затем нажмите "Сохранить".', arrow:'👇 Нажмите кнопку "+ Новая привычка"' } },
-      { key:'reminder', icon:'⏰', title:'Установите время напоминания', desc:'Выберите удобное время для привычки',    tab:'reminders',
-        hint: { icon:'⏰', title:'Настройте напоминание', desc:'Нажмите на поле времени в карточке привычки, выберите удобное время и сохраните.', arrow:'👆 Измените поле времени в карточке' } },
-      { key:'stats',    icon:'🏆', title:'Посмотрите рейтинг',          desc:'Узнайте своё место среди всех',          tab:'stats',
-        hint: { icon:'🏆', title:'Ваше место в рейтинге', desc:'На этой странице вы видите своё место среди всех пользователей. Выполняйте привычки — поднимайтесь выше!', arrow:'👇 Найдите своё место в списке' } },
+      { key:'habit', icon:'☀️', title:'Создайте первую привычку!', desc:'Нажмите кнопку "+ Создать привычку" вверху.', tab:'today',
+        hint: { icon:'☀️', title:'Создайте привычку!', desc:'Нажмите кнопку "+ Создать привычку" в верхней части страницы, введите название и время, затем нажмите "Сохранить".', arrow:'👆 Нажмите "+ Создать привычку".' } },
+      { key:'stats', icon:'⭐', title:'Посмотрите рейтинг!', desc:'Следите за своим уровнем в рейтинге.', tab:'stats',
+        hint: { icon:'⭐', title:'Ваше место в рейтинге!', desc:'На этой странице вы видите своё место среди всех пользователей. Выполняйте привычки — поднимайтесь выше!', arrow:'👇 Найдите своё место в списке.' } },
     ]
   },
   en: {
     title: '👋 Welcome!',
-    sub: 'Complete 3 steps to get started',
+    sub: 'Complete 2 steps to get started.',
     close: 'Later',
     steps: [
-      { key:'habit',    icon:'✏️', title:'Create your first habit',    desc:'Go to Edit tab and tap +',              tab:'habits',
-        hint: { icon:'✏️', title:'Create a habit', desc:'Tap the "+ New habit" button below, enter a name and time, then tap "Save".', arrow:'👇 Tap "+ New habit" button' } },
-      { key:'reminder', icon:'⏰', title:'Set a reminder time',        desc:'Pick a convenient time for your habit', tab:'reminders',
-        hint: { icon:'⏰', title:'Set your reminder', desc:'Tap the time field on a habit card, pick a convenient time and save.', arrow:'👆 Edit the time field on a habit card' } },
-      { key:'stats',    icon:'🏆', title:'Check the leaderboard',      desc:'Find your place among all users',       tab:'stats',
-        hint: { icon:'🏆', title:'Your leaderboard rank', desc:'This page shows your position among all users. Complete habits daily to climb higher!', arrow:'👇 Find your position in the list' } },
+      { key:'habit', icon:'☀️', title:'Create your first habit!', desc:'Tap the "+ Create habit" button at the top.', tab:'today',
+        hint: { icon:'☀️', title:'Create a habit!', desc:'Tap the "+ Create habit" button at the top of the page, enter a name and time, then tap "Save".', arrow:'👆 Tap "+ Create habit" button.' } },
+      { key:'stats', icon:'⭐', title:'Check the leaderboard!', desc:'Track your level in the leaderboard.', tab:'stats',
+        hint: { icon:'⭐', title:'Your leaderboard rank!', desc:'This page shows your position among all users. Complete habits daily to climb higher!', arrow:'👇 Find your position in the list.' } },
     ]
   }
 };
