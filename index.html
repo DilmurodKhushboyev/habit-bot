@@ -1398,13 +1398,6 @@ async function checkin(hid, cardEl) {
       setTimeout(() => pop.classList.remove('show'), 600);
     }
 
-    // Ball xabari
-    if (isDone) {
-      showToast('🎉 +5 ball qo\'shildi!');
-    } else if (tc === 0 && wasFullyDone) {
-      showToast('↩️ -5 ball ayirildi');
-    }
-
     // Ring yangilash
     if (data.today) {
       const habit = (data.today.habits || []).find(h => h.id === hid);
@@ -1434,8 +1427,13 @@ async function checkin(hid, cardEl) {
       if (data.today) data.today.points = result.points;
     }
 
-    const diffTxt = isDone ? '+5 ⭐' : '-5 ⭐';
-    showTodayToast(isDone ? `✅ Bajarildi! ${diffTxt}` : `↩️ Bekor qilindi ${diffTxt}`);
+    const rc2 = result.repeat_count || 1;
+    const tc2 = result.today_count  || 0;
+    const isUndo = !isDone && tc2 === 0 && wasFullyDone;
+    if (isDone || isUndo) {
+      const diffTxt = isDone ? '+5 ⭐' : '-5 ⭐';
+      showTodayToast(isDone ? `✅ Bajarildi! ${diffTxt}` : `↩️ Bekor qilindi ${diffTxt}`);
+    }
     loaded.profile = false; loaded.rating = false; loaded.achievements = false;
     // Yangi badge popup
     if (isDone && result.new_badges && result.new_badges.length) {
