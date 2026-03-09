@@ -1309,7 +1309,7 @@ function renderToday(d) {
     // Progress dots (repeat uchun)
     let dotsHtml = '';
     if (isRepeat) {
-      dotsHtml = '<div style="display:flex;gap:3px;margin-top:4px">'
+      dotsHtml = '<div class="repeat-dots" style="display:flex;gap:3px;margin-top:4px">'
         + Array.from({length: rc}, (_,i) =>
             '<div style="width:8px;height:8px;border-radius:50%;background:'+(i<tc?'var(--green)':'var(--bg)')+';box-shadow:'+(i<tc?'none':'var(--sh-in)')+'"></div>'
           ).join('') + '</div>';
