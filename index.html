@@ -368,6 +368,24 @@ body {
   background: linear-gradient(135deg, #5B8DEF, #A78BFA);
 }
 
+.habit-type-toggle {
+  display: flex; gap: 8px; margin-top: 4px;
+}
+.habit-type-btn {
+  flex: 1; padding: 10px 8px; border-radius: 12px;
+  border: 1.5px solid #e0e0ee; background: var(--bg);
+  font-size: 13px; font-weight: 600; color: var(--sub);
+  font-family: inherit; cursor: pointer; transition: all .15s;
+  text-align: center;
+}
+.habit-type-btn.active {
+  border-color: var(--accent); background: var(--accent);
+  color: #fff; box-shadow: 0 2px 8px rgba(91,141,239,.3);
+}
+.repeat-count-field {
+  display: none; margin-top: 10px;
+}
+.repeat-count-field.visible { display: block; }
 .save-btn {
   width: 100%; padding: 16px; border-radius: 16px;
   background: var(--bg);
@@ -1377,6 +1395,14 @@ async function checkin(hid, cardEl) {
     if (isDone && pop) {
       pop.classList.add('show');
       setTimeout(() => pop.classList.remove('show'), 600);
+    }
+
+    // Ball xabari
+    const wasFullyDone = cardEl.classList.contains('done');
+    if (isDone) {
+      showToast('🎉 +5 ball qo\'shildi!');
+    } else if (tc === 0) {
+      showToast('↩️ -5 ball ayirildi');
     }
 
     // Ring yangilash
@@ -2549,6 +2575,16 @@ function renderHabits(habits, jon = 100) {
           <input id="h-time" type="text" placeholder="Masalan: 07:00 yoki vaqtsiz">
         </div>
         <div class="field">
+          <label>Odat turi</label>
+          <div class="habit-type-toggle">
+            <button type="button" class="habit-type-btn active" id="btn-simple" onclick="setHabitType('simple')">☑️ Oddiy</button>
+            <button type="button" class="habit-type-btn" id="btn-repeat" onclick="setHabitType('repeat')">🔁 Takrorlanuvchi</button>
+          </div>
+          <div class="repeat-count-field" id="repeat-count-field">
+            <input id="h-repeat-count" type="number" min="2" max="99" value="2" placeholder="Masalan: 5 (namoz uchun)">
+          </div>
+        </div>
+        <div class="field">
           <label>Icon tanlang</label>
           ${iconGrid}
         </div>
@@ -2594,6 +2630,7 @@ function openAdd() {
   document.getElementById('h-time').value = '';
   document.querySelectorAll('.icon-opt').forEach(e => e.classList.remove('selected'));
   document.querySelector('.icon-opt')?.classList.add('selected');
+  setHabitType('simple');
   document.getElementById('habit-modal').classList.add('open');
 }
 function openEdit(id, name, icon, time) {
@@ -2621,10 +2658,18 @@ function showToast(msg, err=false) {
   setTimeout(() => t.className = 'toast', 2500);
 }
 
+function setHabitType(type) {
+  document.getElementById('btn-simple').classList.toggle('active', type === 'simple');
+  document.getElementById('btn-repeat').classList.toggle('active', type === 'repeat');
+  document.getElementById('repeat-count-field').classList.toggle('visible', type === 'repeat');
+}
+
 async function saveHabit() {
   const name = document.getElementById('h-name').value.trim();
   const time = document.getElementById('h-time').value.trim() || 'vaqtsiz';
   const icon = document.querySelector('.icon-opt.selected')?.dataset.icon || '✅';
+  const isRepeat = document.getElementById('btn-repeat').classList.contains('active');
+  const repeatCount = isRepeat ? (parseInt(document.getElementById('h-repeat-count').value) || 2) : 1;
   if (!name) { showToast('Nom kiriting!', true); return; }
   try {
     if (editingHabitId) {
@@ -2638,7 +2683,7 @@ async function saveHabit() {
       await fetch(`${API}/habits/${userId}`, {
         method: 'POST',
         headers: {'Content-Type':'application/json','X-User-Id':userId},
-        body: JSON.stringify({name, icon, time})
+        body: JSON.stringify({name, icon, time, type: isRepeat ? 'repeat' : 'simple', repeat_count: repeatCount})
       });
       showToast('✅ Qo\'shildi!');
     }
