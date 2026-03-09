@@ -2516,9 +2516,9 @@ function renderHabits(habits, jon = 100) {
 
   const iconGrid = `
     <div class="icon-cat-tabs" id="icon-cat-tabs">
-      ${Object.keys(ICON_CATS).map(cat =>
+      ${Object.keys(ICON_CATS).map((cat, i) =>
         `<button type="button" class="icon-cat-btn${cat === _iconCat ? ' active' : ''}"
-          onclick="selectIconCat(this,'${cat.replace(/'/g,"\\'")}')">${cat}</button>`
+          onclick="selectIconCat(this,${i})">${cat}</button>`
       ).join('')}
     </div>
     <div class="icon-grid" id="icon-grid-inner">
@@ -2557,7 +2557,8 @@ function renderHabits(habits, jon = 100) {
     </div>`;
 }
 
-function selectIconCat(btn, cat) {
+function selectIconCat(btn, idx) {
+  const cat = Object.keys(ICON_CATS)[idx];
   _iconCat = cat;
   document.querySelectorAll('.icon-cat-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
