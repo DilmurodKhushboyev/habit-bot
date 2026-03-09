@@ -2018,7 +2018,7 @@ function renderRating(d) {
       <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
         border-radius:14px;margin-bottom:4px;background:var(--card);
         box-shadow:${isMe?'0 0 0 2px #5B8DEF':' var(--sh)'}">
-        <div style="font-size:13px;font-weight:700;color:var(--sub);width:20px;text-align:center">${rank}</div>
+        <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#8BA7D6,#A0B4D8);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:2px 2px 5px #B8BBCA,-2px -2px 5px #fff"><span style="font-size:10px;font-weight:800;color:#fff">${rank}</span></div>
         ${userAvatarHTML(u, 34)}
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700;color:${isMe?'#5B8DEF':'var(--text)'};
@@ -2044,7 +2044,7 @@ function renderRating(d) {
         <div style="font-size:10px;color:var(--sub);margin-bottom:4px;padding-left:4px">Sizning o'rningiz:</div>
         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
           border-radius:14px;background:var(--card);box-shadow:0 0 0 2px #5B8DEF">
-          <div style="font-size:13px;font-weight:700;color:#5B8DEF;width:20px;text-align:center">${u.rank}</div>
+          <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#5B8DEF,#4CAF7D);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 0 2px #5B8DEF44"><span style="font-size:10px;font-weight:800;color:#fff">${u.rank}</span></div>
           ${userAvatarHTML(u, 34)}
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:700;color:#5B8DEF">${u.name}</div>
@@ -2573,8 +2573,8 @@ function renderHabits(habits, jon = 100) {
         <div class="field">
           <label>Odat turi</label>
           <div class="habit-type-toggle">
-            <button type="button" class="habit-type-btn active" id="btn-simple" onclick="setHabitType('simple')">☑️ Oddiy</button>
-            <button type="button" class="habit-type-btn" id="btn-repeat" onclick="setHabitType('repeat')">🔁 Takrorlanuvchi</button>
+            <button type="button" class="habit-type-btn active" id="btn-simple" onclick="setHabitType('simple')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" stroke-width="2.2"/><path d="M7 12l4 4 6-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Oddiy</button>
+            <button type="button" class="habit-type-btn" id="btn-repeat" onclick="setHabitType('repeat')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M17 2l4 4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 11V9a4 4 0 0 1 4-4h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M7 22l-4-4 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 13v2a4 4 0 0 1-4 4H3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Takrorlanuvchi</button>
           </div>
           <div class="repeat-count-field" id="repeat-count-field">
             <input id="h-repeat-count" type="number" min="2" max="99" value="2" placeholder="Masalan: 5 (namoz uchun)">
