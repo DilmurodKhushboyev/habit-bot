@@ -2683,9 +2683,15 @@ async function saveHabit() {
       });
       showToast('✅ Qo\'shildi!');
     }
+    const wasFromToday = _returnToToday;
     closeModal();
-    loaded.habits = false;
-    await loadHabits();
+    if (wasFromToday) {
+      loaded.today = false;
+      await loadToday();
+    } else {
+      loaded.habits = false;
+      await loadHabits();
+    }
   } catch(e) { showToast('Xato yuz berdi!', true); }
 }
 
