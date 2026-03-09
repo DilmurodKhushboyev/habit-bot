@@ -2466,12 +2466,12 @@ async function saveLang() {
     });
     const r = await res.json();
     if (!r.ok) throw new Error(r.error);
-    if (btn) { btn.textContent = '✅ Saqlandi!'; btn.classList.add('saved'); }
-    setTimeout(() => {
-      if (btn) { btn.textContent = '💾 Saqlash'; btn.classList.remove('saved'); btn.disabled = false; }
-    }, 2000);
+    currentLang = selectedLang;
+    closeLangModal();
     const t = document.getElementById('toast-profile');
     if (t) { t.textContent = '✅ Til o\'zgartirildi!'; t.className = 'toast show'; setTimeout(()=>t.className='toast',2500); }
+    loaded.profile = false;
+    await loadProfile();
   } catch(e) {
     if (btn) { btn.textContent = '💾 Saqlash'; btn.disabled = false; }
   }
