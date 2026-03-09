@@ -329,7 +329,23 @@ body {
 .field input::placeholder { color: var(--sub); }
 
 .icon-grid {
-  display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 8px;
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 8px;
+  max-height: 200px; overflow-y: auto;
+}
+.icon-cat-tabs {
+  display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto;
+  padding-bottom: 4px; margin-top: 6px; scrollbar-width: none;
+}
+.icon-cat-tabs::-webkit-scrollbar { display: none; }
+.icon-cat-btn {
+  flex-shrink: 0; padding: 5px 10px; border-radius: 20px;
+  border: none; background: var(--bg); box-shadow: var(--sh-sm);
+  font-size: 12px; font-weight: 600; color: var(--sub);
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+  transition: all .15s;
+}
+.icon-cat-btn.active {
+  background: var(--accent); color: #fff; box-shadow: none;
 }
 .icon-opt {
   aspect-ratio: 1; border-radius: 14px;
@@ -2440,7 +2456,20 @@ async function saveLang() {
 }
 
 // ── ODATLAR ──
-const ICONS = ['✅','📚','🏃','💪','🧘','🍎','💧','😴','✍️','🎯','🎸','🌿','🧹','💊','🙏','🧠','🚴','🏋️','📝','🌅'];
+const ICON_CATS = {
+  '⭐ Sevimli': ['✅','🎯','💪','🧘','📚','🏃','💧','😴','🌅','🙏','🧠','🌿','✍️','🎸','🚴','🏋️','📝','💊','🍎','🌟'],
+  '💪 Sport':  ['🏃','🚴','🏋️','🤸','⛹️','🏊','🎽','🥊','🏆','🥅','⚽','🏀','🎾','🏸','🏓','🎿','🧗','🤾','🏌️','🤺','🥋','🛹','🏄','🤼','🎣','🧜','🚵','🏇','🤽','🤿'],
+  '📖 Ta\'lim': ['📚','📖','✍️','📝','🖊️','📓','📒','📔','📕','📗','📘','📙','📐','📏','🔬','🔭','🧪','🧫','🧬','💡','🖥️','⌨️','🖱️','📊','📈','📉','🗂️','📋','📌','📍'],
+  '🍏 Sog\'liq': ['🍎','🥗','🥦','🥕','🍇','🍓','🫐','🥑','🍌','🍋','🥝','🍅','🥒','🌽','🫑','🧄','🧅','🥬','🥑','💊','🩺','🩻','🧬','🫁','🫀','🦷','👁️','🧴','🚿','🛁'],
+  '🧘 Ruhiyat': ['🧘','🙏','🫶','💆','💭','🌈','☮️','🕊️','🌸','🌺','🌻','🌼','🍀','🌾','🌙','⭐','✨','💫','🌠','🎆','🎇','🧿','🪬','💎','🫧','🕯️','🪷','🌊','🏔️','🌄'],
+  '😊 His':    ['😊','😄','🥰','😎','🤩','😤','💪','🙌','👏','🤝','🫂','❤️','💖','💪','🔥','⚡','🌊','💨','🎉','🎊','🏅','🥇','🎖️','🏵️','🎗️','🎁','🎀','🎈','🎪','🎭'],
+  '🏠 Turmush':['🧹','🧺','🧻','🪣','🧽','🪥','🛏️','🛋️','🪑','🚪','🪟','🏠','🏡','🌳','🌲','🌴','🪴','🌵','🐕','🐈','🐠','🐦','🐇','🌻','🌹','🌷','💐','🪨','🪵','🔑'],
+  '💼 Ish':    ['💼','📊','📈','💰','🏦','💳','📱','💻','⌨️','🖨️','📠','📟','☎️','📧','📨','📩','📬','📭','📮','🗃️','🗄️','🗑️','📎','🖇️','📐','📏','✂️','🗃️','🖊️','🖋️'],
+  '🎨 Ijod':   ['🎨','🖌️','🖍️','✏️','🎭','🎬','🎥','📸','🎵','🎶','🎤','🎧','🎼','🎹','🥁','🎷','🎺','🪕','🎻','🎮','🕹️','🃏','🎲','🧩','♟️','🎯','🎳','🪀','🪁','🎣'],
+  '🚀 Texno':  ['🚀','💻','📱','⌨️','🖥️','🖨️','🖱️','💾','💿','📀','📷','📹','🎥','📡','🔋','🔌','💡','🔦','🕯️','🧲','⚙️','🔧','🔨','🪛','🔩','⚗️','🧪','🔬','🔭','📡'],
+};
+let _iconCat = Object.keys(ICON_CATS)[0];
+const ICONS = Object.values(ICON_CATS).flat();
 let editingHabitId = null;
 
 async function refreshHabitsJon() {
@@ -2485,9 +2514,18 @@ function renderHabits(habits, jon = 100) {
   const jonPct = Math.round(jon);
   const jonDoira = jonRingHTML(jonPct, 72);
 
-  const iconGrid = ICONS.map(ic =>
-    `<div class="icon-opt" data-icon="${ic}" onclick="selectIcon(this)">${ic}</div>`
-  ).join('');
+  const iconGrid = `
+    <div class="icon-cat-tabs" id="icon-cat-tabs">
+      ${Object.keys(ICON_CATS).map(cat =>
+        `<button type="button" class="icon-cat-btn${cat === _iconCat ? ' active' : ''}"
+          onclick="selectIconCat(this,'${cat.replace(/'/g,"\\'")}')">${cat}</button>`
+      ).join('')}
+    </div>
+    <div class="icon-grid" id="icon-grid-inner">
+      ${ICON_CATS[_iconCat].map(ic =>
+        `<div class="icon-opt" data-icon="${ic}" onclick="selectIcon(this)">${ic}</div>`
+      ).join('')}
+    </div>`;
 
   document.getElementById('habits-content').innerHTML = `
     <div>
@@ -2517,6 +2555,18 @@ function renderHabits(habits, jon = 100) {
         <button class="save-btn" onclick="saveHabit()">Saqlash</button>
       </div>
     </div>`;
+}
+
+function selectIconCat(btn, cat) {
+  _iconCat = cat;
+  document.querySelectorAll('.icon-cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const grid = document.getElementById('icon-grid-inner');
+  if (grid) {
+    grid.innerHTML = ICON_CATS[cat].map(ic =>
+      `<div class="icon-opt" data-icon="${ic}" onclick="selectIcon(this)">${ic}</div>`
+    ).join('');
+  }
 }
 
 function selectIcon(el) {
