@@ -6768,20 +6768,31 @@ try:
         for i in range(6, -1, -1):
             d = (now_uz - timedelta(days=i)).strftime("%Y-%m-%d")
             day_data = history.get(d, {})
+            w_count = day_data.get("done", 0)
+            w_total = day_data.get("total", 0)
+            if w_count == 0 and w_total == 0:
+                w_count = sum(1 for h in habits if h.get("last_done") == d)
+                w_total = total
             weekly.append({
                 "date":  d,
-                "count": day_data.get("done", 0),
-                "total": day_data.get("total", total) or total,
+                "count": w_count,
+                "total": w_total or total,
             })
         # Oylik (oxirgi 30 kun)
         monthly = []
         for i in range(29, -1, -1):
             d = (now_uz - timedelta(days=i)).strftime("%Y-%m-%d")
             day_data = history.get(d, {})
+            hist_count = day_data.get("done", 0)
+            hist_total = day_data.get("total", 0)
+            # history bo'sh bo'lsa — habits dagi last_done dan hisoblash
+            if hist_count == 0 and hist_total == 0:
+                hist_count = sum(1 for h in habits if h.get("last_done") == d)
+                hist_total = total
             monthly.append({
                 "date":  d,
-                "count": day_data.get("done", 0),
-                "total": day_data.get("total", total) or total,
+                "count": hist_count,
+                "total": hist_total or total,
             })
         # Faol kunlar (30)
         active_days_30 = sum(1 for d in days_30 if heatmap.get(d))
