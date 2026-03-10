@@ -6788,26 +6788,29 @@ try:
         # Har bir odat statistikasi
         habit_stats = []
         for h in habits:
-            done_7  = sum(1 for i in range(7)  if history.get((now_uz-timedelta(days=i)).strftime("%Y-%m-%d"),{}).get("habits",{}).get(h["id"]))
-            done_30 = sum(1 for i in range(30) if history.get((now_uz-timedelta(days=i)).strftime("%Y-%m-%d"),{}).get("habits",{}).get(h["id"]))
+            # history dan hisoblash (yangi ma'lumotlar)
+            done_7_hist  = sum(1 for i in range(7)  if history.get((now_uz-timedelta(days=i)).strftime("%Y-%m-%d"),{}).get("habits",{}).get(h["id"]))
+            done_30_hist = sum(1 for i in range(30) if history.get((now_uz-timedelta(days=i)).strftime("%Y-%m-%d"),{}).get("habits",{}).get(h["id"]))
             week_dots = [bool(history.get((now_uz-timedelta(days=6-i)).strftime("%Y-%m-%d"),{}).get("habits",{}).get(h["id"])) for i in range(7)]
-            # Jami: botga qo'shilgandan beri
-            joined = u.get("joined_at", "")
-            if joined:
-                try:
-                    from datetime import datetime as _dt
-                    days_since = (now_uz.date() - _dt.strptime(joined, "%Y-%m-%d").date()).days + 1
-                except:
-                    days_since = 30
-            else:
-                days_since = 30
-            done_all = sum(1 for i in range(days_since) if history.get((now_uz-timedelta(days=i)).strftime("%Y-%m-%d"),{}).get("habits",{}).get(h["id"]))
+            # Agar history bo'sh bo'lsa (eski foydalanuvchilar) — streak va total_done dan foydalanish
+            total_done_saved = h.get("total_done", 0)
+            streak_val = h.get("streak", 0)
+            # done_7: history mavjud bo'lsa undan, yo'qsa streak dan taxminan
+            done_7  = done_7_hist  if done_7_hist  > 0 else min(streak_val, 7)
+            done_30 = done_30_hist if done_30_hist > 0 else min(total_done_saved, 30)
+            # done_all: total_done field eng ishonchli
+            done_all = total_done_saved if total_done_saved > 0 else done_30_hist
+            # week_dots: history bo'sh bo'lsa last_done asosida bugungi katakni to'ldirish
+            if not any(week_dots) and h.get("last_done") == today:
+                week_dots[-1] = True
+            # percent: done_30 asosida
+            percent = round(done_30 / 30 * 100)
             habit_stats.append({
                 "id":         h["id"],
                 "name":       h["name"],
                 "icon":       h.get("icon", "✅"),
-                "streak":     h.get("streak", 0),
-                "percent":    round(done_30 / 30 * 100),
+                "streak":     streak_val,
+                "percent":    percent,
                 "done_7":     done_7,
                 "done_30":    done_30,
                 "total_done": done_all,
