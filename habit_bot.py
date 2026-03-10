@@ -5053,13 +5053,10 @@ def daily_reset():
             today_str = (datetime.now(tz_uz)).strftime("%Y-%m-%d")
             d = 0
             for h in habits_list:
-                htype = h.get("type", "simple")
-                if htype == "repeat":
-                    if h.get("done_today_count", 0) >= h.get("repeat_count", 1):
-                        d += 1
-                else:
-                    if h.get("last_done") == yesterday:
-                        d += 1
+                # Har ikkala tur uchun ham last_done == yesterday tekshiramiz
+                # (repeat uchun done_today_count allaqachon tozalangan bo'ladi)
+                if h.get("last_done") == yesterday:
+                    d += 1
             # Har bir odat teng ulushga ega: 10% / n
             # Masalan: 3 odat => har biri 3.33%
             jon_before   = udata.get("jon", 100.0)
