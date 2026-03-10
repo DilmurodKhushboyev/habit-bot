@@ -1360,7 +1360,7 @@ function renderToday(d) {
       <div class="today-sub" id="prog-sub">${done_count} / ${total} odat bajarildi</div>
     </div>
 
-    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Bugungi odatlar<button onclick="openAddFromToday()" type="button" style="font-size:12px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px">＋ Odat yaratish</button></div>
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">Bugungi odatlar<div style="display:flex;gap:8px;align-items:center"><button onclick="openAddFromToday()" type="button" style="font-size:12px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;padding:2px 6px">＋ Odat yaratish</button><button onclick="showTodayToast('Tez orada! ')" type="button" style="font-size:12px;font-weight:600;color:#4CAF7D;background:none;border:none;cursor:pointer;padding:2px 6px">＋ Vazifa yaratish</button></div></div>
     ${cardsHtml || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>Hali odat qo\'shilmagan</div>'}
     <div class="toast" id="toast-today"></div>`;
 }
