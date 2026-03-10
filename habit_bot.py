@@ -2125,6 +2125,14 @@ def callback_handler(call):
     cdata = call.data
     u     = load_user(uid)
 
+    # Kechki eslatma — "Tushundim" tugmasi
+    if cdata == "evening_dismiss":
+        try:
+            bot.delete_message(uid, call.message.message_id)
+        except Exception:
+            bot.answer_callback_query(call.id)
+        return
+
     # Eski tugma bosilsa — bot yangilanganini bildirish
     # Til tanlash tugmalari phone bo'lmasa ham ishlashi kerak
     if not u.get("phone") and not cdata.startswith("set_lang_"):
@@ -5131,6 +5139,57 @@ def load_all_schedules():
                 continue
             schedule_habit(user_id, habit)
 
+def send_evening_reminders():
+    """Har kuni 21:00 (UTC+5) da — evening_notify=True foydalanuvchilarga bajarilmagan odatlar haqida eslatma."""
+    from datetime import timezone, timedelta
+    tz_uz = timezone(timedelta(hours=5))
+    today = datetime.now(tz_uz).strftime("%Y-%m-%d")
+    try:
+        users = load_all_users()
+    except Exception as e:
+        print(f"[evening] load_all_users xatosi: {e}")
+        return
+    for uid_str, udata in users.items():
+        try:
+            if not udata.get("evening_notify", False):
+                continue
+            habits = udata.get("habits", [])
+            undone = [h for h in habits if h.get("last_done") != today]
+            if not undone:
+                continue
+            lang = udata.get("lang", "uz")
+            if lang == "ru":
+                lines = ["*🌙 Вечернее напоминание*\n\nСегодня ещё не выполнены:"]
+                for h in undone:
+                    lines.append(f"  {h.get('icon','✅')} {h.get('name','')}")
+                lines.append("\n_Ещё есть время! 💪_")
+            elif lang == "en":
+                lines = ["*🌙 Evening reminder*\n\nNot done yet today:"]
+                for h in undone:
+                    lines.append(f"  {h.get('icon','✅')} {h.get('name','')}")
+                lines.append("\n_You still have time! 💪_")
+            else:
+                lines = ["*🌙 Kechki eslatma*\n\nBugun hali bajarilmagan odatlar:"]
+                for h in undone:
+                    lines.append(f"  {h.get('icon','✅')} {h.get('name','')}")
+                lines.append("\n_Vaqt bor, ulguring! 💪_")
+            text = "\n".join(lines)
+            if lang == "ru":
+                btn_label = "✅ Понятно"
+            elif lang == "en":
+                btn_label = "✅ Got it"
+            else:
+                btn_label = "✅ Tushundim"
+            import json as _json
+            kb_json = _json.dumps({"inline_keyboard": [[{
+                "text": btn_label,
+                "callback_data": "evening_dismiss",
+                "style": "success"
+            }]]})
+            bot.send_message(int(uid_str), text, parse_mode="Markdown", reply_markup=kb_json)
+        except Exception as e:
+            print(f"[evening] uid={uid_str} xato: {e}")
+
 def scheduler_loop():
     from datetime import timezone, timedelta
     tz_uz = timezone(timedelta(hours=5))
@@ -5161,6 +5220,8 @@ def scheduler_loop():
     load_all_schedules()
     # Har kuni 00:00 (UTC+5 = 19:00 UTC) da reset
     schedule.every().day.at("19:00").do(daily_reset).tag("daily_reset")
+    # Har kuni 21:00 (UTC+5 = 16:00 UTC) da kechki eslatma
+    schedule.every().day.at("16:00").do(send_evening_reminders).tag("evening_reminder")
     schedule.every().day.at("19:00").do(group_daily_reset).tag("group_daily_reset")
     # Har dushanba 09:00 (UTC+5 = 04:00 UTC) da haftalik hisobot
     schedule.every().monday.at("04:00").do(send_weekly_reports).tag("weekly_report")
