@@ -2171,12 +2171,6 @@ function renderProfile(d) {
     ? '<span style="background:#5B8DEF22;color:#5B8DEF;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700;margin-left:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgVip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 2l1.8 5.5H20l-4.9 3.6 1.8 5.5L12 13l-4.9 3.6 1.8-5.5L4 7.5h6.2z" fill="url(#svgVip)"/></svg> VIP</span>'
     : '';
 
-  // Mini heatmap (30 kun)
-  const hmCells = (d.days_30 || []).map(day => {
-    const done = d.heatmap_30 && d.heatmap_30[day];
-    return `<div style="aspect-ratio:1;border-radius:4px;background:${done ? 'var(--green)' : 'var(--bg)'};box-shadow:${done ? '1px 1px 3px #3DA86840,-1px -1px 3px #fff' : 'var(--sh-in)'}"></div>`;
-  }).join('');
-
   // Yutuqlar progress
   const achPct = d.total_ach ? Math.round(d.earned_ach / d.total_ach * 100) : 0;
   const achColor = achPct >= 80 ? '#4CAF7D' : achPct >= 40 ? '#5B8DEF' : '#E07040';
@@ -2220,17 +2214,6 @@ function renderProfile(d) {
         <span style="font-size:12px;font-weight:700;color:${jonColor}">${jon}%</span>
       </div>
       <div class="jon-bar-bg"><div class="jon-bar-fill" style="width:${jon}%;background:${jonColor}"></div></div>
-    </div>
-
-    <!-- Mini heatmap -->
-    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgCal" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><rect x="3" y="5" width="18" height="16" rx="3" stroke="url(#svgCal)" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="url(#svgCal)" stroke-width="2" stroke-linecap="round"/></svg> ${S('profile','activity')}</div>
-    <div class="rem-card">
-      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px">${hmCells}</div>
-      <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:10px;color:var(--sub)">
-        <div style="width:10px;height:10px;border-radius:2px;background:var(--green)"></div> ${S('profile','done_label')}
-        <div style="width:10px;height:10px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-left:8px"></div> ${S('profile','not_done')}
-        <span style="margin-left:auto">${d.active_days_30 || 0} / 30 kun</span>
-      </div>
     </div>
 
     <!-- Yutuqlar progress -->
