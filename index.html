@@ -1436,7 +1436,8 @@ async function checkin(hid, cardEl) {
       const diffTxt = isDone ? '+5 ⭐' : '-5 ⭐';
       showTodayToast(isDone ? `✅ Bajarildi! ${diffTxt}` : `↩️ Bekor qilindi ${diffTxt}`);
     }
-    loaded.profile = false; loaded.rating = false; loaded.achievements = false;
+    loaded.profile = false; loaded.rating = false; loaded.achievements = false; loaded.stats = false;
+    if (document.getElementById('page-stats')?.classList.contains('active')) { loadStats(); }
     // Bajarilgan odat pastga, bekor qilingan odat tepaga
     const container = cardEl.parentNode;
     if (container) {
