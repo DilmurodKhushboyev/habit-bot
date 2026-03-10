@@ -4983,9 +4983,19 @@ def group_daily_reset():
 
 def daily_reset():
     """Har kuni 00:00 (UTC+5) da barcha jadvallarni qayta yuklash"""
-    print("[daily_reset] Barcha jadvallar qayta yuklanmoqda...")
     from datetime import timezone, timedelta
     tz_uz     = timezone(timedelta(hours=5))
+    today_str = datetime.now(tz_uz).strftime("%Y-%m-%d")
+    # Bugun allaqachon ishlagan bo'lsa — qayta ishlatma
+    try:
+        settings_doc = mongo_col.find_one({"_id": "_settings"}) or {}
+        if settings_doc.get("last_reset_date") == today_str:
+            print(f"[daily_reset] Bugun allaqachon ishlagan ({today_str}) — o'tkazib yuborildi")
+            return
+        mongo_col.update_one({"_id": "_settings"}, {"$set": {"last_reset_date": today_str}}, upsert=True)
+    except Exception as e:
+        print(f"[daily_reset] Settings xatosi: {e}")
+    print("[daily_reset] Barcha jadvallar qayta yuklanmoqda...")
     yesterday = (datetime.now(tz_uz) - timedelta(days=1)).strftime("%Y-%m-%d")
     users = load_all_users()
     for uid, udata in users.items():
