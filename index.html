@@ -2171,14 +2171,6 @@ function renderProfile(d) {
     ? '<span style="background:#5B8DEF22;color:#5B8DEF;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700;margin-left:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgVip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 2l1.8 5.5H20l-4.9 3.6 1.8 5.5L12 13l-4.9 3.6 1.8-5.5L4 7.5h6.2z" fill="url(#svgVip)"/></svg> VIP</span>'
     : '';
 
-  // Kunlik maqsad
-  const habitCount = (d.habits || []).length;
-  const target = d.daily_target || habitCount;
-  const targetPct = habitCount ? Math.round(target / habitCount * 100) : 0;
-  const targetOpts = Array.from({length: habitCount + 1}, (_, i) =>
-    `<option value="${i}" ${i === target ? 'selected' : ''}>${i === 0 ? 'Maqsadsiz' : i + ' ta odat'}</option>`
-  ).join('');
-
   // Mini heatmap (30 kun)
   const hmCells = (d.days_30 || []).map(day => {
     const done = d.heatmap_30 && d.heatmap_30[day];
@@ -2228,22 +2220,6 @@ function renderProfile(d) {
         <span style="font-size:12px;font-weight:700;color:${jonColor}">${jon}%</span>
       </div>
       <div class="jon-bar-bg"><div class="jon-bar-fill" style="width:${jon}%;background:${jonColor}"></div></div>
-    </div>
-
-    <!-- Kunlik maqsad -->
-    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgTarget" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="9" stroke="url(#svgTarget)" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="url(#svgTarget)" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="url(#svgTarget)"/></svg> ${S('profile','daily_goal')}</div>
-    <div class="rem-card">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <div style="font-size:28px;font-weight:700;color:var(--text);font-family:'DM Mono',monospace">${target}</div>
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:600;color:var(--text)">${S('profile','per_day')}</div>
-          <div style="font-size:11px;color:var(--sub)">${habitCount} ta odatdan ${targetPct}%</div>
-        </div>
-      </div>
-      <select id="target-select" style="width:100%;padding:10px 14px;border-radius:12px;border:none;background:var(--bg);box-shadow:var(--sh-in);font-family:inherit;font-size:13px;color:var(--text);cursor:pointer">
-        ${targetOpts}
-      </select>
-      <button class="rem-save-btn" style="margin-top:10px" onclick="saveTarget()" type="button" id="target-save-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgSave" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 21v-8H7v8M7 3v5h8" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Saqlash</button>
     </div>
 
     <!-- Mini heatmap -->
@@ -2438,28 +2414,7 @@ async function saveEveningNotify(val) {
   } catch(e) {}
 }
 
-async function saveTarget() {
-  const sel = document.getElementById('target-select');
-  if (!sel) return;
-  const btn = document.getElementById('target-save-btn');
-  if (btn) { btn.textContent = '⏳...'; btn.disabled = true; }
-  try {
-    const res = await fetch(`${API}/profile/${userId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-User-Id': userId },
-      body: JSON.stringify({ daily_target: parseInt(sel.value) })
-    });
-    const r = await res.json();
-    if (!r.ok) throw new Error(r.error);
-    if (btn) { btn.textContent = '✅ Saqlandi!'; btn.classList.add('saved'); }
-    setTimeout(() => closeLangModal(), 1500);
-    setTimeout(() => { if (btn) { btn.textContent = '💾 Saqlash'; btn.classList.remove('saved'); btn.disabled = false; } }, 2000);
-    const t = document.getElementById('toast-profile');
-    if (t) { t.textContent = '🎯 Maqsad saqlandi!'; t.className = 'toast show'; setTimeout(()=>t.className='toast',2500); }
-  } catch(e) {
-    if (btn) { btn.textContent = '💾 Saqlash'; btn.disabled = false; }
-  }
-}
+
 
 let selectedLang = null;
 let currentLang = 'uz';
