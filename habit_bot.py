@@ -4917,71 +4917,6 @@ def unschedule_habit_today(user_id, habit_id):
     schedule.clear(f"{user_id}_{habit_id}")
     print(f"[schedule] {user_id}_{habit_id} — bugunlik to'xtatildi")
 
-# ============================================================
-#  YUTUQLAR TIZIMI
-# ============================================================
-ACHIEVEMENTS = [
-    # Streak yutuqlari
-    {"id": "streak_3",    "cat": "streak",  "icon": "🔥", "title": "Boshliq",        "desc": "3 kun ketma-ket bajaring",          "req_type": "streak",     "req_val": 3},
-    {"id": "streak_7",    "cat": "streak",  "icon": "🔥", "title": "Haftalik qahramon","desc": "7 kun ketma-ket bajaring",         "req_type": "streak",     "req_val": 7},
-    {"id": "streak_14",   "cat": "streak",  "icon": "⚡", "title": "Ikki hafta",      "desc": "14 kun ketma-ket bajaring",         "req_type": "streak",     "req_val": 14},
-    {"id": "streak_30",   "cat": "streak",  "icon": "💪", "title": "Bir oylik",       "desc": "30 kun ketma-ket bajaring",         "req_type": "streak",     "req_val": 30},
-    {"id": "streak_100",  "cat": "streak",  "icon": "👑", "title": "Legenda",         "desc": "100 kun ketma-ket bajaring",        "req_type": "streak",     "req_val": 100},
-    # Bajarilgan yutuqlari
-    {"id": "done_10",     "cat": "done",    "icon": "✅", "title": "Birinchi qadam",  "desc": "Jami 10 ta odat bajaring",          "req_type": "total_done", "req_val": 10},
-    {"id": "done_50",     "cat": "done",    "icon": "🌟", "title": "Faol ishtirokchi","desc": "Jami 50 ta odat bajaring",          "req_type": "total_done", "req_val": 50},
-    {"id": "done_100",    "cat": "done",    "icon": "🏅", "title": "Yuz marta",       "desc": "Jami 100 ta odat bajaring",         "req_type": "total_done", "req_val": 100},
-    {"id": "done_500",    "cat": "done",    "icon": "🏆", "title": "Chempion",        "desc": "Jami 500 ta odat bajaring",         "req_type": "total_done", "req_val": 500},
-    {"id": "done_1000",   "cat": "done",    "icon": "💎", "title": "Olmosli",         "desc": "Jami 1000 ta odat bajaring",        "req_type": "total_done", "req_val": 1000},
-    # Ball yutuqlari
-    {"id": "points_100",  "cat": "points",  "icon": "⭐", "title": "Yulduzcha",       "desc": "100 ball to'plang",                 "req_type": "points",     "req_val": 100},
-    {"id": "points_500",  "cat": "points",  "icon": "🌠", "title": "Yulduz",          "desc": "500 ball to'plang",                 "req_type": "points",     "req_val": 500},
-    {"id": "points_1000", "cat": "points",  "icon": "💫", "title": "Super yulduz",    "desc": "1000 ball to'plang",                "req_type": "points",     "req_val": 1000},
-    {"id": "points_5000", "cat": "points",  "icon": "🌌", "title": "Galaktika",       "desc": "5000 ball to'plang",                "req_type": "points",     "req_val": 5000},
-    # Odat soni yutuqlari
-    {"id": "habits_3",    "cat": "habits",  "icon": "🌱", "title": "Uch odat",        "desc": "3 ta odat yarating",                "req_type": "habits",     "req_val": 3},
-    {"id": "habits_5",    "cat": "habits",  "icon": "🌿", "title": "Besh odat",       "desc": "5 ta odat yarating",                "req_type": "habits",     "req_val": 5},
-    {"id": "habits_10",   "cat": "habits",  "icon": "🌳", "title": "O'n odat",        "desc": "10 ta odat yarating",               "req_type": "habits",     "req_val": 10},
-]
-
-CAT_LABELS = {
-    "streak":  {"icon": "🔥", "label": "Streak"},
-    "done":    {"icon": "✅", "label": "Bajarildi"},
-    "points":  {"icon": "⭐", "label": "Ball"},
-    "habits":  {"icon": "🌱", "label": "Odatlar"},
-}
-
-def check_achievements(uid, u):
-    """Foydalanuvchi yutuqlarini tekshirib yangilarini beradi. Yangi yutuqlar listini qaytaradi."""
-    earned_ids = {a["id"] for a in u.get("achievements", [])}
-    new_badges = []
-    total_done = sum(h.get("total_done", 0) for h in u.get("habits", []))
-    streak_val = u.get("streak", 0)
-    points_val = u.get("points", 0)
-    habits_cnt = len(u.get("habits", []))
-
-    for ach in ACHIEVEMENTS:
-        if ach["id"] in earned_ids:
-            continue
-        rt  = ach["req_type"]
-        rv  = ach["req_val"]
-        earned = False
-        if   rt == "streak"     and streak_val >= rv: earned = True
-        elif rt == "total_done" and total_done  >= rv: earned = True
-        elif rt == "points"     and points_val  >= rv: earned = True
-        elif rt == "habits"     and habits_cnt  >= rv: earned = True
-        if earned:
-            from datetime import timezone, timedelta
-            tz_uz = timezone(timedelta(hours=5))
-            u.setdefault("achievements", []).append({
-                "id":       ach["id"],
-                "earned":   True,
-                "date":     datetime.now(tz_uz).strftime("%Y-%m-%d"),
-            })
-            new_badges.append({"icon": ach["icon"], "title": ach["title"]})
-    return new_badges
-
-
 def group_daily_reset():
     """Har kuni 00:00 (UTC+5) da guruh progressini tozalash va eslatma yuborish"""
     print("[group_reset] Guruh progresslari tozalanmoqda...")
@@ -6542,28 +6477,18 @@ try:
         best_streak    = max((h.get("streak", 0) for h in u.get("habits", [])), default=0)
         total_done_all = sum(h.get("total_done", 0) for h in u.get("habits", []))
 
-        earned_ach = sum(1 for a in u.get("achievements", []) if a.get("earned"))
         return jsonify({
-            "name":            u.get("name","?"),
-            "points":          u.get("points",0),
-            "streak":          u.get("streak",0),
-            "jon":             u.get("jon",100),
-            "is_vip":          u.get("is_vip",False),
-            "rank":            rank,
-            "total_users":     len(users),
-            "joined_at":       u.get("joined_at",""),
-            "best_streak":     best_streak,
-            "total_done_all":  total_done_all,
-            "habits":          habits,
-            "earned_ach":      earned_ach,
-            "total_ach":       len(ACHIEVEMENTS),
-            "lang":            u.get("lang", "uz"),
-            "active_pet":      u.get("active_pet", ""),
-            "active_badge":    u.get("active_badge", ""),
-            "active_car":      u.get("active_car", ""),
-            "streak_shields":  u.get("streak_shields", 0),
-            "bonus_2x_active": u.get("bonus_2x_active", False),
-            "bonus_3x_active": u.get("bonus_3x_active", False),
+            "name":           u.get("name","?"),
+            "points":         u.get("points",0),
+            "streak":         u.get("streak",0),
+            "jon":            u.get("jon",100),
+            "is_vip":         u.get("is_vip",False),
+            "rank":           rank,
+            "total_users":    len(users),
+            "joined_at":      u.get("joined_at",""),
+            "best_streak":    best_streak,
+            "total_done_all": total_done_all,
+            "habits":         habits,
         })
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
@@ -6781,10 +6706,6 @@ try:
         day_data["habits"] = hab_map
         history[today] = day_data
         u["history"] = history
-        # Yutuqlarni tekshirish (faqat bajarilganda)
-        new_badges = []
-        if is_done:
-            new_badges = check_achievements(uid, u)
         save_user(uid, u)
         if not found_h:
             return jsonify({"ok": False, "error": "Odat topilmadi"})
@@ -6802,7 +6723,6 @@ try:
             "all_done":    all_done,
             "done_count":  done_count,
             "total":       total,
-            "new_badges":  new_badges,
         })
 
     @api_app.route("/api/stats/<int:uid>")
@@ -6919,30 +6839,8 @@ try:
     @api_app.route("/api/achievements/<int:uid>")
     def api_achievements(uid):
         u = load_user(uid)
-        earned_ids = {a["id"] for a in u.get("achievements", [])}
-        earned_dates = {a["id"]: a.get("date","") for a in u.get("achievements", [])}
-        result = []
-        cats_seen = []
-        for ach in ACHIEVEMENTS:
-            if ach["cat"] not in cats_seen:
-                cats_seen.append(ach["cat"])
-            result.append({
-                "id":     ach["id"],
-                "cat":    ach["cat"],
-                "icon":   ach["icon"],
-                "title":  ach["title"],
-                "desc":   ach["desc"],
-                "earned": ach["id"] in earned_ids,
-                "date":   earned_dates.get(ach["id"], ""),
-            })
-        cats = [{"id": c, "icon": CAT_LABELS[c]["icon"], "label": CAT_LABELS[c]["label"]} for c in cats_seen]
-        earned_count = sum(1 for a in result if a["earned"])
-        return jsonify({
-            "achievements": result,
-            "cats":         cats,
-            "earned_count": earned_count,
-            "total_count":  len(result),
-        })
+        achievements = u.get("achievements", [])
+        return jsonify({"achievements": achievements})
 
     @api_app.route("/api/shop/<int:uid>")
     def api_shop(uid):
