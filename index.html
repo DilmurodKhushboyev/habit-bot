@@ -1301,8 +1301,17 @@ function renderToday(d) {
   const dateStr  = `${dt.getDate()} ${months[dt.getMonth()]} — ${dayNames[dt.getDay()]}`;
   const allDone  = done_count === total && total > 0;
 
+  // Vaqt bo'yicha sort: vaqtsiz eng oxirga, bajarilganlar done bo'lmaganlardan keyin
+  const sortedHabits = [...(habits || [])].sort((a, b) => {
+    // 1. Bajarilgan/bajarilmagan (bajarilmaganlar tepada)
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    // 2. Vaqt bo'yicha o'sish tartibida (vaqtsiz eng oxirga)
+    const ta = a.time && a.time !== 'vaqtsiz' ? a.time : '99:99';
+    const tb = b.time && b.time !== 'vaqtsiz' ? b.time : '99:99';
+    return ta.localeCompare(tb);
+  });
   let cardsHtml = '';
-  (habits || []).forEach(h => {
+  sortedHabits.forEach(h => {
     const rc  = h.repeat_count || 1;
     const tc  = h.today_count  || 0;
     const isRepeat = rc > 1;
