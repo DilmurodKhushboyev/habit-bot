@@ -796,33 +796,19 @@ bot = telebot.TeleBot(BOT_TOKEN)
 def send_message_colored(chat_id, text, reply_markup_dict, parse_mode="Markdown"):
     """Bot API 9.4 style (rangli tugmalar) uchun to'g'ridan HTTP so'rov"""
     url  = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    data = {
+    payload = {
         "chat_id":      chat_id,
         "text":         text,
         "parse_mode":   parse_mode,
-        "reply_markup": json.dumps(reply_markup_dict),
+        "reply_markup": reply_markup_dict,
     }
-    resp = requests.post(url, data=data)
+    resp = requests.post(url, json=payload)
     result = resp.json()
     if result.get("ok"):
         class FakeMsg:
             def __init__(self, msg_id):
                 self.message_id = msg_id
         return FakeMsg(result["result"]["message_id"])
-    # Markdown xatosi bo'lsa — parse_mode'siz qayta urinish
-    if result.get("error_code") == 400:
-        data2 = {
-            "chat_id":      chat_id,
-            "text":         text,
-            "reply_markup": json.dumps(reply_markup_dict),
-        }
-        resp2 = requests.post(url, data=data2)
-        result2 = resp2.json()
-        if result2.get("ok"):
-            class FakeMsg:
-                def __init__(self, msg_id):
-                    self.message_id = msg_id
-            return FakeMsg(result2["result"]["message_id"])
     print(f"[send_message_colored] XATO: {result.get('description')}")
     return None
 
@@ -855,24 +841,14 @@ def kb_to_dict(kb):
 def edit_message_colored(chat_id, message_id, text, reply_markup_dict, parse_mode="Markdown"):
     """Bot API 9.4 style (rangli tugmalar) uchun xabarni tahrirlash"""
     url  = f"https://api.telegram.org/bot{BOT_TOKEN}/editMessageText"
-    data = {
+    payload = {
         "chat_id":      chat_id,
         "message_id":   message_id,
         "text":         text,
         "parse_mode":   parse_mode,
-        "reply_markup": json.dumps(reply_markup_dict),
+        "reply_markup": reply_markup_dict,
     }
-    resp = requests.post(url, data=data)
-    result = resp.json()
-    if not result.get("ok") and result.get("error_code") == 400:
-        # Markdown xatosi bo'lsa — parse_mode'siz qayta urinish
-        data2 = {
-            "chat_id":      chat_id,
-            "message_id":   message_id,
-            "text":         text,
-            "reply_markup": json.dumps(reply_markup_dict),
-        }
-        requests.post(url, data=data2)
+    requests.post(url, json=payload)
 
 def main_menu_dict(uid=None, page=1):
     """Faqat Web App tugmasi"""
