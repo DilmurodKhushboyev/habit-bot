@@ -4980,13 +4980,15 @@ def daily_reset():
             hab_type = habit.get("type", "simple")
             if hab_type == "repeat":
                 # Repeat: done_today_count tozalash + bajarilmasa missed++
-                # BUG FIX: last_done "bugun" (today) bo'lmasa va kamida 1 ta bajarilishi kerak bo'lsa — missed
-                if habit.get("done_today_count", 0) < habit.get("repeat_count", 1):
-                    # last_done bugun emas degani — kecha bajarilmagan
+                fully_done = habit.get("last_done") == yesterday
+                if not fully_done:
+                    # Kecha to'liq bajarilmagan — missed++
                     if habit.get("total_done", 0) > 0 or habit.get("done_today_count", 0) > 0:
                         habit["total_missed"] = habit.get("total_missed", 0) + 1
+                # done_today_count tozalash — lekin last_done ni faqat bajarilmagan bo'lsa nollash
                 habit["done_today_count"] = 0
-                habit["last_done"] = None
+                if not fully_done:
+                    habit["last_done"] = None
                 changed = True
             else:
                 # Oddiy: kecha bajarilmagan bo'lsa missed++ va streak nollanadi
