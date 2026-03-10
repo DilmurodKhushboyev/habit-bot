@@ -6559,6 +6559,8 @@ try:
         name  = (data.get("name") or "").strip()
         icon  = (data.get("icon") or "✅").strip()
         time_ = (data.get("time") or "vaqtsiz").strip()
+        type_ = (data.get("type") or "simple").strip()
+        repeat_count = int(data.get("repeat_count") or 1)
         if not name:
             return jsonify({"ok": False, "error": "Nom bo'sh"}), 400
         u = load_user(uid)
@@ -6568,6 +6570,8 @@ try:
                 h["name"] = name
                 h["icon"] = icon
                 h["time"] = time_
+                h["type"] = type_
+                h["repeat_count"] = repeat_count if type_ == "repeat" else 1
                 break
         else:
             return jsonify({"ok": False, "error": "Topilmadi"}), 404

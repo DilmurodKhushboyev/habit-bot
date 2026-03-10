@@ -2625,7 +2625,7 @@ function renderHabits(habits, jon = 100) {
             <div class="habit-card-meta"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> ${h.time||'vaqtsiz'} &nbsp;<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak} kun</div>
           </div>
           <div class="habit-card-actions">
-            <button class="hbtn" onclick="openEdit('${h.id}','${h.name.replace(/'/g,"\\'")}','${h.icon||'✅'}','${h.time||'vaqtsiz'}')"><svg width="13" height="13" viewBox="0 0 26 26" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgPenBtn" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="url(#svgPenBtn)" opacity="0.85"/></svg></button>
+            <button class="hbtn" onclick="openEdit('${h.id}','${h.name.replace(/'/g,"\\'")}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1})"><svg width="13" height="13" viewBox="0 0 26 26" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgPenBtn" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="url(#svgPenBtn)" opacity="0.85"/></svg></button>
             <button class="hbtn" onclick="deleteHabit('${h.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgTrash" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="url(#svgTrash)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="url(#svgTrash)" stroke-width="2" stroke-linecap="round"/></svg></button>
           </div>
         </div>
@@ -2732,7 +2732,7 @@ function openAdd() {
     if (inp) inp.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 320);
 }
-function openEdit(id, name, icon, time) {
+function openEdit(id, name, icon, time, type, repeatCount) {
   editingHabitId = id;
   document.getElementById('modal-title').textContent = 'Odatni tahrirlash';
   document.getElementById('h-name').value = name;
@@ -2740,6 +2740,10 @@ function openEdit(id, name, icon, time) {
   document.querySelectorAll('.icon-opt').forEach(e => {
     e.classList.toggle('selected', e.dataset.icon === icon);
   });
+  setHabitType(type || 'simple');
+  if ((type || 'simple') === 'repeat') {
+    document.getElementById('h-repeat-count').value = repeatCount || 2;
+  }
   document.getElementById('habit-modal').classList.add('open');
   setTimeout(() => {
     const inp = document.getElementById('h-name');
@@ -2779,7 +2783,7 @@ async function saveHabit() {
       await fetch(`${API}/habits/${userId}/${editingHabitId}`, {
         method: 'PUT',
         headers: {'Content-Type':'application/json','X-User-Id':userId},
-        body: JSON.stringify({name, icon, time})
+        body: JSON.stringify({name, icon, time, type: isRepeat ? 'repeat' : 'simple', repeat_count: repeatCount})
       });
       showToast('✅ Saqlandi!');
     } else {
