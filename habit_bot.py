@@ -6703,6 +6703,20 @@ try:
                     today_count = 1 if is_done else 0
                 break
         u["habits"] = habits
+        # History yangilash (statistika uchun)
+        history = u.get("history", {})
+        day_data = history.get(today, {})
+        done_count_now = sum(1 for hh in habits if hh.get("last_done") == today)
+        total_now = len(habits)
+        # Har bir odat holatini ham saqlash
+        hab_map = day_data.get("habits", {})
+        if found_h:
+            hab_map[hid] = found_h.get("last_done") == today
+        day_data["done"]   = done_count_now
+        day_data["total"]  = total_now
+        day_data["habits"] = hab_map
+        history[today] = day_data
+        u["history"] = history
         save_user(uid, u)
         if not found_h:
             return jsonify({"ok": False, "error": "Odat topilmadi"})
@@ -6738,6 +6752,16 @@ try:
             d = (now_uz - timedelta(days=i)).strftime("%Y-%m-%d")
             days_30.append(d)
         # Heatmap
+        # Bugungi holat uchun habits.last_done dan to'ldirish
+        if not history.get(today, {}).get("done"):
+            done_today_count = sum(1 for h in habits if h.get("last_done") == today)
+            if done_today_count > 0:
+                td = history.get(today, {})
+                if not td.get("habits"):
+                    td["habits"] = {h["id"]: (h.get("last_done") == today) for h in habits}
+                td["done"]  = done_today_count
+                td["total"] = total
+                history[today] = td
         heatmap = {}
         for d in days_30:
             day_data = history.get(d, {})
@@ -6748,6 +6772,16 @@ try:
             d = (now_uz - timedelta(days=i)).strftime("%Y-%m-%d")
             day_data = history.get(d, {})
             weekly.append({
+                "date":  d,
+                "count": day_data.get("done", 0),
+                "total": day_data.get("total", total) or total,
+            })
+        # Oylik (oxirgi 30 kun)
+        monthly = []
+        for i in range(29, -1, -1):
+            d = (now_uz - timedelta(days=i)).strftime("%Y-%m-%d")
+            day_data = history.get(d, {})
+            monthly.append({
                 "date":  d,
                 "count": day_data.get("done", 0),
                 "total": day_data.get("total", total) or total,
@@ -6791,6 +6825,7 @@ try:
                 "total_habits":  total,
             },
             "weekly":      weekly,
+            "monthly":     monthly,
             "heatmap":     heatmap,
             "days_30":     days_30,
             "habit_stats": habit_stats,
