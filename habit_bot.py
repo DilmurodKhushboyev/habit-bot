@@ -4999,13 +4999,14 @@ def daily_reset():
                     habit["last_done"] = None
                 changed = True
             else:
-                # Oddiy: kecha bajarilmagan bo'lsa missed++ va streak nollanadi
+                # Oddiy: kecha ham, bugun ham bajarilmagan bo'lsa missed++ va streak nollanadi
                 missed_today = False
-                if habit.get("last_done") != yesterday and habit.get("last_done") is not None:
+                last_done = habit.get("last_done")
+                if last_done not in (yesterday, today_str, None):
                     habit["total_missed"] = habit.get("total_missed", 0) + 1
                     missed_today = True
                     changed = True
-                elif habit.get("last_done") is None and habit.get("total_done", 0) > 0:
+                elif last_done is None and habit.get("total_done", 0) > 0:
                     habit["total_missed"] = habit.get("total_missed", 0) + 1
                     missed_today = True
                     changed = True
@@ -6745,8 +6746,11 @@ try:
                         u["streak"] = max(0, u.get("streak", 0) - 1)
                         is_done = False
                     else:
+                        from datetime import timezone, timedelta as _td
+                        _tz = timezone(_td(hours=5))
+                        _yesterday = (datetime.now(_tz) - _td(days=1)).strftime("%Y-%m-%d")
+                        h["streak"] = h.get("streak", 0) + 1 if h.get("last_done") == _yesterday else 1
                         h["last_done"] = today
-                        h["streak"] = h.get("streak", 0) + 1
                         u["points"] = u.get("points", 0) + 5
                         u["streak"] = u.get("streak", 0) + 1
                         is_done = True
