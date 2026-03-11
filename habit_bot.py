@@ -6944,38 +6944,6 @@ try:
             "new_badges":  new_badges,
         })
 
-    def _calc_trend(history, habits, now_uz, total):
-        """Joriy hafta vs oldingi hafta bajarilish foizini solishtiradi."""
-        from datetime import timedelta
-        def week_pct(offset_start, offset_end):
-            scores = []
-            for i in range(offset_start, offset_end, -1):
-                d = (now_uz - timedelta(days=i)).strftime("%Y-%m-%d")
-                day_data = history.get(d, {})
-                done  = day_data.get("done", 0)
-                tot   = day_data.get("total", 0) or total
-                if tot > 0:
-                    scores.append(done / tot * 100)
-                else:
-                    scores.append(0)
-            return round(sum(scores) / len(scores)) if scores else 0
-
-        this_week = week_pct(6,  -1)   # oxirgi 7 kun (0..6)
-        prev_week = week_pct(13,  6)   # undan oldingi 7 kun (7..13)
-        diff = this_week - prev_week
-        if diff > 5:
-            direction = "up"
-        elif diff < -5:
-            direction = "down"
-        else:
-            direction = "same"
-        return {
-            "this_week": this_week,
-            "prev_week": prev_week,
-            "diff":      diff,
-            "direction": direction,
-        }
-
     @api_app.route("/api/stats/<int:uid>")
     @require_auth
     def api_stats(uid):
@@ -7087,7 +7055,6 @@ try:
             "habit_stats": habit_stats,
             "points":      u.get("points", 0),
             "streak":      u.get("streak", 0),
-            "trend":       _calc_trend(history, habits, now_uz, total),
         })
 
 
