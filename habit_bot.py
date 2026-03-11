@@ -6598,6 +6598,15 @@ try:
             bot_start = min(done_log.keys()) if done_log else today_str
             # score = oxirgi 30 kunda faol kunlar soni
             score = sum(1 for d, v in done_log.items() if v and d >= (today_dt - timedelta(days=30)).strftime("%Y-%m-%d"))
+            # Faol itemlarni yig'amiz (reyting'da ko'rsatish uchun)
+            _items = []
+            if udata.get("active_pet"):    _items.append(udata["active_pet"])
+            if udata.get("active_badge"):  _items.append(udata["active_badge"])
+            if udata.get("active_car"):    _items.append(udata["active_car"])
+            if udata.get("streak_shields", 0) > 0: _items.append("🛡")
+            if udata.get("bonus_2x_active") and udata.get("bonus_2x_date") == today_str: _items.append("⚡")
+            if udata.get("bonus_3x_active") and udata.get("bonus_3x_date") == today_str: _items.append("🚀")
+            if udata.get("xp_booster_days", 0) > 0: _items.append("💎")
             entries.append({
                 "uid":          uid,
                 "name":         udata.get("name", "?"),
@@ -6609,6 +6618,7 @@ try:
                 "bot_start":    bot_start,
                 "habits_count": len(udata.get("habits", [])),
                 "jon":          round(udata.get("jon", 100)),
+                "active_items": " ".join(_items),
             })
 
         # Saralash
@@ -6663,19 +6673,26 @@ try:
         best_streak    = max((h.get("streak", 0) for h in u.get("habits", [])), default=0)
         total_done_all = sum(h.get("total_done", 0) for h in u.get("habits", []))
 
+        today_str = _tz_today().strftime("%Y-%m-%d")
         return jsonify({
-            "name":           u.get("name","?"),
-            "points":         u.get("points",0),
-            "streak":         u.get("streak",0),
-            "jon":            u.get("jon",100),
-            "is_vip":         u.get("is_vip",False),
-            "rank":           rank,
-            "total_users":    len(users),
-            "joined_at":      u.get("joined_at",""),
-            "best_streak":    best_streak,
-            "total_done_all": total_done_all,
-            "habits":         habits,
-            "xp_booster_days": u.get("xp_booster_days", 0),
+            "name":             u.get("name","?"),
+            "points":           u.get("points",0),
+            "streak":           u.get("streak",0),
+            "jon":              u.get("jon",100),
+            "is_vip":           u.get("is_vip",False),
+            "rank":             rank,
+            "total_users":      len(users),
+            "joined_at":        u.get("joined_at",""),
+            "best_streak":      best_streak,
+            "total_done_all":   total_done_all,
+            "habits":           habits,
+            "xp_booster_days":  u.get("xp_booster_days", 0),
+            "active_pet":       u.get("active_pet", ""),
+            "active_badge":     u.get("active_badge", ""),
+            "active_car":       u.get("active_car", ""),
+            "streak_shields":   u.get("streak_shields", 0),
+            "bonus_2x_active":  u.get("bonus_2x_active", False) and u.get("bonus_2x_date","") == today_str,
+            "bonus_3x_active":  u.get("bonus_3x_active", False) and u.get("bonus_3x_date","") == today_str,
         })
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
