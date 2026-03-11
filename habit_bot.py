@@ -6675,6 +6675,7 @@ try:
             "best_streak":    best_streak,
             "total_done_all": total_done_all,
             "habits":         habits,
+            "xp_booster_days": u.get("xp_booster_days", 0),
         })
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
