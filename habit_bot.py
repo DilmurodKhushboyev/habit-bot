@@ -6522,7 +6522,7 @@ try:
                 f"{k}={v}" for k, v in sorted(params.items())
             )
             # Secret key: HMAC-SHA256(BOT_TOKEN, "WebAppData")
-            secret_key = hmac.new(b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256).digest()
+            secret_key = hmac.new(BOT_TOKEN.encode(), b"WebAppData", hashlib.sha256).digest()
             computed   = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
             if not hmac.compare_digest(computed, received_hash):
                 return None
