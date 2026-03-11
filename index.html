@@ -3373,7 +3373,7 @@ async function buyItem(itemId, method) {
       body: JSON.stringify({ item_id: itemId, method })
     });
     const r = await res.json();
-    if (!r.ok) { alert(r.error || 'Xato'); return; }
+    if (!r.ok) { showToast('❌ ' + (r.error || 'Xato'), true); return; }
     // Ma'lumotlarni yangilash
     if (_shopData) {
       _shopData.points = r.points_left;
@@ -3383,7 +3383,7 @@ async function buyItem(itemId, method) {
     }
     const toast = document.getElementById('toast-shop');
     if (toast) { toast.textContent = '✅ Muvaffaqiyatli sotib olindi!'; toast.className = 'toast show'; setTimeout(()=>toast.className='toast',2500); }
-  } catch(e) { alert('Tarmoq xatosi'); }
+  } catch(e) { showToast('❌ Tarmoq xatosi', true); }
 }
 
 async function activateItem(itemId) {
@@ -3394,7 +3394,7 @@ async function activateItem(itemId) {
       body: JSON.stringify({ item_id: itemId })
     });
     const r = await res.json();
-    if (!r.ok) { alert(r.error || 'Xato'); return; }
+    if (!r.ok) { showToast('❌ ' + (r.error || 'Xato'), true); return; }
     // Local state yangilash
     if (_shopData) {
       const item = _shopData.items.find(i => i.id === itemId);
@@ -3407,7 +3407,7 @@ async function activateItem(itemId) {
     }
     const toast = document.getElementById('toast-shop');
     if (toast) { toast.textContent = '✅ Aktivlashtirildi!'; toast.className = 'toast show'; setTimeout(()=>toast.className='toast',2000); }
-  } catch(e) { alert('Tarmoq xatosi'); }
+  } catch(e) { showToast('❌ Tarmoq xatosi', true); }
 }
 
 // ── CHALLENGE ──
@@ -3426,7 +3426,7 @@ async function sendChallenge() {
   const days      = parseInt(document.getElementById('ch-days').value) || 7;
   const bet       = parseInt(document.getElementById('ch-bet').value) || 50;
   const btn       = document.getElementById('ch-send-btn');
-  if (!habitName) { alert('Odat nomini kiriting!'); return; }
+  if (!habitName) { showToast('⚠️ Odat nomini kiriting!', true); return; }
   if (btn) { btn.textContent = '⏳ Yuborilmoqda...'; btn.disabled = true; }
   try {
     const res = await fetch(`${API}/challenges/${userId}/send`, {
@@ -3440,7 +3440,7 @@ async function sendChallenge() {
     const t = document.getElementById('toast-friends');
     if (t) { t.textContent = '🎯 Challenge yuborildi!'; t.className = 'toast show'; setTimeout(()=>t.className='toast',2500); }
   } catch(e) {
-    alert('Xato: ' + e.message);
+    showToast('❌ ' + (e.message || 'Xato'), true);
   } finally {
     if (btn) { btn.textContent = '🎯 Yuborish'; btn.disabled = false; }
   }
