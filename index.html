@@ -1393,7 +1393,7 @@ function renderToday(d) {
 
     <div style="display:flex;gap:8px;justify-content:center;margin:12px 0 4px">
       <button onclick="openAddFromToday()" type="button" style="font-size:13px;font-weight:600;color:#4CAF7D;background:none;border:none;cursor:pointer;padding:4px 8px">＋ Odat yaratish</button>
-      <button onclick="showTodayToast('Tez orada! 🚀')" type="button" style="font-size:13px;font-weight:600;color:#E07040;background:none;border:none;cursor:pointer;padding:4px 8px">＋ Vazifa yaratish</button>
+
     </div>
 
     <div class="section-title">BUGUNGI ODATLAR</div>
@@ -2523,7 +2523,7 @@ async function saveEveningNotify(val) {
     });
     const t = document.getElementById('toast-profile');
     if (t) { t.textContent = val ? '🌙 Kechki eslatma yoqildi' : '🔕 Kechki eslatma o\'chirildi'; t.className = 'toast show'; setTimeout(()=>t.className='toast',2500); }
-  } catch(e) {}
+  } catch(e) { showToast('Xato yuz berdi!', true); }
 }
 
 
@@ -2736,7 +2736,7 @@ async function refreshHabitsJon() {
     const jonPct = Math.round(d.jon ?? 100);
     const jonEl = document.getElementById('habits-jon-ring');
     if (jonEl) jonEl.innerHTML = jonRingHTML(jonPct, 72);
-  } catch(e) {}
+  } catch(e) { console.error('refreshHabitsJon:', e); }
 }
 
 async function loadHabits() {
@@ -3238,7 +3238,7 @@ async function removeFriend(fid) {
       method: 'DELETE', headers: { 'X-Init-Data': initData, 'X-User-Id': userId }
     });
     await loadFriends();
-  } catch(e) {}
+  } catch(e) { showToast('Xato yuz berdi!', true); }
 }
 
 // ── SHOP ──
@@ -3635,7 +3635,7 @@ function playHabitSound(isDone) {
       osc.stop(ctx.currentTime + 0.3);
     }
     setTimeout(() => ctx.close(), 1500);
-  } catch(e) {}
+  } catch(e) { console.error('audio:', e); }
 }
 </script>
 </body>
