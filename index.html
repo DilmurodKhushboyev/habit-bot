@@ -1467,6 +1467,9 @@ async function checkin(hid, cardEl) {
       method: 'POST',
       headers: { 'X-Init-Data': initData, 'X-User-Id': userId }
     });
+    if (!res.ok) throw new Error('Server xatosi: ' + res.status);
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) throw new Error('Serverga ulanib bo\'lmadi');
     const result = await res.json();
     if (!result.ok) throw new Error(result.error);
     const isDone = result.done;
