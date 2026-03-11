@@ -41,6 +41,16 @@ mongo_db      = mongo_client["habit_bot"]
 mongo_col     = mongo_db["users"]
 groups_col    = mongo_db["groups"]   # Guruhlar kolleksiyasi
 
+# ── MongoDB indekslar (bot ishga tushganda bir marta) ──
+try:
+    from pymongo import ASCENDING, DESCENDING
+    mongo_col.create_index([("points", DESCENDING)],  name="idx_points",  background=True)
+    mongo_col.create_index([("streak", DESCENDING)],  name="idx_streak",  background=True)
+    mongo_col.create_index([("name",   ASCENDING)],   name="idx_name",    background=True)
+    groups_col.create_index([("members", ASCENDING)], name="idx_members", background=True)
+except Exception as _e:
+    print(f"[warn] MongoDB indeks yaratishda xato: {_e}")
+
 # ============================================================
 #  MA'LUMOTLAR BAZASI FUNKSIYALARI
 # ============================================================
