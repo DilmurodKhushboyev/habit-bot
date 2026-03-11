@@ -31,6 +31,27 @@
   --sh-card:   8px 8px 20px #B0B3C2, -8px -8px 20px #FFFFFF;
 }
 
+/* ── DARK MODE ── */
+body.dark {
+  --bg:        #1E2130;
+  --bg2:       #181B28;
+  --surface:   #252840;
+  --raised:    #2A2D42;
+  --text:      #E8EAF2;
+  --sub:       #6B6E80;
+  --accent:    #E07040;
+  --accent2:   #5B8DEF;
+  --green:     #4CAF7D;
+  --red:       #E05050;
+  --gold:      #D4963A;
+
+  --sh-out:    6px 6px 14px #13151F, -6px -6px 14px #272A3D;
+  --sh-in:     inset 4px 4px 10px #13151F, inset -4px -4px 10px #272A3D;
+  --sh-sm:     3px 3px 8px #13151F, -3px -3px 8px #272A3D;
+  --sh-press:  inset 2px 2px 6px #13151F, inset -2px -2px 6px #272A3D;
+  --sh-card:   8px 8px 20px #10121C, -8px -8px 20px #2A2D42;
+}
+
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
 body {
@@ -1209,7 +1230,14 @@ body {
 <script>
 // ── TELEGRAM WEB APP ──
 const tg      = window.Telegram?.WebApp;
-if (tg) { tg.ready(); tg.expand(); }
+if (tg) {
+  tg.ready();
+  tg.expand();
+  if (tg.colorScheme === 'dark') document.body.classList.add('dark');
+  tg.onEvent('themeChanged', () => {
+    document.body.classList.toggle('dark', tg.colorScheme === 'dark');
+  });
+}
 const user     = tg?.initDataUnsafe?.user || { id: 0, first_name: 'Test' };
 const initData = tg?.initData || '';
 const userId   = user.id || 0;
