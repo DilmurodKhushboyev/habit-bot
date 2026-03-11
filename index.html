@@ -581,6 +581,36 @@ body {
 .period-btn.active {
   background: var(--bg); box-shadow: var(--sh-sm); color: var(--text);
 }
+.hstat-charts-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+}
+.hstat-donut-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.hstat-donut-lbl { font-size: 9px; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; }
+.hstat-minibar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.hstat-minibar-lbl { font-size: 9px; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; }
+.hstat-minibar-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 36px;
+}
+.hstat-minibar-col { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; }
+.hstat-minibar-fill { width: 100%; border-radius: 3px 3px 0 0; min-height: 3px; }
+.hstat-minibar-day { font-size: 8px; color: var(--sub); }
 .hstat-progress-bar {
   height: 6px; border-radius: 3px;
   background: var(--bg); box-shadow: var(--sh-in);
@@ -1045,7 +1075,7 @@ body {
   <div id="ssub-panel-friends" style="display:none;padding:0">
     <div class="period-switch" style="margin:0 20px 0">
       <button class="period-btn active" id="gsub-groups"  onclick="setGroupSub('groups')"  type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="gFrnd" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="9" cy="8" r="4" fill="url(#gFrnd)"/><circle cx="17" cy="8" r="3" fill="url(#gFrnd)" opacity="0.6"/><path d="M1 20c0-4 3.6-7 8-7s8 3 8 7" stroke="url(#gFrnd)" stroke-width="2" fill="none"/></svg>Guruh</button>
-      <button class="period-btn"        id="gsub-friends" onclick="setGroupSub('friends')" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="gHand" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M4 12l4 4 4-4 4 4 4-4" stroke="url(#gHand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 8l4 4 4-4 4 4 4-4" stroke="url(#gHand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.5"/></svg>Do'st</button>
+      <button class="period-btn"        id="gsub-friends" onclick="setGroupSub('friends')" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="gHand2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="8" cy="6" r="3" fill="url(#gHand2)"/><circle cx="16" cy="6" r="3" fill="url(#gHand2)" opacity="0.7"/><path d="M2 19c0-3.3 2.7-6 6-6h1" stroke="url(#gHand2)" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M22 19c0-3.3-2.7-6-6-6h-1" stroke="url(#gHand2)" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/><path d="M11 16l1.5 1.5L16 13" stroke="url(#gHand2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Do'st</button>
     </div>
     <div style="padding:0 20px">
       <div id="groups-content">
@@ -1894,18 +1924,43 @@ function renderStats(d) {
 
   // ── Har bir odat ──
   let habitCardsHtml = '';
-  (habit_stats || []).forEach(h => {
+  (habit_stats || []).forEach((h, hIdx) => {
     const pctColor = h.percent >= 80 ? '#4CAF7D' : h.percent >= 50 ? '#5B8DEF' : '#E07040';
-    const wdDots   = h.week_dots.map(v => `<div class="wd ${v ? 'done' : ''}"></div>`).join('');
+
+    // ── Donut chart (percent) ──
+    const r = 22; const circ = 2 * Math.PI * r;
+    const dash = circ * h.percent / 100;
+    const donutId = `dnt-${hIdx}`;
+    const donutSvg = `<svg width="56" height="56" viewBox="0 0 56 56">
+      <circle cx="28" cy="28" r="${r}" fill="none" stroke="#C8CBD8" stroke-width="5"/>
+      <circle cx="28" cy="28" r="${r}" fill="none" stroke="${pctColor}" stroke-width="5"
+        stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"
+        stroke-dashoffset="${(circ/4).toFixed(1)}" stroke-linecap="round"/>
+      <text x="28" y="33" text-anchor="middle" font-size="11" font-weight="800"
+        fill="${pctColor}" font-family="DM Mono,monospace">${h.percent}%</text>
+    </svg>`;
+
+    // ── Mini bar chart (7 kunlik week_dots) ──
+    const dayLbls = ['Ya','Du','Se','Ch','Pa','Ju','Sh'];
+    const miniBars = (h.week_dots || []).map((v, i) => {
+      const barH = v ? 28 : 6;
+      const barC = v ? pctColor : '#C8CBD8';
+      const today_d = new Date(); today_d.setDate(today_d.getDate() - (6 - i));
+      const lbl = dayLbls[today_d.getDay()];
+      return `<div class="hstat-minibar-col">
+        <div class="hstat-minibar-fill" style="height:${barH}px;background:${barC}"></div>
+        <div class="hstat-minibar-day">${lbl}</div>
+      </div>`;
+    }).join('');
+
     habitCardsHtml += `
       <div class="hstat-card">
         <div class="hstat-top">
           <div class="hstat-icon">${h.icon}</div>
           <div class="hstat-info">
             <div class="hstat-name">${h.name}</div>
-            <div class="hstat-sub"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak} kun streak</div>
+            <div class="hstat-sub"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire${hIdx}" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire${hIdx})"/></svg> ${h.streak} kun streak</div>
           </div>
-          <div class="hstat-pct" style="color:${pctColor}">${h.percent}%</div>
         </div>
         <div class="hstat-nums">
           <div class="hstat-num-box">
@@ -1921,8 +1976,16 @@ function renderStats(d) {
             <div class="hstat-num-lbl">Jami</div>
           </div>
         </div>
-        <div class="week-dots-row">${wdDots}</div>
-        <div class="hstat-progress-bar"><div class="hstat-progress-fill" style="width:${h.percent}%;background:${pctColor}"></div></div>
+        <div class="hstat-charts-row">
+          <div class="hstat-donut-wrap">
+            ${donutSvg}
+            <div class="hstat-donut-lbl">Bajarilish</div>
+          </div>
+          <div class="hstat-minibar-wrap">
+            <div class="hstat-minibar-lbl">Oxirgi 7 kun</div>
+            <div class="hstat-minibar-bars">${miniBars}</div>
+          </div>
+        </div>
       </div>`;
   });
 
