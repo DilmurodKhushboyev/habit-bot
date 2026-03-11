@@ -6927,6 +6927,9 @@ try:
         done_count = sum(1 for hh in habits if hh.get("last_done") == today)
         total = len(habits)
         all_done = done_count == total and total > 0
+        # Yutuqlarni tekshir
+        new_ach = check_achievements(uid, u)
+        new_badges = [{"id": a["id"], "icon": a["icon"], "title": a["title"]} for a in new_ach]
         return jsonify({
             "ok":          True,
             "done":        is_done,
@@ -6937,6 +6940,7 @@ try:
             "all_done":    all_done,
             "done_count":  done_count,
             "total":       total,
+            "new_badges":  new_badges,
         })
 
     @api_app.route("/api/stats/<int:uid>")
@@ -7052,12 +7056,120 @@ try:
             "streak":      u.get("streak", 0),
         })
 
+
+    # ── Yutuqlar (Achievements) ──
+    ACHIEVEMENTS = [
+        # Streak
+        {"id":"streak_3",    "cat":"streak",  "icon":"🔥", "title":"Ilk olov",       "desc":"3 kun ketma-ket bajaring",     "req":3,    "field":"streak"},
+        {"id":"streak_7",    "cat":"streak",  "icon":"🌟", "title":"Haftalik qahramon","desc":"7 kun ketma-ket bajaring",    "req":7,    "field":"streak"},
+        {"id":"streak_30",   "cat":"streak",  "icon":"💎", "title":"Oylik ustoz",     "desc":"30 kun ketma-ket bajaring",   "req":30,   "field":"streak"},
+        {"id":"streak_100",  "cat":"streak",  "icon":"👑", "title":"100 kun shohi",   "desc":"100 kun ketma-ket bajaring",  "req":100,  "field":"streak"},
+        # Ball
+        {"id":"pts_100",     "cat":"ball",    "icon":"⭐", "title":"Birinchi yulduz", "desc":"100 ball to'plang",           "req":100,  "field":"points"},
+        {"id":"pts_500",     "cat":"ball",    "icon":"🌠", "title":"Yulduz yomg'iri","desc":"500 ball to'plang",           "req":500,  "field":"points"},
+        {"id":"pts_1000",    "cat":"ball",    "icon":"🏆", "title":"Ming ball",       "desc":"1000 ball to'plang",          "req":1000, "field":"points"},
+        {"id":"pts_5000",    "cat":"ball",    "icon":"💰", "title":"Ball millioneri", "desc":"5000 ball to'plang",          "req":5000, "field":"points"},
+        # Odat soni
+        {"id":"hab_1",       "cat":"odat",    "icon":"🌱", "title":"Birinchi qadam",  "desc":"1 ta odat qo'shing",          "req":1,    "field":"habits_count"},
+        {"id":"hab_5",       "cat":"odat",    "icon":"🌿", "title":"To'plam",         "desc":"5 ta odat qo'shing",          "req":5,    "field":"habits_count"},
+        {"id":"hab_10",      "cat":"odat",    "icon":"🌳", "title":"Bog'bon",         "desc":"10 ta odat qo'shing",         "req":10,   "field":"habits_count"},
+        # Jami bajarilgan
+        {"id":"done_10",     "cat":"faollik", "icon":"✅", "title":"O'n marta",       "desc":"Jami 10 ta odat bajaring",    "req":10,   "field":"total_done"},
+        {"id":"done_50",     "cat":"faollik", "icon":"🎯", "title":"Ellik marta",     "desc":"Jami 50 ta odat bajaring",    "req":50,   "field":"total_done"},
+        {"id":"done_100",    "cat":"faollik", "icon":"🚀", "title":"Yuz marta",       "desc":"Jami 100 ta odat bajaring",   "req":100,  "field":"total_done"},
+        {"id":"done_500",    "cat":"faollik", "icon":"⚡", "title":"Besh yuz",        "desc":"Jami 500 ta odat bajaring",   "req":500,  "field":"total_done"},
+        # Do'stlar
+        {"id":"friend_1",    "cat":"ijtimoiy","icon":"🤝", "title":"Birinchi do'st",  "desc":"1 ta do'st qo'shing",         "req":1,    "field":"friends_count"},
+        {"id":"friend_5",    "cat":"ijtimoiy","icon":"👥", "title":"Jamoatchi",       "desc":"5 ta do'st qo'shing",         "req":5,    "field":"friends_count"},
+    ]
+
+    CAT_LABELS = {
+        "streak":  {"uz":"Streak","ru":"Streak","en":"Streak"},
+        "ball":    {"uz":"Ball","ru":"Очки","en":"Points"},
+        "odat":    {"uz":"Odat","ru":"Привычки","en":"Habits"},
+        "faollik": {"uz":"Faollik","ru":"Активность","en":"Activity"},
+        "ijtimoiy":{"uz":"Ijtimoiy","ru":"Социальные","en":"Social"},
+    }
+
+    def check_achievements(uid, u):
+        """Yangi qozonilgan yutuqlarni tekshiradi, qaytaradi: list of new achievement dicts"""
+        earned_ids = {a["id"] for a in u.get("achievements", [])}
+        streak      = u.get("streak", 0)
+        points      = u.get("points", 0)
+        habits      = u.get("habits", [])
+        total_done  = sum(h.get("total_done", 0) for h in habits)
+        friends_cnt = len(u.get("friends", []))
+        habits_cnt  = len(habits)
+
+        field_vals = {
+            "streak":       streak,
+            "points":       points,
+            "habits_count": habits_cnt,
+            "total_done":   total_done,
+            "friends_count":friends_cnt,
+        }
+
+        new_ach = []
+        ach_list = list(u.get("achievements", []))
+        changed = False
+        for ach in ACHIEVEMENTS:
+            if ach["id"] in earned_ids:
+                continue
+            val = field_vals.get(ach["field"], 0)
+            if val >= ach["req"]:
+                ach_list.append({"id": ach["id"], "earned_at": str(datetime.now().date())})
+                new_ach.append(ach)
+                changed = True
+        if changed:
+            u["achievements"] = ach_list
+            save_user(uid, u)
+        return new_ach
+
     @api_app.route("/api/achievements/<int:uid>")
     @require_auth
     def api_achievements(uid):
-        u = load_user(uid)
-        achievements = u.get("achievements", [])
-        return jsonify({"achievements": achievements})
+        u    = load_user(uid)
+        lang = u.get("lang", "uz")
+        earned_ids = {a["id"] for a in u.get("achievements", [])}
+        streak      = u.get("streak", 0)
+        points      = u.get("points", 0)
+        habits      = u.get("habits", [])
+        total_done  = sum(h.get("total_done", 0) for h in habits)
+        friends_cnt = len(u.get("friends", []))
+        habits_cnt  = len(habits)
+        field_vals  = {
+            "streak":       streak,
+            "points":       points,
+            "habits_count": habits_cnt,
+            "total_done":   total_done,
+            "friends_count":friends_cnt,
+        }
+        result = []
+        cats_seen = {}
+        for ach in ACHIEVEMENTS:
+            earned = ach["id"] in earned_ids
+            current = min(field_vals.get(ach["field"], 0), ach["req"])
+            cat_id  = ach["cat"]
+            if cat_id not in cats_seen:
+                label = CAT_LABELS.get(cat_id, {}).get(lang, cat_id)
+                cats_seen[cat_id] = {"id": cat_id, "label": label}
+            result.append({
+                "id":      ach["id"],
+                "cat":     cat_id,
+                "icon":    ach["icon"],
+                "title":   ach["title"],
+                "desc":    ach["desc"],
+                "req":     ach["req"],
+                "current": current,
+                "earned":  1 if earned else 0,
+            })
+        earned_count = sum(1 for a in result if a["earned"])
+        return jsonify({
+            "achievements": result,
+            "cats":         list(cats_seen.values()),
+            "earned_count": earned_count,
+            "total_count":  len(result),
+        })
 
     @api_app.route("/api/shop/<int:uid>")
     @require_auth
