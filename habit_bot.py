@@ -6886,7 +6886,14 @@ try:
                         if done >= rep_count:
                             h["last_done"] = today
                             h["streak"] = h.get("streak", 0) + 1
-                            u["points"] = u.get("points", 0) + 5
+                            _base = 5
+                            if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
+                                _base = 15
+                            elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
+                                _base = 10
+                            if u.get("xp_booster_days", 0) > 0:
+                                _base = round(_base * 1.1)
+                            u["points"] = u.get("points", 0) + _base
                     h["done_today_count"] = done
                     h["done_date"] = today
                     is_done = done >= rep_count
@@ -6904,7 +6911,14 @@ try:
                         _yesterday = (datetime.now(_tz) - _td(days=1)).strftime("%Y-%m-%d")
                         h["streak"] = h.get("streak", 0) + 1 if h.get("last_done") == _yesterday else 1
                         h["last_done"] = today
-                        u["points"] = u.get("points", 0) + 5
+                        _base = 5
+                        if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
+                            _base = 15
+                        elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
+                            _base = 10
+                        if u.get("xp_booster_days", 0) > 0:
+                            _base = round(_base * 1.1)
+                        u["points"] = u.get("points", 0) + _base
                         u["streak"] = u.get("streak", 0) + 1
                         is_done = True
                     today_count = 1 if is_done else 0
@@ -6924,6 +6938,12 @@ try:
         day_data["habits"] = hab_map
         history[today] = day_data
         u["history"] = history
+        # XP booster kunini kamaytirish (kuniga bir marta)
+        if u.get("xp_booster_days", 0) > 0:
+            last_boost = u.get("xp_booster_last_day", "")
+            if last_boost != today:
+                u["xp_booster_days"] = max(0, u["xp_booster_days"] - 1)
+                u["xp_booster_last_day"] = today
         save_user(uid, u)
         if not found_h:
             return jsonify({"ok": False, "error": "Odat topilmadi"})
@@ -7213,16 +7233,21 @@ try:
     def api_shop(uid):
         u = load_user(uid)
         shop_items = [
-            {"id": "shield_1",   "name": "Streak himoyasi", "cat": "protection", "emoji": "🛡",  "price_ball": 100,  "price_stars": 0, "desc": "1 kunlik streak himoyasi"},
-            {"id": "bonus_2x",   "name": "2x Ball bonus",   "cat": "bonus",      "emoji": "⚡",  "price_ball": 150,  "price_stars": 0, "desc": "1 kun uchun 2x ball"},
-            {"id": "badge_fire", "name": "Olov badge",      "cat": "badge",      "emoji": "🔥",  "price_ball": 200,  "price_stars": 0, "desc": "Profilda ko'rsatiladi"},
-            {"id": "badge_star", "name": "Yulduz badge",    "cat": "badge",      "emoji": "⭐",  "price_ball": 250,  "price_stars": 0, "desc": "Profilda ko'rsatiladi"},
-            {"id": "pet_cat",    "name": "Mushuk",          "cat": "pet",        "emoji": "🐱",  "price_ball": 300,  "price_stars": 0, "desc": "Sevimli mushukcha"},
-            {"id": "pet_dog",    "name": "It",              "cat": "pet",        "emoji": "🐶",  "price_ball": 350,  "price_stars": 0, "desc": "Sodiq do'st"},
-            {"id": "pet_rabbit", "name": "Quyon",           "cat": "pet",        "emoji": "🐰",  "price_ball": 300,  "price_stars": 0, "desc": "Tez-tez sakrashi"},
-            {"id": "car_sport",  "name": "Sport mashina",   "cat": "car",        "emoji": "🏎️", "price_ball": 500,  "price_stars": 0, "desc": "Tez mashina"},
-            {"id": "jon_restore", "name": "Jon tiklash",   "cat": "bonus",      "emoji": "❤️", "price_ball": 25,   "price_stars": 0, "desc": "Jonni 100% ga tiklash (faqat 20% va kam holda)"},
-            {"id": "gift_box",   "name": "Sovga qutisi",    "cat": "gift",       "emoji": "🎁",  "price_ball": 0,    "price_stars": 5, "desc": "Tasodifiy mukofot"},
+            {"id": "shield_1",    "name": "Streak himoyasi",  "cat": "protection", "emoji": "🛡",  "price_ball": 100,  "price_stars": 0, "desc": "1 kunlik streak himoyasi"},
+            {"id": "shield_3",    "name": "3x Streak freeze", "cat": "protection", "emoji": "🧊",  "price_ball": 250,  "price_stars": 0, "desc": "3 kunlik streak himoyasi"},
+            {"id": "bonus_2x",    "name": "2x Ball bonus",    "cat": "bonus",      "emoji": "⚡",  "price_ball": 150,  "price_stars": 0, "desc": "1 kun uchun 2x ball"},
+            {"id": "bonus_3x",    "name": "3x Ball bonus",    "cat": "bonus",      "emoji": "🚀",  "price_ball": 300,  "price_stars": 0, "desc": "1 kun uchun 3x ball"},
+            {"id": "xp_booster",  "name": "XP Booster",       "cat": "bonus",      "emoji": "💎",  "price_ball": 400,  "price_stars": 0, "desc": "7 kun davomida +10% qo'shimcha ball"},
+            {"id": "badge_fire",  "name": "Olov badge",       "cat": "badge",      "emoji": "🔥",  "price_ball": 200,  "price_stars": 0, "desc": "Profilda ko'rsatiladi"},
+            {"id": "badge_star",  "name": "Yulduz badge",     "cat": "badge",      "emoji": "⭐",  "price_ball": 250,  "price_stars": 0, "desc": "Profilda ko'rsatiladi"},
+            {"id": "badge_secret","name": "Maxfiy badge",     "cat": "badge",      "emoji": "👑",  "price_ball": 600,  "price_stars": 0, "desc": "Noyob toj — faqat bozordan"},
+            {"id": "pet_cat",     "name": "Mushuk",           "cat": "pet",        "emoji": "🐱",  "price_ball": 300,  "price_stars": 0, "desc": "Sevimli mushukcha"},
+            {"id": "pet_dog",     "name": "It",               "cat": "pet",        "emoji": "🐶",  "price_ball": 350,  "price_stars": 0, "desc": "Sodiq do'st"},
+            {"id": "pet_rabbit",  "name": "Quyon",            "cat": "pet",        "emoji": "🐰",  "price_ball": 300,  "price_stars": 0, "desc": "Tez-tez sakrashi"},
+            {"id": "car_sport",   "name": "Sport mashina",    "cat": "car",        "emoji": "🏎️", "price_ball": 500,  "price_stars": 0, "desc": "Tez mashina"},
+            {"id": "jon_restore", "name": "Jon tiklash",      "cat": "bonus",      "emoji": "❤️", "price_ball": 25,   "price_stars": 0, "desc": "Jonni 100% ga tiklash (faqat 20% va kam holda)"},
+            {"id": "weekly_report","name": "Haftalik hisobot", "cat": "gift",      "emoji": "📊",  "price_ball": 50,   "price_stars": 0, "desc": "Batafsil haftalik statistika"},
+            {"id": "gift_box",    "name": "Sovga qutisi",     "cat": "gift",       "emoji": "🎁",  "price_ball": 0,    "price_stars": 5, "desc": "Tasodifiy mukofot"},
         ]
         raw_inventory = u.get("inventory", [])
         # inventory: list -> dict formatiga
@@ -7234,7 +7259,7 @@ try:
         active_badge = u.get("active_badge", "")
         active_car   = u.get("active_car", "")
         # can_buy va owned fieldlarini har bir item ga qo'shish
-        one_time = ["badge_fire","badge_star","pet_cat","pet_dog","pet_rabbit","car_sport"]
+        one_time = ["badge_fire","badge_star","badge_secret","pet_cat","pet_dog","pet_rabbit","car_sport"]
         for item in shop_items:
             owned_qty = inventory.get(item["id"], 0)
             item["owned"] = owned_qty
@@ -7259,9 +7284,11 @@ try:
         item_id   = data.get("item_id", "")
         pay_type  = data.get("type", "ball")  # "ball" yoki "stars"
         prices = {
-            "shield_1": 100, "bonus_2x": 150, "badge_fire": 200, "badge_star": 250,
+            "shield_1": 100, "shield_3": 250,
+            "bonus_2x": 150, "bonus_3x": 300, "xp_booster": 400,
+            "badge_fire": 200, "badge_star": 250, "badge_secret": 600,
             "pet_cat": 300, "pet_dog": 350, "pet_rabbit": 300, "car_sport": 500,
-            "jon_restore": 25,
+            "jon_restore": 25, "weekly_report": 50,
         }
         price = prices.get(item_id, 0)
         if not price and item_id != "gift_box":
@@ -7273,19 +7300,47 @@ try:
         else:
             inventory = raw_inv
         # Faqat badge/pet/car bir marta sotib olinadi
-        one_time = ["badge_fire","badge_star","pet_cat","pet_dog","pet_rabbit","car_sport"]
+        one_time = ["badge_fire","badge_star","badge_secret","pet_cat","pet_dog","pet_rabbit","car_sport"]
         if item_id in one_time and inventory.get(item_id, 0) > 0:
             return jsonify({"ok": False, "error": "Allaqachon sotib olingan"})
         if item_id == "jon_restore":
             jon_val = round(u.get("jon", 100.0))
             if jon_val > 20:
                 return jsonify({"ok": False, "error": f"Jon faqat 20% va undan kam bo'lganda tiklanadi. Hozir: {jon_val}%"})
-            if u.get("points", 0) < 50:
+            if u.get("points", 0) < 25:
                 return jsonify({"ok": False, "error": "Ball yetarli emas"})
-            u["points"] = u.get("points", 0) - 50
+            u["points"] = u.get("points", 0) - 25
             u["jon"] = 100.0
             save_user(uid, u)
             return jsonify({"ok": True, "points": u["points"]})
+        if item_id == "shield_3":
+            if u.get("points", 0) < 250:
+                return jsonify({"ok": False, "error": "Ball yetarli emas"})
+            u["points"] = u.get("points", 0) - 250
+            u["streak_shields"] = u.get("streak_shields", 0) + 3
+            save_user(uid, u)
+            return jsonify({"ok": True, "points": u["points"], "streak_shields": u["streak_shields"]})
+        if item_id == "bonus_3x":
+            if u.get("points", 0) < 300:
+                return jsonify({"ok": False, "error": "Ball yetarli emas"})
+            u["points"] = u.get("points", 0) - 300
+            u["bonus_3x_active"] = True
+            u["bonus_3x_date"] = today_uz5()
+            save_user(uid, u)
+            return jsonify({"ok": True, "points": u["points"]})
+        if item_id == "xp_booster":
+            if u.get("points", 0) < 400:
+                return jsonify({"ok": False, "error": "Ball yetarli emas"})
+            u["points"] = u.get("points", 0) - 400
+            u["xp_booster_days"] = u.get("xp_booster_days", 0) + 7
+            save_user(uid, u)
+            return jsonify({"ok": True, "points": u["points"], "xp_booster_days": u["xp_booster_days"]})
+        if item_id == "weekly_report":
+            if u.get("points", 0) < 50:
+                return jsonify({"ok": False, "error": "Ball yetarli emas"})
+            u["points"] = u.get("points", 0) - 50
+            save_user(uid, u)
+            return jsonify({"ok": True, "points": u["points"], "weekly_report": True})
         if pay_type == "ball":
             if u.get("points", 0) < price:
                 return jsonify({"ok": False, "error": "Ball yetarli emas"})
