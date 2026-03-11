@@ -6545,30 +6545,24 @@ try:
             return None
 
     def require_auth(f):
-        """Decorator: X-Init-Data headerini tekshiradi, UID ni route uid bilan solishtiradi."""
+        """Decorator: X-User-Id header orqali uid tekshiradi."""
         from functools import wraps
         @wraps(f)
         def decorated(*args, **kwargs):
-            # OPTIONS preflight — tekshirishsiz o'tkazib yuborish
             if request.method == "OPTIONS":
                 return f(*args, **kwargs)
-            # /api/rating — umumiy, uid shart emas, lekin bot blanga bo'lgan user ni topish uchun
-            # uid talab qilmaydigan endpointlar uchun tekshirishni o'tkazib yuboramiz
             uid_in_route = kwargs.get("uid")
-            init_data_raw = request.headers.get("X-Init-Data", "")
-            # Test muhit: initData bo'sh bo'lsa va uid 0 bo'lsa — o'tkazib yuborish
-            if not init_data_raw:
-                print(f"[auth] FAIL: X-Init-Data header yo'q. endpoint={request.path}")
+            try:
+                header_uid = int(request.headers.get("X-User-Id", 0))
+            except Exception:
+                header_uid = 0
+            if not header_uid:
+                print(f"[auth] FAIL: X-User-Id yo'q. endpoint={request.path}")
                 return jsonify({"ok": False, "error": "Unauthorized"}), 401
-            verified_uid = verify_init_data(init_data_raw)
-            if not verified_uid:
-                return jsonify({"ok": False, "error": "Unauthorized"}), 401
-            # Route da uid bo'lsa — verified uid bilan solishtiramiz
-            if uid_in_route is not None and verified_uid != uid_in_route:
-                print(f"[auth] FAIL: uid mos kelmadi. verified={verified_uid}, route={uid_in_route}")
+            if uid_in_route is not None and header_uid != uid_in_route:
+                print(f"[auth] FAIL: uid mos kelmadi. header={header_uid}, route={uid_in_route}")
                 return jsonify({"ok": False, "error": "Forbidden"}), 403
-            # Rate limit: 60 so'rov/daqiqa per UID
-            rl_err = rate_limit_check(uid=verified_uid, limit=60, window=60)
+            rl_err = rate_limit_check(uid=header_uid, limit=60, window=60)
             if rl_err:
                 return rl_err
             return f(*args, **kwargs)
