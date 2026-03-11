@@ -6453,6 +6453,31 @@ try:
 
     api_app = Flask(__name__)
 
+    # ── Simple in-memory rate limiter ──
+    import collections
+    _rl_buckets = collections.defaultdict(list)  # key -> [timestamp, ...]
+    _rl_lock    = __import__('threading').Lock()
+
+    def _rate_limit(key: str, limit: int, window: int = 60) -> bool:
+        """True = ruxsat, False = limit oshdi. window=soniya, limit=max so'rov."""
+        now = _time.time()
+        with _rl_lock:
+            bucket = _rl_buckets[key]
+            # Eskilarni tozala
+            _rl_buckets[key] = [t for t in bucket if now - t < window]
+            if len(_rl_buckets[key]) >= limit:
+                return False
+            _rl_buckets[key].append(now)
+            return True
+
+    def rate_limit_check(uid=None, limit=60, window=60):
+        """Decorator emas, to'g'ridan-to'g'ri chaqiriladigan tekshirish."""
+        key = f"uid:{uid}" if uid else f"ip:{request.remote_addr}"
+        if not _rate_limit(key, limit, window):
+            return jsonify({"ok": False, "error": "Too many requests"}), 429
+        return None
+
+
     @api_app.after_request
     def add_cors(response):
         response.headers["Access-Control-Allow-Origin"]  = "*"
@@ -6522,6 +6547,10 @@ try:
             # Route da uid bo'lsa — verified uid bilan solishtiramiz
             if uid_in_route is not None and verified_uid != uid_in_route:
                 return jsonify({"ok": False, "error": "Forbidden"}), 403
+            # Rate limit: 60 so'rov/daqiqa per UID
+            rl_err = rate_limit_check(uid=verified_uid, limit=60, window=60)
+            if rl_err:
+                return rl_err
             return f(*args, **kwargs)
         return decorated
 
@@ -6532,6 +6561,10 @@ try:
 
     @api_app.route("/api/rating")
     def api_rating():
+        # Rate limit: 30 so'rov/daqiqa per IP (ochiq endpoint)
+        rl_err = rate_limit_check(uid=None, limit=30, window=60)
+        if rl_err:
+            return rl_err
         from datetime import timedelta
         sort_by = request.args.get("sort", "points")   # points | streak | score
         period  = request.args.get("period", "month")  # month | week | all
