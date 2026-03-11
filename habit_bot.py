@@ -1414,7 +1414,8 @@ def handle_contact(msg):
             print(f"[pending_group] xato: {e}")
 
     # Onboarding — birinchi odat qo'shishga yo'naltirish
-    u["name"] = msg.from_user.first_name or "Do'stim"
+    u["name"]     = msg.from_user.first_name or "Do'stim"
+    u["username"]  = (msg.from_user.username or "").lower()
     save_user(uid, u)
     send_onboarding(uid, u["name"])
 
@@ -6527,7 +6528,7 @@ try:
                 return None
             # auth_date yangiligini tekshirish (24 soat)
             auth_date = int(params.get("auth_date", 0))
-            if _time.time() - auth_date > 86400:
+            if _time.time() - auth_date > 604800:  # 7 kun
                 return None
             # user JSON dan id olish
             import json as _json
@@ -7299,6 +7300,50 @@ try:
         bot_username = "Super_habits_bot"
         invite_link = f"https://t.me/{bot_username}?start=ref_{uid}"
         return jsonify({"friends": friends, "invite_link": invite_link})
+
+    @api_app.route("/api/friends/<int:uid>/search")
+    @require_auth
+    def api_friends_search(uid):
+        q = (request.args.get("q") or "").strip().lower().lstrip("@")
+        if len(q) < 2:
+            return jsonify({"ok": False, "error": "Kamida 2 harf kiriting"}), 400
+        u = load_user(uid)
+        my_friends = set(str(f) for f in u.get("friends", []))
+        results = []
+        all_users = load_all_users()
+        for fid_str, udata in all_users.items():
+            if str(fid_str) == str(uid):
+                continue
+            uname = (udata.get("username") or "").lower()
+            uname_display = (udata.get("name") or "").lower()
+            if q in uname or q in uname_display:
+                results.append({
+                    "id":        int(fid_str),
+                    "name":      udata.get("name", "?"),
+                    "username":  udata.get("username", ""),
+                    "points":    udata.get("points", 0),
+                    "streak":    udata.get("streak", 0),
+                    "photo":     udata.get("photo_url", ""),
+                    "is_friend": fid_str in my_friends,
+                })
+            if len(results) >= 10:
+                break
+        return jsonify({"results": results})
+
+    @api_app.route("/api/friends/<int:uid>/add/<int:fid>", methods=["POST"])
+    @require_auth
+    def api_friends_add(uid, fid):
+        if uid == fid:
+            return jsonify({"ok": False, "error": "O'zingizni qo'sha olmaysiz"}), 400
+        u = load_user(uid)
+        friends = u.get("friends", [])
+        if fid not in friends:
+            if len(friends) >= 50:
+                return jsonify({"ok": False, "error": "Do'stlar limiti 50 ta"}), 400
+            friends.append(fid)
+            u["friends"] = friends
+            save_user(uid, u)
+        return jsonify({"ok": True})
 
     @api_app.route("/api/friends/<int:uid>/remove/<int:fid>", methods=["DELETE"])
     @require_auth
