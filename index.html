@@ -2190,7 +2190,8 @@ function renderRating(d) {
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:5px">
             <div style="font-size:13px;font-weight:700;color:${isMe?'#5B8DEF':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${u.name}${u.badge?' '+u.badge:''}</div>
-            ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap">📋 ${u.habits_count}</div>` : ''}
+            ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#4CAF7D\"/><stop offset=\"100%\" stop-color=\"#5B8DEF\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
+            ${(j=>{const e=j>=80?"❤️":j>=50?"🧡":j>=20?"💛":"🖤";return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap">${e} ${j}%</div>`;})(u.jon??100)}
           </div>
           <div style="height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-top:5px;overflow:hidden">
             <div style="height:100%;border-radius:2px;background:#5B8DEF;width:${pct}%;transition:width .4s"></div>
@@ -2216,7 +2217,8 @@ function renderRating(d) {
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:5px">
               <div style="font-size:13px;font-weight:700;color:#5B8DEF;flex:1">${u.name}</div>
-              ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap">📋 ${u.habits_count}</div>` : ''}
+              ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#4CAF7D\"/><stop offset=\"100%\" stop-color=\"#5B8DEF\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
+              ${(j=>{const e=j>=80?"❤️":j>=50?"🧡":j>=20?"💛":"🖤";return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap">${e} ${j}%</div>`;})(u.jon??100)}
             </div>
             <div style="height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-top:5px;overflow:hidden">
               <div style="height:100%;border-radius:2px;background:#5B8DEF;width:${pct}%"></div>

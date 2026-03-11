@@ -6564,6 +6564,7 @@ try:
                 "done_log":     done_log,
                 "bot_start":    bot_start,
                 "habits_count": len(udata.get("habits", [])),
+                "jon":          round(udata.get("jon", 100)),
             })
 
         # Saralash
