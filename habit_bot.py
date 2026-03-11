@@ -1204,7 +1204,7 @@ def cmd_start(msg):
                             parse_mode="Markdown",
                             reply_markup=kb_approve
                         )
-                    except: pass
+                    except Exception as _e: print(f"[warn] xato: {_e}")
                 elif admin_id == uid:
                     # Admin o'zi kirmoqchi — to'g'ridan qo'shiladi
                     g["members"].append(uid)
@@ -1394,7 +1394,7 @@ def handle_contact(msg):
                             f"👥 *{g['name']}*",
                             parse_mode="Markdown"
                         )
-                except: pass
+                except Exception as _e: print(f"[warn] send_message: {_e}")
                 bot.send_message(uid,
                     f"✅ *{g['name']}* guruhiga qo'shildingiz!\n"
                     f"📌 Odat: *{g.get('habit_name','—')}*",
@@ -1556,7 +1556,7 @@ def finish_onboarding(uid, habit_name, habit_time):
     # Eslatma o'rnatish
     try:
         schedule_habit(uid, new_habit["id"], habit_name, habit_time)
-    except: pass
+    except Exception as _e: print(f"[warn] schedule_habit: {_e}")
     # Tabrik
     text = (
         f"🎊 *Zo'r! Birinchi odatingiz qo'shildi!*\n\n"
@@ -3541,7 +3541,7 @@ def callback_handler(call):
                             f"ℹ️ *{g['name']}* guruhi admin tomonidan o'chirildi.",
                             parse_mode="Markdown", reply_markup=ok_kb()
                         )
-                except: pass
+                except Exception as _e: print(f"[warn] send_message: {_e}")
             delete_group(g_id)
         send_menu2(uid)
         return
@@ -3689,7 +3689,7 @@ def callback_handler(call):
             if main_msg_id:
                 try:
                     edit_message_colored(uid, main_msg_id, build_main_text(uid), main_menu_dict(uid))
-                except: pass
+                except Exception as _e: print(f"[warn] edit_message: {_e}")
             return
         bot.answer_callback_query(call.id, "✅ Bajarildi!")
         done_today[uid_str][h_id] = True
@@ -3759,13 +3759,13 @@ def callback_handler(call):
                         f"👥 *{g['name']}:* {done_count}/{len(members)} a'zo",
                         parse_mode="Markdown", reply_markup=ok_kb()
                     )
-            except: pass
+            except Exception as _e: print(f"[warn] send_message: {_e}")
         # Asosiy menyuni yangilash — xuddi toggle_ kabi
         main_msg_id = u.get("main_msg_id")
         if main_msg_id:
             try:
                 edit_message_colored(uid, main_msg_id, build_main_text(uid), main_menu_dict(uid))
-            except: pass
+            except Exception as _e: print(f"[warn] edit_message: {_e}")
         return
 
     if cdata.startswith("group_habit_add_"):
@@ -3846,7 +3846,7 @@ def callback_handler(call):
                         f"🗑 *{g['name']}* guruhidan *{del_name}* odati o'chirildi.",
                         parse_mode="Markdown", reply_markup=ok_kb()
                     )
-            except: pass
+            except Exception as _e: print(f"[warn] send_message: {_e}")
         sent = _send_group_view(uid, u, g, g_id)
         u["main_msg_id"] = sent.message_id
         save_user(uid, u)
@@ -3910,7 +3910,7 @@ def callback_handler(call):
                 parse_mode="Markdown",
                 reply_markup=kb_confirm
             )
-        except: pass
+        except Exception as _e: print(f"[warn] xato: {_e}")
         return
 
     if cdata.startswith("group_join_ack_"):
@@ -3936,7 +3936,7 @@ def callback_handler(call):
                 f"❌ *{g['name'] if g else 'Guruh'}* guruhiga qo'shilish so'rovingiz rad etildi.",
                 parse_mode="Markdown", reply_markup=ok_kb()
             )
-        except: pass
+        except Exception as _e: print(f"[warn] send_message: {_e}")
         return
 
     if cdata.startswith("group_invite_"):
@@ -3981,7 +3981,7 @@ def callback_handler(call):
                         f"ℹ️ *{u.get('name','Foydalanuvchi')}* guruhdan chiqdi.",
                         parse_mode="Markdown", reply_markup=ok_kb()
                     )
-            except: pass
+            except Exception as _e: print(f"[warn] send_message: {_e}")
         send_menu2(uid)
         return
 
@@ -4974,7 +4974,7 @@ def group_daily_reset():
                                     f"Bugun davom eting! 💪",
                                     parse_mode="Markdown"
                                 )
-                            except: pass
+                            except Exception as _e: print(f"[warn] xato: {_e}")
             # Progressni tozalash
             g["done_today"] = {}
             g["done_date"]  = ""
@@ -5123,7 +5123,7 @@ def daily_reset():
                             f"Bugun bajaring! 💪",
                             parse_mode="Markdown", reply_markup=ok_kb()
                         )
-                    except: pass
+                    except Exception as _e: print(f"[warn] xato: {_e}")
             # Streak: agar hammasi bajargan bo'lsa allaqachon +1 bo'lgan
             # Agar hech kim bajarmaganligi bo'lsa yoki kam bajargan bo'lsa streak nollanadi
             done_count = sum(1 for v in done_today.values() if v)
@@ -5598,7 +5598,7 @@ def _save_group_habit(uid, u):
                     f"📌 *{h_name}*" + (f"  ⏰ {h_time}" if h_time != "vaqtsiz" else ""),
                     parse_mode="Markdown"
                 )
-        except: pass
+        except Exception as _e: print(f"[warn] send_message: {_e}")
     sent = _send_group_view(uid, u, g, g_id)
     u2 = load_user(uid)
     u2["main_msg_id"] = sent.message_id
@@ -6436,7 +6436,7 @@ def _run_broadcast(admin_uid, bc_chat_id, msg_ids, state):
         print(f"[broadcast FATAL] {fatal_e}")
         try:
             bot.send_message(admin_uid, f"❌ Broadcast xatolik bilan to'xtadi: {fatal_e}")
-        except: pass
+        except Exception as _e: print(f"[warn] send_message: {_e}")
     finally:
         u = load_user(admin_uid)
         u["state"] = None
@@ -6679,7 +6679,7 @@ try:
         save_user(uid, u)
         try:
             schedule_habit(uid, new_habit["id"], name, time_)
-        except: pass
+        except Exception as _e: print(f"[warn] schedule_habit: {_e}")
         return jsonify({"ok": True, "habit": new_habit})
 
     @api_app.route("/api/habits/<int:uid>/<hid>", methods=["PUT"])
