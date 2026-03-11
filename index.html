@@ -1323,6 +1323,8 @@ async function loadToday() {
     if (d.points !== undefined) {
       document.getElementById('header-pts').textContent = '⭐ ' + d.points;
     }
+    // Onboarding: data kelgandan keyin tekshiramiz
+    maybeShowOnboard(d);
   } catch(e) {
     document.getElementById('today-content').innerHTML =
       `<div class="empty-state">
@@ -3705,9 +3707,14 @@ function closeOnboard(permanent) {
   document.getElementById('onboard-backdrop').style.display = 'none';
 }
 
-function maybeShowOnboard() {
+function maybeShowOnboard(todayData) {
   const lang = (currentLang && OB_TEXT[currentLang]) ? currentLang : 'uz';
   const state = getObState();
+  // Agar odatlar bo'sh bo'lsa — habit qadamini qayta ko'rsat (done deb belgilama)
+  if (todayData && (!todayData.habits || todayData.habits.length === 0)) {
+    delete state.habit;
+    saveObState(state);
+  }
   const allDone = OB_TEXT[lang].steps.every(s => state[s.key]);
   if (allDone) return;
   renderOnboard();
@@ -3743,7 +3750,6 @@ window.onload = function() {
     return;
   }
   loadToday();
-  setTimeout(maybeShowOnboard, 700);
 };
 
 // ── OVOZ EFFEKTLARI (Web Audio API) ──
