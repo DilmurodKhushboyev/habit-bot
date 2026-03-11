@@ -1230,14 +1230,8 @@ body {
 <script>
 // ── TELEGRAM WEB APP ──
 const tg      = window.Telegram?.WebApp;
-if (tg) {
-  tg.ready();
-  tg.expand();
-  if (tg.colorScheme === 'dark') document.body.classList.add('dark');
-  tg.onEvent('themeChanged', () => {
-    document.body.classList.toggle('dark', tg.colorScheme === 'dark');
-  });
-}
+if (tg) { tg.ready(); tg.expand(); }
+if (localStorage.getItem('sh_dark') === '1') document.body.classList.add('dark');
 const user     = tg?.initDataUnsafe?.user || { id: 0, first_name: 'Test' };
 const initData = tg?.initData || '';
 const userId   = user.id || 0;
@@ -2482,6 +2476,22 @@ function renderProfile(d) {
         </label>
       </div>
     </div>
+    <div class="rem-card" style="margin-top:4px">
+      <div class="rem-top" style="margin-bottom:0;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgStarsLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="8" cy="8" r="2.2" fill="url(#svgStarsLg)"/><circle cx="18" cy="5" r="1.4" fill="url(#svgStarsLg)" opacity="0.7"/><circle cx="20" cy="16" r="1.8" fill="url(#svgStarsLg)" opacity="0.85"/><circle cx="6" cy="19" r="1.2" fill="url(#svgStarsLg)" opacity="0.6"/><circle cx="13" cy="13" r="3" fill="url(#svgStarsLg)" opacity="0.5"/></svg></div>
+          <div>
+            <div class="rem-name">Tungi rejim</div>
+            <div style="font-size:10px;color:var(--sub)">To'q fon, ko'z uchun qulay</div>
+          </div>
+        </div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+          <input type="checkbox" id="dark-toggle" onchange="saveDarkMode(this.checked)" style="opacity:0;width:0;height:0">
+          <span id="dark-slider" style="position:absolute;inset:0;border-radius:24px;background:var(--bg);box-shadow:var(--sh-in);transition:.3s"></span>
+          <span id="dark-knob" style="position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:var(--sub);box-shadow:var(--sh);transition:.3s"></span>
+        </label>
+      </div>
+    </div>
     <div style="margin:8px 0 4px;text-align:center">
       <button type="button" onclick="localStorage.removeItem('sh_ob_v3');maybeShowOnboard()" style="background:none;border:none;font-size:12px;color:var(--sub);cursor:pointer;padding:6px 12px;font-family:inherit;text-decoration:underline;display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg> ${S('profile','onboarding')}</button>
     </div>
@@ -2526,6 +2536,8 @@ function renderProfile(d) {
   setTimeout(function() {
     var tog = document.getElementById("evening-toggle");
     if (tog) { tog.checked = (d.evening_notify !== false); updateToggleVisual(tog.checked); }
+    var dtog = document.getElementById("dark-toggle");
+    if (dtog) { dtog.checked = (localStorage.getItem('sh_dark') === '1'); updateDarkToggleVisual(dtog.checked); }
   }, 30);
 }
 
@@ -2595,6 +2607,28 @@ function updateToggleVisual(checked) {
   slider.style.background = checked ? 'var(--green)' : 'var(--bg)';
   knob.style.background   = checked ? '#fff' : 'var(--sub)';
   knob.style.left         = checked ? '23px' : '3px';
+}
+
+function updateDarkToggleVisual(checked) {
+  const slider = document.getElementById('dark-slider');
+  const knob   = document.getElementById('dark-knob');
+  if (!slider || !knob) return;
+  slider.style.background = checked ? '#A78BFA' : 'var(--bg)';
+  knob.style.background   = checked ? '#fff' : 'var(--sub)';
+  knob.style.left         = checked ? '23px' : '3px';
+}
+
+function saveDarkMode(val) {
+  updateDarkToggleVisual(val);
+  if (val) {
+    localStorage.setItem('sh_dark', '1');
+    document.body.classList.add('dark');
+  } else {
+    localStorage.removeItem('sh_dark');
+    document.body.classList.remove('dark');
+  }
+  const t = document.getElementById('toast-profile');
+  if (t) { t.textContent = val ? '🌙 Tungi rejim yoqildi' : '☀️ Kunduzgi rejim yoqildi'; t.className = 'toast show'; setTimeout(()=>t.className='toast',2500); }
 }
 
 async function saveEveningNotify(val) {
