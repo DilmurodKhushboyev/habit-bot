@@ -498,6 +498,7 @@ body {
   display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
   margin-bottom: 4px;
 }
+.sum-card-chart { margin-top: 8px; }
 .sum-card {
   background: var(--bg); box-shadow: var(--sh-sm);
   border-radius: 18px; padding: 16px; text-align: center;
@@ -1859,27 +1860,67 @@ function renderStats(d) {
   const { summary, weekly, heatmap, days_30, habit_stats, today } = d;
 
   // ── Summary cards ──
+  // Streak: mini flame bars (streak / best_streak)
+  const bestStreak = summary.best_streak || Math.max(summary.streak, 1);
+  const streakPct  = Math.min(100, Math.round(summary.streak / Math.max(bestStreak, 1) * 100));
+  const streakBars = [20,40,60,80,100].map(thresh => {
+    const lit = streakPct >= thresh;
+    return `<div style="flex:1;height:${4 + thresh/20}px;border-radius:2px;background:${lit ? '#E07040' : '#C8CBD8'};margin:0 1px;align-self:flex-end"></div>`;
+  }).join('');
+  const streakChart = `<div style="display:flex;align-items:flex-end;height:18px;margin-top:8px">${streakBars}</div>`;
+
+  // Ball: donut chart (ball / 1000 max ko'rsatish)
+  const ballMax = Math.max(summary.points, 500);
+  const ballPct = Math.min(100, Math.round(summary.points / ballMax * 100));
+  const bR = 14; const bCirc = 2 * Math.PI * bR;
+  const ballChart = `<div style="margin-top:6px"><svg width="36" height="36" viewBox="0 0 36 36">
+    <circle cx="18" cy="18" r="${bR}" fill="none" stroke="#C8CBD8" stroke-width="4"/>
+    <circle cx="18" cy="18" r="${bR}" fill="none" stroke="#F6C93E" stroke-width="4"
+      stroke-dasharray="${(bCirc*ballPct/100).toFixed(1)} ${bCirc.toFixed(1)}"
+      stroke-dashoffset="${(bCirc/4).toFixed(1)}" stroke-linecap="round"/>
+  </svg></div>`;
+
+  // Faol kun: 30 ta kichik kvadrat (active_days_30)
+  const activePct = Math.round(summary.active_days_30 / 30 * 100);
+  const activeBoxes = Array.from({length:10}, (_,i) => {
+    const lit = (i+1) <= Math.round(summary.active_days_30 / 3);
+    return `<div style="width:7px;height:7px;border-radius:2px;background:${lit?'#4CAF7D':'#C8CBD8'};margin:1px"></div>`;
+  }).join('');
+  const activeChart = `<div style="display:flex;flex-wrap:wrap;width:80px;margin-top:8px">${activeBoxes}</div>`;
+
+  // Odat: horizontal segmentli bar
+  const habitMax = Math.max(summary.total_habits, 5);
+  const habitSegs = Array.from({length:5}, (_,i) => {
+    const lit = (i+1) <= Math.round(summary.total_habits / Math.max(habitMax,1) * 5);
+    return `<div style="flex:1;height:8px;border-radius:2px;background:${lit?'#5B8DEF':'#C8CBD8'};margin:0 1px"></div>`;
+  }).join('');
+  const habitChart = `<div style="display:flex;align-items:center;margin-top:10px">${habitSegs}</div>`;
+
   const sumHtml = `
     <div class="summary-grid">
       <div class="sum-card">
         <div class="sum-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireMd" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireMd)"/></svg></div>
         <div class="sum-val">${summary.streak}</div>
         <div class="sum-lbl">Streak</div>
+        ${streakChart}
       </div>
       <div class="sum-card">
         <div class="sum-icon">⭐</div>
         <div class="sum-val">${summary.points}</div>
         <div class="sum-lbl">Ball</div>
+        ${ballChart}
       </div>
       <div class="sum-card">
         <div class="sum-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgChkSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgChkSm)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgChkSm)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <div class="sum-val">${summary.active_days_30}</div>
         <div class="sum-lbl">Faol kun (30)</div>
+        ${activeChart}
       </div>
       <div class="sum-card">
         <div class="sum-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClipSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClipSm)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClipSm)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClipSm)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
         <div class="sum-val">${summary.total_habits}</div>
         <div class="sum-lbl">Odat</div>
+        ${habitChart}
       </div>
     </div>`;
 

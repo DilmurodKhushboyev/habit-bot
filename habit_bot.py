@@ -6891,6 +6891,7 @@ try:
                 "points":        u.get("points", 0),
                 "active_days_30": active_days_30,
                 "total_habits":  total,
+                "best_streak":   max((h.get("streak", 0) for h in u.get("habits", [])), default=0),
             },
             "weekly":      weekly,
             "monthly":     monthly,
