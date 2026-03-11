@@ -6467,8 +6467,7 @@ try:
             if not received_hash:
                 return None
             # Ma'lumotlarni tekshirish uchun satr tuzish
-            data_check_string = "
-".join(
+            data_check_string = "\n".join(
                 f"{k}={v}" for k, v in sorted(params.items())
             )
             # Secret key: HMAC-SHA256(BOT_TOKEN, "WebAppData")
