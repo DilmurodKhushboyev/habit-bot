@@ -1257,12 +1257,23 @@ async function loadTab(tab) {
 }
 
 // ── FETCH ──
-async function apiFetch(endpoint) {
-  const res = await fetch(`${API}/${endpoint}`, {
-    headers: { 'X-Init-Data': initData, 'X-User-Id': userId }
-  });
-  if (!res.ok) throw new Error(res.status);
-  return res.json();
+async function apiFetch(endpoint, options = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(`${API}/${endpoint}`, {
+      ...options,
+      headers: { 'X-Init-Data': initData, 'X-User-Id': userId, ...(options.headers || {}) },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(res.status);
+    return res.json();
+  } catch(e) {
+    clearTimeout(timer);
+    if (e.name === "AbortError") throw new Error("Serverga ulanib bo'lmadi");
+    throw e;
+  }
 }
 
 // ── PROGRESS RING SVG ──
@@ -1953,8 +1964,8 @@ function renderStats(d) {
     const diff  = Math.abs(trend.diff);
     const arrow = dir === 'up'   ? '↑' : dir === 'down' ? '↓' : '→';
     const aColor= dir === 'up'   ? '#4CAF7D' : dir === 'down' ? '#E07040' : '#8A8FA8';
-    const msg   = dir === 'up'   ? "O'tgan haftadan yaxshiroq!" :
-                  dir === 'down' ? "O'tgan haftadan pastroq" :
+    const msg   = dir === "up"   ? "O'tgan haftadan yaxshiroq!" :
+                  dir === "down" ? "O'tgan haftadan pastroq" :
                                    "O'tgan hafta bilan bir xil";
     const barThis = Math.max(2, trend.this_week);
     const barPrev = Math.max(2, trend.prev_week);
@@ -3331,7 +3342,7 @@ async function searchFriends() {
           <div style="font-size:10px;color:var(--sub)">⭐ ${r.points} · 🔥 ${r.streak} kun</div>
         </div>
         ${r.is_friend
-          ? '<div style="font-size:10px;color:var(--green);font-weight:600;flex-shrink:0">✓ Do'st</div>'
+          ? "<div style=\"font-size:10px;color:var(--green);font-weight:600;flex-shrink:0\">✓ Do'st</div>"
           : `<button class="rem-save-btn" style="padding:5px 12px;font-size:11px;flex-shrink:0" onclick="addFriend(${r.id},'${r.name.replace(/'/g,"\'")}',this)" type="button">+ Qo'shish</button>`}
       </div>`).join('');
   } catch(e) {
@@ -3348,12 +3359,12 @@ async function addFriend(fid, fname, btn) {
       showToast(`${fname} do'stlar ro'yxatiga qo'shildi! 🤝`);
       loaded.achievements = false;
     } else {
-      if (btn) { btn.disabled = false; btn.textContent = '+ Qo'shish'; }
+      if (btn) { btn.disabled = false; btn.textContent = "+ Qo'shish"; }
       showToast(d.error || 'Xato', true);
     }
   } catch(e) {
-    if (btn) { btn.disabled = false; btn.textContent = '+ Qo'shish'; }
-    showToast('Xato yuz berdi!', true);
+    if (btn) { btn.disabled = false; btn.textContent = "+ Qo'shish"; }
+    showToast("Xato yuz berdi!", true);
   }
 }
 
@@ -3714,7 +3725,26 @@ if (window.visualViewport) {
     }
   });
 }
-window.onload = function() { loadToday(); setTimeout(maybeShowOnboard, 700); };
+window.onload = function() {
+  // Telegram WebApp userId tayyor bo'lishini kutamiz
+  if (!userId || userId === 0) {
+    let tries = 0;
+    const waitUid = setInterval(() => {
+      const u = window.Telegram?.WebApp?.initDataUnsafe?.user;
+      if (u && u.id) { clearInterval(waitUid); location.reload(); return; }
+      if (++tries >= 30) {
+        clearInterval(waitUid);
+        document.getElementById('today-content').innerHTML =
+          '<div class="empty-state"><div class="icon">⚠️</div>' +
+          '<div>Iltimos botni qayta oching</div>' +
+          '<button onclick="location.reload()" style="margin-top:14px;padding:10px 20px;border-radius:12px;border:none;background:var(--card);box-shadow:var(--sh);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">🔄 Yangilash</button></div>';
+      }
+    }, 100);
+    return;
+  }
+  loadToday();
+  setTimeout(maybeShowOnboard, 700);
+};
 
 // ── OVOZ EFFEKTLARI (Web Audio API) ──
 function playHabitSound(isDone) {
