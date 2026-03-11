@@ -2416,7 +2416,6 @@ def callback_handler(call):
             return
         u["state"] = cdata
         save_user(uid, u)
-        print(f"[DEBUG bc_set] state saqlandi: {cdata!r}")
         bot.answer_callback_query(call.id)
         try: bot.delete_message(uid, call.message.message_id)
         except Exception: pass
@@ -5615,7 +5614,6 @@ def handle_text(msg):
     text  = msg.text or msg.caption or ""
     u     = load_user(uid)
     state = u.get("state")
-    print(f"[DEBUG handle_text] uid={uid}, state={state!r}, type={msg.content_type}, text={text[:30]!r}")
 
     # ── Telefon raqamni matn sifatida kiritish (ro'yxatdan o'tish) ──
     if state == "waiting_phone_reg":
@@ -6346,7 +6344,6 @@ def handle_text(msg):
         return
 
     # ── Broadcast matn/media (admin) ──
-    print(f"[DEBUG broadcast] uid={uid}, state={state!r}, type={msg.content_type}")
     if state in ("admin_bc_private", "admin_bc_groups", "admin_bc_all") and uid == ADMIN_ID:
         bc_chat_id   = msg.chat.id
         media_grp_id = msg.media_group_id
