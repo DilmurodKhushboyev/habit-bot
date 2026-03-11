@@ -1857,7 +1857,7 @@ async function loadStats() {
 }
 
 function renderStats(d) {
-  const { summary, weekly, heatmap, days_30, habit_stats, today } = d;
+  const { summary, weekly, heatmap, days_30, habit_stats, today, trend } = d;
 
   // ── Summary cards ──
   // Streak: mini flame bars (streak / best_streak)
@@ -1945,6 +1945,48 @@ function renderStats(d) {
       <div class="bar-chart-title">${S('stats','week_chart')}</div>
       <div class="bars">${barsHtml}</div>
     </div>`;
+
+  // ── Haftalik tendensiya ──
+  let trendHtml = '';
+  if (trend) {
+    const dir   = trend.direction;
+    const diff  = Math.abs(trend.diff);
+    const arrow = dir === 'up'   ? '↑' : dir === 'down' ? '↓' : '→';
+    const aColor= dir === 'up'   ? '#4CAF7D' : dir === 'down' ? '#E07040' : '#8A8FA8';
+    const msg   = dir === 'up'   ? "O'tgan haftadan yaxshiroq!" :
+                  dir === 'down' ? "O'tgan haftadan pastroq" :
+                                   "O'tgan hafta bilan bir xil";
+    const barThis = Math.max(2, trend.this_week);
+    const barPrev = Math.max(2, trend.prev_week);
+    const barMax  = Math.max(barThis, barPrev, 1);
+    trendHtml = `
+      <div style="background:var(--card);box-shadow:var(--sh);border-radius:16px;padding:14px 16px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px">Haftalik tendensiya</div>
+          <div style="display:flex;align-items:center;gap:5px">
+            <span style="font-size:22px;font-weight:800;color:${aColor};line-height:1">${arrow}</span>
+            <span style="font-size:13px;font-weight:700;color:${aColor}">${diff > 0 ? diff + '%' : ''}</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:16px">
+          <div style="flex:1">
+            <div style="font-size:10px;color:var(--sub);margin-bottom:4px">O'tgan hafta</div>
+            <div style="height:8px;border-radius:4px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">
+              <div style="height:100%;border-radius:4px;background:#C8CBD8;width:${Math.round(barPrev/barMax*100)}%;transition:width .5s"></div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:var(--sub);margin-top:4px">${trend.prev_week}%</div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:10px;color:var(--sub);margin-bottom:4px">Bu hafta</div>
+            <div style="height:8px;border-radius:4px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">
+              <div style="height:100%;border-radius:4px;background:${aColor};width:${Math.round(barThis/barMax*100)}%;transition:width .5s"></div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:${aColor};margin-top:4px">${trend.this_week}%</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:${aColor};margin-top:10px;font-weight:600">${msg}</div>
+      </div>`;
+  }
 
   // ── Heatmap (30 kun) ──
   const hmCells = days_30.map(d => {
@@ -2038,6 +2080,7 @@ function renderStats(d) {
       <button class="period-btn"        id="pbtn-30" onclick="setPeriod(30)" type="button">30 kun</button>
     </div>
     <div id="bar-chart-wrap">${barChartHtml}</div>
+    ${trendHtml}
     ${heatmapHtml}
     <div style="margin-top:16px">
       <button type="button" onclick="toggleHabitStats()" id="habit-stats-btn"
@@ -3207,6 +3250,18 @@ function renderFriends(d) {
   });
 
   document.getElementById('friends-content').innerHTML = `
+    <div class="rem-card">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">🔍 Do'st qidirish</div>
+      <div style="display:flex;gap:8px">
+        <input id="friend-search-inp" type="text" placeholder="Ism yoki @username..." maxlength="30"
+          style="flex:1;padding:8px 12px;border-radius:10px;border:none;background:var(--bg);box-shadow:var(--sh-in);color:var(--text);font-size:13px;outline:none"
+          oninput="onFriendSearchInput(this.value)">
+        <button class="rem-save-btn" style="padding:8px 14px" onclick="searchFriends()" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><circle cx="11" cy="11" r="7" stroke="#fff" stroke-width="2"/><path d="M20 20l-3-3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div id="friend-search-results" style="margin-top:8px"></div>
+    </div>
     <div class="rem-card" style="background:linear-gradient(135deg,#5B8DEF22,#4CAF7D22)">
       <div style="display:flex;align-items:center;gap:12px">
         <div style="display:flex;justify-content:center"><svg width="36" height="36" viewBox="0 0 40 40" fill="none"><defs><linearGradient id="svgHandLg" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M6 20l7 7 7-7 7 7 7-7" stroke="url(#svgHandLg)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M6 13l7 7 7-7 7 7 7-7" stroke="url(#svgHandLg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.45"/></svg></div>
@@ -3239,6 +3294,67 @@ async function removeFriend(fid) {
     });
     await loadFriends();
   } catch(e) { showToast('Xato yuz berdi!', true); }
+}
+
+// ── FRIEND SEARCH ──
+let _friendSearchTimer = null;
+function onFriendSearchInput(val) {
+  clearTimeout(_friendSearchTimer);
+  if (val.trim().length < 2) {
+    document.getElementById('friend-search-results').innerHTML = '';
+    return;
+  }
+  _friendSearchTimer = setTimeout(() => searchFriends(), 500);
+}
+
+async function searchFriends() {
+  const inp = document.getElementById('friend-search-inp');
+  if (!inp) return;
+  const q = inp.value.trim();
+  if (q.length < 2) return;
+  const resEl = document.getElementById('friend-search-results');
+  resEl.innerHTML = '<div style="font-size:12px;color:var(--sub);text-align:center;padding:8px">Qidirilmoqda...</div>';
+  try {
+    const d = await apiFetch(`friends/${userId}/search?q=${encodeURIComponent(q)}`);
+    const results = d.results || [];
+    if (!results.length) {
+      resEl.innerHTML = '<div style="font-size:12px;color:var(--sub);text-align:center;padding:8px">Topilmadi</div>';
+      return;
+    }
+    resEl.innerHTML = results.map(r => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bg)">
+        ${r.photo
+          ? `<img src="${r.photo}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+          : `<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#5B8DEF,#4CAF7D);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;font-weight:700;color:#fff">${(r.name[0]||'?').toUpperCase()}</div>`}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}${r.username ? ' <span style="font-size:10px;color:var(--sub)">@'+r.username+'</span>' : ''}</div>
+          <div style="font-size:10px;color:var(--sub)">⭐ ${r.points} · 🔥 ${r.streak} kun</div>
+        </div>
+        ${r.is_friend
+          ? '<div style="font-size:10px;color:var(--green);font-weight:600;flex-shrink:0">✓ Do'st</div>'
+          : `<button class="rem-save-btn" style="padding:5px 12px;font-size:11px;flex-shrink:0" onclick="addFriend(${r.id},'${r.name.replace(/'/g,"\'")}',this)" type="button">+ Qo'shish</button>`}
+      </div>`).join('');
+  } catch(e) {
+    resEl.innerHTML = '<div style="font-size:12px;color:#E07040;text-align:center;padding:8px">Xato yuz berdi</div>';
+  }
+}
+
+async function addFriend(fid, fname, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    const d = await apiFetch(`friends/${userId}/add/${fid}`, { method: 'POST' });
+    if (d.ok) {
+      if (btn) { btn.textContent = "✓ Do'st"; btn.style.background = 'var(--green)'; }
+      showToast(`${fname} do'stlar ro'yxatiga qo'shildi! 🤝`);
+      loaded.achievements = false;
+    } else {
+      if (btn) { btn.disabled = false; btn.textContent = '+ Qo'shish'; }
+      showToast(d.error || 'Xato', true);
+    }
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = '+ Qo'shish'; }
+    showToast('Xato yuz berdi!', true);
+  }
 }
 
 // ── SHOP ──
