@@ -7130,7 +7130,7 @@ try:
 
     def check_achievements(uid, u):
         """Yangi qozonilgan yutuqlarni tekshiradi, qaytaradi: list of new achievement dicts"""
-        earned_ids = {a["id"] for a in u.get("achievements", [])}
+        earned_ids = {a["id"] for a in u.get("achievements", []) if isinstance(a, dict)}
         streak      = u.get("streak", 0)
         points      = u.get("points", 0)
         habits      = u.get("habits", [])
@@ -7167,7 +7167,7 @@ try:
     def api_achievements(uid):
         u    = load_user(uid)
         lang = u.get("lang", "uz")
-        earned_ids = {a["id"] for a in u.get("achievements", [])}
+        earned_ids = {a["id"] for a in u.get("achievements", []) if isinstance(a, dict)}
         streak      = u.get("streak", 0)
         points      = u.get("points", 0)
         habits      = u.get("habits", [])
