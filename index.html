@@ -1857,7 +1857,7 @@ async function loadStats() {
 }
 
 function renderStats(d) {
-  const { summary, weekly, heatmap, days_30, habit_stats, today } = d;
+  const { summary, weekly, heatmap, days_30, habit_stats, today, trend } = d;
 
   // ── Summary cards ──
   // Streak: mini flame bars (streak / best_streak)
@@ -1945,6 +1945,48 @@ function renderStats(d) {
       <div class="bar-chart-title">${S('stats','week_chart')}</div>
       <div class="bars">${barsHtml}</div>
     </div>`;
+
+  // ── Haftalik tendensiya ──
+  let trendHtml = '';
+  if (trend) {
+    const dir   = trend.direction;
+    const diff  = Math.abs(trend.diff);
+    const arrow = dir === 'up'   ? '↑' : dir === 'down' ? '↓' : '→';
+    const aColor= dir === 'up'   ? '#4CAF7D' : dir === 'down' ? '#E07040' : '#8A8FA8';
+    const msg   = dir === 'up'   ? "O'tgan haftadan yaxshiroq!" :
+                  dir === 'down' ? "O'tgan haftadan pastroq" :
+                                   "O'tgan hafta bilan bir xil";
+    const barThis = Math.max(2, trend.this_week);
+    const barPrev = Math.max(2, trend.prev_week);
+    const barMax  = Math.max(barThis, barPrev, 1);
+    trendHtml = `
+      <div style="background:var(--card);box-shadow:var(--sh);border-radius:16px;padding:14px 16px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px">Haftalik tendensiya</div>
+          <div style="display:flex;align-items:center;gap:5px">
+            <span style="font-size:22px;font-weight:800;color:${aColor};line-height:1">${arrow}</span>
+            <span style="font-size:13px;font-weight:700;color:${aColor}">${diff > 0 ? diff + '%' : ''}</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:16px">
+          <div style="flex:1">
+            <div style="font-size:10px;color:var(--sub);margin-bottom:4px">O'tgan hafta</div>
+            <div style="height:8px;border-radius:4px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">
+              <div style="height:100%;border-radius:4px;background:#C8CBD8;width:${Math.round(barPrev/barMax*100)}%;transition:width .5s"></div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:var(--sub);margin-top:4px">${trend.prev_week}%</div>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:10px;color:var(--sub);margin-bottom:4px">Bu hafta</div>
+            <div style="height:8px;border-radius:4px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">
+              <div style="height:100%;border-radius:4px;background:${aColor};width:${Math.round(barThis/barMax*100)}%;transition:width .5s"></div>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:${aColor};margin-top:4px">${trend.this_week}%</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:${aColor};margin-top:10px;font-weight:600">${msg}</div>
+      </div>`;
+  }
 
   // ── Heatmap (30 kun) ──
   const hmCells = days_30.map(d => {
@@ -2038,6 +2080,7 @@ function renderStats(d) {
       <button class="period-btn"        id="pbtn-30" onclick="setPeriod(30)" type="button">30 kun</button>
     </div>
     <div id="bar-chart-wrap">${barChartHtml}</div>
+    ${trendHtml}
     ${heatmapHtml}
     <div style="margin-top:16px">
       <button type="button" onclick="toggleHabitStats()" id="habit-stats-btn"

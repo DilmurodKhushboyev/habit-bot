@@ -6511,30 +6511,37 @@ try:
         Muvaffaqiyatli bo'lsa user_id qaytaradi, aks holda None.
         """
         if not init_data_raw:
+            print("[auth] FAIL: init_data_raw bo'sh")
             return None
         try:
             params = dict(urllib.parse.parse_qsl(init_data_raw, keep_blank_values=True))
             received_hash = params.pop("hash", None)
             if not received_hash:
+                print("[auth] FAIL: hash yo'q")
                 return None
-            # Ma'lumotlarni tekshirish uchun satr tuzish
             data_check_string = "\n".join(
                 f"{k}={v}" for k, v in sorted(params.items())
             )
-            # Secret key: HMAC-SHA256(BOT_TOKEN, "WebAppData")
-            secret_key = hmac.new(b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256).digest()
+            secret_key = hmac.new(BOT_TOKEN.encode(), b"WebAppData", hashlib.sha256).digest()
             computed   = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
             if not hmac.compare_digest(computed, received_hash):
+                print(f"[auth] FAIL: hash mos kelmadi. computed={computed[:10]}... received={received_hash[:10]}...")
                 return None
-            # auth_date yangiligini tekshirish (24 soat)
             auth_date = int(params.get("auth_date", 0))
-            if _time.time() - auth_date > 604800:  # 7 kun
+            age = int(_time.time() - auth_date)
+            if age > 604800:
+                print(f"[auth] FAIL: auth_date eskirgan ({age} soniya oldin)")
                 return None
-            # user JSON dan id olish
             import json as _json
             user_obj = _json.loads(params.get("user", "{}"))
-            return int(user_obj.get("id", 0)) or None
-        except Exception:
+            uid = int(user_obj.get("id", 0)) or None
+            if uid:
+                print(f"[auth] OK: uid={uid}, age={age}s")
+            else:
+                print("[auth] FAIL: user id topilmadi")
+            return uid
+        except Exception as e:
+            print(f"[auth] EXCEPTION: {e}")
             return None
 
     def require_auth(f):
@@ -6551,12 +6558,14 @@ try:
             init_data_raw = request.headers.get("X-Init-Data", "")
             # Test muhit: initData bo'sh bo'lsa va uid 0 bo'lsa — o'tkazib yuborish
             if not init_data_raw:
+                print(f"[auth] FAIL: X-Init-Data header yo'q. endpoint={request.path}")
                 return jsonify({"ok": False, "error": "Unauthorized"}), 401
             verified_uid = verify_init_data(init_data_raw)
             if not verified_uid:
                 return jsonify({"ok": False, "error": "Unauthorized"}), 401
             # Route da uid bo'lsa — verified uid bilan solishtiramiz
             if uid_in_route is not None and verified_uid != uid_in_route:
+                print(f"[auth] FAIL: uid mos kelmadi. verified={verified_uid}, route={uid_in_route}")
                 return jsonify({"ok": False, "error": "Forbidden"}), 403
             # Rate limit: 60 so'rov/daqiqa per UID
             rl_err = rate_limit_check(uid=verified_uid, limit=60, window=60)
@@ -6944,6 +6953,38 @@ try:
             "new_badges":  new_badges,
         })
 
+    def _calc_trend(history, habits, now_uz, total):
+        """Joriy hafta vs oldingi hafta bajarilish foizini solishtiradi."""
+        from datetime import timedelta
+        def week_pct(offset_start, offset_end):
+            scores = []
+            for i in range(offset_start, offset_end, -1):
+                d = (now_uz - timedelta(days=i)).strftime("%Y-%m-%d")
+                day_data = history.get(d, {})
+                done  = day_data.get("done", 0)
+                tot   = day_data.get("total", 0) or total
+                if tot > 0:
+                    scores.append(done / tot * 100)
+                else:
+                    scores.append(0)
+            return round(sum(scores) / len(scores)) if scores else 0
+
+        this_week = week_pct(6,  -1)   # oxirgi 7 kun (0..6)
+        prev_week = week_pct(13,  6)   # undan oldingi 7 kun (7..13)
+        diff = this_week - prev_week
+        if diff > 5:
+            direction = "up"
+        elif diff < -5:
+            direction = "down"
+        else:
+            direction = "same"
+        return {
+            "this_week": this_week,
+            "prev_week": prev_week,
+            "diff":      diff,
+            "direction": direction,
+        }
+
     @api_app.route("/api/stats/<int:uid>")
     @require_auth
     def api_stats(uid):
@@ -7055,6 +7096,7 @@ try:
             "habit_stats": habit_stats,
             "points":      u.get("points", 0),
             "streak":      u.get("streak", 0),
+            "trend":       _calc_trend(history, habits, now_uz, total),
         })
 
 
