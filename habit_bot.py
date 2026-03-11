@@ -6692,16 +6692,26 @@ try:
     @api_app.route("/api/habits/<int:uid>", methods=["POST"])
     @require_auth
     def api_habits_add(uid):
-        import uuid
+        import uuid, re as _re
         data  = request.get_json() or {}
         name  = (data.get("name") or "").strip()
         icon  = (data.get("icon") or "✅").strip()
         time_ = (data.get("time") or "vaqtsiz").strip()
         hab_type     = data.get("type", "simple")
-        repeat_count = int(data.get("repeat_count", 1))
-        if repeat_count < 1: repeat_count = 1
+        try:
+            repeat_count = max(1, min(int(data.get("repeat_count", 1)), 100))
+        except (ValueError, TypeError):
+            repeat_count = 1
         if not name:
             return jsonify({"ok": False, "error": "Nom bo'sh"}), 400
+        if len(name) > 100:
+            return jsonify({"ok": False, "error": "Nom 100 belgidan oshmasin"}), 400
+        if len(icon) > 10:
+            icon = "✅"
+        if hab_type not in ("simple", "repeat"):
+            hab_type = "simple"
+        if time_ != "vaqtsiz" and not _re.match(r"^\d{2}:\d{2}$", time_):
+            time_ = "vaqtsiz"
         u = load_user(uid)
         new_habit = {
             "id":           str(uuid.uuid4())[:8],
@@ -6728,14 +6738,26 @@ try:
     @api_app.route("/api/habits/<int:uid>/<hid>", methods=["PUT"])
     @require_auth
     def api_habits_edit(uid, hid):
+        import re as _re
         data  = request.get_json() or {}
         name  = (data.get("name") or "").strip()
         icon  = (data.get("icon") or "✅").strip()
         time_ = (data.get("time") or "vaqtsiz").strip()
         type_ = (data.get("type") or "simple").strip()
-        repeat_count = int(data.get("repeat_count") or 1)
+        try:
+            repeat_count = max(1, min(int(data.get("repeat_count") or 1), 100))
+        except (ValueError, TypeError):
+            repeat_count = 1
         if not name:
             return jsonify({"ok": False, "error": "Nom bo'sh"}), 400
+        if len(name) > 100:
+            return jsonify({"ok": False, "error": "Nom 100 belgidan oshmasin"}), 400
+        if len(icon) > 10:
+            icon = "✅"
+        if type_ not in ("simple", "repeat"):
+            type_ = "simple"
+        if time_ != "vaqtsiz" and not _re.match(r"^\d{2}:\d{2}$", time_):
+            time_ = "vaqtsiz"
         u = load_user(uid)
         habits = u.get("habits", [])
         for h in habits:
@@ -7214,9 +7236,32 @@ try:
     def api_profile_put(uid):
         data = request.get_json() or {}
         u = load_user(uid)
-        for field in ["lang", "daily_target", "evening_notify", "photo_url", "display_name", "phone"]:
-            if field in data:
-                u[field] = data[field]
+        # lang
+        if "lang" in data:
+            if data["lang"] in ("uz", "ru", "en", "tr", "kk", "tg", "tk", "kg", "de", "fr"):
+                u["lang"] = data["lang"]
+        # daily_target
+        if "daily_target" in data:
+            try:
+                dt = int(data["daily_target"])
+                u["daily_target"] = max(1, min(dt, 50))
+            except (ValueError, TypeError):
+                pass
+        # evening_notify
+        if "evening_notify" in data:
+            u["evening_notify"] = bool(data["evening_notify"])
+        # photo_url
+        if "photo_url" in data:
+            url = str(data["photo_url"] or "")[:500]
+            u["photo_url"] = url
+        # display_name
+        if "display_name" in data:
+            dn = str(data["display_name"] or "").strip()[:50]
+            u["display_name"] = dn
+        # phone
+        if "phone" in data:
+            phone = str(data["phone"] or "").strip()[:20]
+            u["phone"] = phone
         save_user(uid, u)
         return jsonify({"ok": True})
 
