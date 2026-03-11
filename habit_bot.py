@@ -7264,7 +7264,6 @@ try:
             {"id": "pet_rabbit",  "name": "Quyon",            "cat": "pet",        "emoji": "🐰",  "price_ball": 300,  "price_stars": 0, "desc": "Tez-tez sakrashi"},
             {"id": "car_sport",   "name": "Sport mashina",    "cat": "car",        "emoji": "🏎️", "price_ball": 500,  "price_stars": 0, "desc": "Tez mashina"},
             {"id": "jon_restore", "name": "Jon tiklash",      "cat": "bonus",      "emoji": "❤️", "price_ball": 25,   "price_stars": 0, "desc": "Jonni 100% ga tiklash (faqat 20% va kam holda)"},
-            {"id": "weekly_report","name": "Haftalik hisobot", "cat": "gift",      "emoji": "📊",  "price_ball": 50,   "price_stars": 0, "desc": "Batafsil haftalik statistika"},
             {"id": "gift_box",    "name": "Sovga qutisi",     "cat": "gift",       "emoji": "🎁",  "price_ball": 0,    "price_stars": 5, "desc": "Tasodifiy mukofot"},
         ]
         raw_inventory = u.get("inventory", [])
@@ -7306,7 +7305,7 @@ try:
             "bonus_2x": 150, "bonus_3x": 300, "xp_booster": 400,
             "badge_fire": 200, "badge_star": 250, "badge_secret": 600,
             "pet_cat": 300, "pet_dog": 350, "pet_rabbit": 300, "car_sport": 500,
-            "jon_restore": 25, "weekly_report": 50,
+            "jon_restore": 25,
         }
         price = prices.get(item_id, 0)
         if not price and item_id != "gift_box":
@@ -7353,12 +7352,6 @@ try:
             u["xp_booster_days"] = u.get("xp_booster_days", 0) + 7
             save_user(uid, u)
             return jsonify({"ok": True, "points": u["points"], "xp_booster_days": u["xp_booster_days"]})
-        if item_id == "weekly_report":
-            if u.get("points", 0) < 50:
-                return jsonify({"ok": False, "error": "Ball yetarli emas"})
-            u["points"] = u.get("points", 0) - 50
-            save_user(uid, u)
-            return jsonify({"ok": True, "points": u["points"], "weekly_report": True})
         if pay_type == "ball":
             if u.get("points", 0) < price:
                 return jsonify({"ok": False, "error": "Ball yetarli emas"})
