@@ -6478,14 +6478,15 @@ try:
             # score = oxirgi 30 kunda faol kunlar soni
             score = sum(1 for d, v in done_log.items() if v and d >= (today_dt - timedelta(days=30)).strftime("%Y-%m-%d"))
             entries.append({
-                "uid":       uid,
-                "name":      udata.get("name", "?"),
-                "points":    udata.get("points", 0),
-                "streak":    udata.get("streak", 0),
-                "score":     score,
-                "photo_url": udata.get("photo_url", ""),
-                "done_log":  done_log,
-                "bot_start": bot_start,
+                "uid":          uid,
+                "name":         udata.get("name", "?"),
+                "points":       udata.get("points", 0),
+                "streak":       udata.get("streak", 0),
+                "score":        score,
+                "photo_url":    udata.get("photo_url", ""),
+                "done_log":     done_log,
+                "bot_start":    bot_start,
+                "habits_count": len(udata.get("habits", [])),
             })
 
         # Saralash
