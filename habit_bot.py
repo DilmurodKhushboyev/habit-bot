@@ -6451,6 +6451,66 @@ try:
     def options_preflight(**kwargs):
         return jsonify({}), 200
 
+    # ── Telegram WebApp initData tekshirish ──
+    import hmac, hashlib, urllib.parse, time as _time
+
+    def verify_init_data(init_data_raw: str) -> int | None:
+        """
+        Telegram WebApp initData ni HMAC-SHA256 bilan tekshiradi.
+        Muvaffaqiyatli bo'lsa user_id qaytaradi, aks holda None.
+        """
+        if not init_data_raw:
+            return None
+        try:
+            params = dict(urllib.parse.parse_qsl(init_data_raw, keep_blank_values=True))
+            received_hash = params.pop("hash", None)
+            if not received_hash:
+                return None
+            # Ma'lumotlarni tekshirish uchun satr tuzish
+            data_check_string = "
+".join(
+                f"{k}={v}" for k, v in sorted(params.items())
+            )
+            # Secret key: HMAC-SHA256(BOT_TOKEN, "WebAppData")
+            secret_key = hmac.new(b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256).digest()
+            computed   = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+            if not hmac.compare_digest(computed, received_hash):
+                return None
+            # auth_date yangiligini tekshirish (24 soat)
+            auth_date = int(params.get("auth_date", 0))
+            if _time.time() - auth_date > 86400:
+                return None
+            # user JSON dan id olish
+            import json as _json
+            user_obj = _json.loads(params.get("user", "{}"))
+            return int(user_obj.get("id", 0)) or None
+        except Exception:
+            return None
+
+    def require_auth(f):
+        """Decorator: X-Init-Data headerini tekshiradi, UID ni route uid bilan solishtiradi."""
+        from functools import wraps
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            # OPTIONS preflight — tekshirishsiz o'tkazib yuborish
+            if request.method == "OPTIONS":
+                return f(*args, **kwargs)
+            # /api/rating — umumiy, uid shart emas, lekin bot blanga bo'lgan user ni topish uchun
+            # uid talab qilmaydigan endpointlar uchun tekshirishni o'tkazib yuboramiz
+            uid_in_route = kwargs.get("uid")
+            init_data_raw = request.headers.get("X-Init-Data", "")
+            # Test muhit: initData bo'sh bo'lsa va uid 0 bo'lsa — o'tkazib yuborish
+            if not init_data_raw:
+                return jsonify({"ok": False, "error": "Unauthorized"}), 401
+            verified_uid = verify_init_data(init_data_raw)
+            if not verified_uid:
+                return jsonify({"ok": False, "error": "Unauthorized"}), 401
+            # Route da uid bo'lsa — verified uid bilan solishtiramiz
+            if uid_in_route is not None and verified_uid != uid_in_route:
+                return jsonify({"ok": False, "error": "Forbidden"}), 403
+            return f(*args, **kwargs)
+        return decorated
+
     def _tz_today():
         from datetime import timezone, timedelta
         tz_uz = timezone(timedelta(hours=5))
@@ -6522,6 +6582,7 @@ try:
         })
 
     @api_app.route("/api/profile/<int:uid>")
+    @require_auth
     def api_profile(uid):
         users   = load_all_users()
         ranking = sorted(users.items(), key=lambda x: x[1].get("points",0), reverse=True)
@@ -6555,6 +6616,7 @@ try:
         })
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
+    @require_auth
     def api_habits_get(uid):
         u = load_user(uid)
         habits = []
@@ -6631,6 +6693,7 @@ try:
         return jsonify({"ok": True})
 
     @api_app.route("/api/habits/<int:uid>/<hid>", methods=["DELETE"])
+    @require_auth
     def api_habits_delete(uid, hid):
         u = load_user(uid)
         habits = u.get("habits", [])
@@ -6642,6 +6705,7 @@ try:
         return jsonify({"ok": True})
 
     @api_app.route("/api/groups/<int:uid>")
+    @require_auth
     def api_groups(uid):
         try:
             all_groups = list(mongo_db["groups"].find({"members": str(uid)}))
@@ -6665,6 +6729,7 @@ try:
         return jsonify({"groups": result})
 
     @api_app.route("/api/today/<int:uid>")
+    @require_auth
     def api_today(uid):
         u = load_user(uid)
         today = today_uz5()
@@ -6709,6 +6774,7 @@ try:
         })
 
     @api_app.route("/api/checkin/<int:uid>/<hid>", methods=["POST"])
+    @require_auth
     def api_checkin(uid, hid):
         u = load_user(uid)
         today = today_uz5()
@@ -6792,6 +6858,7 @@ try:
         })
 
     @api_app.route("/api/stats/<int:uid>")
+    @require_auth
     def api_stats(uid):
         from datetime import datetime, timedelta
         u = load_user(uid)
@@ -6904,12 +6971,14 @@ try:
         })
 
     @api_app.route("/api/achievements/<int:uid>")
+    @require_auth
     def api_achievements(uid):
         u = load_user(uid)
         achievements = u.get("achievements", [])
         return jsonify({"achievements": achievements})
 
     @api_app.route("/api/shop/<int:uid>")
+    @require_auth
     def api_shop(uid):
         u = load_user(uid)
         shop_items = [
@@ -6953,6 +7022,7 @@ try:
         })
 
     @api_app.route("/api/shop/<int:uid>/buy", methods=["POST"])
+    @require_auth
     def api_shop_buy(uid):
         data = request.get_json() or {}
         item_id   = data.get("item_id", "")
@@ -6995,6 +7065,7 @@ try:
         return jsonify({"ok": True, "points": u["points"]})
 
     @api_app.route("/api/shop/<int:uid>/activate", methods=["POST"])
+    @require_auth
     def api_shop_activate(uid):
         data = request.get_json() or {}
         item_id = data.get("item_id", "")
@@ -7009,6 +7080,7 @@ try:
         return jsonify({"ok": True})
 
     @api_app.route("/api/friends/<int:uid>")
+    @require_auth
     def api_friends(uid):
         u = load_user(uid)
         friends_ids = u.get("friends", [])
@@ -7035,6 +7107,7 @@ try:
         return jsonify({"friends": friends, "invite_link": invite_link})
 
     @api_app.route("/api/friends/<int:uid>/remove/<int:fid>", methods=["DELETE"])
+    @require_auth
     def api_friends_remove(uid, fid):
         u = load_user(uid)
         friends = u.get("friends", [])
@@ -7045,6 +7118,7 @@ try:
         return jsonify({"ok": True})
 
     @api_app.route("/api/challenges/<int:uid>")
+    @require_auth
     def api_challenges(uid):
         challenges_col = mongo_db.get_collection("challenges") if hasattr(mongo_db, "get_collection") else mongo_db["challenges"]
         sent = list(challenges_col.find({"from_uid": str(uid)}))
@@ -7061,6 +7135,7 @@ try:
         return jsonify({"sent": [fmt(c) for c in sent], "received": [fmt(c) for c in recv]})
 
     @api_app.route("/api/reminder/<int:uid>/<hid>", methods=["PUT"])
+    @require_auth
     def api_reminder(uid, hid):
         data = request.get_json() or {}
         u = load_user(uid)
@@ -7075,6 +7150,7 @@ try:
         return jsonify({"ok": True})
 
     @api_app.route("/api/profile/<int:uid>", methods=["PUT"])
+    @require_auth
     def api_profile_put(uid):
         data = request.get_json() or {}
         u = load_user(uid)
