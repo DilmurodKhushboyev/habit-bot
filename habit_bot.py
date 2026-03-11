@@ -7213,16 +7213,16 @@ try:
     def api_shop(uid):
         u = load_user(uid)
         shop_items = [
-            {"id": "shield_1",   "name": "Streak himoyasi", "cat": "protection", "emoji": "🛡",  "price_ball": 200,  "price_stars": 0, "desc": "1 kunlik streak himoyasi"},
-            {"id": "bonus_2x",   "name": "2x Ball bonus",   "cat": "bonus",      "emoji": "⚡",  "price_ball": 300,  "price_stars": 0, "desc": "1 kun uchun 2x ball"},
-            {"id": "badge_fire", "name": "Olov badge",      "cat": "badge",      "emoji": "🔥",  "price_ball": 400,  "price_stars": 0, "desc": "Profilda ko'rsatiladi"},
-            {"id": "badge_star", "name": "Yulduz badge",    "cat": "badge",      "emoji": "⭐",  "price_ball": 500,  "price_stars": 0, "desc": "Profilda ko'rsatiladi"},
-            {"id": "pet_cat",    "name": "Mushuk",          "cat": "pet",        "emoji": "🐱",  "price_ball": 600,  "price_stars": 0, "desc": "Sevimli mushukcha"},
-            {"id": "pet_dog",    "name": "It",              "cat": "pet",        "emoji": "🐶",  "price_ball": 700,  "price_stars": 0, "desc": "Sodiq do'st"},
-            {"id": "pet_rabbit", "name": "Quyon",           "cat": "pet",        "emoji": "🐰",  "price_ball": 600,  "price_stars": 0, "desc": "Tez-tez sakrashi"},
-            {"id": "car_sport",  "name": "Sport mashina",   "cat": "car",        "emoji": "🏎️", "price_ball": 1000, "price_stars": 0, "desc": "Tez mashina"},
-            {"id": "jon_restore", "name": "Jon tiklash",   "cat": "bonus",      "emoji": "❤️", "price_ball": 50,   "price_stars": 0, "desc": "Jonni 100% ga tiklash (faqat 20% va kam holda)"},
-            {"id": "gift_box",   "name": "Sovga qutisi",    "cat": "gift",       "emoji": "🎁",  "price_ball": 0,    "price_stars": 10, "desc": "Tasodifiy mukofot"},
+            {"id": "shield_1",   "name": "Streak himoyasi", "cat": "protection", "emoji": "🛡",  "price_ball": 100,  "price_stars": 0, "desc": "1 kunlik streak himoyasi"},
+            {"id": "bonus_2x",   "name": "2x Ball bonus",   "cat": "bonus",      "emoji": "⚡",  "price_ball": 150,  "price_stars": 0, "desc": "1 kun uchun 2x ball"},
+            {"id": "badge_fire", "name": "Olov badge",      "cat": "badge",      "emoji": "🔥",  "price_ball": 200,  "price_stars": 0, "desc": "Profilda ko'rsatiladi"},
+            {"id": "badge_star", "name": "Yulduz badge",    "cat": "badge",      "emoji": "⭐",  "price_ball": 250,  "price_stars": 0, "desc": "Profilda ko'rsatiladi"},
+            {"id": "pet_cat",    "name": "Mushuk",          "cat": "pet",        "emoji": "🐱",  "price_ball": 300,  "price_stars": 0, "desc": "Sevimli mushukcha"},
+            {"id": "pet_dog",    "name": "It",              "cat": "pet",        "emoji": "🐶",  "price_ball": 350,  "price_stars": 0, "desc": "Sodiq do'st"},
+            {"id": "pet_rabbit", "name": "Quyon",           "cat": "pet",        "emoji": "🐰",  "price_ball": 300,  "price_stars": 0, "desc": "Tez-tez sakrashi"},
+            {"id": "car_sport",  "name": "Sport mashina",   "cat": "car",        "emoji": "🏎️", "price_ball": 500,  "price_stars": 0, "desc": "Tez mashina"},
+            {"id": "jon_restore", "name": "Jon tiklash",   "cat": "bonus",      "emoji": "❤️", "price_ball": 25,   "price_stars": 0, "desc": "Jonni 100% ga tiklash (faqat 20% va kam holda)"},
+            {"id": "gift_box",   "name": "Sovga qutisi",    "cat": "gift",       "emoji": "🎁",  "price_ball": 0,    "price_stars": 5, "desc": "Tasodifiy mukofot"},
         ]
         raw_inventory = u.get("inventory", [])
         # inventory: list -> dict formatiga
@@ -7259,9 +7259,9 @@ try:
         item_id   = data.get("item_id", "")
         pay_type  = data.get("type", "ball")  # "ball" yoki "stars"
         prices = {
-            "shield_1": 200, "bonus_2x": 300, "badge_fire": 400, "badge_star": 500,
-            "pet_cat": 600, "pet_dog": 700, "pet_rabbit": 600, "car_sport": 1000,
-            "jon_restore": 50,
+            "shield_1": 100, "bonus_2x": 150, "badge_fire": 200, "badge_star": 250,
+            "pet_cat": 300, "pet_dog": 350, "pet_rabbit": 300, "car_sport": 500,
+            "jon_restore": 25,
         }
         price = prices.get(item_id, 0)
         if not price and item_id != "gift_box":
