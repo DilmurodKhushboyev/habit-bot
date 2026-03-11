@@ -57,6 +57,7 @@ def save_user(user_id, udata):
         {"$set": udata},
         upsert=True
     )
+    invalidate_users_cache()
 
 def load_settings():
     doc = mongo_col.find_one({"_id": "_settings"})
@@ -71,11 +72,28 @@ def save_settings(settings):
         upsert=True
     )
 
-def load_all_users():
+# ── load_all_users cache (TTL: 60 soniya) ──
+import time as _cache_time
+_all_users_cache      = None
+_all_users_cache_time = 0.0
+_ALL_USERS_TTL        = 60
+
+def invalidate_users_cache():
+    global _all_users_cache, _all_users_cache_time
+    _all_users_cache      = None
+    _all_users_cache_time = 0.0
+
+def load_all_users(force=False):
+    global _all_users_cache, _all_users_cache_time
+    now = _cache_time.time()
+    if not force and _all_users_cache is not None and (now - _all_users_cache_time) < _ALL_USERS_TTL:
+        return _all_users_cache
     users = {}
     for doc in mongo_col.find({"_id": {"$not": {"$regex": "^_"}}}):
         uid = doc["_id"]
         users[uid] = {k: v for k, v in doc.items() if k != "_id"}
+    _all_users_cache      = users
+    _all_users_cache_time = now
     return users
 
 def user_exists(user_id):
@@ -1683,7 +1701,7 @@ def generate_rating_image(top10_data):
         draw.text((112, cy+21), f"{jon_val}%", font=f_small, fill=jc, anchor="lm")
 
         # ── 7 KUNLIK GRID ──
-        users_all = load_all_users()
+        users_all = load_all_users(force=True)
         udata     = users_all.get(str(uid_str), {})
         done_log  = udata.get("done_log", {})
 
@@ -1888,7 +1906,7 @@ def generate_rating_grid(top10_users, all_users):
 
 def show_rating(uid):
     from datetime import timezone, timedelta
-    users   = load_all_users()
+    users   = load_all_users(force=True)
     ranking = []
     for user_id, udata in users.items():
         ranking.append((
@@ -2027,7 +2045,7 @@ def send_weekly_reports():
     week_start = today - timedelta(days=days_since_monday + 7)
     week_end   = week_start + timedelta(days=6)
     week_label = f"{week_start.strftime('%d.%m')} – {week_end.strftime('%d.%m.%Y')}"
-    users = load_all_users()
+    users = load_all_users(force=True)
     print(f"[weekly_report] {len(users)} foydalanuvchiga hisobot yuborilmoqda...")
     for uid_str, udata in users.items():
         try:
@@ -2339,7 +2357,7 @@ def callback_handler(call):
         bot.answer_callback_query(call.id)
         try: bot.delete_message(uid, call.message.message_id)
         except Exception: pass
-        users      = load_all_users()
+        users      = load_all_users(force=True)
         sent_count = 0
         failed     = 0
         update_text = "*Bot 🆕 yangilandi. /start ni bosib yoki yuborib siz ham yangilang!*"
@@ -2420,7 +2438,7 @@ def callback_handler(call):
         bot.answer_callback_query(call.id)
         try: bot.delete_message(uid, call.message.message_id)
         except Exception: pass
-        users = load_all_users()
+        users = load_all_users(force=True)
         if not users:
             bot.send_message(uid, "👥 Foydalanuvchilar yo'q.", reply_markup=admin_menu())
             return
@@ -2557,7 +2575,7 @@ def callback_handler(call):
         try: bot.delete_message(uid, call.message.message_id)
         except Exception: pass
         period = cdata[12:]
-        users  = load_all_users()
+        users  = load_all_users(force=True)
         today  = date.today()
         if period == "all":
             filtered     = users
@@ -4660,7 +4678,7 @@ def send_monthly_reports():
     import calendar
     days_in_month = calendar.monthrange(last_month.year, last_month.month)[1]
     weeks_count = round(days_in_month / 7)
-    users = load_all_users()
+    users = load_all_users(force=True)
     print(f"[monthly_report] {len(users)} foydalanuvchiga yuborilmoqda...")
     for uid_str, udata in users.items():
         try:
@@ -4763,7 +4781,7 @@ def send_yearly_reports():
     now      = datetime.now(tz_uz)
     last_year = now.year - 1
     year_label = f"{last_year}-yil"
-    users = load_all_users()
+    users = load_all_users(force=True)
     print(f"[yearly_report] {len(users)} foydalanuvchiga yuborilmoqda...")
     for uid_str, udata in users.items():
         try:
@@ -4981,7 +4999,7 @@ def daily_reset():
         print(f"[daily_reset] Settings xatosi: {e}")
     print("[daily_reset] Barcha jadvallar qayta yuklanmoqda...")
     yesterday = (datetime.now(tz_uz) - timedelta(days=1)).strftime("%Y-%m-%d")
-    users = load_all_users()
+    users = load_all_users(force=True)
     for uid, udata in users.items():
         changed = False
         for habit in udata.get("habits", []):
@@ -5127,7 +5145,7 @@ def daily_reset():
     load_all_schedules()
 
 def load_all_schedules():
-    users = load_all_users()
+    users = load_all_users(force=True)
     for uid, udata in users.items():
         try:
             user_id = int(uid)
@@ -5146,7 +5164,7 @@ def send_evening_reminders():
     tz_uz = timezone(timedelta(hours=5))
     today = datetime.now(tz_uz).strftime("%Y-%m-%d")
     try:
-        users = load_all_users()
+        users = load_all_users(force=True)
     except Exception as e:
         print(f"[evening] load_all_users xatosi: {e}")
         return
@@ -5201,7 +5219,7 @@ def scheduler_loop():
     # daily_reset ni birinchi marta sinxron ishlatish (kechagi reset o'tkazib yuborilgan bo'lsa)
     try:
         # Istalgan foydalanuvchidan bitta repeat odatni olib tekshirish
-        users = load_all_users()
+        users = load_all_users(force=True)
         needs_reset = False
         for uid, udata in users.items():
             for h in udata.get("habits", []):
@@ -6369,7 +6387,7 @@ def _run_broadcast(admin_uid, bc_chat_id, msg_ids, state):
     except Exception:
         pass
     try:
-        users      = load_all_users()
+        users      = load_all_users(force=True)
         sent_count = 0
         failed     = 0
         failed_ids = []
@@ -6631,6 +6649,7 @@ try:
         return jsonify({"habits": habits})
 
     @api_app.route("/api/habits/<int:uid>", methods=["POST"])
+    @require_auth
     def api_habits_add(uid):
         import uuid
         data  = request.get_json() or {}
@@ -6666,6 +6685,7 @@ try:
         return jsonify({"ok": True, "habit": new_habit})
 
     @api_app.route("/api/habits/<int:uid>/<hid>", methods=["PUT"])
+    @require_auth
     def api_habits_edit(uid, hid):
         data  = request.get_json() or {}
         name  = (data.get("name") or "").strip()
