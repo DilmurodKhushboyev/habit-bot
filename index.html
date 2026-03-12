@@ -3706,7 +3706,11 @@ function setGroupSub(sub) {
 
 async function loadFriends() {
   try {
-    const d = await apiFetch(`friends/${userId}`);
+    const [d, ch] = await Promise.all([
+      apiFetch(`friends/${userId}`),
+      apiFetch(`challenges/${userId}`).catch(() => ({ received: [] }))
+    ]);
+    d._received_challenges = ch.received || [];
     renderFriends(d);
   } catch(e) {
     document.getElementById('friends-content').innerHTML =
@@ -3716,6 +3720,34 @@ async function loadFriends() {
 
 function renderFriends(d) {
   const friends = d.friends || [];
+  const pending = (d._received_challenges || []).filter(c => c.status === 'pending');
+
+  // ── Kiruvchi challengelar panel ──
+  let challHtml = '';
+  if (pending.length > 0) {
+    const rows = pending.map(c => `
+      <div style="background:var(--bg);border-radius:12px;padding:10px 12px;margin-bottom:8px;box-shadow:var(--sh-sm)">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgTgtCh" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="9" stroke="url(#svgTgtCh)" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="url(#svgTgtCh)" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="url(#svgTgtCh)"/></svg>${c.from_name} sizni challenge qildi!
+        </div>
+        <div style="font-size:11px;color:var(--sub);margin-bottom:8px">📌 ${c.habit_name} · 📅 ${c.days} kun · 💰 ${c.bet} ball garov</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="acceptChallenge('${c.id}')" type="button"
+            style="flex:1;padding:8px;border:none;border-radius:10px;background:linear-gradient(135deg,#4CAF7D,#2D8A5E);color:#fff;font-size:12px;font-weight:700;cursor:pointer">
+            ✅ Qabul qilish
+          </button>
+          <button onclick="rejectChallenge('${c.id}')" type="button"
+            style="flex:1;padding:8px;border:none;border-radius:10px;background:var(--card);color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;box-shadow:var(--sh-sm)">
+            ❌ Rad etish
+          </button>
+        </div>
+      </div>`).join('');
+    challHtml = `
+      <div class="rem-card" style="margin-bottom:8px">
+        <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">🎯 Kiruvchi challengelar (${pending.length})</div>
+        ${rows}
+      </div>`;
+  }
   const emptyFriendsHtml = '<div class="empty-state"><div class="icon">\uD83E\uDD1D</div>Hali do\u2019st yo\u2019q</div>';
   let html = '';
   friends.forEach(f => {
@@ -3747,7 +3779,7 @@ function renderFriends(d) {
       </div>`;
   });
 
-  document.getElementById('friends-content').innerHTML = `
+  document.getElementById('friends-content').innerHTML = challHtml + `
     <div class="rem-card">
       <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">🔍 Do'st qidirish</div>
       <div style="display:flex;gap:8px">
@@ -4077,6 +4109,38 @@ async function sendChallenge() {
     showToast('❌ ' + (e.message || 'Xato'), true);
   } finally {
     if (btn) { btn.textContent = '🎯 Yuborish'; btn.disabled = false; }
+  }
+}
+
+async function acceptChallenge(cid) {
+  try {
+    const res = await fetch(`${API}/challenges/${userId}/${cid}/accept`, {
+      method: 'POST',
+      headers: { 'X-Init-Data': initData, 'X-User-Id': userId }
+    });
+    const r = await res.json();
+    if (!r.ok) throw new Error(r.error);
+    showToast('✅ Challenge qabul qilindi!');
+    loaded.friends = false;
+    loadFriends();
+  } catch(e) {
+    showToast('❌ ' + (e.message || 'Xato'), true);
+  }
+}
+
+async function rejectChallenge(cid) {
+  try {
+    const res = await fetch(`${API}/challenges/${userId}/${cid}/reject`, {
+      method: 'POST',
+      headers: { 'X-Init-Data': initData, 'X-User-Id': userId }
+    });
+    const r = await res.json();
+    if (!r.ok) throw new Error(r.error);
+    showToast('Challenge rad etildi');
+    loaded.friends = false;
+    loadFriends();
+  } catch(e) {
+    showToast('❌ ' + (e.message || 'Xato'), true);
   }
 }
 

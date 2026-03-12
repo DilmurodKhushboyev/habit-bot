@@ -7792,14 +7792,24 @@ try:
     def api_challenges(uid):
         challenges_col = mongo_db.get_collection("challenges") if hasattr(mongo_db, "get_collection") else mongo_db["challenges"]
         sent = list(challenges_col.find({"from_uid": str(uid)}))
-        recv = list(challenges_col.find({"to_uid":   str(uid)}))
+        recv = list(challenges_col.find({"to_uid":   str(uid), "status": "pending"}))
         def fmt(c):
+            from_uid_str = c.get("from_uid", "")
+            try:
+                fu = load_user(int(from_uid_str)) if from_uid_str else {}
+                from_name = fu.get("name", "?") if fu else "?"
+            except Exception:
+                from_name = "?"
             return {
                 "id":          str(c.get("_id","")),
                 "habit_name":  c.get("habit_name",""),
-                "from_uid":    c.get("from_uid",""),
+                "from_uid":    from_uid_str,
+                "from_name":   from_name,
                 "to_uid":      c.get("to_uid",""),
                 "status":      c.get("status","pending"),
+                "days":        c.get("days", 7),
+                "bet":         c.get("bet", 50),
+                "expires_at":  c.get("expires_at",""),
                 "created_at":  c.get("created_at",""),
             }
         return jsonify({"sent": [fmt(c) for c in sent], "received": [fmt(c) for c in recv]})
@@ -7850,6 +7860,84 @@ try:
                 f"📅 Muddat: *{days} kun*\n"
                 f"💰 Garov: *{bet} ball*\n\n"
                 f"_Qabul qilish uchun botga kiring._",
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
+        return jsonify({"ok": True})
+
+    @api_app.route("/api/challenges/<int:uid>/<cid>/accept", methods=["POST"])
+    @require_auth
+    def api_challenges_accept(uid, cid):
+        from bson import ObjectId
+        challenges_col = mongo_db["challenges"]
+        try:
+            c = challenges_col.find_one({"_id": ObjectId(cid), "to_uid": str(uid), "status": "pending"})
+        except Exception:
+            return jsonify({"ok": False, "error": "Topilmadi"})
+        if not c:
+            return jsonify({"ok": False, "error": "Challenge topilmadi yoki allaqachon ko'rib chiqilgan"})
+        bet        = c.get("bet", 50)
+        from_uid   = int(c.get("from_uid", 0))
+        # Ikkalasidan ham garov yechish
+        u_recv = load_user(uid)
+        u_send = load_user(from_uid)
+        if not u_recv or not u_send:
+            return jsonify({"ok": False, "error": "Foydalanuvchi topilmadi"})
+        if u_recv.get("points", 0) < bet:
+            return jsonify({"ok": False, "error": f"Sizda yetarli ball yo'q (kerak: {bet})"})
+        if u_send.get("points", 0) < bet:
+            return jsonify({"ok": False, "error": "Challenger'da yetarli ball yo'q"})
+        u_recv["points"] = u_recv.get("points", 0) - bet
+        u_send["points"] = u_send.get("points", 0) - bet
+        save_user(uid, u_recv)
+        save_user(from_uid, u_send)
+        challenges_col.update_one(
+            {"_id": ObjectId(cid)},
+            {"$set": {"status": "active", "accepted_at": today_uz5()}}
+        )
+        # Yuboruvchiga xabar
+        try:
+            recv_name = u_recv.get("name", "Raqib")
+            bot.send_message(
+                from_uid,
+                f"✅ *Challenge qabul qilindi!*\n\n"
+                f"👤 *{recv_name}* sizning challengingizni qabul qildi!\n"
+                f"📌 Odat: *{c.get('habit_name','')}*\n"
+                f"📅 Muddat: *{c.get('days',7)} kun*\n"
+                f"💰 Garov: *{bet} ball* (ikkalangizdan)\n\n"
+                f"_Omad! 💪_",
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
+        return jsonify({"ok": True, "points": u_recv.get("points", 0)})
+
+    @api_app.route("/api/challenges/<int:uid>/<cid>/reject", methods=["POST"])
+    @require_auth
+    def api_challenges_reject(uid, cid):
+        from bson import ObjectId
+        challenges_col = mongo_db["challenges"]
+        try:
+            c = challenges_col.find_one({"_id": ObjectId(cid), "to_uid": str(uid), "status": "pending"})
+        except Exception:
+            return jsonify({"ok": False, "error": "Topilmadi"})
+        if not c:
+            return jsonify({"ok": False, "error": "Challenge topilmadi"})
+        challenges_col.update_one(
+            {"_id": ObjectId(cid)},
+            {"$set": {"status": "rejected", "rejected_at": today_uz5()}}
+        )
+        # Yuboruvchiga xabar
+        try:
+            from_uid  = int(c.get("from_uid", 0))
+            u_recv    = load_user(uid)
+            recv_name = u_recv.get("name", "Raqib") if u_recv else "Raqib"
+            bot.send_message(
+                from_uid,
+                f"❌ *Challenge rad etildi*\n\n"
+                f"👤 *{recv_name}* sizning challengingizni rad etdi.\n"
+                f"📌 Odat: *{c.get('habit_name','')}*",
                 parse_mode="Markdown"
             )
         except Exception:
