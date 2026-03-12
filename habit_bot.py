@@ -5021,6 +5021,35 @@ def daily_reset():
                     # Kecha to'liq bajarilmagan — missed++
                     if habit.get("total_done", 0) > 0 or habit.get("done_today_count", 0) > 0:
                         habit["total_missed"] = habit.get("total_missed", 0) + 1
+                    # Streak nollash (simple habit kabi shield tekshiruvi bilan)
+                    if habit.get("streak", 0) > 0:
+                        shields = udata.get("streak_shields", 0)
+                        if shields > 0:
+                            streak_val = habit.get("streak", 0)
+                            habit["streak"] = 0
+                            pending = udata.get("pending_shield", {})
+                            pending[habit["id"]] = streak_val
+                            udata["pending_shield"] = pending
+                            try:
+                                kb_sh = InlineKeyboardMarkup()
+                                kb_sh.row(
+                                    InlineKeyboardButton("✅ Ha, ishlatish",    callback_data=f"shield_use_{habit['id']}"),
+                                    InlineKeyboardButton("❌ Yo'q, nollansin", callback_data=f"shield_skip_{habit['id']}")
+                                )
+                                bot.send_message(
+                                    int(uid),
+                                    f"⚠️ *Streakingiz xavf ostida!*\n\n"
+                                    f"*🔥 Streak:* {streak_val} kun\n"
+                                    f"*📌 Odat:* {habit['name']}\n\n"
+                                    f"*🛡 Himoyangiz bor* — ishlatinmi?\n"
+                                    f"_(Yo'q desangiz himoya saqlanib qoladi)_",
+                                    parse_mode="Markdown",
+                                    reply_markup=kb_sh
+                                )
+                            except Exception:
+                                pass
+                        else:
+                            habit["streak"] = 0
                 # done_today_count tozalash — lekin last_done ni faqat bajarilmagan bo'lsa nollash
                 habit["done_today_count"] = 0
                 if not fully_done:
@@ -7470,6 +7499,13 @@ try:
             u["jon"] = 100.0
             save_user(uid, u)
             return jsonify({"ok": True, "points": u["points"]})
+        if item_id == "shield_1":
+            if u.get("points", 0) < 100:
+                return jsonify({"ok": False, "error": "Ball yetarli emas"})
+            u["points"] = u.get("points", 0) - 100
+            u["streak_shields"] = u.get("streak_shields", 0) + 1
+            save_user(uid, u)
+            return jsonify({"ok": True, "points": u["points"], "streak_shields": u["streak_shields"]})
         if item_id == "shield_3":
             if u.get("points", 0) < 250:
                 return jsonify({"ok": False, "error": "Ball yetarli emas"})
@@ -7477,6 +7513,14 @@ try:
             u["streak_shields"] = u.get("streak_shields", 0) + 3
             save_user(uid, u)
             return jsonify({"ok": True, "points": u["points"], "streak_shields": u["streak_shields"]})
+        if item_id == "bonus_2x":
+            if u.get("points", 0) < 150:
+                return jsonify({"ok": False, "error": "Ball yetarli emas"})
+            u["points"] = u.get("points", 0) - 150
+            u["bonus_2x_active"] = True
+            u["bonus_2x_date"] = today_uz5()
+            save_user(uid, u)
+            return jsonify({"ok": True, "points": u["points"]})
         if item_id == "bonus_3x":
             if u.get("points", 0) < 300:
                 return jsonify({"ok": False, "error": "Ball yetarli emas"})
