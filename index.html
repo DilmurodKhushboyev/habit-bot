@@ -3194,6 +3194,7 @@ function renderGroups(d) {
   const groups = d.groups || [];
   let html = '';
   groups.forEach(g => {
+    if (!g.id && g.gid) g.id = g.gid;
     const allMembers = (g.members || []);
     const membersHtml = allMembers.map((m, i) =>
       `<div class="member-row">
