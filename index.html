@@ -3641,8 +3641,22 @@ function setShopCat(cat) {
 
 async function buyItem(itemId, method) {
   if (method === 'stars') {
-    const toast = document.getElementById('toast-shop');
-    if (toast) { toast.textContent = '⭐ Stars bilan sotib olish uchun botga /shop yozing'; toast.className = 'toast show'; setTimeout(()=>toast.className='toast',3500); }
+    try {
+      const res = await fetch(`${API}/shop/${userId}/stars_invoice`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-Init-Data':initData,'X-User-Id':userId},
+        body: JSON.stringify({ item_id: itemId })
+      });
+      const r = await res.json();
+      const toast = document.getElementById('toast-shop');
+      if (!r.ok) {
+        if (toast) { toast.textContent = '❌ ' + (r.error || 'Xato'); toast.className = 'toast show'; setTimeout(()=>toast.className='toast',3000); }
+      } else {
+        if (toast) { toast.textContent = '⭐ To\'lov oynasi Telegram chatda ochildi!'; toast.className = 'toast show'; setTimeout(()=>toast.className='toast',3500); }
+      }
+    } catch(e) {
+      showToast('❌ Tarmoq xatosi', true);
+    }
     return;
   }
   try {

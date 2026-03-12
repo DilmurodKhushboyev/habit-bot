@@ -6385,6 +6385,55 @@ def handle_text(msg):
         return
 
 
+
+
+@bot.pre_checkout_query_handler(func=lambda q: True)
+def handle_pre_checkout(query):
+    """Telegram Stars to'lovini tasdiqlash"""
+    bot.answer_pre_checkout_query(query.id, ok=True)
+
+@bot.message_handler(content_types=["successful_payment"])
+def handle_successful_payment(msg):
+    """Stars to'lovi muvaffaqiyatli — itemni berish"""
+    uid = msg.from_user.id
+    payload = msg.successful_payment.invoice_payload  # "stars_gift_box" formatida
+    try:
+        item_id = payload.replace("stars_", "", 1)
+        u = load_user(uid)
+        raw_inv = u.get("inventory", {})
+        if isinstance(raw_inv, list):
+            inventory = {i: 1 for i in raw_inv}
+        else:
+            inventory = dict(raw_inv)
+        # gift_box — tasodifiy mukofot
+        if item_id == "gift_box":
+            import random as _rnd
+            gifts = [
+                ("points", 100), ("points", 200), ("points", 500),
+                ("streak_shields", 1), ("xp_booster_days", 3),
+            ]
+            gift_type, gift_val = _rnd.choice(gifts)
+            if gift_type == "points":
+                u["points"] = u.get("points", 0) + gift_val
+                msg_text = f"🎁 *Sovga qutisi ochildi!*\n\n🎉 *+{gift_val} ball* qo'shildi!"
+            elif gift_type == "streak_shields":
+                u["streak_shields"] = u.get("streak_shields", 0) + gift_val
+                msg_text = f"🎁 *Sovga qutisi ochildi!*\n\n🛡 *{gift_val} ta streak himoyasi* qo'shildi!"
+            elif gift_type == "xp_booster_days":
+                u["xp_booster_days"] = u.get("xp_booster_days", 0) + gift_val
+                msg_text = f"🎁 *Sovga qutisi ochildi!*\n\n💎 *XP Booster {gift_val} kun* qo'shildi!"
+            else:
+                msg_text = "🎁 Sovga qutisi ochildi!"
+        else:
+            inventory[item_id] = inventory.get(item_id, 0) + 1
+            msg_text = f"✅ *{item_id}* muvaffaqiyatli olindi!"
+        u["inventory"] = inventory
+        save_user(uid, u)
+        bot.send_message(uid, msg_text, parse_mode="Markdown")
+    except Exception as e:
+        print(f"[stars] successful_payment xatosi: {e}")
+
+
 def _run_broadcast(admin_uid, bc_chat_id, msg_ids, state):
     """Broadcast yuborish — matn va album uchun umumiy funksiya"""
     # State ni darhol tozalaymiz — restart bo'lsa ham qotib qolmasin
@@ -7422,6 +7471,31 @@ try:
         u["inventory"] = inventory
         save_user(uid, u)
         return jsonify({"ok": True, "points": u["points"]})
+
+    @api_app.route("/api/shop/<int:uid>/stars_invoice", methods=["POST"])
+    @require_auth
+    def api_shop_stars_invoice(uid):
+        data    = request.get_json(force=True, silent=True) or {}
+        item_id = data.get("item_id", "")
+        stars_prices = {"gift_box": 5}
+        price = stars_prices.get(item_id)
+        if not price:
+            return jsonify({"ok": False, "error": "Stars bilan sotib bo'lmaydigan mahsulot"})
+        item_names = {"gift_box": "Sovga qutisi"}
+        item_descs = {"gift_box": "Tasodifiy mukofot: ball, streak himoya yoki XP booster"}
+        try:
+            bot.send_invoice(
+                chat_id=uid,
+                title=item_names.get(item_id, item_id),
+                description=item_descs.get(item_id, ""),
+                invoice_payload=f"stars_{item_id}",
+                provider_token="",
+                currency="XTR",
+                prices=[{"label": item_names.get(item_id, item_id), "amount": price}],
+            )
+            return jsonify({"ok": True})
+        except Exception as e:
+            return jsonify({"ok": False, "error": str(e)})
 
     @api_app.route("/api/shop/<int:uid>/activate", methods=["POST"])
     @require_auth
