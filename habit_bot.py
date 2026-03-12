@@ -7070,6 +7070,21 @@ try:
         day_data["habits"] = hab_map
         history[today] = day_data
         u["history"] = history
+        # done_log yangilash (rating score uchun — 30 kunlik faollik)
+        if is_done:
+            done_log = u.get("done_log", {})
+            done_log[today] = True
+            u["done_log"] = done_log
+        elif not is_done and found_h:
+            # Undo: agar bugun hech bir odat bajarilmagan bo'lsa — done_log dan o'chirish
+            still_any_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
+            if not still_any_done:
+                done_log = u.get("done_log", {})
+                done_log.pop(today, None)
+                u["done_log"] = done_log
+        # total_done yangilash (achievements uchun)
+        if is_done and found_h and found_h.get("last_done") == today:
+            found_h["total_done"] = found_h.get("total_done", 0) + 1
         # XP booster kunini kamaytirish (kuniga bir marta)
         if u.get("xp_booster_days", 0) > 0:
             last_boost = u.get("xp_booster_last_day", "")
