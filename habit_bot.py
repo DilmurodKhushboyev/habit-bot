@@ -6810,7 +6810,7 @@ try:
         u["habits"] = habits
         save_user(uid, u)
         try:
-            schedule_habit(uid, new_habit["id"], name, time_)
+            schedule_habit(uid, new_habit)
         except Exception as _e: print(f"[warn] schedule_habit: {_e}")
         return jsonify({"ok": True, "habit": new_habit})
 
