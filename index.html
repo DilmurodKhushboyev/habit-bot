@@ -2968,7 +2968,8 @@ function renderHabits(habits, jon = 100) {
             <button type="button" class="habit-type-btn" id="btn-repeat" onclick="setHabitType('repeat')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M17 2l4 4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 11V9a4 4 0 0 1 4-4h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M7 22l-4-4 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 13v2a4 4 0 0 1-4 4H3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Takrorlanuvchi</button>
           </div>
           <div class="repeat-count-field" id="repeat-count-field">
-            <input id="h-repeat-count" type="number" min="2" max="99" value="2" placeholder="Masalan: 5 (namoz uchun)" style="margin-bottom:8px">
+            <label style="font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;display:block">Takror soni</label>
+            <input id="h-repeat-count" type="number" min="2" max="99" placeholder="Takror sonini kiriting" style="margin-bottom:8px">
             <label style="font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;display:block">Vaqt (ixtiyoriy)</label>
             <input id="h-time-repeat" type="text" placeholder="Masalan: 07:00 yoki vaqtsiz">
           </div>
@@ -3084,12 +3085,34 @@ async function saveHabit() {
   const name = document.getElementById('h-name').value.trim();
   const isRepeat = document.getElementById('btn-repeat').classList.contains('active');
   const timeRaw = isRepeat
-    ? (document.getElementById('h-time-repeat')?.value.trim() || 'vaqtsiz')
-    : (document.getElementById('h-time').value.trim() || 'vaqtsiz');
-  const time = timeRaw || 'vaqtsiz';
+    ? (document.getElementById('h-time-repeat')?.value.trim() || '')
+    : (document.getElementById('h-time').value.trim() || '');
+  const timeFinal = timeRaw === '' ? 'vaqtsiz' : timeRaw;
   const icon = document.querySelector('.icon-opt.selected')?.dataset.icon || '✅';
-  const repeatCount = isRepeat ? (parseInt(document.getElementById('h-repeat-count').value) || 2) : 1;
+  const repeatCount = isRepeat ? parseInt(document.getElementById('h-repeat-count').value) : 1;
+
   if (!name) { showToast('Nom kiriting!', true); return; }
+
+  // Takror son validatsiyasi
+  if (isRepeat) {
+    if (!repeatCount || isNaN(repeatCount) || repeatCount < 2 || repeatCount > 99) {
+      showToast('Takror sonini to\'g\'ri kiriting (2–99)!', true); return;
+    }
+  }
+
+  // Vaqt validatsiyasi
+  if (timeFinal !== 'vaqtsiz') {
+    const timePattern = /^\d{2}:\d{2}$/;
+    if (!timePattern.test(timeFinal)) {
+      showToast('Vaqtni to\'g\'ri kiriting: HH:MM (masalan: 07:00) yoki bo\'sh qoldiring!', true); return;
+    }
+    const [hh, mm] = timeFinal.split(':').map(Number);
+    if (hh > 23 || mm > 59) {
+      showToast('Vaqt noto\'g\'ri: soat 00–23, daqiqa 00–59 bo\'lsin!', true); return;
+    }
+  }
+
+  const time = timeFinal;
   try {
     if (editingHabitId) {
       await fetch(`${API}/habits/${userId}/${editingHabitId}`, {
