@@ -4595,7 +4595,10 @@ def callback_handler(call):
                 h["streak"] = h.get("streak", 0) + 1 if h.get("last_done") == yesterday else 1
                 h["last_done"]  = today
                 h["total_done"] = h.get("total_done", 0) + 1
-                u["streak"]     = u.get("streak", 0) + 1
+                # Global streak: kuniga bir marta oshsin
+                if u.get("streak_last_date") != today:
+                    u["streak"] = u.get("streak", 0) + 1
+                    u["streak_last_date"] = today
                 # Bonus multiplier hisoblash (WebApp api_checkin bilan bir xil)
                 _base = 5
                 if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
@@ -7038,6 +7041,7 @@ try:
                 "habit_name":   g.get("habit_name", "—"),
                 "member_count": len(members_raw),
                 "members":      members[:5],
+                "streak":       g.get("streak", 0),
                 "is_admin":     g.get("admin_id") == str(uid),
                 "invite_link":  f"https://t.me/Super_habits_bot?start=grp_{g.get('id','')}" if g.get("admin_id") == str(uid) else "",
             })
@@ -7136,13 +7140,20 @@ try:
                         h["last_done"] = ""
                         h["streak"] = max(0, h.get("streak", 0) - 1)
                         u["points"] = max(0, u.get("points", 0) - 5)
-                        u["streak"] = max(0, u.get("streak", 0) - 1)
+                        # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
+                        _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
+                        if not _still_done and u.get("streak_last_date") == today:
+                            u["streak"] = max(0, u.get("streak", 0) - 1)
+                            u["streak_last_date"] = ""
                     else:
                         done += 1
                         if done >= rep_count:
                             h["last_done"] = today
                             h["streak"] = h.get("streak", 0) + 1
-                            u["streak"] = u.get("streak", 0) + 1
+                            # Global streak: kuniga bir marta oshsin
+                            if u.get("streak_last_date") != today:
+                                u["streak"] = u.get("streak", 0) + 1
+                                u["streak_last_date"] = today
                             _base = 5
                             if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
                                 _base = 15
@@ -7160,7 +7171,11 @@ try:
                         h["last_done"] = ""
                         h["streak"] = max(0, h.get("streak", 0) - 1)
                         u["points"] = max(0, u.get("points", 0) - 5)
-                        u["streak"] = max(0, u.get("streak", 0) - 1)
+                        # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
+                        _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
+                        if not _still_done and u.get("streak_last_date") == today:
+                            u["streak"] = max(0, u.get("streak", 0) - 1)
+                            u["streak_last_date"] = ""
                         is_done = False
                     else:
                         from datetime import timezone, timedelta as _td
@@ -7176,7 +7191,10 @@ try:
                         if u.get("xp_booster_days", 0) > 0:
                             _base = round(_base * 1.1)
                         u["points"] = u.get("points", 0) + _base
-                        u["streak"] = u.get("streak", 0) + 1
+                        # Global streak: kuniga bir marta oshsin
+                        if u.get("streak_last_date") != today:
+                            u["streak"] = u.get("streak", 0) + 1
+                            u["streak_last_date"] = today
                         is_done = True
                     today_count = 1 if is_done else 0
                 break
