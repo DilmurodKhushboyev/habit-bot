@@ -1454,7 +1454,7 @@ function renderToday(d) {
     </div>
 
     <div class="section-title">BUGUNGI ODATLAR</div>
-    <div style="font-size:11px;color:var(--sub);margin:-6px 0 10px 2px">Odatni tasdiqlash uchun ustiga bosing!</div>
+    <div style="font-size:11px;color:var(--green);margin:-6px 0 10px 2px">Odatni tasdiqlash uchun ustiga bosing!</div>
     ${cardsHtml || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>Hali odat qo\'shilmagan</div>'}
     <div class="toast" id="toast-today"></div>`;
 }
@@ -2464,6 +2464,17 @@ function renderProfile(d) {
         <span style="font-size:12px;font-weight:700;color:${jonColor}">${jon}%</span>
       </div>
       <div class="jon-bar-bg"><div class="jon-bar-fill" style="width:${jon}%;background:${jonColor}"></div></div>
+
+      <a href="https://t.me/Super_habits" target="_blank" style="display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:14px;padding:12px 14px;box-shadow:var(--sh-sm);margin-top:14px;text-decoration:none">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#5B8DEF,#A78BFA);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">Yangiliklar kanali</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:1px">@Super_habits</div>
+        </div>
+        <div style="color:var(--sub);font-size:18px">›</div>
+      </a>
     </div>
 
     <!-- Sozlamalar -->
