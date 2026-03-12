@@ -6694,6 +6694,8 @@ try:
             "bonus_2x_active":  u.get("bonus_2x_active", False) and u.get("bonus_2x_date","") == today_str,
             "bonus_3x_active":  u.get("bonus_3x_active", False) and u.get("bonus_3x_date","") == today_str,
             "dark_mode":        u.get("dark_mode", False),
+            "earned_ach":       len([a for a in u.get("achievements", []) if isinstance(a, dict)]),
+            "total_ach":        len(ACHIEVEMENTS),
         })
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
