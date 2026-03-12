@@ -6693,6 +6693,7 @@ try:
             "streak_shields":   u.get("streak_shields", 0),
             "bonus_2x_active":  u.get("bonus_2x_active", False) and u.get("bonus_2x_date","") == today_str,
             "bonus_3x_active":  u.get("bonus_3x_active", False) and u.get("bonus_3x_date","") == today_str,
+            "dark_mode":        u.get("dark_mode", False),
         })
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
@@ -7615,6 +7616,9 @@ try:
         # evening_notify
         if "evening_notify" in data:
             u["evening_notify"] = bool(data["evening_notify"])
+        # dark_mode
+        if "dark_mode" in data:
+            u["dark_mode"] = bool(data["dark_mode"])
         # photo_url
         if "photo_url" in data:
             url = str(data["photo_url"] or "")[:500]

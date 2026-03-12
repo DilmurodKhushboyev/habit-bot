@@ -2584,7 +2584,13 @@ function renderProfile(d) {
     var tog = document.getElementById("evening-toggle");
     if (tog) { tog.checked = (d.evening_notify !== false); updateToggleVisual(tog.checked); }
     var dtog = document.getElementById("dark-toggle");
-    if (dtog) { dtog.checked = (localStorage.getItem('sh_dark') === '1'); updateDarkToggleVisual(dtog.checked); }
+    if (dtog) {
+      var darkVal = (d.dark_mode === true) || (localStorage.getItem('sh_dark') === '1');
+      if (d.dark_mode === true) { localStorage.setItem('sh_dark', '1'); document.body.classList.add('dark'); }
+      else if (d.dark_mode === false && d.hasOwnProperty('dark_mode')) { localStorage.removeItem('sh_dark'); document.body.classList.remove('dark'); }
+      dtog.checked = darkVal;
+      updateDarkToggleVisual(darkVal);
+    }
   }, 30);
 }
 
@@ -2674,6 +2680,11 @@ function saveDarkMode(val) {
     localStorage.removeItem('sh_dark');
     document.body.classList.remove('dark');
   }
+  fetch(`${API}/profile/${userId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Init-Data': initData, 'X-User-Id': userId },
+    body: JSON.stringify({ dark_mode: val })
+  }).catch(() => {});
   const t = document.getElementById('toast-profile');
   if (t) { t.textContent = val ? '🌙 Tungi rejim yoqildi' : '☀️ Kunduzgi rejim yoqildi'; t.className = 'toast show'; setTimeout(()=>t.className='toast',2500); }
 }
