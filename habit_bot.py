@@ -7011,11 +7011,13 @@ try:
                         h["last_done"] = ""
                         h["streak"] = max(0, h.get("streak", 0) - 1)
                         u["points"] = max(0, u.get("points", 0) - 5)
+                        u["streak"] = max(0, u.get("streak", 0) - 1)
                     else:
                         done += 1
                         if done >= rep_count:
                             h["last_done"] = today
                             h["streak"] = h.get("streak", 0) + 1
+                            u["streak"] = u.get("streak", 0) + 1
                             _base = 5
                             if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
                                 _base = 15
