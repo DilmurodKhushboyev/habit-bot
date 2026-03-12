@@ -6808,9 +6808,37 @@ try:
         save_user(uid, u)
         return jsonify({"ok": True})
 
-    @api_app.route("/api/groups/<int:uid>")
+    @api_app.route("/api/groups/<int:uid>", methods=["GET", "POST"])
     @require_auth
     def api_groups(uid):
+        if request.method == "POST":
+            import uuid as _uuid
+            data       = request.get_json(force=True, silent=True) or {}
+            name       = (data.get("name") or "").strip()
+            habit_name = (data.get("habit_name") or "").strip()
+            habit_time = (data.get("habit_time") or "vaqtsiz").strip()
+            if not name or not habit_name:
+                return jsonify({"ok": False, "error": "Ism va odat nomi kerak"})
+            g_id = str(_uuid.uuid4())[:8]
+            group = {
+                "id":         g_id,
+                "name":       name,
+                "habit_name": habit_name,
+                "habit_time": habit_time,
+                "admin_id":   str(uid),
+                "members":    [str(uid)],
+                "streak":     0,
+                "created_at": today_uz5(),
+            }
+            save_group(g_id, group)
+            u = load_user(uid)
+            groups = u.get("groups", [])
+            groups.append({"id": g_id, "name": name, "admin_id": str(uid)})
+            u["groups"] = groups
+            save_user(uid, u)
+            inv_link = f"https://t.me/Super_habits_bot?start=grp_{g_id}"
+            return jsonify({"ok": True, "gid": g_id, "invite_link": inv_link})
+        # GET
         try:
             all_groups = list(mongo_db["groups"].find({"members": str(uid)}))
         except Exception:
@@ -6824,6 +6852,7 @@ try:
                 members.append({"name": mu.get("name","?"), "points": mu.get("points",0)})
             members.sort(key=lambda x: x["points"], reverse=True)
             result.append({
+                "gid":          g.get("id", str(g.get("_id", ""))),
                 "name":         g.get("name","Guruh"),
                 "habit_name":   g.get("habit_name", "—"),
                 "member_count": len(members_raw),
@@ -6831,6 +6860,31 @@ try:
                 "is_admin":     g.get("admin_id") == str(uid),
             })
         return jsonify({"groups": result})
+
+    @api_app.route("/api/groups/<int:uid>/<gid>", methods=["DELETE"])
+    @require_auth
+    def api_groups_delete(uid, gid):
+        try:
+            g = mongo_db["groups"].find_one({"id": gid})
+        except Exception:
+            return jsonify({"ok": False, "error": "Guruh topilmadi"})
+        if not g:
+            return jsonify({"ok": False, "error": "Guruh topilmadi"})
+        if g.get("admin_id") != str(uid):
+            return jsonify({"ok": False, "error": "Faqat admin o'chira oladi"})
+        try:
+            mongo_db["groups"].delete_one({"id": gid})
+        except Exception as e:
+            return jsonify({"ok": False, "error": str(e)})
+        # Barcha a'zolar user profilidan ham o'chirish
+        for mid in g.get("members", []):
+            try:
+                mu = load_user(int(mid))
+                mu["groups"] = [gg for gg in mu.get("groups", []) if gg.get("id") != gid]
+                save_user(int(mid), mu)
+            except Exception:
+                pass
+        return jsonify({"ok": True})
 
     @api_app.route("/api/today/<int:uid>")
     @require_auth
