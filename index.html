@@ -158,7 +158,8 @@ body {
   animation: spin .9s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+@keyframes shimmerSlide { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+@keyframes fadeSlideIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
 
 .empty-state {
   text-align: center; padding: 50px 20px;
@@ -2523,7 +2524,7 @@ function renderProfile(d) {
         </label>
       </div>
     </div>
-    <a href="https://t.me/Super_habits" target="_blank" class="rem-card" style="margin-top:4px;display:flex;align-items:center;gap:10px;text-decoration:none">
+    <a href="https://t.me/Super_habits" target="_blank" class="rem-card" style="margin-top:4px;display:flex;align-items:center;gap:10px;text-decoration:none;border-radius:14px 14px 0 0">
       <div class="rem-top" style="margin-bottom:0;width:100%">
         <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgTgCh" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M22 4L3 11.5L10 14M22 4L15 22L10 14M22 4L10 14" stroke="url(#svgTgCh)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <div style="flex:1">
@@ -2533,9 +2534,9 @@ function renderProfile(d) {
         <div style="color:var(--sub);font-size:18px">›</div>
       </div>
     </a>
-    <div style="overflow:hidden;margin-top:8px;padding:8px 0;border-radius:12px;background:linear-gradient(90deg,#5B8DEF18,#A78BFA18)">
-      <div style="display:inline-block;white-space:nowrap;animation:marquee 14s linear infinite;font-size:12px;font-weight:600;color:#5B8DEF">
-        &nbsp;&nbsp;📢 &nbsp;Bot haqidagi eng so&#39;nggi yangiliklardan boxabar bo&#39;lish uchun telegram kanalimizga obuna bo&#39;ling! &nbsp;➡️ &nbsp;@Super_habits &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <div style="border-radius:0 0 14px 14px;padding:9px 14px 10px;background:linear-gradient(90deg,#5B8DEF22,#A78BFA22,#5B8DEF22);box-shadow:var(--sh-sm)">
+      <div style="font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;letter-spacing:0.01em;background:linear-gradient(90deg,#5B8DEF,#A78BFA,#4CAF7D,#5B8DEF);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmerSlide 3s linear infinite">
+        Bot haqidagi eng so&#39;nggi yangiliklardan boxabar bo&#39;lish uchun kanalimizga obuna bo&#39;ling!
       </div>
     </div>
     <div style="margin:8px 0 4px;text-align:center">
