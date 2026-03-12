@@ -6696,6 +6696,11 @@ try:
             "dark_mode":        u.get("dark_mode", False),
             "earned_ach":       len([a for a in u.get("achievements", []) if isinstance(a, dict)]),
             "total_ach":        len(ACHIEVEMENTS),
+            "display_name":     u.get("display_name", ""),
+            "photo_url":        u.get("photo_url", ""),
+            "evening_notify":   u.get("evening_notify", True),
+            "lang":             u.get("lang", "uz"),
+            "phone":            u.get("phone", ""),
         })
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
