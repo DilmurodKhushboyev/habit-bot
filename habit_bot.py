@@ -5172,7 +5172,11 @@ def daily_reset():
 
         if changed:
             try:
-                update_data = {"habits": udata["habits"], "jon": udata.get("jon", 100)}
+                update_data = {
+                    "habits":        udata["habits"],
+                    "jon":           udata.get("jon", 100),
+                    "pending_shield": udata.get("pending_shield", {}),
+                }
                 mongo_col.update_one({"_id": uid}, {"$set": update_data})
             except Exception:
                 pass
