@@ -1256,6 +1256,438 @@ body {
 const tg      = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 if (localStorage.getItem('sh_dark') === '1') document.body.classList.add('dark');
+
+let selectedLang = null;
+let currentLang = 'uz';
+const STRINGS = {
+  uz: {
+    nav: { today:'Odatlar', stats:'Reyting', habits:'Tahrirlash', bozor:'Bozor', profile:'Profil' },
+    profile: {
+      ball:'Ball', streak:'Streak', done:'Bajarildi', rekord:'rekord',
+      done_label:'Bajarildi', not_done:'Bajarilmadi', kun:'kun',
+      per_day:'ta odat / kun', of_habits:'ta odatdan',
+      see_all:"Barchasini ko'rish ›",
+      settings:'SOZLAMALAR', achievements:'YUTUQLAR', activity:'30 KUNLIK FAOLLIK',
+      edit_profile:"Ma'lumotlarni tahrirlash",
+      bot_lang:'Bot tili',
+      reminders:'Eslatmalar',
+      evening:'Kechki eslatma',
+      evening_sub:'Har kuni 21:00 — bajarilmagan odatlar',
+      onboarding:"Onboarding'ni qayta ko'rish",
+      daily_goal:'KUNLIK MAQSAD',
+      save:'Saqlash', saving:'⏳ Saqlanmoqda...', saved:'✅ Saqlandi!',
+      lang_title:'Bot tili', edit_title:"Ma'lumotlarni tahrirlash",
+      avto:'Avto', jon_label:'JON',
+      dark_mode:'Tungi rejim',
+      channel:'Yangiliklar kanali',
+      lang_modal_title:'Bot tili',
+      click_photo:'Rasmga bosing',
+      phone_label:'Telefon raqam',
+      save_btn:'Saqlash',
+      saved_ok:'✅ Saqlandi!',
+      shield_badge:'himoya',
+    },
+    rating: {
+      sort_points:'⭐ Ball', sort_streak:'Streak', sort_active:'Faollik',
+      period_week:'Hafta', period_month:'Oy', period_all:'Barchasi',
+      my_rank:"Sizning o'rningiz:",
+    },
+
+
+    bozor: {
+      all:'🌟 Barchasi', protection:'Himoya', bonus:'Bonus', general:'Umumiy',
+    },
+    today: {
+      all_done:'Barchasi bajarildi!',
+      all_done_sub:'Ajoyib! Streak davom etmoqda',
+      all_filter:'Barchasi',
+      habit_label:'ODAT',
+      life_label:'JON',
+      progress_sub:'odat bajarildi',
+      add_habit:'＋ Odat yaratish',
+      section_title:'BUGUNGI ODATLAR',
+      tap_hint:'Odatni tasdiqlash uchun ustiga bosing!',
+      empty:"Hali odat qo'shilmagan",
+      times_per_day:'marta/kun',
+      per_day_meta:'marta/kun',
+      days_streak:'kun',
+      retry:'🔄 Qayta urinish',
+    },
+    achievements: {
+      title:'Yutuqlarim',
+      earned_of:'qozonildi',
+      new_badge:'Yangi yutuq qozonildi!',
+      empty:"Bu kategoriyada hali yutuq yo'q",
+      all_cat:'Barchasi',
+    },
+    stats: {
+      general:'Umumiy', week_chart:'Haftalik bajarilish', month_chart:'30 kunlik bajarilish',
+      heatmap_title:'30 kunlik faollik', last7:'Oxirgi 7 kun',
+      completion:'Bajarilish', per_habit:'Har bir odat',
+      not_done:'Bajarilmadi', done:'Bajarildi',
+      faol_kun:'Faol kun (30)',
+      streak_label:'Streak',
+      points_label:'Ball',
+      habits_label:'Odat',
+      total_label:'Jami',
+      this_week:'Bu hafta',
+      prev_week_pct:'oldingi hafta',
+      weekly_trend:'Haftalik tendensiya',
+    },
+    habits: {
+      title:'Odatlarim',
+      empty:"Hozircha odat yo'q",
+      add_new:'Yangi odat',
+      name_label:'Nomi',
+      type_label:'Odat turi',
+      simple_type:'Oddiy',
+      repeat_type:'Takrorlanuvchi',
+      repeat_count_label:'Takror soni',
+      time_label:'Vaqt (ixtiyoriy)',
+      icon_label:'Icon tanlang',
+      edit_title:'Odatni tahrirlash',
+      time_slot:'vaqt',
+      per_day:'marta / kun',
+    },
+    groups: {
+      add_new:"＋ Yangi guruh yaratish",
+      title:'Guruhlarim',
+      empty:"Hozircha guruh yo'q",
+      new_group:'Yangi guruh',
+      group_name:'Guruh nomi',
+      habit_name:'Odat nomi',
+      create:'Yaratish',
+      no_members:"A'zolar yo'q",
+      points_label:'ball',
+    },
+    friends: {
+      empty:"Hali do'st yo'q",
+      streak_label:'kun streak',
+      points_label:'ball',
+      mutual_streak:'Umumiy streak',
+      done_today:'Bugun bajarildi',
+      challenge:'Challenge',
+      remove:'Chiqarish',
+      copy_link:'🔗 Link nusxalandi!',
+      searching:'Qidirilmoqda...',
+      not_found:'Topilmadi',
+      error:'Xato yuz berdi',
+      link_hint:'Link orqali kirsa — umumiy streakingiz birlashadi!',
+    },
+    shop: {
+      your_points:'Sizning balingiz',
+      points_unit:'ball',
+      inventory:'Inventoryim',
+      active_label:'Aktiv',
+      protection:'Himoya',
+      bonus:'Bonus',
+      gift:"Sovg'a",
+      empty_cat:"Bu kategoriyada mahsulot yo'q",
+      buy_success:'✅ Muvaffaqiyatli sotib olindi!',
+      activate_success:'✅ Aktivlashtirildi!',
+      challenge_sent:'🎯 Challenge yuborildi!',
+      challenge_send:'🎯 Yuborish',
+      sending:'⏳ Yuborilmoqda...',
+      you_have:'Sizda:',
+      items_unit:'ta',
+    },
+    reminders: {
+      title:'Eslatmalar',
+      habits_count:'Odatlar',
+      empty:"Hali odat qo'shilmagan. Avval odat qo'shing!",
+      time_slot:'vaqt',
+      add_time:"＋ Vaqt qo'shish",
+      repeat_meta:'marta / kun',
+      reminder_settings:'Eslatma sozlamalari',
+    },
+  },
+  ru: {
+    nav: { today:'Привычки', stats:'Рейтинг', habits:'Редактор', bozor:'Магазин', profile:'Профиль' },
+    profile: {
+      ball:'Очки', streak:'Стрик', done:'Выполнено', rekord:'рекорд',
+      done_label:'Выполнено', not_done:'Не выполнено', kun:'дней',
+      per_day:'привычек / день', of_habits:'из',
+      see_all:'Смотреть все ›',
+      settings:'НАСТРОЙКИ', achievements:'ДОСТИЖЕНИЯ', activity:'АКТИВНОСТЬ 30 ДНЕЙ',
+      edit_profile:'Редактировать данные',
+      bot_lang:'Язык бота',
+      reminders:'Напоминания',
+      evening:'Вечернее напоминание',
+      evening_sub:'Каждый день 21:00 — невыполненные привычки',
+      onboarding:'Посмотреть онбординг снова',
+      daily_goal:'ЕЖЕДНЕВНАЯ ЦЕЛЬ',
+      save:'Сохранить', saving:'⏳ Сохраняем...', saved:'✅ Сохранено!',
+      lang_title:'Язык бота', edit_title:'Редактировать данные',
+      avto:'Авто', jon_label:'ЖИЗНЬ',
+      dark_mode:'Тёмный режим',
+      channel:'Канал новостей',
+      lang_modal_title:'Язык бота',
+      click_photo:'Нажмите на фото',
+      phone_label:'Номер телефона',
+      save_btn:'Сохранить',
+      saved_ok:'✅ Сохранено!',
+      shield_badge:'защита',
+    },
+    rating: {
+      sort_points:'⭐ Очки', sort_streak:'Стрик', sort_active:'Активность',
+      period_week:'Неделя', period_month:'Месяц', period_all:'Все',
+      my_rank:'Ваше место:',
+    },
+
+
+    bozor: {
+      all:'🌟 Все', protection:'Защита', bonus:'Бонус', general:'Общее',
+    },
+    today: {
+      all_done:'Всё выполнено!',
+      all_done_sub:'Отлично! Стрик продолжается',
+      all_filter:'Все',
+      habit_label:'ПРИВЫЧКА',
+      life_label:'ЖИЗНЬ',
+      progress_sub:'привычек выполнено',
+      add_habit:'＋ Добавить привычку',
+      section_title:'ПРИВЫЧКИ НА СЕГОДНЯ',
+      tap_hint:'Нажмите на привычку, чтобы отметить!',
+      empty:'Привычки ещё не добавлены',
+      times_per_day:'раз/день',
+      per_day_meta:'раз/день',
+      days_streak:'дней',
+      retry:'🔄 Повторить',
+    },
+    achievements: {
+      title:'Мои достижения',
+      earned_of:'получено',
+      new_badge:'Новое достижение получено!',
+      empty:'В этой категории пока нет достижений',
+      all_cat:'Все',
+    },
+    stats: {
+      general:'Общее', week_chart:'Выполнение за неделю', month_chart:'Выполнение за 30 дней',
+      heatmap_title:'Активность за 30 дней', last7:'Последние 7 дней',
+      completion:'Выполнение', per_habit:'По каждой привычке',
+      not_done:'Не выполнено', done:'Выполнено',
+      faol_kun:'Активных дней (30)',
+      streak_label:'Стрик',
+      points_label:'Очки',
+      habits_label:'Привычки',
+      total_label:'Всего',
+      this_week:'Эта неделя',
+      prev_week_pct:'пред. неделя',
+      weekly_trend:'Недельная тенденция',
+    },
+    habits: {
+      title:'Мои привычки',
+      empty:'Привычек пока нет',
+      add_new:'Новая привычка',
+      name_label:'Название',
+      type_label:'Тип привычки',
+      simple_type:'Простая',
+      repeat_type:'Повторяющаяся',
+      repeat_count_label:'Кол-во повторений',
+      time_label:'Время (по желанию)',
+      icon_label:'Выбрать иконку',
+      edit_title:'Редактировать привычку',
+      time_slot:'время',
+      per_day:'раз / день',
+    },
+    groups: {
+      add_new:'＋ Создать новую группу',
+      title:'Мои группы',
+      empty:'Групп пока нет',
+      new_group:'Новая группа',
+      group_name:'Название группы',
+      habit_name:'Название привычки',
+      create:'Создать',
+      no_members:'Нет участников',
+      points_label:'очков',
+    },
+    friends: {
+      empty:'Друзей пока нет',
+      streak_label:'дней стрик',
+      points_label:'очков',
+      mutual_streak:'Общий стрик',
+      done_today:'Выполнено сегодня',
+      challenge:'Вызов',
+      remove:'Удалить',
+      copy_link:'🔗 Ссылка скопирована!',
+      searching:'Поиск...',
+      not_found:'Не найдено',
+      error:'Произошла ошибка',
+      link_hint:'Поделитесь ссылкой — объедините стрики!',
+    },
+    shop: {
+      your_points:'Ваши очки',
+      points_unit:'очков',
+      inventory:'Мой инвентарь',
+      active_label:'Активно',
+      protection:'Защита',
+      bonus:'Бонус',
+      gift:'Подарок',
+      empty_cat:'В этой категории нет товаров',
+      buy_success:'✅ Успешно куплено!',
+      activate_success:'✅ Активировано!',
+      challenge_sent:'🎯 Вызов отправлен!',
+      challenge_send:'🎯 Отправить',
+      sending:'⏳ Отправка...',
+      you_have:'У вас:',
+      items_unit:'шт.',
+    },
+    reminders: {
+      title:'Напоминания',
+      habits_count:'Привычки',
+      empty:'Привычки ещё не добавлены. Сначала добавьте привычку!',
+      time_slot:'время',
+      add_time:'＋ Добавить время',
+      repeat_meta:'раз / день',
+      reminder_settings:'Настройки напоминаний',
+    },
+  },
+  en: {
+    nav: { today:'Habits', stats:'Ranking', habits:'Edit', bozor:'Store', profile:'Profile' },
+    profile: {
+      ball:'Points', streak:'Streak', done:'Done', rekord:'record',
+      done_label:'Done', not_done:'Not done', kun:'days',
+      per_day:'habits / day', of_habits:'of',
+      see_all:'See all ›',
+      settings:'SETTINGS', achievements:'ACHIEVEMENTS', activity:'30-DAY ACTIVITY',
+      edit_profile:'Edit profile',
+      bot_lang:'Bot language',
+      reminders:'Reminders',
+      evening:'Evening reminder',
+      evening_sub:'Every day 21:00 — unfinished habits',
+      onboarding:'View onboarding again',
+      daily_goal:'DAILY GOAL',
+      save:'Save', saving:'⏳ Saving...', saved:'✅ Saved!',
+      lang_title:'Bot language', edit_title:'Edit profile',
+      avto:'Car', jon_label:'LIFE',
+      dark_mode:'Dark mode',
+      channel:'News channel',
+      lang_modal_title:'Bot language',
+      click_photo:'Click photo',
+      phone_label:'Phone number',
+      save_btn:'Save',
+      saved_ok:'✅ Saved!',
+      shield_badge:'shield',
+    },
+    rating: {
+      sort_points:'⭐ Points', sort_streak:'Streak', sort_active:'Activity',
+      period_week:'Week', period_month:'Month', period_all:'All',
+      my_rank:'Your rank:',
+    },
+
+
+    bozor: {
+      all:'🌟 All', protection:'Protection', bonus:'Bonus', general:'General',
+    },
+    today: {
+      all_done:'All done!',
+      all_done_sub:'Great! Streak continues',
+      all_filter:'All',
+      habit_label:'HABIT',
+      life_label:'LIFE',
+      progress_sub:'habits completed',
+      add_habit:'＋ Add habit',
+      section_title:"TODAY'S HABITS",
+      tap_hint:'Tap a habit to complete it!',
+      empty:'No habits added yet',
+      times_per_day:'times/day',
+      per_day_meta:'times/day',
+      days_streak:'days',
+      retry:'🔄 Retry',
+    },
+    achievements: {
+      title:'My Achievements',
+      earned_of:'earned',
+      new_badge:'New achievement earned!',
+      empty:'No achievements in this category yet',
+      all_cat:'All',
+    },
+    stats: {
+      general:'General', week_chart:'Weekly completion', month_chart:'30-day completion',
+      heatmap_title:'30-day activity', last7:'Last 7 days',
+      completion:'Completion', per_habit:'Per habit',
+      not_done:'Not done', done:'Done',
+      faol_kun:'Active days (30)',
+      streak_label:'Streak',
+      points_label:'Points',
+      habits_label:'Habits',
+      total_label:'Total',
+      this_week:'This week',
+      prev_week_pct:'prev. week',
+      weekly_trend:'Weekly trend',
+    },
+    habits: {
+      title:'My Habits',
+      empty:'No habits yet',
+      add_new:'New habit',
+      name_label:'Name',
+      type_label:'Habit type',
+      simple_type:'Simple',
+      repeat_type:'Repeating',
+      repeat_count_label:'Repeat count',
+      time_label:'Time (optional)',
+      icon_label:'Choose icon',
+      edit_title:'Edit habit',
+      time_slot:'time',
+      per_day:'times / day',
+    },
+    groups: {
+      add_new:'＋ Create new group',
+      title:'My Groups',
+      empty:'No groups yet',
+      new_group:'New group',
+      group_name:'Group name',
+      habit_name:'Habit name',
+      create:'Create',
+      no_members:'No members',
+      points_label:'points',
+    },
+    friends: {
+      empty:'No friends yet',
+      streak_label:'days streak',
+      points_label:'points',
+      mutual_streak:'Mutual streak',
+      done_today:'Done today',
+      challenge:'Challenge',
+      remove:'Remove',
+      copy_link:'🔗 Link copied!',
+      searching:'Searching...',
+      not_found:'Not found',
+      error:'Error occurred',
+      link_hint:'Share your link — combine streaks!',
+    },
+    shop: {
+      your_points:'Your points',
+      points_unit:'points',
+      inventory:'My Inventory',
+      active_label:'Active',
+      protection:'Protection',
+      bonus:'Bonus',
+      gift:'Gift',
+      empty_cat:'No products in this category',
+      buy_success:'✅ Purchase successful!',
+      activate_success:'✅ Activated!',
+      challenge_sent:'🎯 Challenge sent!',
+      challenge_send:'🎯 Send',
+      sending:'⏳ Sending...',
+      you_have:'You have:',
+      items_unit:'',
+    },
+    reminders: {
+      title:'Reminders',
+      habits_count:'Habits',
+      empty:'No habits added yet. Add a habit first!',
+      time_slot:'time',
+      add_time:'＋ Add time',
+      repeat_meta:'times / day',
+      reminder_settings:'Reminder settings',
+    },
+  }
+};
+function S(key, sub) {
+  const l = (currentLang && STRINGS[currentLang]) ? currentLang : 'uz';
+  return sub ? (STRINGS[l][key]?.[sub] ?? STRINGS['uz'][key]?.[sub] ?? '') : (STRINGS[l][key] ?? STRINGS['uz'][key] ?? '');
+}
 const user     = tg?.initDataUnsafe?.user || { id: 0, first_name: 'Test' };
 const initData = tg?.initData || '';
 const userId   = user.id || 0;
@@ -1386,8 +1818,18 @@ function renderToday(d) {
   const { habits, done_count, total, percent, today } = d;
   const currentJon = d.jon ?? 100;
   const dt = new Date(today);
-  const dayNames = ['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'];
-  const months   = ['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+  const _dayNamesMap = {
+    uz:['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'],
+    ru:['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'],
+    en:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+  };
+  const _monthsMap = {
+    uz:['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'],
+    ru:['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'],
+    en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+  };
+  const dayNames = _dayNamesMap[currentLang] || _dayNamesMap['uz'];
+  const months   = _monthsMap[currentLang]   || _monthsMap['uz'];
   const dateStr  = `${dt.getDate()} ${months[dt.getMonth()]} — ${dayNames[dt.getDay()]}`;
   const allDone  = done_count === total && total > 0;
 
@@ -1420,7 +1862,7 @@ function renderToday(d) {
         <div class="checkin-icon">${h.icon || '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDefIcon" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgDefIcon)" opacity="0.2"/><path d="M7 12l4 4 6-7" stroke="url(#svgDefIcon)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</div>
         <div class="checkin-info">
           <div class="checkin-name">${h.name}</div>
-          <div class="checkin-meta">${isRepeat ? rc+' marta/kun · ' : (h.time !== 'vaqtsiz' ? `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> `+h.time+' · ' : '')}<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak} kun</div>
+          <div class="checkin-meta">${isRepeat ? rc+' '+S('today','times_per_day')+' · ' : (h.time !== 'vaqtsiz' ? `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> `+h.time+' · ' : '')}<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak} ${S('today','days_streak')}</div>
           ${dotsHtml}
         </div>
         <button class="checkin-btn" id="cbtn-${h.id}" style="${isRepeat && !h.done && tc>0 ? 'font-size:11px;font-weight:700' : ''}">${btnContent}</button>
@@ -1440,23 +1882,23 @@ function renderToday(d) {
       <div style="display:flex;justify-content:center;gap:24px;align-items:center;margin:16px 0 4px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
           <div class="prog-ring-wrap" style="margin:0" id="prog-ring">${ringHTML(percent)}</div>
-          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">ODAT</div>
+          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">${S('today','habit_label')}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
           <div class="prog-ring-wrap" style="margin:0" id="jon-ring">${jonRingHTML(currentJon)}</div>
-          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">JON</div>
+          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">${S('today','life_label')}</div>
         </div>
       </div>
-      <div class="today-sub" id="prog-sub">${done_count} / ${total} odat bajarildi</div>
+      <div class="today-sub" id="prog-sub">${done_count} / ${total} ${S('today','progress_sub')}</div>
     </div>
 
     <div style="display:flex;gap:8px;justify-content:center;margin:12px 0 4px">
-      <button onclick="openAddFromToday()" type="button" style="font-size:13px;font-weight:600;color:#4CAF7D;background:none;border:none;cursor:pointer;padding:4px 8px">＋ Odat yaratish</button>
+      <button onclick="openAddFromToday()" type="button" style="font-size:13px;font-weight:600;color:#4CAF7D;background:none;border:none;cursor:pointer;padding:4px 8px">${S('today','add_habit')}</button>
 
     </div>
 
-    <div class="section-title">BUGUNGI ODATLAR</div>
-    <div style="font-size:11px;color:var(--green);margin:-6px 0 10px 2px">Odatni tasdiqlash uchun ustiga bosing!</div>
+    <div class="section-title">${S('today','section_title')}</div>
+    <div style="font-size:11px;color:var(--green);margin:-6px 0 10px 2px">${S('today','tap_hint')}</div>
     ${cardsHtml || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>Hali odat qo\'shilmagan</div>'}
     <div class="toast" id="toast-today"></div>`;
 }
@@ -1500,7 +1942,7 @@ async function checkin(hid, cardEl) {
     const metaEl = cardEl.querySelector('.checkin-meta');
     if (metaEl) {
       const isRepeat = rc > 1;
-      metaEl.innerHTML = isRepeat ? `${rc} marta/kun · <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${result.streak} kun` : `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${result.streak} kun`;
+      metaEl.innerHTML = isRepeat ? `${rc} ${S('today','times_per_day')} · <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${result.streak} ${S('today','days_streak')}` : `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${result.streak} ${S('today','days_streak')}`;
     }
 
     if (isDone && pop) {
@@ -1519,7 +1961,7 @@ async function checkin(hid, cardEl) {
       const ringEl = document.getElementById('prog-ring');
       if (ringEl) ringEl.innerHTML = ringHTML(pct);
       const subEl = document.getElementById('prog-sub');
-      if (subEl) subEl.textContent = `${data.today.done_count} / ${data.today.total} odat bajarildi`;
+      if (subEl) subEl.textContent = `${data.today.done_count} / ${data.today.total} ${S('today','progress_sub')}`;
       if (habit) { habit.done = isDone; habit.streak = result.streak; }
     }
 
@@ -1567,7 +2009,7 @@ async function checkin(hid, cardEl) {
     }
     // Yangi badge popup
     if (isDone && result.new_badges && result.new_badges.length) {
-      result.new_badges.forEach(b => showBadgePopup(b.icon, b.title, 'Yangi yutuq qozonildi!'));
+      result.new_badges.forEach(b => showBadgePopup(b.icon, b.title, S('achievements','new_badge')));
     }
   } catch(e) {
     showTodayToast('❌ Xato: ' + e.message, true);
@@ -1599,7 +2041,7 @@ async function loadReminders() {
 function renderReminders(habits) {
   if (!habits.length) {
     document.getElementById('reminders-content').innerHTML =
-      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>Hali odat qo'shilmagan.<br>Avval odat qo'shing!</div>`;
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>${S('reminders','empty')}</div>`;
     return;
   }
 
@@ -1646,9 +2088,9 @@ function renderReminders(habits) {
             </div>
           </div>
           <div id="times-list-${h.id}">${timesListHtml}</div>
-          <button class="rep-btn" style="width:100%;margin-top:6px;justify-content:center" onclick="addTime('${h.id}')" type="button">＋ Vaqt qo'shish</button>
+          <button class="rep-btn" style="width:100%;margin-top:6px;justify-content:center" onclick="addTime('${h.id}')" type="button">${S('reminders','add_time')}</button>
           <button class="rem-save-btn" id="rsave-${h.id}" onclick="saveReminder('${h.id}')" type="button" style="margin-top:8px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgSave" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 21v-8H7v8M7 3v5h8" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Saqlash
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgSave" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 21v-8H7v8M7 3v5h8" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>${S('profile','save_btn')}
           </button>
         </div>
       </div>`;
@@ -1658,11 +2100,11 @@ function renderReminders(habits) {
     <div class="rem-info-card">
       <div class="rem-info-icon"><svg width="28" height="28" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgBellInf" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 3C13 3 8 6 8 13v5H5l2 2h12l2-2h-3v-5c0-7-5-10-5-10z" fill="url(#svgBellInf)" opacity="0.85"/><circle cx="13" cy="22" r="1.5" fill="url(#svgBellInf)"/></svg></div>
       <div class="rem-info-text">
-        <div class="rem-info-title">Eslatma sozlamalari</div>
+        <div class="rem-info-title">${S('reminders','reminder_settings')}</div>
         <div class="rem-info-sub">Har bir odat uchun bir yoki bir nechta vaqt belgilang.</div>
       </div>
     </div>
-    <div class="section-title">Odatlar (${habits.length})</div>
+    <div class="section-title">${S('reminders','habits_count')} (${habits.length})</div>
     ${cardsHtml}
     <div class="toast" id="toast-rem"></div>`;
 }
@@ -1831,7 +2273,7 @@ function renderAchievements(d, filter = 'all') {
       </div>
       <div class="ach-sum-info">
         <div class="ach-sum-title">Yutuqlarim</div>
-        <div class="ach-sum-sub">${earned_count} / ${total_count} qozonildi</div>
+        <div class="ach-sum-sub">${earned_count} / ${total_count} ${S('achievements','earned_of')}</div>
       </div>
     </div>`;
 
@@ -1874,7 +2316,7 @@ function renderAchievements(d, filter = 'all') {
   document.getElementById('achievements-content').innerHTML = `
     ${sumHtml}
     <div class="ach-cat-tabs">${catTabsHtml}</div>
-    ${cardsHtml || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgLock" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><rect x="5" y="11" width="14" height="10" rx="2" stroke="url(#svgLock)" stroke-width="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="url(#svgLock)" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="url(#svgLock)"/></svg></div>Bu kategoriyada hali yutuq yo\'q</div>'}`;
+    ${cardsHtml || `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgLock" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><rect x="5" y="11" width="14" height="10" rx="2" stroke="url(#svgLock)" stroke-width="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="url(#svgLock)" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="url(#svgLock)"/></svg></div>${S('achievements','empty')}</div>`}`;
 }
 
 function filterAch(cat) {
@@ -1965,13 +2407,13 @@ function renderStats(d) {
       <div class="sum-card">
         <div class="sum-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireMd" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireMd)"/></svg></div>
         <div class="sum-val">${summary.streak}</div>
-        <div class="sum-lbl">Streak</div>
+        <div class="sum-lbl">${S('stats','streak_label')}</div>
         ${streakChart}
       </div>
       <div class="sum-card">
         <div class="sum-icon">⭐</div>
         <div class="sum-val">${summary.points}</div>
-        <div class="sum-lbl">Ball</div>
+        <div class="sum-lbl">${S('stats','points_label')}</div>
         ${ballChart}
       </div>
       <div class="sum-card">
@@ -1983,7 +2425,7 @@ function renderStats(d) {
       <div class="sum-card">
         <div class="sum-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClipSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClipSm)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClipSm)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClipSm)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
         <div class="sum-val">${summary.total_habits}</div>
-        <div class="sum-lbl">Odat</div>
+        <div class="sum-lbl">${S('stats','habits_label')}</div>
         ${habitChart}
       </div>
     </div>`;
@@ -2026,7 +2468,7 @@ function renderStats(d) {
     trendHtml = `
       <div style="background:var(--card);box-shadow:var(--sh);border-radius:16px;padding:14px 16px;margin-bottom:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px">Haftalik tendensiya</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px">${S('stats','weekly_trend')}</div>
           <div style="display:flex;align-items:center;gap:5px">
             <span style="font-size:22px;font-weight:800;color:${aColor};line-height:1">${arrow}</span>
             <span style="font-size:13px;font-weight:700;color:${aColor}">${diff > 0 ? diff + '%' : ''}</span>
@@ -2041,7 +2483,7 @@ function renderStats(d) {
             <div style="font-size:12px;font-weight:700;color:var(--sub);margin-top:4px">${trend.prev_week}%</div>
           </div>
           <div style="flex:1">
-            <div style="font-size:10px;color:var(--sub);margin-bottom:4px">Bu hafta</div>
+            <div style="font-size:10px;color:var(--sub);margin-bottom:4px">${S('stats','this_week')}</div>
             <div style="height:8px;border-radius:4px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">
               <div style="height:100%;border-radius:4px;background:${aColor};width:${Math.round(barThis/barMax*100)}%;transition:width .5s"></div>
             </div>
@@ -2106,7 +2548,7 @@ function renderStats(d) {
           <div class="hstat-icon">${h.icon}</div>
           <div class="hstat-info">
             <div class="hstat-name">${h.name}</div>
-            <div class="hstat-sub"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire${hIdx}" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire${hIdx})"/></svg> ${h.streak} kun streak</div>
+            <div class="hstat-sub"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire${hIdx}" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire${hIdx})"/></svg> ${h.streak} ${S('today','days_streak')} streak</div>
           </div>
         </div>
         <div class="hstat-nums">
@@ -2120,7 +2562,7 @@ function renderStats(d) {
           </div>
           <div class="hstat-num-box">
             <div class="hstat-num-val">${h.total_done}</div>
-            <div class="hstat-num-lbl">Jami</div>
+            <div class="hstat-num-lbl">${S('stats','total_label')}</div>
           </div>
         </div>
         <div class="hstat-charts-row">
@@ -2450,7 +2892,7 @@ function renderProfile(d) {
       ${(d.active_car || d.streak_shields > 0 || d.bonus_2x_active || d.bonus_3x_active || d.xp_booster_days > 0) ? `
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
         ${d.active_car ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px">${d.active_car} <span style="color:var(--sub)">Avto</span></div>` : ''}
-        ${d.streak_shields > 0 ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgShield" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShield)" opacity="0.85"/></svg><span style="color:var(--sub)">${d.streak_shields}x himoya</span></div>` : ''}
+        ${d.streak_shields > 0 ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgShield" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShield)" opacity="0.85"/></svg><span style="color:var(--sub)">${d.streak_shields}x ${S('profile','shield_badge')}</span></div>` : ''}
         ${d.bonus_2x_active ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgBolt" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBolt)"/></svg><span style="color:#5B8DEF;font-weight:700">2× bonus</span></div>` : ''}
         ${d.bonus_3x_active ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgFireB" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireB)"/></svg><span style="color:#E07040;font-weight:700">3× bonus</span></div>` : ''}
         ${d.xp_booster_days > 0 ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgDiamond" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M6 3h12l4 6-10 12L2 9z" fill="url(#svgDiamond)" opacity="0.85"/></svg><span style="color:#5B8DEF;font-weight:700">💎 ${d.xp_booster_days} kun</span></div>` : ''}
@@ -2514,7 +2956,7 @@ function renderProfile(d) {
         <div style="display:flex;align-items:center;gap:10px">
           <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgStarsLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="8" cy="8" r="2.2" fill="url(#svgStarsLg)"/><circle cx="18" cy="5" r="1.4" fill="url(#svgStarsLg)" opacity="0.7"/><circle cx="20" cy="16" r="1.8" fill="url(#svgStarsLg)" opacity="0.85"/><circle cx="6" cy="19" r="1.2" fill="url(#svgStarsLg)" opacity="0.6"/><circle cx="13" cy="13" r="3" fill="url(#svgStarsLg)" opacity="0.5"/></svg></div>
           <div>
-            <div class="rem-name">Tungi rejim</div>
+            <div class="rem-name">${S('profile','dark_mode')}</div>
             <div style="font-size:10px;color:var(--sub)">To'q fon, ko'z uchun qulay</div>
           </div>
         </div>
@@ -2529,7 +2971,7 @@ function renderProfile(d) {
       <div class="rem-top" style="margin-bottom:0;width:100%">
         <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgTgCh" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M22 4L3 11.5L10 14M22 4L15 22L10 14M22 4L10 14" stroke="url(#svgTgCh)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <div style="flex:1">
-          <div class="rem-name">Yangiliklar kanali</div>
+          <div class="rem-name">${S('profile','channel')}</div>
           <div style="font-size:10px;color:var(--sub)">@Super_habits</div>
         </div>
         <div style="color:var(--sub);font-size:18px">›</div>
@@ -2550,9 +2992,9 @@ function renderProfile(d) {
       <div class="modal">
         <div class="modal-handle"></div>
         <button class="modal-close" onclick="closeLangModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
-        <div class="modal-title"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" style="display:inline;vertical-align:middle;margin-right:6px"><defs><linearGradient id="svgGlobH" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><circle cx="13" cy="13" r="10" stroke="url(#svgGlobH)" stroke-width="2"/><ellipse cx="13" cy="13" rx="4.5" ry="10" stroke="url(#svgGlobH)" stroke-width="1.5"/><path d="M3 13h20M3 9h20M3 17h20" stroke="url(#svgGlobH)" stroke-width="1.2" opacity="0.5"/></svg>Bot tili</div>
+        <div class="modal-title"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" style="display:inline;vertical-align:middle;margin-right:6px"><defs><linearGradient id="svgGlobH" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><circle cx="13" cy="13" r="10" stroke="url(#svgGlobH)" stroke-width="2"/><ellipse cx="13" cy="13" rx="4.5" ry="10" stroke="url(#svgGlobH)" stroke-width="1.5"/><path d="M3 13h20M3 9h20M3 17h20" stroke="url(#svgGlobH)" stroke-width="1.2" opacity="0.5"/></svg>${S('profile','lang_modal_title')}</div>
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px" id="lang-modal-btns"></div>
-        <button class="rem-save-btn" style="margin-top:16px" onclick="saveLang()" type="button" id="lang-save-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgSave" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 21v-8H7v8M7 3v5h8" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Saqlash</button>
+        <button class="rem-save-btn" style="margin-top:16px" onclick="saveLang()" type="button" id="lang-save-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgSave" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 21v-8H7v8M7 3v5h8" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="lang-save-txt">Saqlash</span></button>
       </div>
     </div>
 
@@ -2568,17 +3010,17 @@ function renderProfile(d) {
             <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:var(--text);display:flex;align-items:center;justify-content:center;font-size:12px"><svg width="12" height="12" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgPenB" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#E0E0E0"/></linearGradient></defs><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="url(#svgPenB)" opacity="0.95"/></svg></div>
           </div>
           <input type="file" id="ep-photo-input" accept="image/*" style="display:none" onchange="previewEpPhoto(this)">
-          <div style="font-size:10px;color:var(--sub);margin-top:6px">Rasmga bosing</div>
+          <div style="font-size:10px;color:var(--sub);margin-top:6px">${S('profile','click_photo')}</div>
         </div>
         <div class="field">
           <label>Ism</label>
           <input id="ep-name" type="text" placeholder="Ismingiz" maxlength="60">
         </div>
         <div class="field">
-          <label>Telefon raqam</label>
+          <label>${S('profile','phone_label')}</label>
           <input id="ep-phone" type="tel" placeholder="+998 90 123 45 67" maxlength="20">
         </div>
-        <button class="save-btn" onclick="saveEditProfile()" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgSave" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 21v-8H7v8M7 3v5h8" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Saqlash</button>
+        <button class="save-btn" onclick="saveEditProfile()" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgSave" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 21v-8H7v8M7 3v5h8" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="edit-save-txt">Saqlash</span></button>
       </div>
     </div>`;
   setTimeout(function() {
@@ -2704,140 +3146,30 @@ async function saveEveningNotify(val) {
 }
 
 
-
-let selectedLang = null;
-let currentLang = 'uz';
-const STRINGS = {
-  uz: {
-    nav: { today:'Odatlar', stats:'Reyting', habits:'Tahrirlash', bozor:'Bozor', profile:'Profil' },
-    profile: {
-      ball:'Ball', streak:'Streak', done:'Bajarildi', rekord:'rekord',
-      done_label:'Bajarildi', not_done:'Bajarilmadi', kun:'kun',
-      per_day:'ta odat / kun', of_habits:'ta odatdan',
-      see_all:"Barchasini ko'rish ›",
-      settings:'SOZLAMALAR', achievements:'YUTUQLAR', activity:'30 KUNLIK FAOLLIK',
-      edit_profile:"Ma'lumotlarni tahrirlash",
-      bot_lang:'Bot tili',
-      reminders:'Eslatmalar',
-      evening:'Kechki eslatma',
-      evening_sub:'Har kuni 21:00 — bajarilmagan odatlar',
-      onboarding:"Onboarding'ni qayta ko'rish",
-      daily_goal:'KUNLIK MAQSAD',
-      save:'Saqlash', saving:'⏳ Saqlanmoqda...', saved:'✅ Saqlandi!',
-      lang_title:'Bot tili', edit_title:"Ma'lumotlarni tahrirlash",
-      avto:'Avto', jon_label:'JON',
-    },
-    rating: {
-      sort_points:'⭐ Ball', sort_streak:'Streak', sort_active:'Faollik',
-      period_week:'Hafta', period_month:'Oy', period_all:'Barchasi',
-      my_rank:"Sizning o'rningiz:",
-    },
-    stats: {
-      general:'Umumiy', week_chart:'Haftalik bajarilish', month_chart:'30 kunlik bajarilish',
-      heatmap_title:'30 kunlik faollik', last7:'Oxirgi 7 kun',
-      completion:'Bajarilish', per_habit:'Har bir odat',
-      not_done:'Bajarilmadi', done:'Bajarildi',
-      faol_kun:'Faol kun (30)',
-    },
-    today: {
-      all_done:'Barchasi bajarildi!',
-      all_done_sub:'Ajoyib! Streak davom etmoqda',
-      all_filter:'Barchasi',
-    },
-    bozor: {
-      all:'🌟 Barchasi', protection:'Himoya', bonus:'Bonus', general:'Umumiy',
-    },
-  },
-  ru: {
-    nav: { today:'Привычки', stats:'Рейтинг', habits:'Редактор', bozor:'Магазин', profile:'Профиль' },
-    profile: {
-      ball:'Очки', streak:'Стрик', done:'Выполнено', rekord:'рекорд',
-      done_label:'Выполнено', not_done:'Не выполнено', kun:'дней',
-      per_day:'привычек / день', of_habits:'из',
-      see_all:'Смотреть все ›',
-      settings:'НАСТРОЙКИ', achievements:'ДОСТИЖЕНИЯ', activity:'АКТИВНОСТЬ 30 ДНЕЙ',
-      edit_profile:'Редактировать данные',
-      bot_lang:'Язык бота',
-      reminders:'Напоминания',
-      evening:'Вечернее напоминание',
-      evening_sub:'Каждый день 21:00 — невыполненные привычки',
-      onboarding:'Посмотреть онбординг снова',
-      daily_goal:'ЕЖЕДНЕВНАЯ ЦЕЛЬ',
-      save:'Сохранить', saving:'⏳ Сохраняем...', saved:'✅ Сохранено!',
-      lang_title:'Язык бота', edit_title:'Редактировать данные',
-      avto:'Авто', jon_label:'ЖИЗНЬ',
-    },
-    rating: {
-      sort_points:'⭐ Очки', sort_streak:'Стрик', sort_active:'Активность',
-      period_week:'Неделя', period_month:'Месяц', period_all:'Все',
-      my_rank:'Ваше место:',
-    },
-    stats: {
-      general:'Общее', week_chart:'Выполнение за неделю', month_chart:'Выполнение за 30 дней',
-      heatmap_title:'Активность за 30 дней', last7:'Последние 7 дней',
-      completion:'Выполнение', per_habit:'По каждой привычке',
-      not_done:'Не выполнено', done:'Выполнено',
-      faol_kun:'Активных дней (30)',
-    },
-    today: {
-      all_done:'Всё выполнено!',
-      all_done_sub:'Отлично! Стрик продолжается',
-      all_filter:'Все',
-    },
-    bozor: {
-      all:'🌟 Все', protection:'Защита', bonus:'Бонус', general:'Общее',
-    },
-  },
-  en: {
-    nav: { today:'Habits', stats:'Ranking', habits:'Edit', bozor:'Store', profile:'Profile' },
-    profile: {
-      ball:'Points', streak:'Streak', done:'Done', rekord:'record',
-      done_label:'Done', not_done:'Not done', kun:'days',
-      per_day:'habits / day', of_habits:'of',
-      see_all:'See all ›',
-      settings:'SETTINGS', achievements:'ACHIEVEMENTS', activity:'30-DAY ACTIVITY',
-      edit_profile:'Edit profile',
-      bot_lang:'Bot language',
-      reminders:'Reminders',
-      evening:'Evening reminder',
-      evening_sub:'Every day 21:00 — unfinished habits',
-      onboarding:'View onboarding again',
-      daily_goal:'DAILY GOAL',
-      save:'Save', saving:'⏳ Saving...', saved:'✅ Saved!',
-      lang_title:'Bot language', edit_title:'Edit profile',
-      avto:'Car', jon_label:'LIFE',
-    },
-    rating: {
-      sort_points:'⭐ Points', sort_streak:'Streak', sort_active:'Activity',
-      period_week:'Week', period_month:'Month', period_all:'All',
-      my_rank:'Your rank:',
-    },
-    stats: {
-      general:'General', week_chart:'Weekly completion', month_chart:'30-day completion',
-      heatmap_title:'30-day activity', last7:'Last 7 days',
-      completion:'Completion', per_habit:'Per habit',
-      not_done:'Not done', done:'Done',
-      faol_kun:'Active days (30)',
-    },
-    today: {
-      all_done:'All done!',
-      all_done_sub:'Great! Streak continues',
-      all_filter:'All',
-    },
-    bozor: {
-      all:'🌟 All', protection:'Protection', bonus:'Bonus', general:'General',
-    },
-  }
-};
-function S(key, sub) {
-  const l = (currentLang && STRINGS[currentLang]) ? currentLang : 'uz';
-  return sub ? (STRINGS[l][key]?.[sub] ?? STRINGS['uz'][key]?.[sub] ?? '') : (STRINGS[l][key] ?? STRINGS['uz'][key] ?? '');
-}
 function updateNavLabels() {
   const ids = ['today','stats','habits','bozor','profile'];
   ids.forEach(id => {
     const el = document.querySelector('#nav-' + id + ' .nav-label');
     if (el) el.textContent = S('nav', id);
+  });
+  // Static button labels
+  const saveTxt = S('profile','save_btn');
+  ['lang-save-txt','edit-save-txt','habit-save-txt'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = saveTxt;
+  });
+  // Habit form labels
+  const habitLbls = [
+    ['lbl-habit-name', S('habits','name_label')],
+    ['lbl-habit-type', S('habits','type_label')],
+    ['lbl-repeat-count', S('habits','repeat_count_label')],
+    ['lbl-icon-pick', S('habits','icon_label')],
+    ['btn-simple-lbl', S('habits','simple_type')],
+    ['btn-repeat-lbl', S('habits','repeat_type')],
+  ];
+  habitLbls.forEach(([id, txt]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = txt;
   });
 }
 
@@ -2883,8 +3215,16 @@ async function saveLang() {
     closeLangModal();
     const t = document.getElementById('toast-profile');
     if (t) { t.textContent = '✅ Til o\'zgartirildi!'; t.className = 'toast show'; setTimeout(()=>t.className='toast',2500); }
-    loaded.profile = false;
+    // Barcha sahifalar cache'ini tozalash — til o'zgarganda qayta yuklansin
+    Object.keys(loaded).forEach(k => loaded[k] = false);
+    updateNavLabels();
     await loadProfile();
+    // Agar boshqa tab ochiq bo'lsa — uni ham qayta render qilish
+    const activeTab = document.querySelector('.page.active')?.id?.replace('page-','');
+    if (activeTab && activeTab !== 'profile') {
+      const tabFns = {today:loadToday, stats:loadStats, habits:loadHabits, bozor:loadShop};
+      if (tabFns[activeTab]) await tabFns[activeTab]();
+    }
   } catch(e) {
     if (btn) { btn.textContent = '💾 Saqlash'; btn.disabled = false; }
   }
@@ -2964,8 +3304,8 @@ function renderHabits(habits, jon = 100) {
 
   document.getElementById('habits-content').innerHTML = `
     <div>
-      <div class="section-title">Odatlarim (${habits.length})</div>
-      ${rows || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>Hozircha odat yo\'q</div>'}
+      <div class="section-title">${S('habits','title')} (${habits.length})</div>
+      ${rows || `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>${S('habits','empty')}</div>`}
     </div>
 
     <div class="toast" id="toast"></div>
@@ -2976,17 +3316,17 @@ function renderHabits(habits, jon = 100) {
         <button class="modal-close" onclick="closeModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
         <div class="modal-title" id="modal-title">Yangi odat</div>
         <div class="field">
-          <label>Nomi</label>
+          <label id="lbl-habit-name">Nomi</label>
           <input id="h-name" type="text" placeholder="Masalan: Kitob o'qish" maxlength="60">
         </div>
         <div class="field">
-          <label>Odat turi</label>
+          <label id="lbl-habit-type">Odat turi</label>
           <div class="habit-type-toggle">
-            <button type="button" class="habit-type-btn active" id="btn-simple" onclick="setHabitType('simple')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" stroke-width="2.2"/><path d="M7 12l4 4 6-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Oddiy</button>
-            <button type="button" class="habit-type-btn" id="btn-repeat" onclick="setHabitType('repeat')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M17 2l4 4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 11V9a4 4 0 0 1 4-4h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M7 22l-4-4 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 13v2a4 4 0 0 1-4 4H3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Takrorlanuvchi</button>
+            <button type="button" class="habit-type-btn active" id="btn-simple" onclick="setHabitType('simple')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" stroke-width="2.2"/><path d="M7 12l4 4 6-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg id="btn-simple-lbl"><span id="btn-simple-lbl">Oddiy</span></button>
+            <button type="button" class="habit-type-btn" id="btn-repeat" onclick="setHabitType('repeat')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M17 2l4 4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 11V9a4 4 0 0 1 4-4h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M7 22l-4-4 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 13v2a4 4 0 0 1-4 4H3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg id="btn-repeat-lbl"><span id="btn-repeat-lbl">Takrorlanuvchi</span></button>
           </div>
           <div class="repeat-count-field" id="repeat-count-field">
-            <label style="font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;display:block">Takror soni</label>
+            <label id="lbl-repeat-count" style="font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;display:block">Takror soni</label>
             <input id="h-repeat-count" type="number" min="2" max="99" placeholder="Takror sonini kiriting" style="margin-bottom:8px">
             <label style="font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;display:block">Vaqt (ixtiyoriy)</label>
             <input id="h-time-repeat" type="text" placeholder="Masalan: 07:00 yoki vaqtsiz">
@@ -2997,10 +3337,10 @@ function renderHabits(habits, jon = 100) {
           <input id="h-time" type="text" placeholder="Masalan: 07:00 yoki vaqtsiz">
         </div>
         <div class="field">
-          <label>Icon tanlang</label>
+          <label id="lbl-icon-pick">Icon tanlang</label>
           ${iconGrid}
         </div>
-        <button class="save-btn" onclick="saveHabit()">Saqlash</button>
+        <button class="save-btn" onclick="saveHabit()"><span id="habit-save-txt">Saqlash</span></button>
       </div>
     </div>`;
 }
@@ -3037,7 +3377,7 @@ async function openAddFromToday() {
 
 function openAdd() {
   editingHabitId = null;
-  document.getElementById('modal-title').textContent = 'Yangi odat';
+  document.getElementById('modal-title').textContent = S('habits','add_new');
   document.getElementById('h-name').value = '';
   document.getElementById('h-time').value = '';
   document.querySelectorAll('.icon-opt').forEach(e => e.classList.remove('selected'));
@@ -3051,7 +3391,7 @@ function openAdd() {
 }
 function openEdit(id, name, icon, time, type, repeatCount) {
   editingHabitId = id;
-  document.getElementById('modal-title').textContent = 'Odatni tahrirlash';
+  document.getElementById('modal-title').textContent = S('habits','edit_title');
   document.getElementById('h-name').value = name;
   const _editType = type || 'simple';
   if (_editType === 'repeat') {
@@ -3200,7 +3540,7 @@ function renderGroups(d) {
     const membersHtml = allMembers.map((m, i) =>
       `<div class="member-row">
         <span>${i < 3 ? [`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgGold" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6E27A"/><stop offset="100%" stop-color="#D4963A"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#svgGold)"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">1</text></svg>`,`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgSilv" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E8E8E8"/><stop offset="100%" stop-color="#A0A8B8"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#svgSilv)"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">2</text></svg>`,`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgBronz" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E8A87C"/><stop offset="100%" stop-color="#A0522D"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#svgBronz)"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">3</text></svg>`][i] : (i+1)+'.'} ${m.name}</span>
-        <span style="color:var(--sub);font-size:12px">${m.points} ball</span>
+        <span style="color:var(--sub);font-size:12px">${m.points} ${S('groups','points_label')}</span>
       </div>`
     ).join('');
 
@@ -3233,8 +3573,8 @@ function renderGroups(d) {
 
   document.getElementById('groups-content').innerHTML = `
     <button class="add-btn" onclick="openGroupAdd()">＋ Yangi guruh yaratish</button>
-    <div class="section-title">Guruhlarim (${groups.length})</div>
-    ${html || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgUsrEm" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="9" r="4" fill="url(#svgUsrEm)"/><circle cx="18" cy="10" r="3" fill="url(#svgUsrEm)" opacity="0.6"/><path d="M2 22c0-4 3.6-7 8-7s8 3 8 7" stroke="url(#svgUsrEm)" stroke-width="2" fill="none"/><path d="M18 15c2.5.5 5 2.5 5 5" stroke="url(#svgUsrEm)" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/></svg></div>Hozircha guruh yo\'q</div>'}
+    <div class="section-title">${S('groups','title')} (${groups.length})</div>
+    ${html || `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgUsrEm" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="9" r="4" fill="url(#svgUsrEm)"/><circle cx="18" cy="10" r="3" fill="url(#svgUsrEm)" opacity="0.6"/><path d="M2 22c0-4 3.6-7 8-7s8 3 8 7" stroke="url(#svgUsrEm)" stroke-width="2" fill="none"/><path d="M18 15c2.5.5 5 2.5 5 5" stroke="url(#svgUsrEm)" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/></svg></div>${S('groups','empty')}</div>`}
     <div class="toast" id="toast-group"></div>
 
     <div class="modal-overlay" id="group-modal">
@@ -3386,11 +3726,11 @@ function renderFriends(d) {
           <div class="rem-icon" style="font-size:28px">${f.name[0]?.toUpperCase() || '?'}</div>
           <div style="flex:1">
             <div style="font-size:14px;font-weight:700;color:var(--text)">${f.name}</div>
-            <div style="font-size:11px;color:var(--sub);margin-top:2px">⭐ ${f.points} ball · <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="gFireF" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#gFireF)"/></svg> ${f.streak} kun streak</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">⭐ ${f.points} ${S('friends','points_label')} · <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="gFireF" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#gFireF)"/></svg> ${f.streak} ${S('friends','streak_label')}</div>
           </div>
           <div style="text-align:center">
             <div style="font-size:11px;color:var(--sub)">${S('bozor','general')}</div>
-            <div style="font-size:18px;font-weight:700;color:${mutualColor};font-family:'DM Mono',monospace">${f.mutual_streak}</div>
+            <div style="font-size:18px;font-weight:700;color:${mutualColor};font-family:'DM Mono',monospace">${f.mutual_streak} ${S('friends','mutual_streak')}</div>
             <div style="font-size:9px;color:var(--sub)">kun <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg></div>
           </div>
         </div>
@@ -3565,19 +3905,19 @@ function renderShop(d) {
                   cursor:pointer;background:var(--bg);box-shadow:var(--sh);color:var(--text)">
                 Aktiv qil
               </button>`
-            : `<div style="font-size:10px;color:var(--sub)">${item.cat==='protection'?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgShSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShSm)" opacity="0.85"/></svg>Himoya':item.cat==='bonus'?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgBtSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBtSm)"/></svg>Bonus':'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgGift" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><rect x="3" y="10" width="18" height="12" rx="2" stroke="url(#svgGift)" stroke-width="2"/><path d="M3 10h18v3H3zM12 10V22M12 10c0 0-2-5 0-7 1-1 3-1 3 1s-2 3-3 6M12 10c0 0 2-5 0-7-1-1-3-1-3 1s2 3 3 6" stroke="url(#svgGift)" stroke-width="1.5" stroke-linecap="round"/></svg>Sovg\'a'}</div>`
+            : `<div style="font-size:10px;color:var(--sub)">${item.cat==='protection'?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgShSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShSm)" opacity="0.85"/></svg>${S("shop","protection")}':item.cat==='bonus'?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgBtSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBtSm)"/></svg>${S("shop","bonus")}':'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgGift" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><rect x="3" y="10" width="18" height="12" rx="2" stroke="url(#svgGift)" stroke-width="2"/><path d="M3 10h18v3H3zM12 10V22M12 10c0 0-2-5 0-7 1-1 3-1 3 1s-2 3-3 6M12 10c0 0 2-5 0-7-1-1-3-1-3 1s2 3 3 6" stroke="url(#svgGift)" stroke-width="1.5" stroke-linecap="round"/></svg>${S("shop","gift")}'}</div>`
         }
       </div>`;
     }).join('');
     invHtml = `
-      <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgBox" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M3 9l9-6 9 6v12a1 1 0 01-1 1H4a1 1 0 01-1-1V9z" stroke="url(#svgBox)" stroke-width="2" stroke-linejoin="round"/><path d="M9 21V12h6v9" stroke="url(#svgBox)" stroke-width="2" stroke-linecap="round"/></svg> Inventoryim</div>
+      <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgBox" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M3 9l9-6 9 6v12a1 1 0 01-1 1H4a1 1 0 01-1-1V9z" stroke="url(#svgBox)" stroke-width="2" stroke-linejoin="round"/><path d="M9 21V12h6v9" stroke="url(#svgBox)" stroke-width="2" stroke-linecap="round"/></svg> ${S('shop','inventory')}</div>
       ${invCards}`;
   }
 
   const visItems = items.filter(i => _shopCat === 'all' || i.cat === _shopCat);
   const cats = [
     ['all',S('bozor','all')],['protection','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgShSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShSm)" opacity="0.85"/></svg>'+S('bozor','protection')],['bonus','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgBtSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBtSm)"/></svg>'+S('bozor','bonus')],
-    ['badge','🏅 Badge'],['pet','🐾 Hayvon'],['car','🚗 Avto'],['gift','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgGift" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><rect x="3" y="10" width="18" height="12" rx="2" stroke="url(#svgGift)" stroke-width="2"/><path d="M3 10h18v3H3zM12 10V22M12 10c0 0-2-5 0-7 1-1 3-1 3 1s-2 3-3 6M12 10c0 0 2-5 0-7-1-1-3-1-3 1s2 3 3 6" stroke="url(#svgGift)" stroke-width="1.5" stroke-linecap="round"/></svg>Sovg\'a']
+    ['badge','🏅 Badge'],['pet','🐾 Hayvon'],['car','🚗 Avto'],['gift',[S('shop','gift')]]
   ];
   const catBtns = cats.map(([k,l]) =>
     `<button onclick="setShopCat('${k}')" class="period-btn${_shopCat===k?' active':''}"
@@ -3596,7 +3936,7 @@ function renderShop(d) {
         <div style="flex:1">
           <div style="font-size:14px;font-weight:700;color:var(--text)">${item.name}</div>
           <div style="font-size:11px;color:var(--sub);margin-top:3px;line-height:1.4">${item.desc}</div>
-          ${item.owned > 0 ? `<div style="font-size:10px;color:var(--green);margin-top:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgChkI" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgChkI)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgChkI)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Sizda: ${item.owned} ta</div>` : ''}
+          ${item.owned > 0 ? `<div style="font-size:10px;color:var(--green);margin-top:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgChkI" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgChkI)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgChkI)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>${S('shop','you_have')} ${item.owned} ${S('shop','items_unit')}</div>` : ''}
         </div>
       </div>
       <div style="margin-top:10px">
@@ -3624,8 +3964,8 @@ function renderShop(d) {
     <div style="background:linear-gradient(135deg,#5B8DEF22,#4CAF7D22);border-radius:16px;padding:14px 16px;margin-bottom:4px;display:flex;align-items:center;gap:10px">
       <div style="font-size:28px">⭐</div>
       <div>
-        <div style="font-size:11px;color:var(--sub)">Sizning balingiz</div>
-        <div style="font-size:22px;font-weight:700;color:var(--text)">${points.toLocaleString()} ball</div>
+        <div style="font-size:11px;color:var(--sub)">${S('shop','your_points')}</div>
+        <div style="font-size:22px;font-weight:700;color:var(--text)">${points.toLocaleString()} ${S('shop','points_unit')}</div>
       </div>
     </div>
     ${invHtml}
