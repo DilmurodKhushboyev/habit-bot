@@ -7529,6 +7529,58 @@ try:
             }
         return jsonify({"sent": [fmt(c) for c in sent], "received": [fmt(c) for c in recv]})
 
+    @api_app.route("/api/challenges/<int:uid>/send", methods=["POST"])
+    @require_auth
+    def api_challenges_send(uid):
+        data        = request.get_json(force=True, silent=True) or {}
+        receiver_id = data.get("receiver_id")
+        habit_name  = (data.get("habit_name") or "").strip()
+        days        = int(data.get("days") or 7)
+        bet         = int(data.get("bet") or 50)
+        if not habit_name:
+            return jsonify({"ok": False, "error": "Odat nomi kerak"})
+        if not receiver_id:
+            return jsonify({"ok": False, "error": "Qabul qiluvchi ID kerak"})
+        if not user_exists(int(receiver_id)):
+            return jsonify({"ok": False, "error": "Foydalanuvchi topilmadi"})
+        sender = load_user(uid)
+        if sender.get("points", 0) < bet:
+            return jsonify({"ok": False, "error": f"Yetarli ball yo'q (kerak: {bet})"})
+        challenges_col = mongo_db["challenges"]
+        existing = challenges_col.find_one({
+            "from_uid": str(uid),
+            "to_uid":   str(receiver_id),
+            "status":   "pending"
+        })
+        if existing:
+            return jsonify({"ok": False, "error": "Allaqachon kutilayotgan challenge bor"})
+        import datetime as _dt
+        challenges_col.insert_one({
+            "from_uid":   str(uid),
+            "to_uid":     str(receiver_id),
+            "habit_name": habit_name,
+            "days":       days,
+            "bet":        bet,
+            "status":     "pending",
+            "created_at": today_uz5(),
+            "expires_at": (_dt.date.today() + _dt.timedelta(days=days)).isoformat(),
+        })
+        try:
+            sender_name = sender.get("name", "Kimdir")
+            bot.send_message(
+                int(receiver_id),
+                f"🎯 *Challenge keldi!*\n\n"
+                f"👤 *{sender_name}* sizni challenge qildi!\n"
+                f"📌 Odat: *{habit_name}*\n"
+                f"📅 Muddat: *{days} kun*\n"
+                f"💰 Garov: *{bet} ball*\n\n"
+                f"_Qabul qilish uchun botga kiring._",
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
+        return jsonify({"ok": True})
+
     @api_app.route("/api/reminder/<int:uid>/<hid>", methods=["PUT"])
     @require_auth
     def api_reminder(uid, hid):
