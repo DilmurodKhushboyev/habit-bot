@@ -1566,7 +1566,7 @@ def finish_onboarding(uid, habit_name, habit_time):
     save_user(uid, u)
     # Eslatma o'rnatish
     try:
-        schedule_habit(uid, new_habit["id"], habit_name, habit_time)
+        schedule_habit(uid, new_habit)
     except Exception as _e: print(f"[warn] schedule_habit: {_e}")
     # Tabrik
     text = (
@@ -4595,7 +4595,16 @@ def callback_handler(call):
                 h["streak"] = h.get("streak", 0) + 1 if h.get("last_done") == yesterday else 1
                 h["last_done"]  = today
                 h["total_done"] = h.get("total_done", 0) + 1
-                u["points"]     = u.get("points", 0) + 5
+                u["streak"]     = u.get("streak", 0) + 1
+                # Bonus multiplier hisoblash (WebApp api_checkin bilan bir xil)
+                _base = 5
+                if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
+                    _base = 15
+                elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
+                    _base = 10
+                if u.get("xp_booster_days", 0) > 0:
+                    _base = round(_base * 1.1)
+                u["points"]     = u.get("points", 0) + _base
                 # done_log: kunlik bajarilgan kunlarni saqlash
                 done_log = u.get("done_log", {})
                 done_log[today] = True
@@ -4610,7 +4619,7 @@ def callback_handler(call):
                 bot.answer_callback_query(call.id, "✅")
                 try:
                     bot.edit_message_text(
-                        f"{T(uid, 'done_ok', name=h['name'])} *+5 ⭐ ball*\n\n{msg_extra}",
+                        f"{T(uid, 'done_ok', name=h['name'])} *+{_base} ⭐ ball*\n\n{msg_extra}",
                         uid, call.message.message_id, parse_mode="Markdown"
                     )
                 except Exception:
