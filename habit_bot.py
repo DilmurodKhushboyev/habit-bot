@@ -6915,6 +6915,7 @@ try:
                 "member_count": len(members_raw),
                 "members":      members[:5],
                 "is_admin":     g.get("admin_id") == str(uid),
+                "invite_link":  f"https://t.me/Super_habits_bot?start=grp_{g.get('id','')}" if g.get("admin_id") == str(uid) else "",
             })
         return jsonify({"groups": result})
 
