@@ -7115,6 +7115,7 @@ try:
         u = load_user(uid)
         today = today_uz5()
         habits = u.get("habits", [])
+        points_before = u.get("points", 0)
         found_h = None
         for h in habits:
             if h["id"] == hid:
@@ -7228,6 +7229,7 @@ try:
             "repeat_count": found_h.get("repeat_count", 1),
             "today_count": today_count,
             "points":      u.get("points", 0),
+            "earned":      u.get("points", 0) - points_before,
             "all_done":    all_done,
             "done_count":  done_count,
             "total":       total,
@@ -7734,6 +7736,14 @@ try:
             friends.append(fid)
             u["friends"] = friends
             save_user(uid, u)
+        # Ikkinchi tomon: fid ning ro'yxatiga ham uid ni qo'shish
+        f = load_user(fid)
+        if f:
+            f_friends = f.get("friends", [])
+            if uid not in f_friends and len(f_friends) < 50:
+                f_friends.append(uid)
+                f["friends"] = f_friends
+                save_user(fid, f)
         return jsonify({"ok": True})
 
     @api_app.route("/api/friends/<int:uid>/remove/<int:fid>", methods=["DELETE"])
@@ -7745,6 +7755,14 @@ try:
             friends.remove(fid)
             u["friends"] = friends
             save_user(uid, u)
+        # Ikkinchi tomon: fid ning ro'yxatidan ham uid ni o'chirish
+        f = load_user(fid)
+        if f:
+            f_friends = f.get("friends", [])
+            if uid in f_friends:
+                f_friends.remove(uid)
+                f["friends"] = f_friends
+                save_user(fid, f)
         return jsonify({"ok": True})
 
     @api_app.route("/api/challenges/<int:uid>")

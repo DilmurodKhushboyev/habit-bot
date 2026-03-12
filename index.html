@@ -1541,7 +1541,8 @@ async function checkin(hid, cardEl) {
     const tc2 = result.today_count  || 0;
     const isUndo = !isDone && tc2 === 0 && wasFullyDone;
     if (isDone || isUndo) {
-      const diffTxt = isDone ? '+5 ⭐' : '-5 ⭐';
+      const earnedAbs = Math.abs(result.earned ?? (isDone ? 5 : -5));
+      const diffTxt = isDone ? `+${earnedAbs} ⭐` : `-${earnedAbs} ⭐`;
       showTodayToast(isDone ? `✅ Bajarildi! ${diffTxt}` : `↩️ Bekor qilindi ${diffTxt}`);
       playHabitSound(isDone);
     }
@@ -3669,7 +3670,7 @@ async function buyItem(itemId, method) {
     if (!r.ok) { showToast('❌ ' + (r.error || 'Xato'), true); return; }
     // Ma'lumotlarni yangilash
     if (_shopData) {
-      _shopData.points = r.points_left;
+      _shopData.points = r.points;
       const item = _shopData.items.find(i => i.id === itemId);
       if (item) { item.owned = r.owned; item.can_buy = item.owned < item.max_own; }
       renderShop(_shopData);
