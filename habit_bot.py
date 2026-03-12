@@ -6851,6 +6851,13 @@ try:
             return jsonify({"ok": False, "error": "Topilmadi"}), 404
         u["habits"] = habits
         save_user(uid, u)
+        # Yangi vaqt bilan qayta rejalashtirish
+        edited_h = next((h for h in habits if h.get("id") == hid), None)
+        if edited_h:
+            try:
+                schedule_habit(uid, edited_h)
+            except Exception as _e:
+                print(f"[warn] schedule_habit edit: {_e}")
         return jsonify({"ok": True})
 
     @api_app.route("/api/habits/<int:uid>/<hid>", methods=["DELETE"])
@@ -6863,6 +6870,10 @@ try:
             return jsonify({"ok": False, "error": "Topilmadi"}), 404
         u["habits"] = new_habits
         save_user(uid, u)
+        try:
+            unschedule_habit_today(uid, hid)
+        except Exception as _e:
+            print(f"[warn] unschedule_habit_today delete: {_e}")
         return jsonify({"ok": True})
 
     @api_app.route("/api/groups/<int:uid>", methods=["GET", "POST"])
@@ -7694,6 +7705,13 @@ try:
                 break
         u["habits"] = habits
         save_user(uid, u)
+        # Yangi vaqt bilan qayta rejalashtirish
+        updated_h = next((h for h in habits if h.get("id") == hid), None)
+        if updated_h:
+            try:
+                schedule_habit(uid, updated_h)
+            except Exception as _e:
+                print(f"[warn] schedule_habit reminder: {_e}")
         return jsonify({"ok": True})
 
     @api_app.route("/api/profile/<int:uid>", methods=["PUT"])
