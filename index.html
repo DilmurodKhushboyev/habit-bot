@@ -2933,7 +2933,7 @@ function renderProfile(d) {
 
       <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-top:14px">
         <div class="stat-box"><div class="stat-val">${d.points || 0}</div><div class="stat-lbl">${S('profile','ball')}</div></div>
-        <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div class="stat-lbl">${S('profile','streak')}</div><div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">${S('profile','rekord')}: ${d.best_streak || 0}</div></div>
+        <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div class="stat-lbl">${S('profile','streak')}</div><div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">${S('profile','rekord')}: ${d.best_streak || 0}${d.best_streak_date ? '<span style="font-weight:400;color:var(--sub)"> (' + d.best_streak_date + ')</span>' : ''}</div></div>
         <div class="stat-box"><div class="stat-val">${d.total_done_all || 0}</div><div class="stat-lbl" style="font-size:8px">${S('profile','done')}</div></div>
       </div>
 

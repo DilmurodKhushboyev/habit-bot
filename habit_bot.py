@@ -4614,6 +4614,7 @@ def callback_handler(call):
                     u["streak_last_date"] = today
                     if u["streak"] > u.get("best_streak", 0):
                         u["best_streak"] = u["streak"]
+                        u["best_streak_date"] = today
                 # Bonus multiplier hisoblash (WebApp api_checkin bilan bir xil)
                 _base = 5
                 if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
@@ -7028,6 +7029,7 @@ try:
             "total_users":      len(users),
             "joined_at":        u.get("joined_at",""),
             "best_streak":      best_streak,
+            "best_streak_date": u.get("best_streak_date", ""),
             "total_done_all":   total_done_all,
             "habits":           habits,
             "xp_booster_days":  u.get("xp_booster_days", 0),
@@ -7420,6 +7422,7 @@ try:
                                 u["streak_last_date"] = today
                                 if u["streak"] > u.get("best_streak", 0):
                                     u["best_streak"] = u["streak"]
+                                    u["best_streak_date"] = today
                             _base = 5
                             if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
                                 _base = 15
@@ -7463,6 +7466,7 @@ try:
                             u["streak_last_date"] = today
                             if u["streak"] > u.get("best_streak", 0):
                                 u["best_streak"] = u["streak"]
+                                u["best_streak_date"] = today
                         is_done = True
                     today_count = 1 if is_done else 0
                 break
