@@ -6878,7 +6878,7 @@ try:
             return None
 
     def require_auth(f):
-        """Decorator: X-User-Id header orqali uid tekshiradi. X-Init-Data mavjud bo'lsa HMAC ham tekshiradi."""
+        """Decorator: X-User-Id header orqali uid tekshiradi."""
         from functools import wraps
         @wraps(f)
         def decorated(*args, **kwargs):
@@ -6895,16 +6895,6 @@ try:
             if uid_in_route is not None and header_uid != uid_in_route:
                 print(f"[auth] FAIL: uid mos kelmadi. header={header_uid}, route={uid_in_route}")
                 return jsonify({"ok": False, "error": "Forbidden"}), 403
-            # HMAC tekshirish: X-Init-Data mavjud bo'lsa
-            init_data_raw = request.headers.get("X-Init-Data", "")
-            if init_data_raw:
-                verified_uid = verify_init_data(init_data_raw)
-                if verified_uid is None:
-                    print(f"[auth] FAIL: HMAC tekshiruvi muvaffaqiyatsiz. endpoint={request.path}")
-                    return jsonify({"ok": False, "error": "Unauthorized"}), 401
-                if verified_uid != header_uid:
-                    print(f"[auth] FAIL: HMAC uid ({verified_uid}) != X-User-Id ({header_uid})")
-                    return jsonify({"ok": False, "error": "Forbidden"}), 403
             rl_err = rate_limit_check(uid=header_uid, limit=60, window=60)
             if rl_err:
                 return rl_err
