@@ -6929,10 +6929,9 @@ try:
         period  = request.args.get("period", "month")  # month | week | all
         uid_arg = request.args.get("uid", "0")
 
-        today_dt    = _tz_today()
-        today_str   = today_dt.strftime("%Y-%m-%d")
-        yest_str_r  = (today_dt - timedelta(days=1)).strftime("%Y-%m-%d")
-        days        = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
+        today_dt  = _tz_today()
+        today_str = today_dt.strftime("%Y-%m-%d")
+        days      = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
         day_lbls  = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
 
         all_users = load_all_users()
@@ -6957,7 +6956,7 @@ try:
                 "uid":          uid,
                 "name":         udata.get("name", "?"),
                 "points":       udata.get("points", 0),
-                "streak":       udata.get("streak", 0) if udata.get("streak_last_date", "") in (today_str, yest_str_r) else 0,
+                "streak":       udata.get("streak", 0),
                 "score":        score,
                 "photo_url":    udata.get("photo_url", ""),
                 "done_log":     done_log,
@@ -7020,14 +7019,10 @@ try:
         total_done_all = sum(h.get("total_done", 0) for h in u.get("habits", []))
 
         today_str = _tz_today().strftime("%Y-%m-%d")
-        from datetime import timezone as _tz2, timedelta as _td2
-        _yesterday_str = (datetime.now(timezone(_td2(hours=5))) - _td2(days=1)).strftime("%Y-%m-%d")
-        _sld = u.get("streak_last_date", "")
-        _active_streak = u.get("streak", 0) if _sld in (today_str, _yesterday_str) else 0
         return jsonify({
             "name":             u.get("name","?"),
             "points":           u.get("points",0),
-            "streak":           _active_streak,
+            "streak":           u.get("streak",0),
             "jon":              u.get("jon",100),
             "is_vip":           u.get("is_vip",False),
             "rank":             rank,
@@ -7378,11 +7373,6 @@ try:
         total = len(habits)
         percent = round(done_count / total * 100) if total else 0
         jon_pct = min(100, max(0, u.get("jon", 100)))
-        from datetime import timezone as _tz3, timedelta as _td3
-        _today_s2    = today
-        _yest_s2     = (datetime.now(timezone(_td3(hours=5))) - _td3(days=1)).strftime("%Y-%m-%d")
-        _sld2        = u.get("streak_last_date", "")
-        _active_str2 = u.get("streak", 0) if _sld2 in (_today_s2, _yest_s2) else 0
         return jsonify({
             "habits":     result,
             "today":      today,
@@ -7391,7 +7381,7 @@ try:
             "percent":    percent,
             "jon":        jon_pct,
             "points":     u.get("points", 0),
-            "streak":     _active_str2,
+            "streak":     u.get("streak", 0),
             "daily_target": u.get("daily_target", 1),
         })
 
