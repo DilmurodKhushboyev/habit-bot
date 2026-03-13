@@ -1142,7 +1142,7 @@ body {
 </div>
 
 <!-- GURUHLAR (Shop uchun saqlanadi, guruh/do'st Statistika ichida) -->
-<div class="page" id="page-groups" style="display:none!important"></div>
+<div class="page" id="page-groups"></div>
 
 <!-- CHALLENGE MODAL -->
 <div id="challenge-modal" class="modal-overlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);align-items:flex-end;justify-content:center">
@@ -3603,10 +3603,18 @@ function renderGroups(d) {
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgLink" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M10 14a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="url(#svgLink)" stroke-width="2" stroke-linecap="round"/><path d="M14 10a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="url(#svgLink)" stroke-width="2" stroke-linecap="round"/></svg>Invite link nusxalash
           </button>` : ''}
         </div>
-        <div style="margin-top:8px;border-top:1px solid var(--bg);padding-top:8px;text-align:center">
+        <div style="margin-top:8px;border-top:1px solid var(--bg);padding-top:8px;display:flex;gap:8px;align-items:center">
+          <button onclick="event.stopPropagation();groupCheckin('${g.id}', this)" type="button"
+            id="gcheckin-${g.id}"
+            style="flex:1;padding:10px;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;
+              ${g.done_today_me
+                ? 'background:var(--bg);color:var(--green);box-shadow:var(--sh-in)'
+                : 'background:linear-gradient(135deg,#4CAF7D,#2D8A5E);color:#fff'}">
+            ${g.done_today_me ? '✅ Bajarildi' : '☑️ Bajarish'}
+          </button>
           <button onclick="event.stopPropagation();openGroupHabitAdd('${g.id}')" type="button"
-            style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;padding:2px 8px">
-            ＋ Odat qo'shish
+            style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;padding:2px 8px;white-space:nowrap">
+            ＋ Odat
           </button>
         </div>
       </div>`;
@@ -3712,6 +3720,40 @@ function showGroupToast(msg, err=false) {
   if (!t) return;
   t.textContent = msg; t.className = 'toast show' + (err?' err':'');
   setTimeout(() => t.className = 'toast', 2500);
+}
+
+async function groupCheckin(gid, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+  try {
+    const res = await fetch(`${API}/groups/${userId}/${gid}/checkin`, {
+      method: 'POST',
+      headers: { 'X-Init-Data': initData, 'X-User-Id': userId }
+    });
+    const r = await res.json();
+    if (!r.ok) throw new Error(r.error);
+    if (r.done) {
+      if (btn) {
+        btn.style.background = 'var(--bg)';
+        btn.style.color = 'var(--green)';
+        btn.style.boxShadow = 'var(--sh-in)';
+        btn.textContent = '✅ Bajarildi';
+      }
+      showGroupToast('✅ +5 ball! 🔥 ' + (r.streak || 1) + ' kun streak' + (r.all_done ? ' · Guruh ham bajarildi! 🎉' : ''));
+    } else {
+      if (btn) {
+        btn.style.background = 'linear-gradient(135deg,#4CAF7D,#2D8A5E)';
+        btn.style.color = '#fff';
+        btn.style.boxShadow = '';
+        btn.textContent = '☑️ Bajarish';
+      }
+      showGroupToast('↩️ Bekor qilindi');
+    }
+  } catch(e) {
+    showGroupToast('❌ ' + (e.message || 'Xato'), true);
+    if (btn) { btn.disabled = false; btn.textContent = '☑️ Bajarish'; }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 // ── STATISTIKA SUB-TAB ──

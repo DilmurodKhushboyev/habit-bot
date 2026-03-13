@@ -7030,6 +7030,7 @@ try:
         except Exception:
             all_groups = []
         result = []
+        today_grp = today_uz5()
         for g in all_groups:
             members_raw = g.get("members", [])
             members = []
@@ -7037,6 +7038,10 @@ try:
                 mu = load_user(int(mid))
                 members.append({"name": mu.get("name","?"), "points": mu.get("points",0)})
             members.sort(key=lambda x: x["points"], reverse=True)
+            # done_today_me: foydalanuvchi bugun bajardimi?
+            done_today = g.get("done_today", {}) if g.get("done_date") == today_grp else {}
+            uid_done = done_today.get(str(uid), {})
+            done_today_me = bool(uid_done) if isinstance(uid_done, bool) else (True in uid_done.values() if isinstance(uid_done, dict) else False)
             result.append({
                 "gid":          g.get("id", str(g.get("_id", ""))),
                 "name":         g.get("name","Guruh"),
@@ -7046,8 +7051,81 @@ try:
                 "streak":       g.get("streak", 0),
                 "is_admin":     g.get("admin_id") == str(uid),
                 "invite_link":  f"https://t.me/Super_habits_bot?start=grp_{g.get('id','')}" if g.get("admin_id") == str(uid) else "",
+                "done_today_me": done_today_me,
             })
         return jsonify({"groups": result})
+
+    @api_app.route("/api/groups/<int:uid>/<gid>/checkin", methods=["POST"])
+    @require_auth
+    def api_groups_checkin(uid, gid):
+        try:
+            g = mongo_db["groups"].find_one({"id": gid})
+        except Exception:
+            return jsonify({"ok": False, "error": "Guruh topilmadi"})
+        if not g:
+            return jsonify({"ok": False, "error": "Guruh topilmadi"})
+        members = g.get("members", [])
+        if str(uid) not in [str(m) for m in members]:
+            return jsonify({"ok": False, "error": "Siz bu guruh a'zosi emassiz"})
+        today = today_uz5()
+        if g.get("done_date") != today:
+            g["done_today"] = {}
+            g["done_date"]  = today
+        done_today = g.get("done_today", {})
+        uid_str = str(uid)
+        # Toggle: allaqachon bajarilgan bo'lsa — bekor qilish
+        uid_done = done_today.get(uid_str, {})
+        already_done = bool(uid_done) if isinstance(uid_done, bool) else (True in uid_done.values() if isinstance(uid_done, dict) else False)
+        u = load_user(uid)
+        if already_done:
+            done_today[uid_str] = False
+            g["done_today"] = done_today
+            # member_done_log dan bugungi yozuvni olib tashlash
+            done_log = g.get("member_done_log", {})
+            if uid_str in done_log:
+                done_log[uid_str].pop(today, None)
+            g["member_done_log"] = done_log
+            mongo_db["groups"].replace_one({"id": gid}, g)
+            u["points"] = max(0, u.get("points", 0) - 5)
+            save_user(uid, u)
+            return jsonify({"ok": True, "done": False, "points": u.get("points", 0)})
+        # Bajarildi
+        done_today[uid_str] = {"main": True}
+        g["done_today"] = done_today
+        done_count = sum(1 for v in done_today.values() if (v is True or (isinstance(v, dict) and True in v.values())))
+        all_done = done_count == len(members)
+        if all_done and g.get("streak_date") != today:
+            g["streak"]      = g.get("streak", 0) + 1
+            g["streak_date"] = today
+        # member_done_log
+        done_log = g.get("member_done_log", {})
+        if uid_str not in done_log:
+            done_log[uid_str] = {}
+        already_logged_today = done_log[uid_str].get(today, False)
+        done_log[uid_str][today] = True
+        g["member_done_log"] = done_log
+        # member_streaks
+        if not already_logged_today:
+            from datetime import timezone, timedelta as _td
+            _tz = timezone(_td(hours=5))
+            yesterday_s = (datetime.now(_tz) - _td(days=1)).strftime("%Y-%m-%d")
+            m_streaks = g.get("member_streaks", {})
+            if done_log[uid_str].get(yesterday_s):
+                m_streaks[uid_str] = m_streaks.get(uid_str, 0) + 1
+            else:
+                m_streaks[uid_str] = 1
+            g["member_streaks"] = m_streaks
+        mongo_db["groups"].replace_one({"id": gid}, g)
+        u["points"] = u.get("points", 0) + 5
+        save_user(uid, u)
+        m_streak_val = g.get("member_streaks", {}).get(uid_str, 1)
+        return jsonify({
+            "ok":       True,
+            "done":     True,
+            "points":   u.get("points", 0),
+            "streak":   m_streak_val,
+            "all_done": all_done,
+        })
 
     @api_app.route("/api/groups/<int:uid>/<gid>", methods=["DELETE"])
     @require_auth
