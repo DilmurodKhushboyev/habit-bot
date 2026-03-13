@@ -6878,7 +6878,7 @@ try:
             return None
 
     def require_auth(f):
-        """Decorator: X-User-Id header orqali uid tekshiradi."""
+        """Decorator: X-User-Id header orqali uid tekshiradi. X-Init-Data mavjud bo'lsa HMAC ham tekshiradi."""
         from functools import wraps
         @wraps(f)
         def decorated(*args, **kwargs):
@@ -6895,6 +6895,16 @@ try:
             if uid_in_route is not None and header_uid != uid_in_route:
                 print(f"[auth] FAIL: uid mos kelmadi. header={header_uid}, route={uid_in_route}")
                 return jsonify({"ok": False, "error": "Forbidden"}), 403
+            # HMAC tekshirish: X-Init-Data mavjud bo'lsa
+            init_data_raw = request.headers.get("X-Init-Data", "")
+            if init_data_raw:
+                verified_uid = verify_init_data(init_data_raw)
+                if verified_uid is None:
+                    print(f"[auth] FAIL: HMAC tekshiruvi muvaffaqiyatsiz. endpoint={request.path}")
+                    return jsonify({"ok": False, "error": "Unauthorized"}), 401
+                if verified_uid != header_uid:
+                    print(f"[auth] FAIL: HMAC uid ({verified_uid}) != X-User-Id ({header_uid})")
+                    return jsonify({"ok": False, "error": "Forbidden"}), 403
             rl_err = rate_limit_check(uid=header_uid, limit=60, window=60)
             if rl_err:
                 return rl_err
@@ -6929,9 +6939,10 @@ try:
         period  = request.args.get("period", "month")  # month | week | all
         uid_arg = request.args.get("uid", "0")
 
-        today_dt  = _tz_today()
-        today_str = today_dt.strftime("%Y-%m-%d")
-        days      = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
+        today_dt    = _tz_today()
+        today_str   = today_dt.strftime("%Y-%m-%d")
+        yest_str_r  = (today_dt - timedelta(days=1)).strftime("%Y-%m-%d")
+        days        = [(today_dt - timedelta(days=6-i)).strftime("%Y-%m-%d") for i in range(7)]
         day_lbls  = [(today_dt - timedelta(days=6-i)).strftime("%d") for i in range(7)]
 
         all_users = load_all_users()
@@ -6956,7 +6967,7 @@ try:
                 "uid":          uid,
                 "name":         udata.get("name", "?"),
                 "points":       udata.get("points", 0),
-                "streak":       udata.get("streak", 0),
+                "streak":       udata.get("streak", 0) if udata.get("streak_last_date", "") in (today_str, yest_str_r) else 0,
                 "score":        score,
                 "photo_url":    udata.get("photo_url", ""),
                 "done_log":     done_log,
@@ -7019,10 +7030,14 @@ try:
         total_done_all = sum(h.get("total_done", 0) for h in u.get("habits", []))
 
         today_str = _tz_today().strftime("%Y-%m-%d")
+        from datetime import timezone as _tz2, timedelta as _td2
+        _yesterday_str = (datetime.now(_tz2(_td2(hours=5))) - _td2(days=1)).strftime("%Y-%m-%d")
+        _sld = u.get("streak_last_date", "")
+        _active_streak = u.get("streak", 0) if _sld in (today_str, _yesterday_str) else 0
         return jsonify({
             "name":             u.get("name","?"),
             "points":           u.get("points",0),
-            "streak":           u.get("streak",0),
+            "streak":           _active_streak,
             "jon":              u.get("jon",100),
             "is_vip":           u.get("is_vip",False),
             "rank":             rank,
@@ -7373,6 +7388,11 @@ try:
         total = len(habits)
         percent = round(done_count / total * 100) if total else 0
         jon_pct = min(100, max(0, u.get("jon", 100)))
+        from datetime import timezone as _tz3, timedelta as _td3
+        _today_s2    = today
+        _yest_s2     = (datetime.now(_tz3(_td3(hours=5))) - _td3(days=1)).strftime("%Y-%m-%d")
+        _sld2        = u.get("streak_last_date", "")
+        _active_str2 = u.get("streak", 0) if _sld2 in (_today_s2, _yest_s2) else 0
         return jsonify({
             "habits":     result,
             "today":      today,
@@ -7381,7 +7401,7 @@ try:
             "percent":    percent,
             "jon":        jon_pct,
             "points":     u.get("points", 0),
-            "streak":     u.get("streak", 0),
+            "streak":     _active_str2,
             "daily_target": u.get("daily_target", 1),
         })
 
