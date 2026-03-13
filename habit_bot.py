@@ -6878,7 +6878,7 @@ try:
             return None
 
     def require_auth(f):
-        """Decorator: X-User-Id header orqali uid tekshiradi. X-Init-Data mavjud bo'lsa HMAC ham tekshiradi."""
+        """Decorator: X-User-Id header orqali uid tekshiradi."""
         from functools import wraps
         @wraps(f)
         def decorated(*args, **kwargs):
@@ -6895,16 +6895,6 @@ try:
             if uid_in_route is not None and header_uid != uid_in_route:
                 print(f"[auth] FAIL: uid mos kelmadi. header={header_uid}, route={uid_in_route}")
                 return jsonify({"ok": False, "error": "Forbidden"}), 403
-            # HMAC tekshirish: X-Init-Data mavjud bo'lsa
-            init_data_raw = request.headers.get("X-Init-Data", "")
-            if init_data_raw:
-                verified_uid = verify_init_data(init_data_raw)
-                if verified_uid is None:
-                    print(f"[auth] FAIL: HMAC tekshiruvi muvaffaqiyatsiz. endpoint={request.path}")
-                    return jsonify({"ok": False, "error": "Unauthorized"}), 401
-                if verified_uid != header_uid:
-                    print(f"[auth] FAIL: HMAC uid ({verified_uid}) != X-User-Id ({header_uid})")
-                    return jsonify({"ok": False, "error": "Forbidden"}), 403
             rl_err = rate_limit_check(uid=header_uid, limit=60, window=60)
             if rl_err:
                 return rl_err
@@ -7031,7 +7021,7 @@ try:
 
         today_str = _tz_today().strftime("%Y-%m-%d")
         from datetime import timezone as _tz2, timedelta as _td2
-        _yesterday_str = (datetime.now(_tz2(_td2(hours=5))) - _td2(days=1)).strftime("%Y-%m-%d")
+        _yesterday_str = (datetime.now(timezone(_td2(hours=5))) - _td2(days=1)).strftime("%Y-%m-%d")
         _sld = u.get("streak_last_date", "")
         _active_streak = u.get("streak", 0) if _sld in (today_str, _yesterday_str) else 0
         return jsonify({
@@ -7390,7 +7380,7 @@ try:
         jon_pct = min(100, max(0, u.get("jon", 100)))
         from datetime import timezone as _tz3, timedelta as _td3
         _today_s2    = today
-        _yest_s2     = (datetime.now(_tz3(_td3(hours=5))) - _td3(days=1)).strftime("%Y-%m-%d")
+        _yest_s2     = (datetime.now(timezone(_td3(hours=5))) - _td3(days=1)).strftime("%Y-%m-%d")
         _sld2        = u.get("streak_last_date", "")
         _active_str2 = u.get("streak", 0) if _sld2 in (_today_s2, _yest_s2) else 0
         return jsonify({
