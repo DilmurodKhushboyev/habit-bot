@@ -2500,11 +2500,12 @@ function renderStats(d) {
               </linearGradient>
             </defs>
             ${(() => {
+              if (!days_30 || days_30.length < 2) return '';
+              const span = days_30.length - 1;
               const pts = days_30.map((day, i) => {
-                const dayData = (d.monthly || d.weekly);
                 const match = (d.monthly || []).find(m => m.date === day);
                 const pct = match && match.total ? Math.round(match.count / match.total * 100) : (heatmap[day] ? 70 : 0);
-                const x = Math.round(i / (days_30.length - 1) * 300);
+                const x = Math.round(i / span * 300);
                 const y = Math.round((1 - pct / 100) * 44) + 3;
                 return { x, y, pct };
               });
