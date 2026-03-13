@@ -29,9 +29,10 @@ from pymongo import MongoClient
 # ============================================================
 #  SOZLAMALAR
 # ============================================================
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "SHU_YERGA_TOKEN_QOYING")
-ADMIN_ID   = int(os.environ.get("ADMIN_ID", 5071908808))
-MONGO_URI  = os.environ.get("MONGO_URI", "mongodb+srv://habitbot:Habit2026@cluster0.i0jux9m.mongodb.net/?appName=Cluster0")
+BOT_TOKEN        = os.environ.get("BOT_TOKEN", "SHU_YERGA_TOKEN_QOYING")
+ADMIN_ID         = int(os.environ.get("ADMIN_ID", 5071908808))
+MONGO_URI        = os.environ.get("MONGO_URI", "mongodb+srv://habitbot:Habit2026@cluster0.i0jux9m.mongodb.net/?appName=Cluster0")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 # ============================================================
 #  MONGODB ULANISH
@@ -5770,6 +5771,11 @@ def _save_new_group(uid, u):
     if not name or not habit_name:
         send_menu2(uid)
         return
+    admin_groups = [g for g in u.get("groups", []) if str(g.get("admin_id", "")) == str(uid)]
+    if len(admin_groups) >= 3:
+        bot.send_message(uid, "⚠️ Siz admin sifatida 3 tadan ko'p guruh yarata olmaysiz.", parse_mode="Markdown")
+        send_menu2(uid)
+        return
     g_id = str(uuid.uuid4())[:8]
     group = {
         "id":          g_id,
@@ -7083,6 +7089,8 @@ try:
         if time_ != "vaqtsiz" and not _re.match(r"^\d{2}:\d{2}$", time_):
             time_ = "vaqtsiz"
         u = load_user(uid)
+        if len(u.get("habits", [])) >= 15:
+            return jsonify({"ok": False, "error": "Odatlar soni 15 tadan oshmasin"}), 400
         new_habit = {
             "id":           str(uuid.uuid4())[:8],
             "name":         name,
@@ -7178,6 +7186,10 @@ try:
             habit_time = (data.get("habit_time") or "vaqtsiz").strip()
             if not name or not habit_name:
                 return jsonify({"ok": False, "error": "Ism va odat nomi kerak"})
+            u = load_user(uid)
+            admin_groups = [g for g in u.get("groups", []) if str(g.get("admin_id", "")) == str(uid)]
+            if len(admin_groups) >= 3:
+                return jsonify({"ok": False, "error": "Siz admin sifatida 3 tadan ko'p guruh yarata olmaysiz"})
             g_id = str(_uuid.uuid4())[:8]
             group = {
                 "id":         g_id,
@@ -7190,7 +7202,6 @@ try:
                 "created_at": today_uz5(),
             }
             save_group(g_id, group)
-            u = load_user(uid)
             groups = u.get("groups", [])
             groups.append({"id": g_id, "name": name, "admin_id": str(uid)})
             u["groups"] = groups
@@ -8084,13 +8095,32 @@ try:
         data        = request.get_json(force=True, silent=True) or {}
         receiver_id = data.get("receiver_id")
         habit_name  = (data.get("habit_name") or "").strip()
-        days        = int(data.get("days") or 7)
-        bet         = int(data.get("bet") or 50)
+        try:
+            days = int(data.get("days") or 7)
+        except (ValueError, TypeError):
+            days = 7
+        try:
+            bet = int(data.get("bet") or 50)
+        except (ValueError, TypeError):
+            bet = 50
+        # Validatsiya
         if not habit_name:
             return jsonify({"ok": False, "error": "Odat nomi kerak"})
+        if len(habit_name) > 100:
+            return jsonify({"ok": False, "error": "Odat nomi 100 belgidan oshmasin"})
         if not receiver_id:
             return jsonify({"ok": False, "error": "Qabul qiluvchi ID kerak"})
-        if not user_exists(int(receiver_id)):
+        try:
+            receiver_id = int(receiver_id)
+        except (ValueError, TypeError):
+            return jsonify({"ok": False, "error": "Noto'g'ri ID"})
+        if receiver_id == uid:
+            return jsonify({"ok": False, "error": "O'zingizga challenge yubora olmaysiz"})
+        if days < 1 or days > 30:
+            return jsonify({"ok": False, "error": "Muddat 1 dan 30 kungacha bo'lishi kerak"})
+        if bet < 10 or bet > 1000:
+            return jsonify({"ok": False, "error": "Garov 10 dan 1000 ballgacha bo'lishi kerak"})
+        if not user_exists(receiver_id):
             return jsonify({"ok": False, "error": "Foydalanuvchi topilmadi"})
         sender = load_user(uid)
         if sender.get("points", 0) < bet:
@@ -8211,6 +8241,88 @@ try:
         except Exception:
             pass
         return jsonify({"ok": True})
+
+    @api_app.route("/api/ai/advice/<int:uid>", methods=["POST"])
+    @require_auth
+    def api_ai_advice(uid):
+        """Foydalanuvchi statistikasi asosida AI maslahat qaytaradi. Kuniga 3 marta limit."""
+        if not ANTHROPIC_API_KEY:
+            return jsonify({"ok": False, "error": "AI xizmati sozlanmagan"}), 503
+        u = load_user(uid)
+        today = today_uz5()
+        # Kunlik limit: 3 marta
+        ai_log = u.get("ai_advice_log", {})
+        used_today = ai_log.get(today, 0)
+        if used_today >= 3:
+            return jsonify({"ok": False, "error": "Bugun 3 ta AI maslahat oldingiz. Ertaga qayta urinib ko'ring."}), 429
+        # Foydalanuvchi ma'lumotlari
+        habits   = u.get("habits", [])
+        lang     = u.get("lang", "uz")
+        streak   = u.get("streak", 0)
+        points   = u.get("points", 0)
+        best_str = _calc_best_streak(u)
+        history  = u.get("history", {})
+        from datetime import datetime as _dt2, timedelta as _td2
+        now_uz  = _dt2.now() + _td2(hours=5)
+        # Oxirgi 7 kunlik faollik foizi
+        weekly_pct = []
+        for i in range(6, -1, -1):
+            d = (now_uz - _td2(days=i)).strftime("%Y-%m-%d")
+            day_data = history.get(d, {})
+            done  = day_data.get("done", 0)
+            total = day_data.get("total", 0) or len(habits) or 1
+            weekly_pct.append(round(done / total * 100))
+        avg_7 = round(sum(weekly_pct) / len(weekly_pct)) if weekly_pct else 0
+        habit_names = [h.get("name", "") for h in habits[:10]]
+        # Til bo'yicha prompt
+        lang_prompts = {
+            "uz": "O'zbek tilida javob ber.",
+            "ru": "Отвечай на русском языке.",
+            "en": "Reply in English.",
+        }
+        lang_instr = lang_prompts.get(lang, lang_prompts["uz"])
+        _no_habits = "yo'q"
+        prompt = (
+            f"Sen odatlarni shakllantirish bo'yicha motivatsion murabbiysan. {lang_instr}\n\n"
+            f"Foydalanuvchi ma'lumotlari:\n"
+            f"- Odatlar: {', '.join(habit_names) if habit_names else _no_habits}\n"
+            f"- Joriy streak: {streak} kun\n"
+            f"- Eng uzun streak: {best_str} kun\n"
+            f"- Ballar: {points}\n"
+            f"- Oxirgi 7 kunlik o'rtacha bajarilish: {avg_7}%\n"
+            f"- Haftalik natijalar (%): {weekly_pct}\n\n"
+            f"Ushbu foydalanuvchiga qisqa (3-4 gap), aniq va iliq maslahat ber. "
+            f"Zaif tomonlarini ayt, kuchli tomonlarini maqta, va bugun nima qilish kerakligini tavsiya et. "
+            f"Emoji ishlatma, faqat matn."
+        )
+        try:
+            import urllib.request, json as _json
+            req_body = _json.dumps({
+                "model": "claude-haiku-4-5-20251001",
+                "max_tokens": 300,
+                "messages": [{"role": "user", "content": prompt}]
+            }).encode("utf-8")
+            req = urllib.request.Request(
+                "https://api.anthropic.com/v1/messages",
+                data=req_body,
+                headers={
+                    "Content-Type":      "application/json",
+                    "x-api-key":         ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                },
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                result = _json.loads(resp.read().decode("utf-8"))
+            advice = result["content"][0]["text"].strip()
+        except Exception as e:
+            print(f"[ai_advice] xato: {e}")
+            return jsonify({"ok": False, "error": "AI xizmatiga ulanib bo'lmadi"}), 502
+        # Limitni yangilash
+        ai_log[today] = used_today + 1
+        u["ai_advice_log"] = ai_log
+        save_user(uid, u)
+        return jsonify({"ok": True, "advice": advice, "used": used_today + 1, "limit": 3})
 
     @api_app.route("/api/reminder/<int:uid>/<hid>", methods=["PUT"])
     @require_auth
