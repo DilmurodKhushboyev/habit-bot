@@ -5142,7 +5142,6 @@ def daily_reset():
         habits_list = udata.get("habits", [])
         n = len(habits_list)
         if n > 0:
-            today_str = (datetime.now(tz_uz)).strftime("%Y-%m-%d")
             d = 0
             for h in habits_list:
                 # Har ikkala tur uchun ham last_done == yesterday tekshiramiz
@@ -5187,7 +5186,6 @@ def daily_reset():
                 pass
     # ── Guruhlar: daily reset ──
     try:
-        today_str = (datetime.now(tz_uz)).strftime("%Y-%m-%d")
         for gdoc in groups_col.find({}):
             g_id = gdoc["_id"]
             g    = {k: v for k, v in gdoc.items() if k != "_id"}
