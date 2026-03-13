@@ -821,6 +821,19 @@ MOTIVATSIYA = {
 # ============================================================
 bot = telebot.TeleBot(BOT_TOKEN)
 
+# Bot username — bir marta yuklanadi, keyingi murojaatlarda qayta so'ralmasin
+_BOT_USERNAME = None
+
+def get_bot_username():
+    """Bot username'ini qaytaradi — birinchi chaqiruvda yuklanadi, keyin cache'dan."""
+    global _BOT_USERNAME
+    if not _BOT_USERNAME:
+        try:
+            _BOT_USERNAME = bot.get_me().username
+        except Exception:
+            _BOT_USERNAME = "Super_habits_bot"
+    return _BOT_USERNAME
+
 def send_message_colored(chat_id, text, reply_markup_dict, parse_mode="Markdown"):
     """Bot API 9.4 style (rangli tugmalar) uchun to'g'ridan HTTP so'rov"""
     url  = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -3958,8 +3971,7 @@ def callback_handler(call):
         g = load_group(g_id)
         if not g:
             return
-        bot_info = bot.get_me()
-        inv_link = f"https://t.me/{bot_info.username}?start=grp_{g_id}"
+        inv_link = f"https://t.me/{get_bot_username()}?start=grp_{g_id}"
         sent = bot.send_message(uid,
             f"🔗 *{g['name']} — Invite link:*\n\n`{inv_link}`\n\n"
             f"_Ushbu linkni do'stlaringizga yuboring!_",
@@ -5177,9 +5189,10 @@ def daily_reset():
         if changed:
             try:
                 update_data = {
-                    "habits":        udata["habits"],
-                    "jon":           udata.get("jon", 100),
+                    "habits":         udata["habits"],
+                    "jon":            udata.get("jon", 100),
                     "pending_shield": udata.get("pending_shield", {}),
+                    "streak_shields": udata.get("streak_shields", 0),
                 }
                 mongo_col.update_one({"_id": uid}, {"$set": update_data})
             except Exception:
@@ -5777,8 +5790,7 @@ def _save_new_group(uid, u):
     u["state"] = None
     save_user(uid, u)
     # Muvaffaqiyat xabari
-    bot_info = bot.get_me()
-    inv_link = f"https://t.me/{bot_info.username}?start=grp_{g_id}"
+    inv_link = f"https://t.me/{get_bot_username()}?start=grp_{g_id}"
     sent = bot.send_message(
         uid,
         f"✅ *Guruh yaratildi!*\n\n"
@@ -6676,7 +6688,7 @@ def _run_broadcast(admin_uid, bc_chat_id, msg_ids, state):
                 continue
             try:
                 kb_user = InlineKeyboardMarkup()
-                kb_user.add(InlineKeyboardButton("▶️ Start", url="https://t.me/Super_habits_bot?start=bc"))
+                kb_user.add(InlineKeyboardButton("▶️ Start", url=f"https://t.me/{get_bot_username()}?start=bc"))
                 for i_mid, mid in enumerate(msg_ids):
                     # Tugmani faqat oxirgi xabarga biriktirish
                     if i_mid == len(msg_ids) - 1:
@@ -6887,6 +6899,18 @@ try:
         tz_uz = timezone(timedelta(hours=5))
         return datetime.now(tz_uz)
 
+    def _is_done_today(uid_done):
+        """done_today[uid_str] qiymatidan foydalanuvchi bajardimi yoki yo'qligini qaytaradi."""
+        if isinstance(uid_done, bool):
+            return uid_done
+        if isinstance(uid_done, dict):
+            return True in uid_done.values()
+        return False
+
+    def _calc_best_streak(u):
+        """Foydalanuvchining eng uzun streakini qaytaradi (saqlangan yoki joriy habitlardan kattasi)."""
+        return max(u.get("best_streak", 0), max((h.get("streak", 0) for h in u.get("habits", [])), default=0))
+
     @api_app.route("/api/rating")
     def api_rating():
         # Rate limit: 30 so'rov/daqiqa per IP (ochiq endpoint)
@@ -6984,7 +7008,7 @@ try:
             })
 
         # best_streak va total_done_all hisoblash
-        best_streak    = max(u.get("best_streak", 0), max((h.get("streak", 0) for h in u.get("habits", [])), default=0))
+        best_streak    = _calc_best_streak(u)
         total_done_all = sum(h.get("total_done", 0) for h in u.get("habits", []))
 
         today_str = _tz_today().strftime("%Y-%m-%d")
@@ -7016,7 +7040,7 @@ try:
             "lang":             u.get("lang", "uz"),
             "phone":            u.get("phone", ""),
             "ref_count":        len(u.get("referrals", [])),
-            "ref_link":         f"https://t.me/Super_habits_bot?start=ref_{uid}",
+            "ref_link":         f"https://t.me/{get_bot_username()}?start=ref_{uid}",
         })
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
@@ -7171,7 +7195,7 @@ try:
             groups.append({"id": g_id, "name": name, "admin_id": str(uid)})
             u["groups"] = groups
             save_user(uid, u)
-            inv_link = f"https://t.me/Super_habits_bot?start=grp_{g_id}"
+            inv_link = f"https://t.me/{get_bot_username()}?start=grp_{g_id}"
             return jsonify({"ok": True, "gid": g_id, "invite_link": inv_link})
         # GET
         try:
@@ -7190,7 +7214,7 @@ try:
             # done_today_me: foydalanuvchi bugun bajardimi?
             done_today = g.get("done_today", {}) if g.get("done_date") == today_grp else {}
             uid_done = done_today.get(str(uid), {})
-            done_today_me = bool(uid_done) if isinstance(uid_done, bool) else (True in uid_done.values() if isinstance(uid_done, dict) else False)
+            done_today_me = _is_done_today(uid_done)
             result.append({
                 "gid":          g.get("id", str(g.get("_id", ""))),
                 "name":         g.get("name","Guruh"),
@@ -7199,7 +7223,7 @@ try:
                 "members":      members[:5],
                 "streak":       g.get("streak", 0),
                 "is_admin":     g.get("admin_id") == str(uid),
-                "invite_link":  f"https://t.me/Super_habits_bot?start=grp_{g.get('id','')}" if g.get("admin_id") == str(uid) else "",
+                "invite_link":  f"https://t.me/{get_bot_username()}?start=grp_{g.get('id','')}" if g.get("admin_id") == str(uid) else "",
                 "done_today_me": done_today_me,
             })
         return jsonify({"groups": result})
@@ -7224,7 +7248,7 @@ try:
         uid_str = str(uid)
         # Toggle: allaqachon bajarilgan bo'lsa — bekor qilish
         uid_done = done_today.get(uid_str, {})
-        already_done = bool(uid_done) if isinstance(uid_done, bool) else (True in uid_done.values() if isinstance(uid_done, dict) else False)
+        already_done = _is_done_today(uid_done)
         u = load_user(uid)
         if already_done:
             done_today[uid_str] = False
@@ -7459,8 +7483,11 @@ try:
                 done_log.pop(today, None)
                 u["done_log"] = done_log
         # total_done yangilash (achievements uchun)
-        if is_done and found_h and found_h.get("last_done") == today:
-            found_h["total_done"] = found_h.get("total_done", 0) + 1
+        if found_h:
+            if is_done and found_h.get("last_done") == today:
+                found_h["total_done"] = found_h.get("total_done", 0) + 1
+            elif not is_done:
+                found_h["total_done"] = max(0, found_h.get("total_done", 0) - 1)
         # XP booster kunini kamaytirish (kuniga bir marta)
         if u.get("xp_booster_days", 0) > 0:
             last_boost = u.get("xp_booster_last_day", "")
@@ -7625,7 +7652,7 @@ try:
                 "points":        u.get("points", 0),
                 "active_days_30": active_days_30,
                 "total_habits":  total,
-                "best_streak":   max(u.get("best_streak", 0), max((h.get("streak", 0) for h in u.get("habits", [])), default=0)),
+                "best_streak":   _calc_best_streak(u),
             },
             "weekly":      weekly,
             "monthly":     monthly,
@@ -7853,6 +7880,8 @@ try:
         if item_id == "bonus_2x":
             if u.get("points", 0) < 150:
                 return jsonify({"ok": False, "error": "Ball yetarli emas"})
+            if u.get("bonus_2x_active") and u.get("bonus_2x_date") == today_uz5():
+                return jsonify({"ok": False, "error": "Bugun 2x bonus allaqachon aktiv"})
             u["points"] = u.get("points", 0) - 150
             u["bonus_2x_active"] = True
             u["bonus_2x_date"] = today_uz5()
@@ -7861,6 +7890,8 @@ try:
         if item_id == "bonus_3x":
             if u.get("points", 0) < 300:
                 return jsonify({"ok": False, "error": "Ball yetarli emas"})
+            if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today_uz5():
+                return jsonify({"ok": False, "error": "Bugun 3x bonus allaqachon aktiv"})
             u["points"] = u.get("points", 0) - 300
             u["bonus_3x_active"] = True
             u["bonus_3x_date"] = today_uz5()
@@ -7911,14 +7942,15 @@ try:
     @require_auth
     def api_shop_activate(uid):
         data = request.get_json() or {}
-        item_id = data.get("item_id", "")
+        item_id  = data.get("item_id", "")
+        deactive = data.get("deactivate", False)
         u = load_user(uid)
         if item_id.startswith("pet_"):
-            u["active_pet"] = item_id
+            u["active_pet"]   = "" if deactive else item_id
         elif item_id.startswith("badge_"):
-            u["active_badge"] = item_id
+            u["active_badge"] = "" if deactive else item_id
         elif item_id.startswith("car_"):
-            u["active_car"] = item_id
+            u["active_car"]   = "" if deactive else item_id
         save_user(uid, u)
         return jsonify({"ok": True})
 
@@ -7945,8 +7977,7 @@ try:
                     "mutual_streak": min(u.get("streak", 0), fu.get("streak", 0)),
                 })
         # Invite link
-        bot_username = "Super_habits_bot"
-        invite_link = f"https://t.me/{bot_username}?start=ref_{uid}"
+        invite_link = f"https://t.me/{get_bot_username()}?start=ref_{uid}"
         return jsonify({"friends": friends, "invite_link": invite_link})
 
     @api_app.route("/api/friends/<int:uid>/search")
@@ -8127,7 +8158,11 @@ try:
         save_user(from_uid, u_send)
         challenges_col.update_one(
             {"_id": ObjectId(cid)},
-            {"$set": {"status": "active", "accepted_at": today_uz5()}}
+            {"$set": {
+                "status":      "active",
+                "accepted_at": today_uz5(),
+                "expires_at":  (__import__("datetime").date.today() + __import__("datetime").timedelta(days=c.get("days", 7))).isoformat(),
+            }}
         )
         # Yuboruvchiga xabar
         try:

@@ -1141,8 +1141,7 @@ body {
   </div>
 </div>
 
-<!-- GURUHLAR (Shop uchun saqlanadi, guruh/do'st Statistika ichida) -->
-<div class="page" id="page-groups"></div>
+
 
 <!-- CHALLENGE MODAL -->
 <div id="challenge-modal" class="modal-overlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);align-items:flex-end;justify-content:center">
@@ -2945,7 +2944,7 @@ function renderProfile(d) {
         return '<div style="background:var(--bg);border-radius:10px;padding:8px 10px;box-shadow:var(--sh-in);margin-bottom:10px">' + rows + nextTxt + '</div>';
       })()}
       <div style="background:var(--bg);border-radius:10px;padding:8px 12px;box-shadow:var(--sh-in);font-size:11px;color:var(--sub);word-break:break-all;margin-bottom:8px;font-family:'DM Mono',monospace">${d.ref_link || ''}</div>
-      <button onclick="copyRefLink('${d.ref_link || ''}')" type="button"
+      <button id="copy-ref-btn" data-link="${(d.ref_link || '').replace(/"/g, '&quot;')}" type="button"
         style="width:100%;padding:11px;border:none;border-radius:12px;background:linear-gradient(135deg,#4CAF7D,#5B8DEF);color:#fff;font-size:13px;font-weight:700;cursor:pointer">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><rect x="9" y="9" width="13" height="13" rx="2" stroke="#fff" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
         Havolani nusxalash
@@ -3074,6 +3073,12 @@ function renderProfile(d) {
       else if (d.dark_mode === false && d.hasOwnProperty('dark_mode')) { localStorage.removeItem('sh_dark'); document.body.classList.remove('dark'); }
       dtog.checked = darkVal;
       updateDarkToggleVisual(darkVal);
+    }
+    var copyBtn = document.getElementById("copy-ref-btn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", function() {
+        copyRefLink(this.getAttribute("data-link") || "");
+      });
     }
   }, 30);
 }
@@ -3791,7 +3796,7 @@ async function loadFriends() {
   try {
     const [d, ch] = await Promise.all([
       apiFetch(`friends/${userId}`),
-      apiFetch(`challenges/${userId}`).catch(() => ({ received: [] }))
+      apiFetch(`challenges/${userId}`).catch((e) => { console.warn('[challenges] yuklanmadi:', e); return { received: [] }; })
     ]);
     d._received_challenges = ch.received || [];
     renderFriends(d);
@@ -4019,7 +4024,11 @@ function renderShop(d) {
           <div style="font-size:10px;color:var(--sub);margin-top:1px">${qty} ta</div>
         </div>
         ${isActive
-          ? `<div style="font-size:11px;font-weight:700;color:#4CAF7D"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgChkI" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgChkI)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgChkI)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Aktiv</div>`
+          ? `<button onclick="activateItem('${item.id}', true)" type="button"
+              style="padding:6px 12px;border:none;border-radius:10px;font-size:11px;font-weight:700;
+                cursor:pointer;background:#4CAF7D22;color:#4CAF7D">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M7 12l4 4 6-7" stroke="#4CAF7D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Aktiv
+            </button>`
           : canAct
             ? `<button onclick="activateItem('${item.id}')" type="button"
                 style="padding:6px 12px;border:none;border-radius:10px;font-size:11px;font-weight:700;
@@ -4141,12 +4150,12 @@ async function buyItem(itemId, method) {
   } catch(e) { showToast('❌ Tarmoq xatosi', true); }
 }
 
-async function activateItem(itemId) {
+async function activateItem(itemId, deactivate = false) {
   try {
     const res = await fetch(`${API}/shop/${userId}/activate`, {
       method: 'POST',
       headers: {'Content-Type':'application/json','X-Init-Data':initData,'X-User-Id':userId},
-      body: JSON.stringify({ item_id: itemId })
+      body: JSON.stringify({ item_id: itemId, deactivate: deactivate })
     });
     const r = await res.json();
     if (!r.ok) { showToast('❌ ' + (r.error || 'Xato'), true); return; }
@@ -4154,14 +4163,15 @@ async function activateItem(itemId) {
     if (_shopData) {
       const item = _shopData.items.find(i => i.id === itemId);
       if (item) {
-        if (item.cat === 'pet')   _shopData.active_pet   = itemId;
-        if (item.cat === 'badge') _shopData.active_badge = itemId;
-        if (item.cat === 'car')   _shopData.active_car   = itemId;
+        if (item.cat === 'pet')   _shopData.active_pet   = deactivate ? '' : itemId;
+        if (item.cat === 'badge') _shopData.active_badge = deactivate ? '' : itemId;
+        if (item.cat === 'car')   _shopData.active_car   = deactivate ? '' : itemId;
       }
       renderShop(_shopData);
     }
     const toast = document.getElementById('toast-shop');
-    if (toast) { toast.textContent = '✅ Aktivlashtirildi!'; toast.className = 'toast show'; setTimeout(()=>toast.className='toast',2000); }
+    const msg = deactivate ? "❎ O'chirildi!" : '✅ Aktivlashtirildi!';
+    if (toast) { toast.textContent = msg; toast.className = 'toast show'; setTimeout(()=>toast.className='toast',2000); }
   } catch(e) { showToast('❌ Tarmoq xatosi', true); }
 }
 
