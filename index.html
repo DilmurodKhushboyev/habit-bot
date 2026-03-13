@@ -1815,7 +1815,7 @@ async function loadToday() {
 
 function renderToday(d) {
   const { habits, done_count, total, percent, today } = d;
-  const currentJon = d.jon ?? 100;
+  const dailyTarget = d.daily_target || 1;  const currentJon = d.jon ?? 100;
   const dt = new Date(today);
   const _dayNamesMap = {
     uz:['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'],
@@ -1888,7 +1888,7 @@ function renderToday(d) {
           <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">${S('today','life_label')}</div>
         </div>
       </div>
-      <div class="today-sub" id="prog-sub">${done_count} / ${total} ${S('today','progress_sub')}</div>
+      <div class="today-sub" id="prog-sub">${done_count} / ${total} ${S('today','progress_sub')}${dailyTarget > 1 ? ' · <span style="color:var(--green);font-weight:700">Maqsad: ' + Math.min(done_count, dailyTarget) + '/' + dailyTarget + '</span>' : ''}</div>
     </div>
 
     <div style="display:flex;gap:8px;justify-content:center;margin:12px 0 4px">
@@ -2439,7 +2439,7 @@ function renderStats(d) {
     const isToday = w.date === today;
     return `
       <div class="bar-col">
-        <div class="bar-num">${w.count > 0 ? w.count : ''}</div>
+        <div class="bar-num" style="color:${pct > 0 ? color : 'var(--sub)'}">${pct > 0 ? pct + '%' : ''}</div>
         <div class="bar-fill" style="height:${hPx}px;background:${color};${isToday ? 'box-shadow:0 0 0 2px '+color+'44,2px 2px 6px #B8BBCA,-2px -2px 6px #FFFFFF' : ''}"></div>
         <div class="bar-lbl" style="${isToday ? 'color:var(--text);font-weight:700' : ''}">${dayLabels[new Date(w.date).getDay()]}</div>
       </div>`;
@@ -2490,6 +2490,30 @@ function renderStats(d) {
           </div>
         </div>
         <div style="font-size:11px;color:${aColor};margin-top:10px;font-weight:600">${msg}</div>
+        <div style="margin-top:12px">
+          <div style="font-size:10px;color:var(--sub);margin-bottom:5px;font-weight:600;letter-spacing:.5px">30 KUNLIK TENDENSIYA</div>
+          <svg viewBox="0 0 300 50" width="100%" height="50" preserveAspectRatio="none" style="display:block;overflow:visible">
+            <defs>
+              <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="${aColor}" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="${aColor}" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            ${(() => {
+              const pts = days_30.map((day, i) => {
+                const dayData = (d.monthly || d.weekly);
+                const match = (d.monthly || []).find(m => m.date === day);
+                const pct = match && match.total ? Math.round(match.count / match.total * 100) : (heatmap[day] ? 70 : 0);
+                const x = Math.round(i / (days_30.length - 1) * 300);
+                const y = Math.round((1 - pct / 100) * 44) + 3;
+                return { x, y, pct };
+              });
+              const pathD = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p.x + ',' + p.y).join(' ');
+              const areaD = 'M' + pts[0].x + ',50 ' + pts.map(p => 'L' + p.x + ',' + p.y).join(' ') + ' L' + pts[pts.length-1].x + ',50 Z';
+              return '<path d="' + areaD + '" fill="url(#sparkGrad)"/><path d="' + pathD + '" fill="none" stroke="' + aColor + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+            })()}
+          </svg>
+        </div>
       </div>`;
   }
 
@@ -2667,7 +2691,7 @@ function setPeriod(p) {
     const lbl = p === 7 ? ['Ya','Du','Se','Ch','Pa','Ju','Sh'][new Date(w.date).getDay()]
                         : (dayNum % 5 === 0 || i === 0 || i === days.length - 1 ? dayNum : '');
     return '<div class="bar-col">'
-      + '<div class="bar-num">' + (w.count > 0 ? w.count : '') + '</div>'
+      + '<div class="bar-num" style="color:' + (pct > 0 ? color : 'var(--sub)') + '">' + (pct > 0 ? pct + '%' : '') + '</div>'
       + '<div class="bar-fill" style="height:' + hPx + 'px;background:' + color + ';' + (isToday ? 'box-shadow:0 0 0 2px ' + color + '44' : '') + '"></div>'
       + '<div class="bar-lbl" style="' + (isToday ? 'color:var(--text);font-weight:700' : '') + '">' + lbl + '</div>'
       + '</div>';
@@ -3041,6 +3065,24 @@ function renderProfile(d) {
         </label>
       </div>
     </div>
+    <div class="rem-card" style="margin-top:4px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgTargLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#F6C93E"/></linearGradient></defs><circle cx="13" cy="13" r="10" stroke="url(#svgTargLg)" stroke-width="2"/><circle cx="13" cy="13" r="6" stroke="url(#svgTargLg)" stroke-width="1.5"/><circle cx="13" cy="13" r="2.5" fill="url(#svgTargLg)"/></svg></div>
+        <div style="flex:1">
+          <div class="rem-name">${S('today','daily_goal')}</div>
+          <div style="font-size:10px;color:var(--sub)">Kunlik bajarmoqchi bo'lgan odatlar soni</div>
+        </div>
+        <div id="daily-target-val" style="font-size:16px;font-weight:700;color:var(--green);min-width:24px;text-align:center">1</div>
+      </div>
+      <input type="range" id="daily-target-range" min="1" max="15" step="1" value="1"
+        oninput="document.getElementById('daily-target-val').textContent=this.value"
+        style="width:100%;accent-color:#4CAF7D;cursor:pointer">
+      <button type="button" onclick="saveDailyTarget()"
+        style="margin-top:10px;width:100%;padding:9px;border:none;border-radius:12px;cursor:pointer;
+          background:linear-gradient(135deg,#4CAF7D,#2D8A5E);color:#fff;font-size:12px;font-weight:700">
+        Saqlash
+      </button>
+    </div>
     <a href="https://t.me/Super_habits" target="_blank" class="rem-card" style="margin-top:4px;display:flex;align-items:center;gap:10px;text-decoration:none;border-radius:14px 14px 0 0">
       <div class="rem-top" style="margin-bottom:0;width:100%">
         <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgTgCh" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M22 4L3 11.5L10 14M22 4L15 22L10 14M22 4L10 14" stroke="url(#svgTgCh)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
@@ -3114,7 +3156,28 @@ function renderProfile(d) {
         copyRefLink(this.getAttribute("data-link") || "");
       });
     }
+    var dtRange = document.getElementById("daily-target-range");
+    var dtVal   = document.getElementById("daily-target-val");
+    if (dtRange && dtVal) {
+      var initDt = d.daily_target || 1;
+      dtRange.value    = initDt;
+      dtVal.textContent = initDt;
+    }
   }, 30);
+}
+
+async function saveDailyTarget() {
+  const range = document.getElementById('daily-target-range');
+  if (!range) return;
+  const val = parseInt(range.value);
+  try {
+    const r = await apiFetch(`profile/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ daily_target: val })
+    });
+    if (r.ok) showToast('✅ Kunlik maqsad saqlandi: ' + val + ' ta');
+    else showToast('❌ Xato', true);
+  } catch(e) { showToast('❌ Tarmoq xatosi', true); }
 }
 
 

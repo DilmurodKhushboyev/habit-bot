@@ -7049,6 +7049,7 @@ try:
             "phone":            u.get("phone", ""),
             "ref_count":        len(u.get("referrals", [])),
             "ref_link":         f"https://t.me/{get_bot_username()}?start=ref_{uid}",
+            "daily_target":     u.get("daily_target", 1),
         })
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
@@ -7381,6 +7382,7 @@ try:
             "jon":        jon_pct,
             "points":     u.get("points", 0),
             "streak":     u.get("streak", 0),
+            "daily_target": u.get("daily_target", 1),
         })
 
     @api_app.route("/api/checkin/<int:uid>/<hid>", methods=["POST"])
