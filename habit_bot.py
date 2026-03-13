@@ -6866,6 +6866,8 @@ try:
             "evening_notify":   u.get("evening_notify", True),
             "lang":             u.get("lang", "uz"),
             "phone":            u.get("phone", ""),
+            "ref_count":        len(u.get("referrals", [])),
+            "ref_link":         f"https://t.me/Super_habits_bot?start=ref_{uid}",
         })
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
