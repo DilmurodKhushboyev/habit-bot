@@ -4599,6 +4599,8 @@ def callback_handler(call):
                 if u.get("streak_last_date") != today:
                     u["streak"] = u.get("streak", 0) + 1
                     u["streak_last_date"] = today
+                    if u["streak"] > u.get("best_streak", 0):
+                        u["best_streak"] = u["streak"]
                 # Bonus multiplier hisoblash (WebApp api_checkin bilan bir xil)
                 _base = 5
                 if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
@@ -6835,7 +6837,7 @@ try:
             })
 
         # best_streak va total_done_all hisoblash
-        best_streak    = max((h.get("streak", 0) for h in u.get("habits", [])), default=0)
+        best_streak    = max(u.get("best_streak", 0), max((h.get("streak", 0) for h in u.get("habits", [])), default=0))
         total_done_all = sum(h.get("total_done", 0) for h in u.get("habits", []))
 
         today_str = _tz_today().strftime("%Y-%m-%d")
@@ -7154,6 +7156,8 @@ try:
                             if u.get("streak_last_date") != today:
                                 u["streak"] = u.get("streak", 0) + 1
                                 u["streak_last_date"] = today
+                                if u["streak"] > u.get("best_streak", 0):
+                                    u["best_streak"] = u["streak"]
                             _base = 5
                             if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
                                 _base = 15
@@ -7195,6 +7199,8 @@ try:
                         if u.get("streak_last_date") != today:
                             u["streak"] = u.get("streak", 0) + 1
                             u["streak_last_date"] = today
+                            if u["streak"] > u.get("best_streak", 0):
+                                u["best_streak"] = u["streak"]
                         is_done = True
                     today_count = 1 if is_done else 0
                 break
@@ -7392,7 +7398,7 @@ try:
                 "points":        u.get("points", 0),
                 "active_days_30": active_days_30,
                 "total_habits":  total,
-                "best_streak":   max((h.get("streak", 0) for h in u.get("habits", [])), default=0),
+                "best_streak":   max(u.get("best_streak", 0), max((h.get("streak", 0) for h in u.get("habits", [])), default=0)),
             },
             "weekly":      weekly,
             "monthly":     monthly,
