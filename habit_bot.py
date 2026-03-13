@@ -5288,6 +5288,153 @@ def send_evening_reminders():
         except Exception as e:
             print(f"[evening] uid={uid_str} xato: {e}")
 
+def resolve_expired_challenges():
+    """Muddati o'tgan challengelarni hal qilish — har kuni ishlaydi."""
+    import datetime as _dt
+    from datetime import timezone, timedelta as _td
+    tz_uz     = timezone(_td(hours=5))
+    today_str = datetime.now(tz_uz).strftime("%Y-%m-%d")
+    yesterday = (_dt.date.today() - _dt.timedelta(days=1)).isoformat()
+    try:
+        challenges_col = mongo_db["challenges"]
+    except Exception as e:
+        print(f"[resolve_challenges] DB xatosi: {e}")
+        return
+
+    # ── 1. Pending → expired (3+ kundan beri qabul qilinmagan) ──
+    try:
+        three_days_ago = (_dt.date.today() - _dt.timedelta(days=3)).isoformat()
+        expired_pending = list(challenges_col.find({
+            "status":     "pending",
+            "created_at": {"$lte": three_days_ago}
+        }))
+        for c in expired_pending:
+            challenges_col.update_one(
+                {"_id": c["_id"]},
+                {"$set": {"status": "expired"}}
+            )
+            # Yuboruvchiga xabar
+            try:
+                bot.send_message(
+                    int(c["from_uid"]),
+                    f"⏰ *Challenge muddati o'tdi*\n\n"
+                    f"📌 Odat: *{c.get('habit_name','')}*\n"
+                    f"Qabul qilinmadi — challenge bekor qilindi.",
+                    parse_mode="Markdown"
+                )
+            except Exception:
+                pass
+        if expired_pending:
+            print(f"[resolve_challenges] {len(expired_pending)} ta pending challenge expired qilindi")
+    except Exception as e:
+        print(f"[resolve_challenges] Pending expiry xatosi: {e}")
+
+    # ── 2. Active → completed (expires_at <= yesterday) ──
+    try:
+        expired_active = list(challenges_col.find({
+            "status":     "active",
+            "expires_at": {"$lte": yesterday}
+        }))
+        for c in expired_active:
+            from_uid    = c.get("from_uid", "")
+            to_uid      = c.get("to_uid", "")
+            bet         = c.get("bet", 50)
+            accepted_at = c.get("accepted_at", c.get("created_at", ""))
+            expires_at  = c.get("expires_at", yesterday)
+
+            # done_log kunlarini hisoblash (accepted_at dan expires_at gacha)
+            def count_done(uid_str):
+                try:
+                    u = load_user(int(uid_str))
+                    if not u:
+                        return 0
+                    dl = u.get("done_log", {})
+                    return sum(1 for d, v in dl.items() if v and accepted_at <= d <= expires_at)
+                except Exception:
+                    return 0
+
+            from_score = count_done(from_uid)
+            to_score   = count_done(to_uid)
+
+            # G'olib aniqlash
+            if from_score > to_score:
+                winner_uid, loser_uid = from_uid, to_uid
+                winner_score, loser_score = from_score, to_score
+            elif to_score > from_score:
+                winner_uid, loser_uid = to_uid, from_uid
+                winner_score, loser_score = to_score, from_score
+            else:
+                winner_uid = None  # Durrang
+
+            if winner_uid:
+                # G'olib bet*2 oladi
+                try:
+                    u_w = load_user(int(winner_uid))
+                    u_l = load_user(int(loser_uid))
+                    if u_w:
+                        u_w["points"] = u_w.get("points", 0) + bet * 2
+                        save_user(int(winner_uid), u_w)
+                    # G'olib xabari
+                    w_name = u_w.get("name", "G'olib") if u_w else "G'olib"
+                    l_name = u_l.get("name", "Raqib") if u_l else "Raqib"
+                    try:
+                        bot.send_message(
+                            int(winner_uid),
+                            f"🏆 *Challenge tugadi — Siz g'olib bo'ldingiz!*\n\n"
+                            f"📌 Odat: *{c.get('habit_name','')}*\n"
+                            f"📊 Natija: *{winner_score}* kun vs {loser_score} kun\n"
+                            f"💰 *+{bet * 2} ball* hisobingizga qo'shildi!",
+                            parse_mode="Markdown"
+                        )
+                    except Exception:
+                        pass
+                    try:
+                        bot.send_message(
+                            int(loser_uid),
+                            f"😔 *Challenge tugadi — {w_name} g'olib bo'ldi*\n\n"
+                            f"📌 Odat: *{c.get('habit_name','')}*\n"
+                            f"📊 Natija: {loser_score} kun vs *{winner_score}* kun\n"
+                            f"Keyingi safar omad! 💪",
+                            parse_mode="Markdown"
+                        )
+                    except Exception:
+                        pass
+                except Exception as e:
+                    print(f"[resolve_challenges] Winner reward xatosi: {e}")
+            else:
+                # Durrang — ikkalasi ham bet qaytariladi
+                for ruid in [from_uid, to_uid]:
+                    try:
+                        u_r = load_user(int(ruid))
+                        if u_r:
+                            u_r["points"] = u_r.get("points", 0) + bet
+                            save_user(int(ruid), u_r)
+                        bot.send_message(
+                            int(ruid),
+                            f"🤝 *Challenge durrang tugadi!*\n\n"
+                            f"📌 Odat: *{c.get('habit_name','')}*\n"
+                            f"📊 Natija: {from_score} kun vs {to_score} kun\n"
+                            f"💰 *+{bet} ball* (garov qaytarildi)",
+                            parse_mode="Markdown"
+                        )
+                    except Exception:
+                        pass
+
+            challenges_col.update_one(
+                {"_id": c["_id"]},
+                {"$set": {
+                    "status":       "completed",
+                    "resolved_at":  today_str,
+                    "from_score":   from_score,
+                    "to_score":     to_score,
+                    "winner_uid":   winner_uid or "tie",
+                }}
+            )
+        if expired_active:
+            print(f"[resolve_challenges] {len(expired_active)} ta active challenge hal qilindi")
+    except Exception as e:
+        print(f"[resolve_challenges] Active resolve xatosi: {e}")
+
 def scheduler_loop():
     from datetime import timezone, timedelta
     tz_uz = timezone(timedelta(hours=5))
@@ -5321,6 +5468,8 @@ def scheduler_loop():
     # Har kuni 21:00 (UTC+5 = 16:00 UTC) da kechki eslatma
     schedule.every().day.at("16:00").do(send_evening_reminders).tag("evening_reminder")
     schedule.every().day.at("19:00").do(group_daily_reset).tag("group_daily_reset")
+    # Har kuni 00:05 (UTC+5 = 19:05 UTC) da muddati o'tgan challengelar hal qilinadi
+    schedule.every().day.at("19:05").do(resolve_expired_challenges).tag("challenge_resolve")
     # Har dushanba 09:00 (UTC+5 = 04:00 UTC) da haftalik hisobot
     schedule.every().monday.at("04:00").do(send_weekly_reports).tag("weekly_report")
     # Har oyning 1-kuni 09:00 (UTC+5 = 04:00 UTC) da oylik hisobot
