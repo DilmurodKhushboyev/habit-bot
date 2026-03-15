@@ -37,7 +37,14 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 # ============================================================
 #  MONGODB ULANISH
 # ============================================================
-mongo_client  = MongoClient(MONGO_URI)
+mongo_client  = MongoClient(
+    MONGO_URI,
+    serverSelectionTimeoutMS=8000,
+    connectTimeoutMS=8000,
+    socketTimeoutMS=10000,
+    retryWrites=True,
+    retryReads=True,
+)
 mongo_db      = mongo_client["habit_bot"]
 mongo_col     = mongo_db["users"]
 groups_col    = mongo_db["groups"]   # Guruhlar kolleksiyasi
@@ -57,18 +64,34 @@ except Exception as _e:
 # ============================================================
 def load_user(user_id):
     uid = str(user_id)
-    doc = mongo_col.find_one({"_id": uid})
-    if doc:
-        return {k: v for k, v in doc.items() if k != "_id"}
-    return {"habits": [], "state": None, "joined_at": str(date.today())}
+    for _attempt in range(3):
+        try:
+            doc = mongo_col.find_one({"_id": uid})
+            if doc:
+                return {k: v for k, v in doc.items() if k != "_id"}
+            return {"habits": [], "state": None, "joined_at": str(date.today())}
+        except Exception as _e:
+            if _attempt < 2:
+                import time as _t; _t.sleep(1)
+            else:
+                print(f"[load_user] xato ({uid}): {_e}")
+                return {"habits": [], "state": None, "joined_at": str(date.today())}
 
 def save_user(user_id, udata):
-    mongo_col.update_one(
-        {"_id": str(user_id)},
-        {"$set": udata},
-        upsert=True
-    )
-    invalidate_users_cache()
+    for _attempt in range(3):
+        try:
+            mongo_col.update_one(
+                {"_id": str(user_id)},
+                {"$set": udata},
+                upsert=True
+            )
+            invalidate_users_cache()
+            return
+        except Exception as _e:
+            if _attempt < 2:
+                import time as _t; _t.sleep(1)
+            else:
+                print(f"[save_user] xato ({user_id}): {_e}")
 
 def load_settings():
     doc = mongo_col.find_one({"_id": "_settings"})
