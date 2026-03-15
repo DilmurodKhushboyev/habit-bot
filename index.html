@@ -518,17 +518,17 @@ body {
 
 /* ── STATISTIKA ── */
 .summary-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
   margin-bottom: 4px;
 }
 .sum-card-chart { margin-top: 8px; }
 .sum-card {
   background: var(--bg); box-shadow: var(--sh-sm);
-  border-radius: 18px; padding: 16px; text-align: center;
+  border-radius: 22px; padding: 20px 16px; text-align: center;
 }
-.sum-val { font-size: 28px; font-weight: 700; color: var(--text); font-family: 'DM Mono', monospace; }
-.sum-lbl { font-size: 10px; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
-.sum-icon { font-size: 20px; margin-bottom: 4px; }
+.sum-val { font-size: 36px; font-weight: 800; color: var(--text); font-family: 'DM Mono', monospace; line-height: 1; margin: 6px 0 4px; }
+.sum-lbl { font-size: 10px; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+.sum-icon { font-size: 26px; margin-bottom: 2px; }
 
 /* Bar chart */
 .bar-chart {
@@ -1712,7 +1712,8 @@ function switchTab(tab, el) {
   const backBar   = document.getElementById('back-bar');
   if (backBar) backBar.style.display = backPages.includes(tab) ? 'flex' : 'none';
   if (!loaded[tab]) loadTab(tab);
-  else if (tab === 'habits') refreshHabitsJon();
+  else if (tab === 'habits') { loaded.habits = false; loadTab('habits'); }
+  else refreshHabitsJon();
 }
 
 function goBack() {
