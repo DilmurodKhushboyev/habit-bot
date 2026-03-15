@@ -7207,7 +7207,6 @@ try:
             "phone":            u.get("phone", ""),
             "ref_count":        len(u.get("referrals", [])),
             "ref_link":         f"https://t.me/{get_bot_username()}?start=ref_{uid}",
-            "daily_target":     u.get("daily_target", 1),
         })
 
     @api_app.route("/api/habits/<int:uid>", methods=["GET"])
@@ -7542,7 +7541,6 @@ try:
             "jon":        jon_pct,
             "points":     u.get("points", 0),
             "streak":     u.get("streak", 0),
-            "daily_target": u.get("daily_target", 1),
         })
 
     @api_app.route("/api/checkin/<int:uid>/<hid>", methods=["POST"])
@@ -8534,13 +8532,6 @@ try:
         if "lang" in data:
             if data["lang"] in ("uz", "ru", "en", "tr", "kk", "tg", "tk", "kg", "de", "fr"):
                 u["lang"] = data["lang"]
-        # daily_target
-        if "daily_target" in data:
-            try:
-                dt = int(data["daily_target"])
-                u["daily_target"] = max(1, min(dt, 50))
-            except (ValueError, TypeError):
-                pass
         # evening_notify
         if "evening_notify" in data:
             u["evening_notify"] = bool(data["evening_notify"])

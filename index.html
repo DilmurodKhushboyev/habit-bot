@@ -1831,7 +1831,7 @@ async function loadToday() {
 
 function renderToday(d) {
   const { habits, done_count, total, percent, today } = d;
-  const dailyTarget = d.daily_target || 1;  const currentJon = d.jon ?? 100;
+  const currentJon = d.jon ?? 100;
   const dt = new Date(today);
   const _dayNamesMap = {
     uz:['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'],
@@ -1904,7 +1904,7 @@ function renderToday(d) {
           <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">${S('today','life_label')}</div>
         </div>
       </div>
-      <div class="today-sub" id="prog-sub">${done_count} / ${total} ${S('today','progress_sub')}${dailyTarget > 1 ? ' · <span style="color:var(--green);font-weight:700">Maqsad: ' + Math.min(done_count, dailyTarget) + '/' + dailyTarget + '</span>' : ''}</div>
+      <div class="today-sub" id="prog-sub">${done_count} / ${total} ${S('today','progress_sub')}</div>
     </div>
 
     <div style="display:flex;gap:8px;justify-content:center;margin:12px 0 4px">
@@ -3139,24 +3139,6 @@ function renderProfile(d) {
         </label>
       </div>
     </div>
-    <div class="rem-card" style="margin-top:4px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgTargLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#F6C93E"/></linearGradient></defs><circle cx="13" cy="13" r="10" stroke="url(#svgTargLg)" stroke-width="2"/><circle cx="13" cy="13" r="6" stroke="url(#svgTargLg)" stroke-width="1.5"/><circle cx="13" cy="13" r="2.5" fill="url(#svgTargLg)"/></svg></div>
-        <div style="flex:1">
-          <div class="rem-name">${S('today','daily_goal')}</div>
-          <div style="font-size:10px;color:var(--sub)">Kunlik bajarmoqchi bo'lgan odatlar soni</div>
-        </div>
-        <div id="daily-target-val" style="font-size:16px;font-weight:700;color:var(--green);min-width:24px;text-align:center">1</div>
-      </div>
-      <input type="range" id="daily-target-range" min="1" max="15" step="1" value="1"
-        oninput="document.getElementById('daily-target-val').textContent=this.value"
-        style="width:100%;accent-color:#4CAF7D;cursor:pointer">
-      <button type="button" onclick="saveDailyTarget()"
-        style="margin-top:10px;width:100%;padding:9px;border:none;border-radius:12px;cursor:pointer;
-          background:linear-gradient(135deg,#4CAF7D,#2D8A5E);color:#fff;font-size:12px;font-weight:700">
-        Saqlash
-      </button>
-    </div>
     <a href="https://t.me/Super_habits" target="_blank" class="rem-card" style="margin-top:4px;display:flex;align-items:center;gap:10px;text-decoration:none;border-radius:14px 14px 0 0">
       <div class="rem-top" style="margin-bottom:0;width:100%">
         <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgTgCh" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M22 4L3 11.5L10 14M22 4L15 22L10 14M22 4L10 14" stroke="url(#svgTgCh)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
@@ -3230,31 +3212,8 @@ function renderProfile(d) {
         copyRefLink(this.getAttribute("data-link") || "");
       });
     }
-    var dtRange = document.getElementById("daily-target-range");
-    var dtVal   = document.getElementById("daily-target-val");
-    if (dtRange && dtVal) {
-      var initDt = d.daily_target || 1;
-      dtRange.value    = initDt;
-      dtVal.textContent = initDt;
-    }
   }, 30);
 }
-
-async function saveDailyTarget() {
-  const range = document.getElementById('daily-target-range');
-  if (!range) return;
-  const val = parseInt(range.value);
-  try {
-    const r = await apiFetch(`profile/${userId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ daily_target: val })
-    });
-    if (r.ok) showToast('✅ Kunlik maqsad saqlandi: ' + val + ' ta');
-    else showToast('❌ Xato', true);
-  } catch(e) { showToast('❌ Tarmoq xatosi', true); }
-}
-
 
 // ── PROFIL TAHRIRLASH ──
 let _epPhotoDataUrl = null;
