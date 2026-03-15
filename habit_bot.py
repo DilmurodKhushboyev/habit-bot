@@ -39,9 +39,9 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 # ============================================================
 mongo_client  = MongoClient(
     MONGO_URI,
-    serverSelectionTimeoutMS=8000,
-    connectTimeoutMS=8000,
-    socketTimeoutMS=10000,
+    serverSelectionTimeoutMS=3000,
+    connectTimeoutMS=3000,
+    socketTimeoutMS=5000,
     retryWrites=True,
     retryReads=True,
 )
@@ -72,7 +72,7 @@ def load_user(user_id):
             return {"habits": [], "state": None, "joined_at": str(date.today())}
         except Exception as _e:
             if _attempt < 2:
-                import time as _t; _t.sleep(1)
+                import time as _t; _t.sleep(0.5)
             else:
                 print(f"[load_user] xato ({uid}): {_e}")
                 return {"habits": [], "state": None, "joined_at": str(date.today())}
@@ -89,7 +89,7 @@ def save_user(user_id, udata):
             return
         except Exception as _e:
             if _attempt < 2:
-                import time as _t; _t.sleep(1)
+                import time as _t; _t.sleep(0.5)
             else:
                 print(f"[save_user] xato ({user_id}): {_e}")
 
