@@ -3688,6 +3688,9 @@ function setHabitType(type) {
 }
 
 async function saveHabit() {
+  const saveBtn = document.getElementById('habit-save-txt');
+  if (saveBtn && saveBtn.dataset.saving === '1') return;
+  if (saveBtn) { saveBtn.dataset.saving = '1'; saveBtn.textContent = S('habits','saving') || '⏳ Saqlanmoqda...'; }
   const name = document.getElementById('h-name').value.trim();
   const isRepeat = document.getElementById('btn-repeat').classList.contains('active');
   const timeRaw = isRepeat
@@ -3749,6 +3752,9 @@ async function saveHabit() {
       await loadHabits();
     }
   } catch(e) { showToast('Xato yuz berdi!', true); }
+  finally {
+    if (saveBtn) { saveBtn.dataset.saving = ''; saveBtn.textContent = S('habits','save_btn') || 'Saqlash'; }
+  }
 }
 
 async function deleteHabit(id) {
