@@ -2078,6 +2078,13 @@ function renderReminders(habits) {
         <input class="time-input" type="time" id="tval-${h.id}-${i}" value="${t}">
         <button class="time-clear" onclick="removeTime('${h.id}',${i})" type="button" title="O'chirish"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
       </div>`).join('');
+    const smartBtn = `<button type="button" id="smart-btn-${h.id}" onclick="getSuggestedTime('${h.id}')"
+      style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:none;border-radius:10px;cursor:pointer;
+        background:linear-gradient(135deg,#5B8DEF22,#A78BFA22);color:#5B8DEF;font-size:11px;font-weight:700;
+        font-family:inherit;margin-bottom:4px;width:100%">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><defs><linearGradient id="svgSmartR" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="12" cy="12" r="9" stroke="url(#svgSmartR)" stroke-width="1.8"/><path d="M12 7v5l3 2" stroke="url(#svgSmartR)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      💡 Aqlli taklif
+    </button>`;
 
     return `
       <div class="rem-card ${!enabled ? 'disabled' : ''}" id="remcard-${h.id}">
@@ -2102,6 +2109,7 @@ function renderReminders(habits) {
               ${reps.map(r => `<button class="rep-btn ${repeat===r.id?'active':''}" id="rep-${h.id}-${r.id}" onclick="setRepeat('${h.id}','${r.id}')" type="button">${r.label}</button>`).join('')}
             </div>
           </div>
+          ${smartBtn}
           <div id="times-list-${h.id}">${timesListHtml}</div>
           <button class="rep-btn" style="width:100%;margin-top:6px;justify-content:center" onclick="addTime('${h.id}')" type="button">${S('reminders','add_time')}</button>
           <button class="rem-save-btn" id="rsave-${h.id}" onclick="saveReminder('${h.id}')" type="button" style="margin-top:8px">
@@ -2239,6 +2247,37 @@ async function saveReminder(hid) {
   } catch(e) {
     if (saveBtn) { saveBtn.textContent = '💾 Saqlash'; saveBtn.disabled = false; }
     showRemToast('❌ Xato: ' + e.message, true);
+  }
+}
+
+async function getSuggestedTime(hid) {
+  const btn = document.getElementById('smart-btn-' + hid);
+  if (btn) { btn.disabled = true; btn.innerHTML = btn.innerHTML.replace('💡 Aqlli taklif', '⏳ Tahlil qilinmoqda...'); }
+  try {
+    const r = await apiFetch(`smart-remind/${userId}/${hid}`);
+    if (!r.ok) {
+      const need = 3 - (r.count || 0);
+      showRemToast(`📊 Ma'lumot yetarli emas. Odatni yana ${need} marta bajaring.`);
+      return;
+    }
+    // Birinchi vaqt inputiga to'ldirish
+    const timesList = document.getElementById('times-list-' + hid);
+    const firstInp  = timesList ? timesList.querySelector('input[type=time]') : null;
+    if (firstInp) {
+      firstInp.value = r.suggested_time;
+    } else {
+      // Vaqt qo'shish
+      addTime(hid);
+      setTimeout(() => {
+        const inp = document.getElementById('times-list-' + hid)?.querySelector('input[type=time]');
+        if (inp) inp.value = r.suggested_time;
+      }, 50);
+    }
+    showRemToast(`💡 Taklif: ${r.suggested_time} (${r.based_on} kunlik ma'lumot asosida)`);
+  } catch(e) {
+    showRemToast('❌ Taklif olishda xato', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = btn.innerHTML.replace('⏳ Tahlil qilinmoqda...', '💡 Aqlli taklif'); }
   }
 }
 

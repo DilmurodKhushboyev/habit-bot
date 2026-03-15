@@ -7657,6 +7657,15 @@ try:
         day_data["done"]   = done_count_now
         day_data["total"]  = total_now
         day_data["habits"] = hab_map
+        # Smart reminder uchun checkin vaqtini saqlash
+        _ctimes = day_data.get("checkin_times", {})
+        if found_h:
+            if is_done:
+                from datetime import datetime as _dt_sr, timedelta as _td_sr
+                _ctimes[hid] = (_dt_sr.now() + _td_sr(hours=5)).strftime("%H:%M")
+            else:
+                _ctimes.pop(hid, None)
+        day_data["checkin_times"] = _ctimes
         history[today] = day_data
         u["history"] = history
         # done_log yangilash (rating score uchun — 30 kunlik faollik)
@@ -8500,6 +8509,34 @@ try:
         u["ai_advice_log"] = ai_log
         save_user(uid, u)
         return jsonify({"ok": True, "advice": advice, "used": used_today + 1, "limit": 3})
+
+    @api_app.route("/api/smart-remind/<int:uid>/<hid>")
+    @require_auth
+    def api_smart_remind(uid, hid):
+        """Oxirgi 30 kunlik checkin vaqtlaridan eng ko'p uchragan vaqtni taklif qiladi."""
+        u = load_user(uid)
+        history = u.get("history", {})
+        from datetime import datetime as _dt_sr2, timedelta as _td_sr2
+        from collections import Counter
+        now_uz = _dt_sr2.now() + _td_sr2(hours=5)
+        times = []
+        for i in range(30):
+            d = (now_uz - _td_sr2(days=i)).strftime("%Y-%m-%d")
+            ct = history.get(d, {}).get("checkin_times", {})
+            if hid in ct:
+                times.append(ct[hid])
+        if len(times) < 3:
+            return jsonify({"ok": False, "reason": "not_enough_data", "count": len(times)})
+        # Eng yaqin 30 daqiqaga yaxlitlab, eng ko'p uchragan vaqtni topamiz
+        def _round_30(t):
+            try:
+                h, m = map(int, t.split(":"))
+                return f"{h:02d}:{'00' if m < 30 else '30'}"
+            except Exception:
+                return t
+        rounded = [_round_30(t) for t in times]
+        suggested = Counter(rounded).most_common(1)[0][0]
+        return jsonify({"ok": True, "suggested_time": suggested, "based_on": len(times)})
 
     @api_app.route("/api/reminder/<int:uid>/<hid>", methods=["PUT"])
     @require_auth
