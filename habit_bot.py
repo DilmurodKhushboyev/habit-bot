@@ -8561,5 +8561,24 @@ if __name__ == "__main__":
     if run_api:
         threading.Thread(target=run_api, daemon=True).start()
     print("Bot tayyor! Telegramdan /start yuboring.")
-    import logging
-    bot.infinity_polling(timeout=60, long_polling_timeout=30, logger_level=logging.DEBUG, allowed_updates=["message", "callback_query"], restart_on_change=False)
+    WEBHOOK_BASE = os.environ.get("WEBAPP_URL", "").rstrip("/")
+    if WEBHOOK_BASE:
+        WEBHOOK_PATH = "/webhook/" + BOT_TOKEN
+        WEBHOOK_URL  = WEBHOOK_BASE + WEBHOOK_PATH
+
+        @api_app.route(WEBHOOK_PATH, methods=["POST"])
+        def telegram_webhook():
+            import json as _wjson
+            from flask import request as _wreq
+            if _wreq.headers.get("content-type") == "application/json":
+                update = telebot.types.Update.de_json(_wjson.loads(_wreq.data))
+                bot.process_new_updates([update])
+            return "", 200
+
+        bot.remove_webhook()
+        import time as _wt; _wt.sleep(1)
+        bot.set_webhook(url=WEBHOOK_URL, allowed_updates=["message", "callback_query"])
+        print(f"[webhook] Set: {WEBHOOK_URL}")
+    else:
+        import logging
+        bot.infinity_polling(timeout=60, long_polling_timeout=30, logger_level=logging.DEBUG, allowed_updates=["message", "callback_query"], restart_on_change=False)
