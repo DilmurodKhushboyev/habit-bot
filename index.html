@@ -3721,19 +3721,23 @@ async function saveHabit() {
   const time = timeFinal;
   try {
     if (editingHabitId) {
-      await fetch(`${API}/habits/${userId}/${editingHabitId}`, {
+      const res = await fetch(`${API}/habits/${userId}/${editingHabitId}`, {
         method: 'PUT',
         headers: {'Content-Type':'application/json','X-Init-Data':initData,'X-User-Id':userId},
         body: JSON.stringify({name, icon, time, type: isRepeat ? 'repeat' : 'simple', repeat_count: repeatCount})
       });
+      const rj = await res.json().catch(() => ({}));
+      if (!res.ok || rj.ok === false) { showToast('❌ ' + (rj.error || 'Xato!'), true); return; }
       showToast('✅ Saqlandi!');
     } else {
-      await fetch(`${API}/habits/${userId}`, {
+      const res = await fetch(`${API}/habits/${userId}`, {
         method: 'POST',
         headers: {'Content-Type':'application/json','X-Init-Data':initData,'X-User-Id':userId},
         body: JSON.stringify({name, icon, time, type: isRepeat ? 'repeat' : 'simple', repeat_count: repeatCount})
       });
-      showToast('✅ Qo\'shildi!');
+      const rj = await res.json().catch(() => ({}));
+      if (!res.ok || rj.ok === false) { showToast('❌ ' + (rj.error || 'Xato!'), true); return; }
+      showToast('✅ Qoʼshildi!');
     }
     const wasFromToday = _returnToToday;
     closeModal();
