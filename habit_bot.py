@@ -5161,33 +5161,21 @@ def _check_streak_milestone(uid, new_streak):
     lang = get_lang(uid)
     if lang == "ru":
         text = (
-            f"{ms['emoji']} *{ms['title']}*
-
-"
-            f"Поздравляем! Вы поддерживаете серию *{new_streak} дней* подряд!
-
-"
-            f"🎁 *Бонус:* +{ms['bonus']} ⭐ баллов добавлено!"
+            f"{ms['emoji']} *{ms['title']}*\n\n"
+            f"Pozdravlyaem! Vy podderzhivaete seriyu *{new_streak} dnej* podryad!\n\n"
+            f"\U0001f381 *Bonus:* +{ms['bonus']} \u2b50 ballov dobavleno!"
         )
     elif lang == "en":
         text = (
-            f"{ms['emoji']} *{ms['title']}*
-
-"
-            f"Congratulations! You've kept a *{new_streak}-day* streak!
-
-"
-            f"🎁 *Bonus:* +{ms['bonus']} ⭐ points added!"
+            f"{ms['emoji']} *{ms['title']}*\n\n"
+            f"Congratulations! You've kept a *{new_streak}-day* streak!\n\n"
+            f"\U0001f381 *Bonus:* +{ms['bonus']} \u2b50 points added!"
         )
     else:
         text = (
-            f"{ms['emoji']} *{ms['title']}*
-
-"
-            f"Tabriklaymiz! Siz *{new_streak} kun* ketma-ket odat bajardingiz!
-
-"
-            f"🎁 *Bonus:* +{ms['bonus']} ⭐ ball qo'shildi!"
+            f"{ms['emoji']} *{ms['title']}*\n\n"
+            f"Tabriklaymiz! Siz *{new_streak} kun* ketma-ket odat bajardingiz!\n\n"
+            f"\U0001f381 *Bonus:* +{ms['bonus']} \u2b50 ball qo'shildi!"
         )
     try:
         bot.send_message(uid, text, parse_mode="Markdown")
