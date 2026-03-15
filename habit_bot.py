@@ -5511,6 +5511,77 @@ def send_evening_reminders():
         except Exception as e:
             print(f"[evening] uid={uid_str} xato: {e}")
 
+def send_habit_health_warnings():
+    """Har juma 11:00 (UTC+5) da — oxirgi 7 kunda foizi past (<30%) odatlar haqida ogohlantirish."""
+    from datetime import timezone, timedelta
+    tz_uz    = timezone(timedelta(hours=5))
+    now_uz   = datetime.now(tz_uz)
+    today    = now_uz.strftime("%Y-%m-%d")
+    # Faqat juma kuni ishlaydi (weekday 4 = juma)
+    if now_uz.weekday() != 4:
+        return
+    try:
+        users = load_all_users(force=True)
+    except Exception as e:
+        print(f"[health] load_all_users xatosi: {e}")
+        return
+    warned_count = 0
+    for uid_str, udata in users.items():
+        try:
+            habits = udata.get("habits", [])
+            if not habits:
+                continue
+            # Bugun allaqachon yuborilganmi?
+            if udata.get("habit_health_warned") == today:
+                continue
+            history = udata.get("history", {})
+            lang    = udata.get("lang", "uz")
+            weak_habits = []
+            for h in habits:
+                done_7 = sum(
+                    1 for i in range(7)
+                    if history.get(
+                        (now_uz - timedelta(days=i)).strftime("%Y-%m-%d"), {}
+                    ).get("habits", {}).get(h["id"])
+                )
+                pct = round(done_7 / 7 * 100)
+                if pct < 30:
+                    weak_habits.append((h.get("icon", "✅"), h.get("name", ""), pct))
+            if not weak_habits:
+                continue
+            # Xabar tuzish
+            if lang == "ru":
+                lines = ["*⚠️ Слабые привычки на этой неделе:*\n"]
+                for icon, name, pct in weak_habits:
+                    bar = "█" * round(pct / 10) + "░" * (10 - round(pct / 10))
+                    lines.append(f"  {icon} *{name}*\n  {bar} {pct}%\n")
+                lines.append("_Уделите им больше внимания на следующей неделе! 💪_")
+            elif lang == "en":
+                lines = ["*⚠️ Weak habits this week:*\n"]
+                for icon, name, pct in weak_habits:
+                    bar = "█" * round(pct / 10) + "░" * (10 - round(pct / 10))
+                    lines.append(f"  {icon} *{name}*\n  {bar} {pct}%\n")
+                lines.append("_Give them more attention next week! 💪_")
+            else:
+                lines = ["*⚠️ Bu hafta zaif odatlar:*\n"]
+                for icon, name, pct in weak_habits:
+                    bar = "█" * round(pct / 10) + "░" * (10 - round(pct / 10))
+                    lines.append(f"  {icon} *{name}*\n  {bar} {pct}%\n")
+                lines.append("_Keyingi haftada ularga ko'proq e'tibor bering! 💪_")
+            text = "\n".join(lines)
+            bot.send_message(int(uid_str), text, parse_mode="Markdown")
+            # Bugun yuborildi — belgilash
+            mongo_col.update_one(
+                {"_id": uid_str},
+                {"$set": {"habit_health_warned": today}},
+                upsert=False
+            )
+            warned_count += 1
+            time.sleep(0.05)
+        except Exception as e:
+            print(f"[health] uid={uid_str} xato: {e}")
+    print(f"[health] {warned_count} foydalanuvchiga ogohlantirish yuborildi.")
+
 def resolve_expired_challenges():
     """Muddati o'tgan challengelarni hal qilish — har kuni ishlaydi."""
     import datetime as _dt
@@ -5693,6 +5764,8 @@ def scheduler_loop():
     schedule.every().day.at("19:00").do(group_daily_reset).tag("group_daily_reset")
     # Har kuni 00:05 (UTC+5 = 19:05 UTC) da muddati o'tgan challengelar hal qilinadi
     schedule.every().day.at("19:05").do(resolve_expired_challenges).tag("challenge_resolve")
+    # Har juma 11:00 (UTC+5 = 06:00 UTC) da odat sog'liqligi tekshiruvi
+    schedule.every().friday.at("06:00").do(send_habit_health_warnings).tag("habit_health")
     # Har dushanba 09:00 (UTC+5 = 04:00 UTC) da haftalik hisobot
     schedule.every().monday.at("04:00").do(send_weekly_reports).tag("weekly_report")
     # Har oyning 1-kuni 09:00 (UTC+5 = 04:00 UTC) da oylik hisobot
