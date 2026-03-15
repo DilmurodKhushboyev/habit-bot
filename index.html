@@ -4419,8 +4419,12 @@ async function sellItem(itemId, itemName, refund) {
       body: JSON.stringify({item_id: itemId})
     });
     const r = await res.json().catch(() => ({}));
-    if (!res.ok || r.ok === false) { showShopToast('❌ ' + (r.error || 'Xato'), true); return; }
-    showShopToast('✅ Sotildi! +' + r.refund + ' ⭐ ball');
+    const _toast = document.getElementById('toast-shop');
+    if (!res.ok || r.ok === false) {
+      if (_toast) { _toast.textContent = '❌ ' + (r.error || 'Xato'); _toast.className = 'toast show err'; setTimeout(()=>_toast.className='toast',3000); }
+      return;
+    }
+    if (_toast) { _toast.textContent = '✅ Sotildi! +' + r.refund + ' ⭐ ball'; _toast.className = 'toast show'; setTimeout(()=>_toast.className='toast',2500); }
     if (_shopData) {
       _shopData.points = r.points;
       // inventory dict narsalari
@@ -4444,7 +4448,10 @@ async function sellItem(itemId, itemName, refund) {
       if (itemId.startsWith('car_'))   _shopData.active_car   = _shopData.active_car   === itemId ? '' : _shopData.active_car;
       renderShop(_shopData);
     }
-  } catch(e) { showShopToast('❌ Xato: ' + e.message, true); }
+  } catch(e) {
+    const _t = document.getElementById('toast-shop');
+    if (_t) { _t.textContent = '❌ Xato: ' + e.message; _t.className = 'toast show err'; setTimeout(()=>_t.className='toast',3000); }
+  }
 }
 
 async function activateItem(itemId, deactivate = false) {
