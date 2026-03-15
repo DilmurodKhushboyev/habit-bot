@@ -8452,24 +8452,23 @@ try:
             f"Emoji ishlatma, faqat matn."
         )
         try:
-            import urllib.request, json as _json
-            req_body = _json.dumps({
-                "model": "claude-haiku-4-5-20251001",
-                "max_tokens": 300,
-                "messages": [{"role": "user", "content": prompt}]
-            }).encode("utf-8")
-            req = urllib.request.Request(
+            import requests as _req, json as _json
+            resp = _req.post(
                 "https://api.anthropic.com/v1/messages",
-                data=req_body,
                 headers={
                     "Content-Type":      "application/json",
                     "x-api-key":         ANTHROPIC_API_KEY,
                     "anthropic-version": "2023-06-01",
                 },
-                method="POST"
+                json={
+                    "model": "claude-haiku-4-5-20251001",
+                    "max_tokens": 300,
+                    "messages": [{"role": "user", "content": prompt}]
+                },
+                timeout=25
             )
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                result = _json.loads(resp.read().decode("utf-8"))
+            resp.raise_for_status()
+            result = resp.json()
             advice = result["content"][0]["text"].strip()
         except Exception as e:
             print(f"[ai_advice] xato: {e}")
