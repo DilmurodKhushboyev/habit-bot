@@ -4412,18 +4412,33 @@ async function buyItem(itemId, method) {
 async function sellItem(itemId, itemName, refund) {
   if (!confirm(itemName + ' sotilsinmi? +' + refund + ' ⭐ ball qaytariladi (50%).')) return;
   try {
-    const r = await apiFetch(`shop/${userId}/sell`, {
+    // apiFetch !res.ok da throw qiladi, shuning uchun to'g'ridan fetch ishlatamiz
+    const res = await fetch(`${API}/shop/${userId}/sell`, {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'application/json','X-Init-Data':initData,'X-User-Id':userId},
       body: JSON.stringify({item_id: itemId})
     });
-    if (!r.ok) { showShopToast('❌ ' + (r.error || 'Xato'), true); return; }
+    const r = await res.json().catch(() => ({}));
+    if (!res.ok || r.ok === false) { showShopToast('❌ ' + (r.error || 'Xato'), true); return; }
     showShopToast('✅ Sotildi! +' + r.refund + ' ⭐ ball');
     if (_shopData) {
       _shopData.points = r.points;
+      // inventory dict narsalari
       const inv = _shopData.inventory || {};
       if (inv[itemId] > 1) inv[itemId]--;
       else delete inv[itemId];
+      // counter fieldlar (shield/bonus/xp)
+      if (itemId === 'shield_1' || itemId === 'shield_3') {
+        const item = (_shopData.items || []).find(i => i.id === itemId);
+        if (item) item.owned = Math.max(0, (item.owned || 1) - 1);
+      }
+      if (itemId === 'bonus_2x') _shopData.bonus_2x_active = false;
+      if (itemId === 'bonus_3x') _shopData.bonus_3x_active = false;
+      if (itemId === 'xp_booster') {
+        const item = (_shopData.items || []).find(i => i.id === 'xp_booster');
+        if (item) item.owned = 0;
+      }
+      // aktiv deaktivatsiya
       if (itemId.startsWith('pet_'))   _shopData.active_pet   = _shopData.active_pet   === itemId ? '' : _shopData.active_pet;
       if (itemId.startsWith('badge_')) _shopData.active_badge = _shopData.active_badge === itemId ? '' : _shopData.active_badge;
       if (itemId.startsWith('car_'))   _shopData.active_car   = _shopData.active_car   === itemId ? '' : _shopData.active_car;
