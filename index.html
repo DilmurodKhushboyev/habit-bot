@@ -518,23 +518,32 @@ body {
 
 /* ── STATISTIKA ── */
 .summary-grid {
-  display: flex; flex-direction: column; gap: 8px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
   margin-bottom: 4px;
 }
 .sum-card-chart { margin-top: 8px; }
 .sum-card {
-  background: var(--bg); box-shadow: var(--sh-sm);
-  border-radius: 18px; padding: 14px 16px;
-  display: flex; align-items: center; gap: 12px;
+  background: var(--bg); box-shadow: var(--sh-card);
+  border-radius: 22px; padding: 18px 16px 14px;
+  display: flex; flex-direction: column; align-items: flex-start;
+  position: relative; overflow: hidden; min-height: 130px;
 }
-.sum-card-left {
-  width: 4px; border-radius: 2px; flex-shrink: 0; align-self: stretch; min-height: 36px;
+.sum-card::before {
+  content: ''; position: absolute; top: -20px; right: -20px;
+  width: 80px; height: 80px; border-radius: 50%;
+  opacity: 0.08; background: currentColor;
 }
-.sum-card-body { flex: 1; min-width: 0; }
-.sum-val { font-size: 28px; font-weight: 800; color: var(--text); font-family: 'DM Mono', monospace; line-height: 1; }
-.sum-lbl { font-size: 10px; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
-.sum-icon { font-size: 22px; flex-shrink: 0; }
-.sum-viz { flex-shrink: 0; display: flex; align-items: center; }
+.sum-card-body { flex: 1; width: 100%; }
+.sum-val {
+  font-size: 34px; font-weight: 900; line-height: 1;
+  font-family: 'DM Mono', monospace; margin: 6px 0 2px;
+}
+.sum-lbl {
+  font-size: 9px; color: var(--sub); text-transform: uppercase;
+  letter-spacing: 1.5px; margin-bottom: 10px;
+}
+.sum-icon { font-size: 24px; line-height: 1; }
+.sum-viz { width: 100%; margin-top: auto; }
 
 /* Bar chart */
 .bar-chart {
@@ -2411,81 +2420,76 @@ function renderStats(d) {
   const sumHtml = `
     <div class="summary-grid">
 
-      <!-- 1. STREAK — o'suvchi bar chart (gradient) -->
-      <div class="sum-card">
-        <div class="sum-card-left" style="background:linear-gradient(180deg,#F6C93E,#E07040)"></div>
-        <div class="sum-icon"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><defs><linearGradient id="svgFireS" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireS)"/></svg></div>
-        <div class="sum-card-body">
-          <div class="sum-val">${summary.streak}</div>
-          <div class="sum-lbl">${S('stats','streak_label')}</div>
-        </div>
-        <div class="sum-viz">
-          <div style="display:flex;align-items:flex-end;gap:3px;height:32px">
+      <!-- 1. STREAK -->
+      <div class="sum-card" style="color:#E07040">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%">
+          <span class="sum-icon">🔥</span>
+          <div style="display:flex;align-items:flex-end;gap:2px;height:28px">
             ${[20,40,60,80,100].map(t => {
               const lit = streakPct >= t;
-              return `<div style="width:6px;height:${6+t*0.22}px;border-radius:3px;background:${lit?'linear-gradient(180deg,#F6C93E,#E07040)':'var(--bg2, #C8CBD8)'};box-shadow:${lit?'none':'var(--sh-in)'}"></div>`;
+              const h = 6 + t * 0.2;
+              return `<div style="width:5px;height:${h}px;border-radius:3px;background:${lit?'linear-gradient(180deg,#F6C93E,#E07040)':'var(--bg2,#C8CBD8)'};transition:height .4s"></div>`;
             }).join('')}
           </div>
         </div>
+        <div class="sum-val" style="color:#E07040">${summary.streak}</div>
+        <div class="sum-lbl">${S('stats','streak_label')}</div>
+        <div style="width:100%;height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">
+          <div style="height:100%;width:${streakPct}%;background:linear-gradient(90deg,#F6C93E,#E07040);border-radius:2px;transition:width .6s ease"></div>
+        </div>
       </div>
 
-      <!-- 2. BALL — aylana progress (donut) -->
-      <div class="sum-card">
-        <div class="sum-card-left" style="background:linear-gradient(180deg,#FFE566,#D4963A)"></div>
-        <div class="sum-icon">⭐</div>
-        <div class="sum-card-body">
-          <div class="sum-val">${summary.points}</div>
-          <div class="sum-lbl">${S('stats','points_label')}</div>
-        </div>
-        <div class="sum-viz">
-          <svg width="44" height="44" viewBox="0 0 44 44">
-            <circle cx="22" cy="22" r="16" fill="none" stroke="#C8CBD8" stroke-width="5"/>
-            <circle cx="22" cy="22" r="16" fill="none" stroke="#F6C93E" stroke-width="5"
-              stroke-dasharray="${(2*Math.PI*16*ballPct/100).toFixed(1)} ${(2*Math.PI*16).toFixed(1)}"
-              stroke-dashoffset="${(2*Math.PI*16*0.25).toFixed(1)}" stroke-linecap="round"/>
-            <text x="22" y="27" text-anchor="middle" font-size="10" font-weight="800" fill="#D4963A" font-family="DM Mono,monospace">${ballPct}%</text>
+      <!-- 2. BALL -->
+      <div class="sum-card" style="color:#D4963A">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%">
+          <span class="sum-icon">⭐</span>
+          <svg width="42" height="42" viewBox="0 0 42 42">
+            <circle cx="21" cy="21" r="15" fill="none" stroke="#C8CBD8" stroke-width="4.5"/>
+            <circle cx="21" cy="21" r="15" fill="none" stroke="url(#gBall)" stroke-width="4.5"
+              stroke-dasharray="${(2*Math.PI*15*ballPct/100).toFixed(1)} ${(2*Math.PI*15).toFixed(1)}"
+              stroke-dashoffset="${(2*Math.PI*15*0.25).toFixed(1)}" stroke-linecap="round"/>
+            <defs><linearGradient id="gBall" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FFE566"/><stop offset="100%" stop-color="#D4963A"/></linearGradient></defs>
+            <text x="21" y="26" text-anchor="middle" font-size="9" font-weight="900" fill="#D4963A" font-family="DM Mono,monospace">${ballPct}%</text>
           </svg>
         </div>
+        <div class="sum-val" style="color:#D4963A">${summary.points}</div>
+        <div class="sum-lbl">${S('stats','points_label')}</div>
+        <div style="font-size:9px;color:var(--sub);margin-top:2px">max: ${Math.max(summary.points,500)} ⭐</div>
       </div>
 
-      <!-- 3. FAOL KUN — dot-calendar grid -->
-      <div class="sum-card">
-        <div class="sum-card-left" style="background:linear-gradient(180deg,#6EDAA0,#4CAF7D)"></div>
-        <div class="sum-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgChkS" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgChkS)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgChkS)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="sum-card-body">
-          <div class="sum-val">${summary.active_days_30}</div>
-          <div class="sum-lbl">${S('stats','faol_kun')}</div>
-        </div>
-        <div class="sum-viz">
-          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:3px;width:54px">
-            ${Array.from({length:12}, (_,i) => {
-              const lit = i < Math.round(summary.active_days_30 / 30 * 12);
-              return `<div style="width:7px;height:7px;border-radius:50%;background:${lit?'#4CAF7D':'#C8CBD8'}"></div>`;
+      <!-- 3. FAOL KUN -->
+      <div class="sum-card" style="color:#4CAF7D">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%">
+          <span class="sum-icon">✅</span>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:2.5px">
+            ${Array.from({length:10}, (_,i) => {
+              const lit = i < Math.round(summary.active_days_30 / 3);
+              return `<div style="width:7px;height:7px;border-radius:50%;background:${lit?'#4CAF7D':'#C8CBD8'};box-shadow:${lit?'0 0 4px #4CAF7D44':'none'}"></div>`;
             }).join('')}
           </div>
         </div>
+        <div class="sum-val" style="color:#4CAF7D">${summary.active_days_30}</div>
+        <div class="sum-lbl">${S('stats','faol_kun')}</div>
+        <div style="width:100%;height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">
+          <div style="height:100%;width:${Math.round(summary.active_days_30/30*100)}%;background:linear-gradient(90deg,#6EDAA0,#4CAF7D);border-radius:2px;transition:width .6s ease"></div>
+        </div>
       </div>
 
-      <!-- 4. ODAT — gorizontal segment bar (pill style) -->
-      <div class="sum-card">
-        <div class="sum-card-left" style="background:linear-gradient(180deg,#7FAAFF,#5B8DEF)"></div>
-        <div class="sum-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClipS" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClipS)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClipS)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClipS)" stroke-width="1.5" stroke-linecap="round"/></svg></div>
-        <div class="sum-card-body">
-          <div class="sum-val">${summary.total_habits}</div>
-          <div class="sum-lbl">${S('stats','habits_label')}</div>
-        </div>
-        <div class="sum-viz">
-          <div style="display:flex;flex-direction:column;gap:4px;width:56px">
-            ${Array.from({length:3}, (_,row) => {
-              const segs = Array.from({length:5}, (_,col) => {
-                const idx = row*5+col;
-                const lit = idx < summary.total_habits;
-                return `<div style="flex:1;height:6px;border-radius:3px;background:${lit?'#5B8DEF':'#C8CBD8'};box-shadow:${lit?'none':'var(--sh-in)'}"></div>`;
-              }).join('');
-              return `<div style="display:flex;gap:3px">${segs}</div>`;
-            }).join('')}
+      <!-- 4. ODAT -->
+      <div class="sum-card" style="color:#5B8DEF">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%">
+          <span class="sum-icon">📋</span>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            ${[0,1,2].map(row => `<div style="display:flex;gap:2.5px">${[0,1,2,3,4].map(col => {
+              const idx = row*5+col;
+              const lit = idx < summary.total_habits;
+              return `<div style="width:6px;height:6px;border-radius:2px;background:${lit?'linear-gradient(135deg,#7FAAFF,#5B8DEF)':'#C8CBD8'}"></div>`;
+            }).join('')}</div>`).join('')}
           </div>
         </div>
+        <div class="sum-val" style="color:#5B8DEF">${summary.total_habits}</div>
+        <div class="sum-lbl">${S('stats','habits_label')}</div>
+        <div style="font-size:9px;color:var(--sub);margin-top:2px">${S('stats','total_label')}: ${summary.total_habits}/15</div>
       </div>
 
     </div>`;
@@ -2552,7 +2556,7 @@ function renderStats(d) {
         </div>
         <div style="font-size:11px;color:${aColor};margin-top:10px;font-weight:600">${msg}</div>
         <div style="margin-top:12px">
-          <div style="font-size:10px;color:var(--sub);margin-bottom:5px;font-weight:600;letter-spacing:.5px">30 KUNLIK TENDENSIYA</div>
+          <div style="font-size:10px;color:var(--sub);margin-bottom:5px;font-weight:600;letter-spacing:.5px">${S('stats','trend_30_title').toUpperCase()}</div>
           <svg viewBox="0 0 300 50" width="100%" height="50" preserveAspectRatio="none" style="display:block;overflow:visible">
             <defs>
               <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
@@ -2679,8 +2683,8 @@ function renderStats(d) {
     <div class="section-title">${S('stats','general')}</div>
     ${sumHtml}
     <div class="period-switch">
-      <button class="period-btn active" id="pbtn-7"  onclick="setPeriod(7)"  type="button">7 kun</button>
-      <button class="period-btn"        id="pbtn-30" onclick="setPeriod(30)" type="button">30 kun</button>
+      <button class="period-btn active" id="pbtn-7"  onclick="setPeriod(7)"  type="button">${S('stats','period_7')}</button>
+      <button class="period-btn"        id="pbtn-30" onclick="setPeriod(30)" type="button">${S('stats','period_30')}</button>
     </div>
     <div id="bar-chart-wrap">${barChartHtml}</div>
     ${trendHtml}
@@ -2748,7 +2752,8 @@ function setPeriod(p) {
   if (ab) ab.classList.add('active');
   if (!data.stats) return;
   const d = data.stats;
-  const days = p === 7 ? d.weekly : (d.monthly || d.weekly);
+  const days = p === 7 ? (d.weekly || []) : (d.monthly || d.weekly || []);
+  if (!days.length) return;
   const barsHtml = days.map((w, i) => {
     const pct   = w.total ? Math.round(w.count / w.total * 100) : 0;
     const hPx   = Math.max(4, Math.round(pct * 0.7));
