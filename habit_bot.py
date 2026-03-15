@@ -7078,10 +7078,15 @@ try:
             # score = oxirgi 30 kunda faol kunlar soni
             score = sum(1 for d, v in done_log.items() if v and d >= (today_dt - timedelta(days=30)).strftime("%Y-%m-%d"))
             # Faol itemlarni yig'amiz (reyting'da ko'rsatish uchun)
+            _ITEM_EMOJI = {
+                "pet_cat": "🐱", "pet_dog": "🐶", "pet_rabbit": "🐰",
+                "badge_fire": "🔥", "badge_star": "⭐", "badge_secret": "👑",
+                "car_sport": "🏎️",
+            }
             _items = []
-            if udata.get("active_pet"):    _items.append(udata["active_pet"])
-            if udata.get("active_badge"):  _items.append(udata["active_badge"])
-            if udata.get("active_car"):    _items.append(udata["active_car"])
+            if udata.get("active_pet"):    _items.append(_ITEM_EMOJI.get(udata["active_pet"],   udata["active_pet"]))
+            if udata.get("active_badge"):  _items.append(_ITEM_EMOJI.get(udata["active_badge"], udata["active_badge"]))
+            if udata.get("active_car"):    _items.append(_ITEM_EMOJI.get(udata["active_car"],   udata["active_car"]))
             if udata.get("streak_shields", 0) > 0: _items.append("🛡")
             if udata.get("bonus_2x_active") and udata.get("bonus_2x_date") == today_str: _items.append("⚡")
             if udata.get("bonus_3x_active") and udata.get("bonus_3x_date") == today_str: _items.append("🚀")
