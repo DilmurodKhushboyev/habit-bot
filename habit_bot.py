@@ -8529,6 +8529,36 @@ try:
     def api_health():
         return jsonify({"status": "ok", "bot": "Super Habits"})
 
+    # ── Webhook endpoint (Telegram xabarlarini qabul qiladi) ──
+    _WEBHOOK_PATH = "/webhook/" + BOT_TOKEN
+
+    @api_app.route(_WEBHOOK_PATH, methods=["POST"])
+    def telegram_webhook():
+        import json as _wjson
+        from flask import request as _wreq
+        if _wreq.headers.get("content-type") == "application/json":
+            update = telebot.types.Update.de_json(_wjson.loads(_wreq.data))
+            bot.process_new_updates([update])
+        return "", 200
+
+    @api_app.route("/setup_webhook")
+    def setup_webhook():
+        """Bir marta brauzerdan ochiladi — webhook o'rnatadi"""
+        _base = os.environ.get("WEBAPP_URL", "").rstrip("/")
+        if not _base:
+            return jsonify({"ok": False, "error": "WEBAPP_URL sozlanmagan"}), 500
+        _url = _base + _WEBHOOK_PATH
+        try:
+            bot.set_webhook(url=_url, allowed_updates=["message", "callback_query"])
+            from telebot.types import BotCommand
+            bot.set_my_commands([
+                BotCommand("start",       "Botni ishga tushirish"),
+                BotCommand("admin_panel", "Admin panel"),
+            ])
+            return jsonify({"ok": True, "webhook": _url})
+        except Exception as _e:
+            return jsonify({"ok": False, "error": str(_e)}), 502
+
     def run_api():
         port = int(os.environ.get("PORT", 8080))
         api_app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
@@ -8547,38 +8577,18 @@ if __name__ == "__main__":
     print("=" * 45)
     print("  Odatlar Shakllantirish Boti ishga tushdi!")
     print("=" * 45)
-    from telebot.types import BotCommand
-    try:
-        bot.set_my_commands([
-            BotCommand("start",       "Botni ishga tushirish"),
-            BotCommand("admin_panel", "Admin panel"),
-        ])
-        print("Bot menyusi o'rnatildi.")
-    except Exception as e:
-        print(f"Menyu o'rnatishda xato: {e}")
     threading.Thread(target=scheduler_loop, daemon=True).start()
-    # Web App API serverni alohida threadda ishga tushurish
     if run_api:
         threading.Thread(target=run_api, daemon=True).start()
-    print("Bot tayyor! Telegramdan /start yuboring.")
-    WEBHOOK_BASE = os.environ.get("WEBAPP_URL", "").rstrip("/")
-    if WEBHOOK_BASE:
-        WEBHOOK_PATH = "/webhook/" + BOT_TOKEN
-        WEBHOOK_URL  = WEBHOOK_BASE + WEBHOOK_PATH
-
-        @api_app.route(WEBHOOK_PATH, methods=["POST"])
-        def telegram_webhook():
-            import json as _wjson
-            from flask import request as _wreq
-            if _wreq.headers.get("content-type") == "application/json":
-                update = telebot.types.Update.de_json(_wjson.loads(_wreq.data))
-                bot.process_new_updates([update])
-            return "", 200
-
-        bot.remove_webhook()
-        import time as _wt; _wt.sleep(1)
-        bot.set_webhook(url=WEBHOOK_URL, allowed_updates=["message", "callback_query"])
-        print(f"[webhook] Set: {WEBHOOK_URL}")
-    else:
+    print("Bot tayyor! /setup_webhook endpointini bir marta oching.")
+    # Railway da webhook ishlaydi — polling shart emas
+    # Lokal test uchun polling
+    WEBAPP_URL_CHECK = os.environ.get("WEBAPP_URL", "")
+    if not WEBAPP_URL_CHECK:
         import logging
         bot.infinity_polling(timeout=60, long_polling_timeout=30, logger_level=logging.DEBUG, allowed_updates=["message", "callback_query"], restart_on_change=False)
+    else:
+        # Webhook rejimi: Flask thread asosiy thread sifatida ishlaydi
+        import time as _main_sleep
+        while True:
+            _main_sleep.sleep(60)
