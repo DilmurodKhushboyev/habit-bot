@@ -2707,6 +2707,8 @@ function renderStats(d) {
         ${habitCardsHtml || '<div class="empty-state"><div class="icon">\u{1F4CB}</div>Hali odat qo\'shilmagan</div>'}
       </div>
     </div>`;
+  // Oldin tanlangan davrni tiklash (7 yoki 30)
+  if (_statPeriod !== 7) setPeriod(_statPeriod);
 }
 
 async function loadAiAdvice() {
