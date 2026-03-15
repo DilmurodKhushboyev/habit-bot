@@ -2088,7 +2088,9 @@ def build_weekly_report_text(uid, report):
     text += f"*🎯 Bajarildi:* {done_pct}%\n"
     text += f"*{je} Jon:* {jon_start}% → {jon_end}% ({jon_sign}{jon_change}%)\n"
     text += f"*🔥 Eng uzun streak:* {best_streak} kun\n"
-    text += f"*⭐ Yig'ilgan ball:* +{balls_earned}\n\n"
+    best_day = report.get("best_day", "—")
+    text += f"*⭐ Yig'ilgan ball:* +{balls_earned}\n"
+    text += f"*📆 Eng faol kun:* {best_day}\n\n"
     text += "▬" * 16 + "\n"
     text += f"*🏆 Eng yaxshi odat:* {best_habit}\n"
     text += f"*⚠️ Eng kam bajarilgan:* {worst_habit}\n"
@@ -2111,22 +2113,46 @@ def send_weekly_reports():
             if not habits:
                 continue
             uid_int  = int(uid_str)
-            jon_end  = udata.get("jon", 100)
-            jon_start = max(0, min(100, round(jon_end - (jon_end - 50) * 0.1)))
+            jon_end  = round(udata.get("jon", 100))
+            # O'tgan hafta boshlanish jonini history dan topamiz
+            _h_hist = udata.get("history", {})
+            _w_jon_vals = []
+            for _wi in range(7, 0, -1):
+                _wd = (now - timedelta(days=_wi)).strftime("%Y-%m-%d")
+                _wd_data = _h_hist.get(_wd, {})
+                if "jon" in _wd_data:
+                    _w_jon_vals.append(_wd_data["jon"])
+            jon_start = round(_w_jon_vals[0]) if _w_jon_vals else max(0, min(100, round(jon_end - (jon_end - 50) * 0.1)))
+            # O'tgan 7 kunni history dan hisoblash
             total_possible = 0
             total_done_w   = 0
             habit_scores   = []
             best_streak    = 0
+            best_day_count = 0
+            best_day_label = "—"
+            _day_names = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"]
             for h in habits:
                 rep  = h.get("repeat_count", 1) if h.get("type") == "repeat" else 1
-                done = min(h.get("total_done", 0), rep * 7)
+                done_w = 0
+                for _wi in range(6, -1, -1):
+                    _wd = (now - timedelta(days=_wi)).strftime("%Y-%m-%d")
+                    if _h_hist.get(_wd, {}).get("habits", {}).get(h["id"]):
+                        done_w += 1
                 poss = rep * 7
                 total_possible += poss
-                total_done_w   += done
-                score = round(done / poss * 100) if poss else 0
+                total_done_w   += done_w
+                score = round(done_w / poss * 100) if poss else 0
                 habit_scores.append((h["name"], score))
                 if h.get("streak", 0) > best_streak:
                     best_streak = h.get("streak", 0)
+            # Eng faol kun — o'tgan 7 kundagi eng ko'p odat bajarilgan kun
+            for _wi in range(6, -1, -1):
+                _wd = (now - timedelta(days=_wi)).strftime("%Y-%m-%d")
+                _d_done = _h_hist.get(_wd, {}).get("done", 0)
+                if _d_done > best_day_count:
+                    best_day_count = _d_done
+                    _wd_obj = now - timedelta(days=_wi)
+                    best_day_label = f"{_day_names[_wd_obj.weekday()]} ({_wd_obj.strftime('%d.%m')})"
             done_pct     = round(total_done_w / total_possible * 100) if total_possible else 0
             balls_earned = total_done_w * 5
             habit_scores.sort(key=lambda x: x[1], reverse=True)
@@ -2142,6 +2168,7 @@ def send_weekly_reports():
                 "balls_earned": balls_earned,
                 "best_habit":   best_habit,
                 "worst_habit":  worst_habit,
+                "best_day":     best_day_label,
             }
             try:
                 # BUG FIX: _id har doim string saqlanadi, uid_int emas uid_str ishlatish kerak
