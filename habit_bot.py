@@ -8377,6 +8377,45 @@ try:
         save_user(uid, u)
         return jsonify({"ok": True})
 
+    @api_app.route("/api/shop/<int:uid>/sell", methods=["POST"])
+    @require_auth
+    def api_shop_sell(uid):
+        """Inventardagi narsani 50% narxiga sotish."""
+        data    = request.get_json() or {}
+        item_id = data.get("item_id", "")
+        # Sotish narxlari (asl narxning 50%)
+        sell_prices = {
+            "badge_fire":   100, "badge_star":  125, "badge_secret": 300,
+            "pet_cat":      150, "pet_dog":     175, "pet_rabbit":   150,
+            "car_sport":    250,
+        }
+        refund = sell_prices.get(item_id)
+        if refund is None:
+            return jsonify({"ok": False, "error": "Bu narsa sotilmaydi"})
+        u = load_user(uid)
+        raw_inv = u.get("inventory", [])
+        if isinstance(raw_inv, list):
+            inventory = {i: 1 for i in raw_inv}
+        else:
+            inventory = dict(raw_inv)
+        if inventory.get(item_id, 0) < 1:
+            return jsonify({"ok": False, "error": "Inventarda topilmadi"})
+        # Inventardan olib tashlash
+        inventory[item_id] = inventory.get(item_id, 0) - 1
+        if inventory[item_id] <= 0:
+            del inventory[item_id]
+        u["inventory"] = inventory
+        # Faollashtirish bekor qilish (agar aktiv bo'lsa)
+        if item_id.startswith("pet_")   and u.get("active_pet")   == item_id:
+            u["active_pet"]   = ""
+        if item_id.startswith("badge_") and u.get("active_badge") == item_id:
+            u["active_badge"] = ""
+        if item_id.startswith("car_")   and u.get("active_car")   == item_id:
+            u["active_car"]   = ""
+        u["points"] = u.get("points", 0) + refund
+        save_user(uid, u)
+        return jsonify({"ok": True, "points": u["points"], "refund": refund})
+
     @api_app.route("/api/friends/<int:uid>")
     @require_auth
     def api_friends(uid):
