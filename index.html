@@ -3754,9 +3754,11 @@ async function saveHabit() {
 async function deleteHabit(id) {
   if (!confirm('Odatni o\'chirasizmi?')) return;
   try {
-    await fetch(`${API}/habits/${userId}/${id}`, {
+    const res = await fetch(`${API}/habits/${userId}/${id}`, {
       method: 'DELETE', headers: {'X-Init-Data': initData, 'X-User-Id': userId}
     });
+    const rj = await res.json().catch(() => ({}));
+    if (!res.ok || rj.ok === false) { showToast('❌ ' + (rj.error || 'Xato!'), true); return; }
     showToast('🗑️ O\'chirildi!');
     loaded.habits = false;
     await loadHabits();
