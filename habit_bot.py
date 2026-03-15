@@ -4564,6 +4564,7 @@ def callback_handler(call):
                                 if u["streak"] > u.get("best_streak", 0):
                                     u["best_streak"] = u["streak"]
                                     u["best_streak_date"] = today
+                                threading.Thread(target=_check_streak_milestone, args=(uid, u["streak"]), daemon=True).start()
                             # done_log: kunlik bajarilish tarixi
                             done_log = u.get("done_log", {})
                             done_log[today] = True
@@ -4681,6 +4682,7 @@ def callback_handler(call):
                             if u["streak"] > u.get("best_streak", 0):
                                 u["best_streak"] = u["streak"]
                                 u["best_streak_date"] = today
+                            threading.Thread(target=_check_streak_milestone, args=(uid, u["streak"]), daemon=True).start()
                         # done_log: kunlik bajarilgan kun
                         done_log = u.get("done_log", {})
                         done_log[today] = True
@@ -4773,6 +4775,7 @@ def callback_handler(call):
                     if u["streak"] > u.get("best_streak", 0):
                         u["best_streak"] = u["streak"]
                         u["best_streak_date"] = today
+                    threading.Thread(target=_check_streak_milestone, args=(uid, u["streak"]), daemon=True).start()
                 # Bonus multiplier hisoblash (WebApp api_checkin bilan bir xil)
                 _base = 5
                 if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
@@ -5129,6 +5132,67 @@ def send_reminder(user_id, habit):
         )
     except Exception as e:
         print(f"[reminder] xato: {e}")
+
+STREAK_MILESTONES = {
+    7:   {"emoji": "🔥", "bonus": 20,  "title": "7 kunlik streak!"},
+    14:  {"emoji": "⚡", "bonus": 35,  "title": "2 haftalik streak!"},
+    21:  {"emoji": "💪", "bonus": 50,  "title": "21 kunlik streak!"},
+    30:  {"emoji": "💎", "bonus": 100, "title": "Oylik ustoz!"},
+    60:  {"emoji": "🏆", "bonus": 200, "title": "60 kunlik streak!"},
+    100: {"emoji": "👑", "bonus": 500, "title": "100 kun shohi!"},
+    365: {"emoji": "🌟", "bonus": 1000, "title": "1 yillik streak!"},
+}
+
+def _check_streak_milestone(uid, new_streak):
+    """Global streak milestone bo'lsa — Telegram xabari yuboradi va bonus ball beradi.
+    Qayta yuborishni oldini olish uchun u['streak_milestones_sent'] listidan foydalanadi."""
+    ms = STREAK_MILESTONES.get(new_streak)
+    if not ms:
+        return
+    u = load_user(uid)
+    sent_list = u.get("streak_milestones_sent", [])
+    if new_streak in sent_list:
+        return
+    # Bonus ball qo'shamiz
+    u["points"] = u.get("points", 0) + ms["bonus"]
+    sent_list.append(new_streak)
+    u["streak_milestones_sent"] = sent_list
+    save_user(uid, u)
+    lang = get_lang(uid)
+    if lang == "ru":
+        text = (
+            f"{ms['emoji']} *{ms['title']}*
+
+"
+            f"Поздравляем! Вы поддерживаете серию *{new_streak} дней* подряд!
+
+"
+            f"🎁 *Бонус:* +{ms['bonus']} ⭐ баллов добавлено!"
+        )
+    elif lang == "en":
+        text = (
+            f"{ms['emoji']} *{ms['title']}*
+
+"
+            f"Congratulations! You've kept a *{new_streak}-day* streak!
+
+"
+            f"🎁 *Bonus:* +{ms['bonus']} ⭐ points added!"
+        )
+    else:
+        text = (
+            f"{ms['emoji']} *{ms['title']}*
+
+"
+            f"Tabriklaymiz! Siz *{new_streak} kun* ketma-ket odat bajardingiz!
+
+"
+            f"🎁 *Bonus:* +{ms['bonus']} ⭐ ball qo'shildi!"
+        )
+    try:
+        bot.send_message(uid, text, parse_mode="Markdown")
+    except Exception as e:
+        print(f"[milestone] xato {uid}: {e}")
 
 def schedule_habit(user_id, habit):
     # Avval eski jadval bo'lsa o'chiramiz (dublikat bo'lmasligi uchun)
@@ -7729,18 +7793,36 @@ try:
         # Yutuqlarni tekshir
         new_ach = check_achievements(uid, u)
         new_badges = [{"id": a["id"], "icon": a["icon"], "title": a["title"]} for a in new_ach]
+        # Streak milestone tekshiruvi (WebApp uchun — bot xabar yubormasdan, faqat response orqali)
+        streak_milestone = None
+        new_global_streak = u.get("streak", 0)
+        if is_done and new_global_streak in STREAK_MILESTONES:
+            ms = STREAK_MILESTONES[new_global_streak]
+            sent_list = u.get("streak_milestones_sent", [])
+            if new_global_streak not in sent_list:
+                u["points"] = u.get("points", 0) + ms["bonus"]
+                sent_list.append(new_global_streak)
+                u["streak_milestones_sent"] = sent_list
+                save_user(uid, u)
+                streak_milestone = {
+                    "streak": new_global_streak,
+                    "emoji":  ms["emoji"],
+                    "title":  ms["title"],
+                    "bonus":  ms["bonus"],
+                }
         return jsonify({
-            "ok":          True,
-            "done":        is_done,
-            "streak":      found_h.get("streak", 0),
-            "repeat_count": found_h.get("repeat_count", 1),
-            "today_count": today_count,
-            "points":      u.get("points", 0),
-            "earned":      u.get("points", 0) - points_before,
-            "all_done":    all_done,
-            "done_count":  done_count,
-            "total":       total,
-            "new_badges":  new_badges,
+            "ok":              True,
+            "done":            is_done,
+            "streak":          found_h.get("streak", 0),
+            "repeat_count":    found_h.get("repeat_count", 1),
+            "today_count":     today_count,
+            "points":          u.get("points", 0),
+            "earned":          u.get("points", 0) - points_before,
+            "all_done":        all_done,
+            "done_count":      done_count,
+            "total":           total,
+            "new_badges":      new_badges,
+            "streak_milestone": streak_milestone,
         })
 
     def _calc_trend(history, habits, now_uz, total):

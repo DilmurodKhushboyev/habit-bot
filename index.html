@@ -2026,6 +2026,11 @@ async function checkin(hid, cardEl) {
     if (isDone && result.new_badges && result.new_badges.length) {
       result.new_badges.forEach(b => showBadgePopup(b.icon, b.title, S('achievements','new_badge')));
     }
+    // Streak milestone popup
+    if (isDone && result.streak_milestone) {
+      const sm = result.streak_milestone;
+      setTimeout(() => showBadgePopup(sm.emoji, sm.title, `+${sm.bonus} ⭐ bonus ball!`), result.new_badges && result.new_badges.length ? 1500 : 0);
+    }
   } catch(e) {
     showTodayToast('❌ Xato: ' + e.message, true);
   } finally {
