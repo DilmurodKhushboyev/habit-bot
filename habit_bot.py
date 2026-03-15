@@ -7084,9 +7084,25 @@ try:
                 "car_sport": "🏎️",
             }
             _items = []
-            if udata.get("active_pet"):    _items.append(_ITEM_EMOJI.get(udata["active_pet"],   udata["active_pet"]))
-            if udata.get("active_badge"):  _items.append(_ITEM_EMOJI.get(udata["active_badge"], udata["active_badge"]))
-            if udata.get("active_car"):    _items.append(_ITEM_EMOJI.get(udata["active_car"],   udata["active_car"]))
+            _shown_ids = set()
+            if udata.get("active_pet"):
+                _items.append(_ITEM_EMOJI.get(udata["active_pet"], udata["active_pet"]))
+                _shown_ids.add(udata["active_pet"])
+            if udata.get("active_badge"):
+                _items.append(_ITEM_EMOJI.get(udata["active_badge"], udata["active_badge"]))
+                _shown_ids.add(udata["active_badge"])
+            if udata.get("active_car"):
+                _items.append(_ITEM_EMOJI.get(udata["active_car"], udata["active_car"]))
+                _shown_ids.add(udata["active_car"])
+            raw_inv = udata.get("inventory", {})
+            if isinstance(raw_inv, list):
+                inv_dict = {i: 1 for i in raw_inv}
+            else:
+                inv_dict = dict(raw_inv)
+            for iid, qty in inv_dict.items():
+                if qty > 0 and iid not in _shown_ids and iid in _ITEM_EMOJI:
+                    _items.append(_ITEM_EMOJI[iid])
+                    _shown_ids.add(iid)
             if udata.get("streak_shields", 0) > 0: _items.append("🛡")
             if udata.get("bonus_2x_active") and udata.get("bonus_2x_date") == today_str: _items.append("⚡")
             if udata.get("bonus_3x_active") and udata.get("bonus_3x_date") == today_str: _items.append("🚀")
