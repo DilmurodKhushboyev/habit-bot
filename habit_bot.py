@@ -7540,6 +7540,22 @@ try:
             done_today = g.get("done_today", {}) if g.get("done_date") == today_grp else {}
             uid_done = done_today.get(str(uid), {})
             done_today_me = _is_done_today(uid_done)
+            # Haftalik maqsad progress hisoblash
+            from datetime import timezone as _tz_wg, timedelta as _td_wg
+            _tz_uz_wg  = _tz_wg(_td_wg(hours=5))
+            _now_wg    = datetime.now(_tz_uz_wg)
+            # Haftaning dushanbasi
+            _week_start = (_now_wg - _td_wg(days=_now_wg.weekday())).strftime("%Y-%m-%d")
+            _week_days  = [(_now_wg - _td_wg(days=_now_wg.weekday()-i)).strftime("%Y-%m-%d") for i in range(7)]
+            _done_log   = g.get("member_done_log", {})
+            _weekly_done = 0
+            for _mid in members_raw:
+                _mid_log = _done_log.get(str(_mid), {})
+                for _wd in _week_days:
+                    if _mid_log.get(_wd):
+                        _weekly_done += 1
+            _weekly_total  = len(members_raw) * 7  # maksimal mumkin
+            _weekly_goal   = g.get("weekly_goal", 0)
             result.append({
                 "gid":          g.get("id", str(g.get("_id", ""))),
                 "name":         g.get("name","Guruh"),
@@ -7550,6 +7566,9 @@ try:
                 "is_admin":     g.get("admin_id") == str(uid),
                 "invite_link":  f"https://t.me/{get_bot_username()}?start=grp_{g.get('id','')}" if g.get("admin_id") == str(uid) else "",
                 "done_today_me": done_today_me,
+                "weekly_goal":  _weekly_goal,
+                "weekly_done":  _weekly_done,
+                "weekly_total": _weekly_total,
             })
         return jsonify({"groups": result})
 
@@ -7624,6 +7643,29 @@ try:
             "streak":   m_streak_val,
             "all_done": all_done,
         })
+
+    @api_app.route("/api/groups/<int:uid>/<gid>/goal", methods=["PUT"])
+    @require_auth
+    def api_groups_set_goal(uid, gid):
+        """Admin haftalik guruh maqsadini belgilaydi."""
+        data = request.get_json(force=True, silent=True) or {}
+        try:
+            g = mongo_db["groups"].find_one({"id": gid})
+        except Exception:
+            return jsonify({"ok": False, "error": "Guruh topilmadi"})
+        if not g:
+            return jsonify({"ok": False, "error": "Guruh topilmadi"})
+        if g.get("admin_id") != str(uid):
+            return jsonify({"ok": False, "error": "Faqat admin maqsad belgilaydi"})
+        try:
+            goal = int(data.get("goal", 0))
+            if goal < 0 or goal > 9999:
+                raise ValueError
+        except (ValueError, TypeError):
+            return jsonify({"ok": False, "error": "Noto'g'ri qiymat"})
+        g["weekly_goal"] = goal
+        mongo_db["groups"].replace_one({"id": gid}, g)
+        return jsonify({"ok": True, "weekly_goal": goal})
 
     @api_app.route("/api/groups/<int:uid>/<gid>", methods=["DELETE"])
     @require_auth

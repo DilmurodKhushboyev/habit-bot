@@ -3810,6 +3810,27 @@ function renderGroups(d) {
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgLink" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M10 14a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="url(#svgLink)" stroke-width="2" stroke-linecap="round"/><path d="M14 10a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="url(#svgLink)" stroke-width="2" stroke-linecap="round"/></svg>Invite link nusxalash
           </button>` : ''}
         </div>
+        ${(() => {
+          const wg = g.weekly_goal || 0;
+          const wd = g.weekly_done || 0;
+          const wt = g.weekly_total || 1;
+          const wpct = wg > 0 ? Math.min(100, Math.round(wd / wg * 100)) : Math.round(wd / wt * 100);
+          const wc = wpct >= 100 ? '#4CAF7D' : wpct >= 50 ? '#5B8DEF' : '#E07040';
+          const goalTxt = wg > 0 ? `${wd}/${wg}` : `${wd} ta`;
+          const goalLabel = wg > 0 ? (wd >= wg ? '🏆 Maqsadga yetildi!' : `${wg - wd} ta qoldi`) : 'Maqsad belgilanmagan';
+          return `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--bg)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+              <div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;font-weight:600">🎯 Haftalik umumiy</div>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:10px;font-weight:700;color:${wc}">${goalTxt} · ${goalLabel}</span>
+                ${g.is_admin ? '<button onclick="event.stopPropagation();setGroupGoal(\'' + g.id + '\', ' + wg + ')" type="button" style="background:none;border:none;color:var(--sub);font-size:11px;cursor:pointer;padding:0 2px">✏️</button>' : ''}
+              </div>
+            </div>
+            <div style="height:5px;border-radius:3px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">
+              <div style="height:100%;border-radius:3px;width:${wpct}%;background:linear-gradient(90deg,${wc}99,${wc});transition:width .5s ease"></div>
+            </div>
+          </div>`;
+        })()}
         <div style="margin-top:8px;border-top:1px solid var(--bg);padding-top:8px;display:flex;gap:8px;align-items:center">
           <button onclick="event.stopPropagation();groupCheckin('${g.id}', this)" type="button"
             id="gcheckin-${g.id}"
@@ -3866,6 +3887,22 @@ function openGroupHabitAdd(gid) {
   if (detail && detail.style.display !== 'block') toggleGroup(gid);
   showToastGroup('Odat qoʻshish funksiyasi tez orada!');
 }
+async function setGroupGoal(gid, currentGoal) {
+  const val = prompt('Haftalik umumiy maqsad (ta):', currentGoal || '');
+  if (val === null) return;
+  const goal = parseInt(val);
+  if (isNaN(goal) || goal < 0) { showToastGroup('❌ Noto\u02bcg\u02bcri qiymat'); return; }
+  try {
+    const r = await apiFetch(`groups/${userId}/${gid}/goal`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ goal })
+    });
+    if (r.ok) { showToastGroup('✅ Maqsad saqlandi: ' + goal + ' ta'); loaded.stats = false; loadGroups(); }
+    else showToastGroup('❌ ' + (r.error || 'Xato'));
+  } catch(e) { showToastGroup('❌ Tarmoq xatosi'); }
+}
+
 function showToastGroup(msg) {
   const t = document.getElementById('toast-group');
   if (!t) return;
