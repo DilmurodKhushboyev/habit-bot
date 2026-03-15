@@ -7135,11 +7135,14 @@ try:
     @api_app.route("/api/profile/<int:uid>")
     @require_auth
     def api_profile(uid):
-        users   = load_all_users()
-        ranking = sorted(users.items(), key=lambda x: x[1].get("points",0), reverse=True)
-        rank    = next((i+1 for i,(k,_) in enumerate(ranking) if k==str(uid)), None)
-
         u = load_user(uid)
+        # Rank: load_all_users o'rniga tez MongoDB so'rov
+        my_points  = u.get("points", 0)
+        rank       = mongo_col.count_documents({
+            "_id":    {"$not": {"$regex": "^_"}},
+            "points": {"$gt": my_points}
+        }) + 1
+        total_users = mongo_col.count_documents({"_id": {"$not": {"$regex": "^_"}}})
         habits = []
         for h in u.get("habits", []):
             habits.append({
@@ -7160,7 +7163,7 @@ try:
             "jon":              u.get("jon",100),
             "is_vip":           u.get("is_vip",False),
             "rank":             rank,
-            "total_users":      len(users),
+            "total_users":      total_users,
             "joined_at":        u.get("joined_at",""),
             "best_streak":      best_streak,
             "best_streak_date": u.get("best_streak_date", ""),
