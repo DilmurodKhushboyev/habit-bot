@@ -8002,6 +8002,17 @@ try:
                 week_dots[-1] = True
             # percent: done_30 asosida
             percent = round(done_30 / 30 * 100)
+            # 66 kun kalkulyatori
+            from datetime import datetime as _dt66
+            _created = h.get("created_at", "")
+            _days_since = 0
+            if _created:
+                try:
+                    _days_since = (now_uz.date() - _dt66.fromisoformat(_created).date()).days + 1
+                except Exception:
+                    _days_since = 0
+            _days_66 = min(66, max(_days_since, done_all, streak_val))
+            _days_66_done = min(done_all, 66)
             habit_stats.append({
                 "id":         h["id"],
                 "name":       h["name"],
@@ -8012,6 +8023,8 @@ try:
                 "done_30":    done_30,
                 "total_done": done_all,
                 "week_dots":  week_dots,
+                "days_66":      _days_66,
+                "days_66_done": _days_66_done,
             })
         return jsonify({
             "today":   today,

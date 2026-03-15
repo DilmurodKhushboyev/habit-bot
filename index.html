@@ -2708,6 +2708,25 @@ function renderStats(d) {
             <div class="hstat-minibar-bars">${miniBars}</div>
           </div>
         </div>
+        ${(() => {
+          const d66 = h.days_66_done || 0;
+          const total66 = 66;
+          const pct66 = Math.round(d66 / total66 * 100);
+          const c66 = d66 >= 66 ? '#4CAF7D' : d66 >= 33 ? '#5B8DEF' : '#E07040';
+          const left66 = Math.max(0, 66 - d66);
+          const label66 = d66 >= 66
+            ? '🏆 Odat shakllanib bo\'ldi!'
+            : left66 + ' kun qoldi';
+          return `<div style="margin-top:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;font-weight:600">🎯 66 kun kalkulyatori</div>
+              <div style="font-size:10px;font-weight:700;color:${c66}">${d66}/66 · ${label66}</div>
+            </div>
+            <div style="height:6px;border-radius:3px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">
+              <div style="height:100%;border-radius:3px;width:${pct66}%;background:linear-gradient(90deg,${c66}99,${c66});transition:width .6s ease"></div>
+            </div>
+          </div>`;
+        })()}
       </div>`;
   });
 
