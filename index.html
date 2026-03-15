@@ -4268,7 +4268,7 @@ function renderShop(d) {
       const isActive = (item.cat==='pet' && activePet===item.id)
                     || (item.cat==='badge' && activeBadge===item.id)
                     || (item.cat==='car' && activeCar===item.id);
-      const _sellPrices = {badge_fire:100,badge_star:125,badge_secret:300,pet_cat:150,pet_dog:175,pet_rabbit:150,car_sport:250};
+      const _sellPrices = {badge_fire:100,badge_star:125,badge_secret:300,pet_cat:150,pet_dog:175,pet_rabbit:150,car_sport:250,shield_1:50,shield_3:125,bonus_2x:75,bonus_3x:150,xp_booster:200};
       const sellRefund = _sellPrices[item.id] || 0;
       return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
         background:var(--bg);border-radius:14px;box-shadow:${isActive?'0 0 0 2px #4CAF7D':'var(--sh-sm)'};margin-bottom:6px">

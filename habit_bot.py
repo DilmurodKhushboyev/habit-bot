@@ -8233,8 +8233,19 @@ try:
         active_car   = u.get("active_car", "")
         # can_buy va owned fieldlarini har bir item ga qo'shish
         one_time = ["badge_fire","badge_star","badge_secret","pet_cat","pet_dog","pet_rabbit","car_sport"]
+        # Counter fieldlardan owned miqdorini to'ldirish
+        _counter_owned = {
+            "shield_1":  min(u.get("streak_shields", 0), 1) if u.get("streak_shields", 0) > 0 else 0,
+            "shield_3":  max(0, u.get("streak_shields", 0) - 1) if u.get("streak_shields", 0) > 1 else 0,
+            "bonus_2x":  1 if (u.get("bonus_2x_active") and u.get("bonus_2x_date") == today_uz5()) else 0,
+            "bonus_3x":  1 if (u.get("bonus_3x_active") and u.get("bonus_3x_date") == today_uz5()) else 0,
+            "xp_booster": u.get("xp_booster_days", 0),
+        }
         for item in shop_items:
-            owned_qty = inventory.get(item["id"], 0)
+            if item["id"] in _counter_owned:
+                owned_qty = _counter_owned[item["id"]]
+            else:
+                owned_qty = inventory.get(item["id"], 0)
             item["owned"] = owned_qty
             # Bir martalik narsalar: allaqachon olingan bo'lsa can_buy=False
             if item["id"] in one_time:
@@ -8388,11 +8399,56 @@ try:
             "badge_fire":   100, "badge_star":  125, "badge_secret": 300,
             "pet_cat":      150, "pet_dog":     175, "pet_rabbit":   150,
             "car_sport":    250,
+            "shield_1":      50, "shield_3":    125,
+            "bonus_2x":      75, "bonus_3x":    150,
+            "xp_booster":   200,
         }
         refund = sell_prices.get(item_id)
         if refund is None:
             return jsonify({"ok": False, "error": "Bu narsa sotilmaydi"})
         u = load_user(uid)
+        today = today_uz5()
+        # Counter fieldlar uchun alohida tekshirish
+        if item_id == "shield_1":
+            if u.get("streak_shields", 0) < 1:
+                return jsonify({"ok": False, "error": "Inventarda topilmadi"})
+            u["streak_shields"] = u.get("streak_shields", 0) - 1
+            u["points"] = u.get("points", 0) + refund
+            save_user(uid, u)
+            return jsonify({"ok": True, "points": u["points"], "refund": refund})
+        if item_id == "shield_3":
+            if u.get("streak_shields", 0) < 1:
+                return jsonify({"ok": False, "error": "Inventarda topilmadi"})
+            sell_qty = min(u["streak_shields"], 3)
+            actual_refund = refund * sell_qty // 3
+            u["streak_shields"] = max(0, u["streak_shields"] - sell_qty)
+            u["points"] = u.get("points", 0) + actual_refund
+            save_user(uid, u)
+            return jsonify({"ok": True, "points": u["points"], "refund": actual_refund})
+        if item_id == "bonus_2x":
+            if not (u.get("bonus_2x_active") and u.get("bonus_2x_date") == today):
+                return jsonify({"ok": False, "error": "Aktiv bonus topilmadi"})
+            u["bonus_2x_active"] = False
+            u["points"] = u.get("points", 0) + refund
+            save_user(uid, u)
+            return jsonify({"ok": True, "points": u["points"], "refund": refund})
+        if item_id == "bonus_3x":
+            if not (u.get("bonus_3x_active") and u.get("bonus_3x_date") == today):
+                return jsonify({"ok": False, "error": "Aktiv bonus topilmadi"})
+            u["bonus_3x_active"] = False
+            u["points"] = u.get("points", 0) + refund
+            save_user(uid, u)
+            return jsonify({"ok": True, "points": u["points"], "refund": refund})
+        if item_id == "xp_booster":
+            if u.get("xp_booster_days", 0) < 1:
+                return jsonify({"ok": False, "error": "Inventarda topilmadi"})
+            days_left = u["xp_booster_days"]
+            actual_refund = round(refund * days_left / 7)
+            u["xp_booster_days"] = 0
+            u["points"] = u.get("points", 0) + actual_refund
+            save_user(uid, u)
+            return jsonify({"ok": True, "points": u["points"], "refund": actual_refund})
+        # Inventory narsalar (badge/pet/car)
         raw_inv = u.get("inventory", [])
         if isinstance(raw_inv, list):
             inventory = {i: 1 for i in raw_inv}
@@ -8400,12 +8456,10 @@ try:
             inventory = dict(raw_inv)
         if inventory.get(item_id, 0) < 1:
             return jsonify({"ok": False, "error": "Inventarda topilmadi"})
-        # Inventardan olib tashlash
         inventory[item_id] = inventory.get(item_id, 0) - 1
         if inventory[item_id] <= 0:
             del inventory[item_id]
         u["inventory"] = inventory
-        # Faollashtirish bekor qilish (agar aktiv bo'lsa)
         if item_id.startswith("pet_")   and u.get("active_pet")   == item_id:
             u["active_pet"]   = ""
         if item_id.startswith("badge_") and u.get("active_badge") == item_id:
