@@ -3690,7 +3690,6 @@ function setHabitType(type) {
 async function saveHabit() {
   const saveBtn = document.getElementById('habit-save-txt');
   if (saveBtn && saveBtn.dataset.saving === '1') return;
-  if (saveBtn) { saveBtn.dataset.saving = '1'; saveBtn.textContent = S('habits','saving') || '⏳ Saqlanmoqda...'; }
   const name = document.getElementById('h-name').value.trim();
   const isRepeat = document.getElementById('btn-repeat').classList.contains('active');
   const timeRaw = isRepeat
@@ -3721,6 +3720,8 @@ async function saveHabit() {
     }
   }
 
+  // Barcha validatsiyalar o'tdi — tugmani bloklash
+  if (saveBtn) { saveBtn.dataset.saving = '1'; saveBtn.textContent = S('habits','saving') || '⏳ Saqlanmoqda...'; }
   const time = timeFinal;
   try {
     if (editingHabitId) {
