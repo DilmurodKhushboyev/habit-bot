@@ -2653,13 +2653,18 @@ async function loadAiAdvice() {
   box.style.display = 'none';
   try {
     const r = await apiFetch(`ai/advice/${userId}`, { method: 'POST' });
-    if (!r.ok) { showToast('❌ ' + (r.error || 'Xato'), true); }
-    else {
+    if (!r.ok) {
+      box.style.display = 'block';
+      box.innerHTML = `<div style="color:var(--red)">❌ ${r.error || 'Xato yuz berdi'}</div>`;
+    } else {
       box.style.display = 'block';
       box.innerHTML = r.advice.replace(/\n/g, '<br>') +
         `<div style="font-size:10px;color:var(--sub);margin-top:8px;text-align:right">${r.used}/${r.limit} bugun</div>`;
     }
-  } catch(e) { showToast('❌ Tarmoq xatosi', true); }
+  } catch(e) {
+    box.style.display = 'block';
+    box.innerHTML = `<div style="color:var(--red)">❌ Tarmoq xatosi: ${e.message || e}</div>`;
+  }
   finally {
     btn.disabled = false;
     btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2a7 7 0 017 7c0 3-1.8 5.5-4.5 6.6V18a1 1 0 01-1 1h-3a1 1 0 01-1-1v-2.4C6.8 14.5 5 12 5 9a7 7 0 017-7z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 21h6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg> AI maslahat olish';
