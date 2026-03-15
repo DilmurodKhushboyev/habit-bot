@@ -162,6 +162,7 @@ LANGS = {
         "limit":             "⚠️ Odatlarni yaratish me'yori 15 ta!",
         "remind_title":      "⏰ *Eslatma!*\n\n*🎯 Odat:* {name}\n\n{motiv}",
         "btn_done":          "✅ Bajardim!",
+        "btn_skip":          "❌ Bajarmadim",
         "stats_title":       "*📊 Statistika —* {page}/{total} sahifa",
         "stats_ball":        "*⭐ Jami ball:* {ball} ball",
         "stats_rank":        "*🎖 Daraja:* {rank}",
@@ -220,6 +221,7 @@ LANGS = {
         "limit":             "⚠️ Maximum 15 habits allowed!",
         "remind_title":      "⏰ *Reminder!*\n\n*🎯 Habit:* {name}\n\n{motiv}",
         "btn_done":          "✅ Done!",
+        "btn_skip":          "❌ Not done",
         "stats_title":       "*📊 Statistics —* page {page}/{total}",
         "stats_ball":        "⭐ *Total points: {ball}*",
         "stats_rank":        "🎖 Rank: {rank}",
@@ -278,6 +280,7 @@ LANGS = {
         "limit":             "⚠️ Максимум 15 привычек!",
         "remind_title":      "⏰ *Напоминание!*\n\n*🎯 Привычка:* {name}\n\n{motiv}",
         "btn_done":          "✅ Выполнено!",
+        "btn_skip":          "❌ Не выполнено",
         "stats_title":       "📊 *Статистика* — стр. {page}/{total}",
         "stats_ball":        "⭐ *Всего очков: {ball}*",
         "stats_rank":        "🎖 Уровень: {rank}",
@@ -336,6 +339,7 @@ LANGS = {
         "limit":             "⚠️ Maksimum 15 alışkanlık!",
         "remind_title":      "⏰ *Hatırlatma!*\n\n*🎯 Alışkanlık:* {name}\n\n{motiv}",
         "btn_done":          "✅ Yaptım!",
+        "btn_skip":          "❌ Yapmadım",
         "stats_title":       "📊 *İstatistik* — {page}/{total}. sayfa",
         "stats_ball":        "⭐ *Toplam puan: {ball}*",
         "stats_rank":        "🎖 Seviye: {rank}",
@@ -394,6 +398,7 @@ LANGS = {
         "limit":             "⚠️ Максимум 15 дағды!",
         "remind_title":      "⏰ *Еске салу!*\n\n🎯 Дағды: *{name}*\n\n{motiv}",
         "btn_done":          "✅ Орындадым!",
+        "btn_skip":          "❌ Орындамадым",
         "stats_title":       "📊 *Статистика* — {page}/{total} бет",
         "stats_ball":        "⭐ *Жалпы ұпай: {ball}*",
         "stats_rank":        "🎖 Деңгей: {rank}",
@@ -452,6 +457,7 @@ LANGS = {
         "limit":             "⚠️ Ҳадди аксар 15 одат!",
         "remind_title":      "⏰ *Огоҳӣ!*\n\n🎯 Одат: *{name}*\n\n{motiv}",
         "btn_done":          "✅ Иҷро кардам!",
+        "btn_skip":          "❌ Иҷро накардам",
         "stats_title":       "📊 *Омор* — {page}/{total} саҳифа",
         "stats_ball":        "⭐ *Ҷамъи хол: {ball}*",
         "stats_rank":        "🎖 Дараҷа: {rank}",
@@ -510,6 +516,7 @@ LANGS = {
         "limit":             "⚠️ Iň köp 15 endik!",
         "remind_title":      "⏰ *Ýatlatma!*\n\n🎯 Endik: *{name}*\n\n{motiv}",
         "btn_done":          "✅ Etdim!",
+        "btn_skip":          "❌ Etmedim",
         "stats_title":       "📊 *Statistika* — {page}/{total} sahypa",
         "stats_ball":        "⭐ *Jemi bal: {ball}*",
         "stats_rank":        "🎖 Dereje: {rank}",
@@ -568,6 +575,7 @@ LANGS = {
         "limit":             "⚠️ Максималдуу 15 адат!",
         "remind_title":      "⏰ *Эстетме!*\n\n🎯 Адат: *{name}*\n\n{motiv}",
         "btn_done":          "✅ Аткардым!",
+        "btn_skip":          "❌ Аткарган жокмун",
         "stats_title":       "📊 *Статистика* — {page}/{total} барак",
         "stats_ball":        "⭐ *Жалпы упай: {ball}*",
         "stats_rank":        "🎖 Деңгээл: {rank}",
@@ -626,6 +634,7 @@ LANGS = {
         "limit":             "⚠️ Maximal 15 Gewohnheiten!",
         "remind_title":      "⏰ *Erinnerung!*\n\n🎯 Gewohnheit: *{name}*\n\n{motiv}",
         "btn_done":          "✅ Erledigt!",
+        "btn_skip":          "❌ Nicht erledigt",
         "stats_title":       "📊 *Statistik* — Seite {page}/{total}",
         "stats_ball":        "⭐ *Gesamtpunkte: {ball}*",
         "stats_rank":        "🎖 Level: {rank}",
@@ -684,6 +693,7 @@ LANGS = {
         "limit":             "⚠️ Maximum 15 habitudes!",
         "remind_title":      "⏰ *Rappel!*\n\n🎯 Habitude: *{name}*\n\n{motiv}",
         "btn_done":          "✅ Fait!",
+        "btn_skip":          "❌ Non fait",
         "stats_title":       "📊 *Statistiques* — page {page}/{total}",
         "stats_ball":        "⭐ *Total points: {ball}*",
         "stats_rank":        "🎖 Niveau: {rank}",
@@ -915,7 +925,7 @@ def done_keyboard(uid, habit_id):
     kb = InlineKeyboardMarkup()
     kb.row(
         InlineKeyboardButton(T(uid, "btn_done"), callback_data=f"done_{habit_id}"),
-        InlineKeyboardButton("❌ Bajarmadim",    callback_data=f"skip_{habit_id}")
+        InlineKeyboardButton(T(uid, "btn_skip"),  callback_data=f"skip_{habit_id}")
     )
     return kb
 
@@ -5034,7 +5044,7 @@ def send_reminder(user_id, habit):
     streak     = current_habit.get("streak", 0) if current_habit else 0
     lang       = get_lang(user_id)
     motiv      = random.choice(MOTIVATSIYA.get(lang, MOTIVATSIYA["uz"]))
-    habit_name = habit["name"]
+    habit_name = current_habit.get("name", habit["name"])
 
     # Streak ga qarab jonli xabar
     if streak == 0:
