@@ -2216,14 +2216,10 @@ def callback_handler(call):
             if not u.get("phone"):
                 # Til tanlandi, endi telefon so'ralsin
                 kb_ph = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-                kb_ph.add(KeyboardButton("📱 Telefon raqamni yuborish", request_contact=True))
+                kb_ph.add(KeyboardButton(T(uid, "share_phone"), request_contact=True))
                 sent_ph = bot.send_message(
                     uid,
-                    f"👋 Salom, *{name}*!\n\n"
-                    "Davom etish uchun ro'yxatdan o'ting:\n\n"
-                    "📌 Telefon raqamingizni yuboring:\n"
-                    "• Tugmani bosib yuboring, _yoki_\n"
-                    "• Qo'lda kiriting: *+998901234567*",
+                    T(uid, "ask_phone"),
                     parse_mode="Markdown",
                     reply_markup=kb_ph
                 )
@@ -4455,12 +4451,30 @@ def callback_handler(call):
                     fully_done       = done_today_count >= rep_count
 
                     if fully_done:
-                        # Bekor qilish: to'liq bajarilganidan qaytarish (ball va total_done qaytariladi)
+                        # Bekor qilish: to'liq bajarilganidan qaytarish
                         h["done_today_count"] = 0
                         h["last_done"]  = None
                         h["streak"]     = max(0, h.get("streak", 0) - 1)
                         h["total_done"] = max(0, h.get("total_done", 0) - 1)
-                        u["points"]     = max(0, u.get("points", 0) - 5)
+                        # Bonus multiplier (api_checkin bilan bir xil)
+                        _undo_base = 5
+                        if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
+                            _undo_base = 15
+                        elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
+                            _undo_base = 10
+                        if u.get("xp_booster_days", 0) > 0:
+                            _undo_base = round(_undo_base * 1.1)
+                        u["points"] = max(0, u.get("points", 0) - _undo_base)
+                        # Global streak: faqat bugun boshqa odat bajarilmagan bo'lsa kamaytir
+                        _still_done = any(hh.get("last_done") == today for hh in u.get("habits", []) if hh["id"] != habit_id)
+                        if not _still_done and u.get("streak_last_date") == today:
+                            u["streak"] = max(0, u.get("streak", 0) - 1)
+                            u["streak_last_date"] = ""
+                        # done_log: boshqa odat bajarilmagan bo'lsa o'chirish
+                        if not _still_done:
+                            done_log = u.get("done_log", {})
+                            done_log.pop(today, None)
+                            u["done_log"] = done_log
                         save_user(uid, u)
                         schedule_habit(uid, h)
                         bot.answer_callback_query(call.id, f"↩️ 0/{rep_count}")
@@ -4474,11 +4488,42 @@ def callback_handler(call):
                             h["streak"]     = h.get("streak", 0) + 1 if h.get("last_done") == yesterday else 1
                             h["last_done"]  = today
                             h["total_done"] = h.get("total_done", 0) + 1
+                            # Bonus multiplier (api_checkin bilan bir xil)
+                            _base = 5
+                            if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
+                                _base = 15
+                            elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
+                                _base = 10
+                            if u.get("xp_booster_days", 0) > 0:
+                                _base = round(_base * 1.1)
+                            u["points"] = u.get("points", 0) + _base
+                            # Global streak: kuniga bir marta oshsin
+                            if u.get("streak_last_date") != today:
+                                u["streak"] = u.get("streak", 0) + 1
+                                u["streak_last_date"] = today
+                                if u["streak"] > u.get("best_streak", 0):
+                                    u["best_streak"] = u["streak"]
+                                    u["best_streak_date"] = today
                             # done_log: kunlik bajarilish tarixi
                             done_log = u.get("done_log", {})
                             done_log[today] = True
                             u["done_log"] = done_log
-                            u["points"]     = u.get("points", 0) + 5
+                            # history yangilash (statistika uchun)
+                            history = u.get("history", {})
+                            day_data = history.get(today, {})
+                            done_count_now = sum(1 for hh in u.get("habits", []) if hh.get("last_done") == today)
+                            hab_map = day_data.get("habits", {})
+                            hab_map[habit_id] = True
+                            day_data["done"]   = done_count_now
+                            day_data["total"]  = len(u.get("habits", []))
+                            day_data["habits"] = hab_map
+                            history[today] = day_data
+                            u["history"] = history
+                            # XP booster kunini kamaytirish (kuniga bir marta)
+                            if u.get("xp_booster_days", 0) > 0:
+                                if u.get("xp_booster_last_day", "") != today:
+                                    u["xp_booster_days"] = max(0, u["xp_booster_days"] - 1)
+                                    u["xp_booster_last_day"] = today
                             unschedule_habit_today(uid, habit_id)
                             save_user(uid, u)
                             bot.answer_callback_query(call.id)
@@ -4489,7 +4534,7 @@ def callback_handler(call):
                             else:                s_extra_r = f"\n🔥 Streak: {streak_r} kun"
                             sent_msg = bot.send_message(
                                 uid,
-                                T(uid, "done_ok", name=h["name"]) + f" *+5 ⭐ ball*" + s_extra_r,
+                                T(uid, "done_ok", name=h["name"]) + f" *+{_base} ⭐ ball*" + s_extra_r,
                                 parse_mode="Markdown"
                             )
                         else:
@@ -4526,7 +4571,25 @@ def callback_handler(call):
                         h["last_done"]  = None
                         h["streak"]     = max(0, h.get("streak", 0) - 1)
                         h["total_done"] = max(0, h.get("total_done", 0) - 1)
-                        u["points"]     = max(0, u.get("points", 0) - 5)
+                        # Bonus multiplier (api_checkin bilan bir xil)
+                        _undo_base = 5
+                        if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
+                            _undo_base = 15
+                        elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
+                            _undo_base = 10
+                        if u.get("xp_booster_days", 0) > 0:
+                            _undo_base = round(_undo_base * 1.1)
+                        u["points"] = max(0, u.get("points", 0) - _undo_base)
+                        # Global streak: faqat bugun boshqa odat bajarilmagan bo'lsa kamaytir
+                        _still_done = any(hh.get("last_done") == today for hh in u.get("habits", []) if hh["id"] != habit_id)
+                        if not _still_done and u.get("streak_last_date") == today:
+                            u["streak"] = max(0, u.get("streak", 0) - 1)
+                            u["streak_last_date"] = ""
+                        # done_log: boshqa odat bajarilmagan bo'lsa o'chirish
+                        if not _still_done:
+                            done_log = u.get("done_log", {})
+                            done_log.pop(today, None)
+                            u["done_log"] = done_log
                         save_user(uid, u)
                         schedule_habit(uid, h)
                         bot.answer_callback_query(call.id)
@@ -4542,7 +4605,42 @@ def callback_handler(call):
                         h["streak"]     = h.get("streak", 0) + 1 if h.get("last_done") == yesterday else 1
                         h["last_done"]  = today
                         h["total_done"] = h.get("total_done", 0) + 1
-                        u["points"]     = u.get("points", 0) + 5
+                        # Bonus multiplier (api_checkin bilan bir xil)
+                        _base = 5
+                        if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
+                            _base = 15
+                        elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
+                            _base = 10
+                        if u.get("xp_booster_days", 0) > 0:
+                            _base = round(_base * 1.1)
+                        u["points"] = u.get("points", 0) + _base
+                        # Global streak: kuniga bir marta oshsin
+                        if u.get("streak_last_date") != today:
+                            u["streak"] = u.get("streak", 0) + 1
+                            u["streak_last_date"] = today
+                            if u["streak"] > u.get("best_streak", 0):
+                                u["best_streak"] = u["streak"]
+                                u["best_streak_date"] = today
+                        # done_log: kunlik bajarilgan kun
+                        done_log = u.get("done_log", {})
+                        done_log[today] = True
+                        u["done_log"] = done_log
+                        # history yangilash (statistika uchun)
+                        history = u.get("history", {})
+                        day_data = history.get(today, {})
+                        done_count_now = sum(1 for hh in u.get("habits", []) if hh.get("last_done") == today)
+                        hab_map = day_data.get("habits", {})
+                        hab_map[habit_id] = True
+                        day_data["done"]   = done_count_now
+                        day_data["total"]  = len(u.get("habits", []))
+                        day_data["habits"] = hab_map
+                        history[today] = day_data
+                        u["history"] = history
+                        # XP booster kunini kamaytirish (kuniga bir marta)
+                        if u.get("xp_booster_days", 0) > 0:
+                            if u.get("xp_booster_last_day", "") != today:
+                                u["xp_booster_days"] = max(0, u["xp_booster_days"] - 1)
+                                u["xp_booster_last_day"] = today
                         save_user(uid, u)
                         unschedule_habit_today(uid, habit_id)
                         bot.answer_callback_query(call.id)
@@ -4551,7 +4649,7 @@ def callback_handler(call):
                         elif streak_s >= 14: s_extra_s = f"\n🔥 Streak: {streak_s} kun 🌟"
                         elif streak_s >= 7:  s_extra_s = f"\n🔥 Streak: {streak_s} kun 🔥"
                         else:                s_extra_s = f"\n🔥 Streak: {streak_s} kun"
-                        sent_msg = bot.send_message(uid, T(uid, "done_ok", name=h["name"]) + " *+5 ⭐ ball*" + s_extra_s, parse_mode="Markdown")
+                        sent_msg = bot.send_message(uid, T(uid, "done_ok", name=h["name"]) + f" *+{_base} ⭐ ball*" + s_extra_s, parse_mode="Markdown")
                         def del_msg2(chat_id, msg_id):
                             time.sleep(3)
                             try: bot.delete_message(chat_id, msg_id)
@@ -4925,9 +5023,7 @@ def send_reminder(user_id, habit):
             # Bugun allaqachon bajarilgan bo'lsa — eslatma yubormaymiz
             if h.get("last_done") == today:
                 return
-            # Kecha bajarilganmi — aks holda missed++
-            if h.get("last_done") not in (today, yesterday, None):
-                h["total_missed"] = h.get("total_missed", 0) + 1
+            # total_missed bu yerda EMAS — daily_reset() da hisoblanadi (qo'sh hisoblashni oldini olish)
             break
     if not exists:
         return
@@ -5032,7 +5128,7 @@ def group_daily_reset():
                                 bot.send_message(
                                     int(mid),
                                     f"😔 *{g['name']}*\n\n"
-                                    f"Kecha odatni bajarmadiiz.\n"
+                                    f"Kecha odatni bajarmadingiz.\n"
                                     f"📌 *{g.get('habit_name','—')}*\n\n"
                                     f"Bugun davom eting! 💪",
                                     parse_mode="Markdown"
@@ -5220,9 +5316,9 @@ def daily_reset():
                         )
                     except Exception as _e: print(f"[warn] xato: {_e}")
             # Streak: agar hammasi bajargan bo'lsa allaqachon +1 bo'lgan
-            # Agar hech kim bajarmaganligi bo'lsa yoki kam bajargan bo'lsa streak nollanadi
+            # Agar hammasi bajarmaganligi bo'lsa streak nollanadi
             done_count = sum(1 for v in done_today.values() if v)
-            if done_count < len(members) and done_count == 0 and g.get("streak", 0) > 0:
+            if done_count < len(members) and g.get("streak", 0) > 0:
                 g["streak"] = 0
             # Yangi kun uchun tozalash
             g["done_today"] = {}
@@ -5912,6 +6008,11 @@ def handle_text(msg):
         if old_msg_id:
             try: bot.delete_message(uid, old_msg_id)
             except: pass
+        if not u.get("temp_habit"):
+            u["state"] = None
+            save_user(uid, u)
+            send_main_menu(uid)
+            return
         u["temp_habit"]["repeat_count"] = count
         u["state"] = "waiting_habit_name"
         save_user(uid, u)
@@ -6969,7 +7070,7 @@ try:
         # Saralash
         if sort_by == "streak":
             entries.sort(key=lambda x: x["streak"], reverse=True)
-        elif sort_by == "score":
+        elif sort_by in ("score", "active"):
             entries.sort(key=lambda x: x["score"], reverse=True)
         else:
             entries.sort(key=lambda x: x["points"], reverse=True)
@@ -7059,14 +7160,16 @@ try:
         habits = []
         for h in u.get("habits", []):
             habits.append({
-                "id":         h.get("id",""),
-                "name":       h.get("name",""),
-                "icon":       h.get("icon","✅"),
-                "time":       h.get("time","vaqtsiz"),
-                "streak":     h.get("streak",0),
-                "total_done": h.get("total_done",0),
+                "id":           h.get("id",""),
+                "name":         h.get("name",""),
+                "icon":         h.get("icon","✅"),
+                "time":         h.get("time","vaqtsiz"),
+                "type":         h.get("type","simple"),
+                "repeat_count": h.get("repeat_count",1),
+                "streak":       h.get("streak",0),
+                "total_done":   h.get("total_done",0),
             })
-        return jsonify({"habits": habits})
+        return jsonify({"habits": habits, "jon": round(u.get("jon", 100))})
 
     @api_app.route("/api/habits/<int:uid>", methods=["POST"])
     @require_auth
@@ -7405,7 +7508,7 @@ try:
                     if done >= rep_count:
                         # Allaqachon to'liq bajarilgan — bekor qilish (0 ga tushirish)
                         done = 0
-                        h["last_done"] = ""
+                        h["last_done"] = None
                         h["streak"] = max(0, h.get("streak", 0) - 1)
                         _undo_base = 5
                         if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
@@ -7446,7 +7549,7 @@ try:
                     today_count = done
                 else:
                     if h.get("last_done") == today:
-                        h["last_done"] = ""
+                        h["last_done"] = None
                         h["streak"] = max(0, h.get("streak", 0) - 1)
                         _undo_base = 5
                         if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
