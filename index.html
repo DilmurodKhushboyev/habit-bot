@@ -2603,6 +2603,18 @@ function renderStats(d) {
   });
 
   document.getElementById('stats-content').innerHTML = `
+    <div style="margin-bottom:12px">
+      <button type="button" id="ai-advice-btn" onclick="loadAiAdvice()"
+        style="width:100%;padding:13px 16px;border:none;border-radius:16px;cursor:pointer;
+          background:linear-gradient(135deg,#5B8DEF,#A78BFA);color:#fff;
+          font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2a7 7 0 017 7c0 3-1.8 5.5-4.5 6.6V18a1 1 0 01-1 1h-3a1 1 0 01-1-1v-2.4C6.8 14.5 5 12 5 9a7 7 0 017-7z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 21h6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
+        AI maslahat olish
+      </button>
+      <div id="ai-advice-box" style="display:none;margin-top:10px;padding:14px 16px;
+        background:var(--bg);border-radius:16px;box-shadow:var(--sh-sm);
+        font-size:13px;line-height:1.6;color:var(--text)"></div>
+    </div>
     <div class="section-title">${S('stats','general')}</div>
     ${sumHtml}
     <div class="period-switch">
@@ -2629,18 +2641,6 @@ function renderStats(d) {
       <div id="habit-stats-body" style="display:none;margin-top:8px">
         ${habitCardsHtml || '<div class="empty-state"><div class="icon">\u{1F4CB}</div>Hali odat qo\'shilmagan</div>'}
       </div>
-    </div>
-    <div style="margin-top:16px">
-      <button type="button" id="ai-advice-btn" onclick="loadAiAdvice()"
-        style="width:100%;padding:13px 16px;border:none;border-radius:16px;cursor:pointer;
-          background:linear-gradient(135deg,#5B8DEF,#A78BFA);color:#fff;
-          font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2a7 7 0 017 7c0 3-1.8 5.5-4.5 6.6V18a1 1 0 01-1 1h-3a1 1 0 01-1-1v-2.4C6.8 14.5 5 12 5 9a7 7 0 017-7z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 21h6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
-        AI maslahat olish
-      </button>
-      <div id="ai-advice-box" style="display:none;margin-top:10px;padding:14px 16px;
-        background:var(--bg);border-radius:16px;box-shadow:var(--sh-sm);
-        font-size:13px;line-height:1.6;color:var(--text)"></div>
     </div>`;
 }
 
