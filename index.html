@@ -4709,6 +4709,14 @@ if (window.visualViewport) {
     }
   });
 }
+// Foydalanuvchi WebApp ga qaytganda (bot bildirishnomasidan) today ni yangilash
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible' && userId) {
+    loaded.today = false;
+    if (_curTab === 'today') loadToday();
+  }
+});
+
 window.onload = function() {
   // Telegram WebApp userId tayyor bo'lishini kutamiz
   if (!userId || userId === 0) {
