@@ -8946,7 +8946,7 @@ try:
             return jsonify({"ok": False, "error": "WEBAPP_URL sozlanmagan"}), 500
         _url = _base + _WEBHOOK_PATH
         try:
-            bot.set_webhook(url=_url, allowed_updates=["message", "callback_query"])
+            bot.set_webhook(url=_url, allowed_updates=["message", "callback_query", "pre_checkout_query"])
             from telebot.types import BotCommand
             bot.set_my_commands([
                 BotCommand("start",       "Botni ishga tushirish"),
@@ -8983,7 +8983,7 @@ if __name__ == "__main__":
     WEBAPP_URL_CHECK = os.environ.get("WEBAPP_URL", "")
     if not WEBAPP_URL_CHECK:
         import logging
-        bot.infinity_polling(timeout=60, long_polling_timeout=30, logger_level=logging.DEBUG, allowed_updates=["message", "callback_query"], restart_on_change=False)
+        bot.infinity_polling(timeout=60, long_polling_timeout=30, logger_level=logging.DEBUG, allowed_updates=["message", "callback_query", "pre_checkout_query"], restart_on_change=False)
     else:
         # Webhook rejimi: Flask thread asosiy thread sifatida ishlaydi
         import time as _main_sleep
