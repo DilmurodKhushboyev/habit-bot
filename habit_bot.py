@@ -8359,6 +8359,7 @@ try:
         item_names = {"gift_box": "Sovga qutisi"}
         item_descs = {"gift_box": "Tasodifiy mukofot: ball, streak himoya yoki XP booster"}
         try:
+            from telebot.types import LabeledPrice as _LP
             bot.send_invoice(
                 chat_id=uid,
                 title=item_names.get(item_id, item_id),
@@ -8366,7 +8367,7 @@ try:
                 invoice_payload=f"stars_{item_id}",
                 provider_token="",
                 currency="XTR",
-                prices=[{"label": item_names.get(item_id, item_id), "amount": price}],
+                prices=[_LP(item_names.get(item_id, item_id), price)],
             )
             return jsonify({"ok": True})
         except Exception as e:
