@@ -3996,6 +3996,7 @@ async function groupCheckin(gid, btn) {
         btn.textContent = '✅ Bajarildi';
       }
       showGroupToast('✅ +5 ball! 🔥 ' + (r.streak || 1) + ' kun streak' + (r.all_done ? ' · Guruh ham bajarildi! 🎉' : ''));
+      loaded.today = false;
     } else {
       if (btn) {
         btn.style.background = 'linear-gradient(135deg,#4CAF7D,#2D8A5E)';
