@@ -3997,6 +3997,10 @@ async function groupCheckin(gid, btn) {
       }
       showGroupToast('✅ +5 ball! 🔥 ' + (r.streak || 1) + ' kun streak' + (r.all_done ? ' · Guruh ham bajarildi! 🎉' : ''));
       loaded.today = false;
+      if (r.points !== undefined) {
+        const ptsEl = document.getElementById('header-pts');
+        if (ptsEl) ptsEl.textContent = '⭐ ' + r.points;
+      }
     } else {
       if (btn) {
         btn.style.background = 'linear-gradient(135deg,#4CAF7D,#2D8A5E)';
@@ -4005,6 +4009,10 @@ async function groupCheckin(gid, btn) {
         btn.textContent = '☑️ Bajarish';
       }
       showGroupToast('↩️ Bekor qilindi');
+      if (r.points !== undefined) {
+        const ptsEl = document.getElementById('header-pts');
+        if (ptsEl) ptsEl.textContent = '⭐ ' + r.points;
+      }
     }
   } catch(e) {
     showGroupToast('❌ ' + (e.message || 'Xato'), true);
