@@ -4410,7 +4410,8 @@ async function buyItem(itemId, method) {
 }
 
 async function sellItem(itemId, itemName, refund) {
-  if (!confirm(itemName + ' sotilsinmi? +' + refund + ' ⭐ ball qaytariladi (50%).')) return;
+  // confirm() Telegram WebApp da ishlamaydi — showPopup ishlatamiz
+  const _doSell = async () => {
   try {
     // apiFetch !res.ok da throw qiladi, shuning uchun to'g'ridan fetch ishlatamiz
     const res = await fetch(`${API}/shop/${userId}/sell`, {
@@ -4451,6 +4452,16 @@ async function sellItem(itemId, itemName, refund) {
   } catch(e) {
     const _t = document.getElementById('toast-shop');
     if (_t) { _t.textContent = '❌ Xato: ' + e.message; _t.className = 'toast show err'; setTimeout(()=>_t.className='toast',3000); }
+  }
+  };
+  if (window.Telegram?.WebApp?.showPopup) {
+    window.Telegram.WebApp.showPopup({
+      title: 'Sotish',
+      message: itemName + ' sotilsinmi? +' + refund + ' ⭐ ball qaytariladi.',
+      buttons: [{id:'ok', type:'ok'}, {id:'cancel', type:'cancel'}]
+    }, (btnId) => { if (btnId === 'ok') _doSell(); });
+  } else {
+    if (confirm(itemName + ' sotilsinmi? +' + refund + ' ⭐ ball qaytariladi (50%).')) _doSell();
   }
 }
 
