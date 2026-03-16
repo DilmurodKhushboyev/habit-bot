@@ -8932,10 +8932,11 @@ try:
     @api_app.route(_WEBHOOK_PATH, methods=["POST"])
     def telegram_webhook():
         import json as _wjson
+        import threading as _thr
         from flask import request as _wreq
         if _wreq.headers.get("content-type") == "application/json":
             update = telebot.types.Update.de_json(_wjson.loads(_wreq.data))
-            bot.process_new_updates([update])
+            _thr.Thread(target=bot.process_new_updates, args=([update],), daemon=True).start()
         return "", 200
 
     @api_app.route("/setup_webhook")
