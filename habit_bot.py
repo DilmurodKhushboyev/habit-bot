@@ -8409,19 +8409,23 @@ try:
         u = load_user(uid)
         today = today_uz5()
         # Counter fieldlar uchun alohida tekshirish
-        if item_id == "shield_1":
-            if u.get("streak_shields", 0) < 1:
+        if item_id in ("shield_1", "shield_3"):
+            raw_inv_s = u.get("inventory", [])
+            inv_s = {i: 1 for i in raw_inv_s} if isinstance(raw_inv_s, list) else dict(raw_inv_s)
+            shields = u.get("streak_shields", 0)
+            in_inv  = inv_s.get(item_id, 0) >= 1
+            if shields < 1 and not in_inv:
                 return jsonify({"ok": False, "error": "Inventarda topilmadi"})
-            u["streak_shields"] = u.get("streak_shields", 0) - 1
-            u["points"] = u.get("points", 0) + refund
-            save_user(uid, u)
-            return jsonify({"ok": True, "points": u["points"], "refund": refund})
-        if item_id == "shield_3":
-            if u.get("streak_shields", 0) < 1:
-                return jsonify({"ok": False, "error": "Inventarda topilmadi"})
-            sell_qty = min(u["streak_shields"], 3)
-            actual_refund = refund * sell_qty // 3
-            u["streak_shields"] = max(0, u["streak_shields"] - sell_qty)
+            if shields >= 1:
+                sell_qty = min(shields, 3) if item_id == "shield_3" else 1
+                actual_refund = refund * sell_qty // 3 if item_id == "shield_3" else refund
+                u["streak_shields"] = max(0, shields - sell_qty)
+            else:
+                actual_refund = refund
+                inv_s[item_id] = inv_s.get(item_id, 0) - 1
+                if inv_s[item_id] <= 0:
+                    del inv_s[item_id]
+                u["inventory"] = inv_s
             u["points"] = u.get("points", 0) + actual_refund
             save_user(uid, u)
             return jsonify({"ok": True, "points": u["points"], "refund": actual_refund})
