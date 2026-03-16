@@ -7564,7 +7564,7 @@ try:
                 "members":      members[:5],
                 "streak":       g.get("streak", 0),
                 "is_admin":     g.get("admin_id") == str(uid),
-                "invite_link":  f"https://t.me/{get_bot_username()}?start=grp_{g.get('id','')}" if g.get("admin_id") == str(uid) else "",
+                "invite_link":  f"https://t.me/{get_bot_username()}?start=grp_{g.get('id','')}",  # barcha a'zolarga
                 "done_today_me": done_today_me,
                 "weekly_goal":  _weekly_goal,
                 "weekly_done":  _weekly_done,
