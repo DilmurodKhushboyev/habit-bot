@@ -4255,7 +4255,7 @@ function renderShop(d) {
   const inventory = d.inventory || {};
 
   // Inventory bo'limi — faqat sotib olinganlar
-  const owned_items = items.filter(i => (inventory[i.id] || 0) > 0);
+  const owned_items = items.filter(i => (i.owned || 0) > 0 || (inventory[i.id] || 0) > 0);
   const activePet   = d.active_pet   || '';
   const activeBadge = d.active_badge || '';
   const activeCar   = d.active_car   || '';
@@ -4263,7 +4263,7 @@ function renderShop(d) {
   let invHtml = '';
   if (owned_items.length > 0) {
     const invCards = owned_items.map(item => {
-      const qty     = inventory[item.id] || 0;
+      const qty     = item.owned || inventory[item.id] || 0;
       const canAct  = ['pet','badge','car'].includes(item.cat);
       const isActive = (item.cat==='pet' && activePet===item.id)
                     || (item.cat==='badge' && activeBadge===item.id)
