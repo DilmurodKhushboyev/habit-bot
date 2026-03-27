@@ -328,7 +328,7 @@ function renderStats(d) {
           const left66 = Math.max(0, 66 - d66);
           const label66 = d66 >= 66
             ? S('msg','habit_formed')
-            : left66 + S('msg','days_left').replace('{n}', left66);
+            : S('msg','days_left').replace('{n}', left66);
           return `<div style="margin-top:10px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;font-weight:600">🎯 ${S('msg','calc_66')}</div>
