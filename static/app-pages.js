@@ -1,0 +1,567 @@
+// ── BUGUN ──
+async function loadToday() {
+  try {
+    const d = await apiFetch(`today/${userId}`);
+    data.today = d;
+    if (d.lang && d.lang !== currentLang) {
+      currentLang = d.lang;
+      localStorage.setItem('sh_lang', d.lang);
+      updateNavLabels();
+    }
+    renderToday(d);
+    // Header points — today javobidan olinadi
+    if (d.points !== undefined) {
+      document.getElementById('header-pts').textContent = '⭐ ' + d.points;
+    }
+    // Onboarding: data kelgandan keyin tekshiramiz
+    maybeShowOnboard(d);
+  } catch(e) {
+    document.getElementById('today-content').innerHTML =
+      `<div class="empty-state">
+        <div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FBBF24"/><stop offset="100%" stop-color="#F59E0B"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div>${S('msg','data_error')}</div>
+        <small style="color:var(--sub);margin-top:8px;display:block">${e}</small>
+        <button onclick="loaded.today=false;loadToday()" style="margin-top:14px;padding:10px 20px;border-radius:12px;border:none;background:var(--bg);box-shadow:var(--sh-sm);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">${S('today','retry')}</button>
+      </div>`;
+  }
+}
+
+function renderToday(d) {
+  const { habits, done_count, total, percent, today } = d;
+  const currentJon = d.jon ?? 100;
+  const dt = new Date(today);
+  const _dayNamesMap = {
+    uz:['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'],
+    ru:['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'],
+    en:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+  };
+  const _monthsMap = {
+    uz:['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'],
+    ru:['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'],
+    en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+  };
+  const dayNames = _dayNamesMap[currentLang] || _dayNamesMap['uz'];
+  const months   = _monthsMap[currentLang]   || _monthsMap['uz'];
+  const dateStr  = `${dt.getDate()} ${months[dt.getMonth()]} — ${dayNames[dt.getDay()]}`;
+  const allDone  = done_count === total && total > 0;
+
+  // Vaqt bo'yicha sort: vaqtsiz eng oxirga, bajarilganlar done bo'lmaganlardan keyin
+  const sortedHabits = [...(habits || [])].sort((a, b) => {
+    // 1. Bajarilgan/bajarilmagan (bajarilmaganlar tepada)
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    // 2. Vaqt bo'yicha o'sish tartibida (vaqtsiz eng oxirga)
+    const ta = a.time && a.time !== 'vaqtsiz' ? a.time : '99:99';
+    const tb = b.time && b.time !== 'vaqtsiz' ? b.time : '99:99';
+    return ta.localeCompare(tb);
+  });
+  let cardsHtml = '';
+  sortedHabits.forEach(h => {
+    const rc  = h.repeat_count || 1;
+    const tc  = h.today_count  || 0;
+    const isRepeat = rc > 1;
+    // Tugma: bitta bo'lsa SVG-tick, ko'p bo'lsa 3/5
+    const btnContent = h.done ? '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><path d="M4 10l5 5 7-8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : (isRepeat && tc > 0 ? tc+'/'+rc : '');
+    // Progress dots (repeat uchun)
+    let dotsHtml = '';
+    if (isRepeat) {
+      dotsHtml = '<div class="repeat-dots" style="display:flex;gap:3px;margin-top:4px">'
+        + Array.from({length: rc}, (_,i) =>
+            '<div style="width:8px;height:8px;border-radius:50%;background:'+(i<tc?'var(--green)':'var(--bg)')+';box-shadow:'+(i<tc?'none':'var(--sh-in)')+'"></div>'
+          ).join('') + '</div>';
+    }
+    cardsHtml += `
+      <div class="checkin-card ${h.done ? 'done' : ''}" id="ccard-${h.id}" onclick="checkin('${h.id}', this)">
+        <div class="checkin-icon">${h.icon || '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDefIcon" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#047857"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgDefIcon)" opacity="0.2"/><path d="M7 12l4 4 6-7" stroke="url(#svgDefIcon)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</div>
+        <div class="checkin-info">
+          <div class="checkin-name">${h.name}</div>
+          <div class="checkin-meta">${isRepeat ? rc+' '+S('today','times_per_day')+' · ' : (h.time !== 'vaqtsiz' ? `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#059669"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> `+h.time+' · ' : '')}<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak} ${S('today','days_streak')}</div>
+          ${dotsHtml}
+        </div>
+        <button class="checkin-btn" id="cbtn-${h.id}" style="${isRepeat && !h.done && tc>0 ? 'font-size:11px;font-weight:700' : ''}">${btnContent}</button>
+        <div class="confetti-pop" id="pop-${h.id}">✨</div>
+      </div>`;
+  });
+
+  document.getElementById('today-content').innerHTML = `
+    <div class="all-done-banner ${allDone ? 'show' : ''}" id="all-done-banner">
+      <div class="bd-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="svgParty" x1="0" y1="32" x2="32" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs><path d="M4 28L14 4l14 14L4 28z" fill="url(#svgParty)" opacity="0.85"/><circle cx="24" cy="6" r="2" fill="#34D399"/><circle cx="28" cy="12" r="1.5" fill="#34D399"/><circle cx="20" cy="4" r="1" fill="#10B981"/><path d="M22 10l2-3M26 8l3-1M24 14l3 1" stroke="#34D399" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div class="bd-title">${S('today','all_done')}</div>
+      <div class="bd-sub">${S('today','all_done_sub')} <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg></div>
+    </div>
+
+    <div class="today-hero">
+      <div class="today-date">${dateStr}</div>
+      <div style="display:flex;justify-content:center;gap:24px;align-items:center;margin:16px 0 4px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="prog-ring-wrap" style="margin:0" id="prog-ring">${ringHTML(percent)}</div>
+          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">${S('today','habit_label')}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="prog-ring-wrap" style="margin:0" id="jon-ring">${jonRingHTML(currentJon)}</div>
+          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">${S('today','life_label')}</div>
+        </div>
+      </div>
+      <div class="today-sub" id="prog-sub">${done_count} / ${total} ${S('today','progress_sub')}</div>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:center;margin:12px 0 4px">
+      <button onclick="openAddFromToday()" type="button" style="font-size:13px;font-weight:600;color:#10B981;background:none;border:none;cursor:pointer;padding:4px 8px">${S('today','add_habit')}</button>
+
+    </div>
+
+    <div class="section-title">${S('today','section_title')}</div>
+    <div style="font-size:11px;color:var(--green);margin:-6px 0 10px 2px">${S('today','tap_hint')}</div>
+    ${cardsHtml || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#6B8C80"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>' + S('msg','no_habits_yet') + '</div>'}
+    <div class="toast" id="toast-today"></div>`;
+}
+
+async function checkin(hid, cardEl) {
+  const btn = document.getElementById('cbtn-' + hid);
+  const pop = document.getElementById('pop-' + hid);
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/checkin/${userId}/${hid}`, {
+      method: 'POST',
+      headers: { 'X-Init-Data': initData, 'X-User-Id': userId }
+    });
+    if (!res.ok) throw new Error(S('msg','server_error') + ': ' + res.status);
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) throw new Error(S('msg','connection_error'));
+    const result = await res.json();
+    if (!result.ok) throw new Error(result.error);
+    const isDone = result.done;
+    const wasFullyDone = cardEl.classList.contains('done');
+
+    cardEl.classList.toggle('done', isDone);
+    if (btn) { btn.innerHTML = isDone ? '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><path d="M4 10l5 5 7-8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''; }
+
+    // Meta va tugmani yangilash
+    const rc  = result.repeat_count || 1;
+    const tc  = result.today_count  || 0;
+    if (btn) {
+      btn.innerHTML = isDone ? '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><path d="M4 10l5 5 7-8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : (rc > 1 && tc > 0 ? tc+'/'+rc : '');
+      btn.style.fontSize = (rc > 1 && !isDone && tc > 0) ? '11px' : '';
+    }
+    // Progress dots yangilash
+    const info = cardEl.querySelector('.checkin-info');
+    if (info && rc > 1) {
+      let dots = info.querySelector('.repeat-dots');
+      if (!dots) { dots = document.createElement('div'); dots.className='repeat-dots'; dots.style.cssText='display:flex;gap:3px;margin-top:4px'; info.appendChild(dots); }
+      dots.innerHTML = Array.from({length: rc}, (_,i) =>
+        '<div style="width:8px;height:8px;border-radius:50%;background:'+(i<tc?'var(--green)':'var(--bg)')+';box-shadow:'+(i<tc?'none':'var(--sh-in)')+'"></div>'
+      ).join('');
+    }
+    const metaEl = cardEl.querySelector('.checkin-meta');
+    if (metaEl) {
+      const isRepeat = rc > 1;
+      metaEl.innerHTML = isRepeat ? `${rc} ${S('today','times_per_day')} · <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${result.streak} ${S('today','days_streak')}` : `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${result.streak} ${S('today','days_streak')}`;
+    }
+
+    if (isDone && pop) {
+      pop.classList.add('show');
+      setTimeout(() => pop.classList.remove('show'), 600);
+    }
+
+    // Ring yangilash
+    if (data.today) {
+      const habit = (data.today.habits || []).find(h => h.id === hid);
+      const wasDone = habit ? habit.done : false;
+      if (isDone && !wasDone) data.today.done_count += 1;
+      else if (!isDone && wasDone) data.today.done_count -= 1;
+      data.today.done_count = Math.max(0, Math.min(data.today.total, data.today.done_count));
+      const pct = data.today.total ? Math.round(data.today.done_count / data.today.total * 100) : 0;
+      const ringEl = document.getElementById('prog-ring');
+      if (ringEl) ringEl.innerHTML = ringHTML(pct);
+      const subEl = document.getElementById('prog-sub');
+      if (subEl) subEl.textContent = `${data.today.done_count} / ${data.today.total} ${S('today','progress_sub')}`;
+      if (habit) { habit.done = isDone; habit.streak = result.streak; }
+    }
+
+    if (result.all_done) {
+      const b = document.getElementById('all-done-banner');
+      if (b) b.classList.add('show');
+    } else {
+      const b = document.getElementById('all-done-banner');
+      if (b) b.classList.remove('show');
+    }
+
+    if (result.points !== undefined) {
+      const ptsEl = document.getElementById("header-pts");
+      if (ptsEl) ptsEl.textContent = "⭐ " + result.points;
+      if (data.today) data.today.points = result.points;
+    }
+
+    const rc2 = result.repeat_count || 1;
+    const tc2 = result.today_count  || 0;
+    const isUndo = !isDone && tc2 === 0 && wasFullyDone;
+    if (isDone || isUndo) {
+      const earnedAbs = Math.abs(result.earned ?? (isDone ? 5 : -5));
+      const diffTxt = isDone ? `+${earnedAbs} ⭐` : `-${earnedAbs} ⭐`;
+      showTodayToast(isDone ? S('msg','done_toast') + ' ' + diffTxt : S('msg','undone_toast') + ' ' + diffTxt);
+      playHabitSound(isDone);
+    }
+    loaded.profile = false; loaded.rating = false; loaded.achievements = false; loaded.stats = false;
+    if (document.getElementById('page-stats')?.classList.contains('active')) { loadStats(); }
+    // Bajarilgan odat pastga, bekor qilingan odat tepaga
+    const container = cardEl.parentNode;
+    if (container) {
+      if (isDone) {
+        // Pastga: barcha done bo'lmagan kartalardan keyin qo'y
+        const undoneCards = [...container.querySelectorAll('.checkin-card:not(.done)')];
+        if (undoneCards.length > 0) {
+          setTimeout(() => container.appendChild(cardEl), 300);
+        }
+      } else if (isUndo) {
+        // Tepaga: birinchi done kartadan oldin qo'y
+        const firstDone = container.querySelector('.checkin-card.done');
+        if (firstDone && firstDone !== cardEl) {
+          setTimeout(() => container.insertBefore(cardEl, firstDone), 300);
+        }
+      }
+    }
+    // Yangi badge popup
+    if (isDone && result.new_badges && result.new_badges.length) {
+      result.new_badges.forEach(b => showBadgePopup(b.icon, b.title, S('achievements','new_badge')));
+    }
+    // Streak milestone popup
+    if (isDone && result.streak_milestone) {
+      const sm = result.streak_milestone;
+      setTimeout(() => showBadgePopup(sm.emoji, sm.title, `+${sm.bonus} ⭐ ${S('msg','bonus_ball')}`), result.new_badges && result.new_badges.length ? 1500 : 0);
+    }
+  } catch(e) {
+    showTodayToast('❌ ' + S('msg','error_label') + ': ' + e.message, true);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function showTodayToast(msg, err = false) {
+  const t = document.getElementById('toast-today');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = 'toast show' + (err ? ' err' : '');
+  setTimeout(() => { t.className = 'toast'; }, 2500);
+}
+
+// ── ESLATMALAR ──
+async function loadReminders() {
+  try {
+    const d = await apiFetch(`habits/${userId}`);
+    data.reminders = d.habits || [];
+    renderReminders(d.habits || []);
+  } catch(e) {
+    document.getElementById('reminders-content').innerHTML =
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FBBF24"/><stop offset="100%" stop-color="#F59E0B"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>${S('msg','data_error')}.</div>`;
+  }
+}
+
+function renderReminders(habits) {
+  if (!habits.length) {
+    document.getElementById('reminders-content').innerHTML =
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#6B8C80"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>${S('reminders','empty')}</div>`;
+    return;
+  }
+
+  const cardsHtml = habits.map(h => {
+    const enabled      = h.reminder_enabled !== false;
+    const repeat       = h.repeat || 'daily';
+    const times        = Array.isArray(h.times) ? h.times : (h.time && h.time !== 'vaqtsiz' ? [h.time] : []);
+    const repeatCount  = times.length || 1;
+    const reps = [
+      {id:'daily',    label:S('msg','rem_everyday')},
+      {id:'weekdays', label:S('msg','rem_weekdays')},
+      {id:'weekends', label:S('msg','rem_weekends')},
+    ];
+
+    // Vaqtlar ro'yxati HTML
+    const timesListHtml = times.map((t, i) => `
+      <div class="time-row" id="trow-${h.id}-${i}">
+        <span class="time-lbl">${S('msg','time_slot_n').replace('{n}', i+1)}</span>
+        <input class="time-input" type="time" id="tval-${h.id}-${i}" value="${t}">
+        <button class="time-clear" onclick="removeTime('${h.id}',${i})" type="button" title="${S('msg','delete_btn')}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
+      </div>`).join('');
+
+    return `
+      <div class="rem-card ${!enabled ? 'disabled' : ''}" id="remcard-${h.id}">
+        <div class="rem-top">
+          <div class="rem-icon">${h.icon || '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDefIcon" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#047857"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgDefIcon)" opacity="0.2"/><path d="M7 12l4 4 6-7" stroke="url(#svgDefIcon)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</div>
+          <div style="flex:1">
+            <div class="rem-name">${h.name}</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">${repeatCount} ${S('reminders','repeat_meta')}</div>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle" onclick="toggleReminder('${h.id}', this)">
+              <input type="checkbox" id="tog-${h.id}" ${enabled ? 'checked' : ''}>
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+        </div>
+        <div class="rem-body" id="rembody-${h.id}">
+          <div class="repeat-row">
+            <span class="repeat-lbl">${S('msg','repeat_day')}</span>
+            <div class="repeat-opts">
+              ${reps.map(r => `<button class="rep-btn ${repeat===r.id?'active':''}" id="rep-${h.id}-${r.id}" onclick="setRepeat('${h.id}','${r.id}')" type="button">${r.label}</button>`).join('')}
+            </div>
+          </div>
+          <div id="times-list-${h.id}">${timesListHtml}</div>
+          <button class="rep-btn" style="width:100%;margin-top:6px;justify-content:center" onclick="addTime('${h.id}')" type="button">${S('reminders','add_time')}</button>
+          <button class="rem-save-btn" id="rsave-${h.id}" onclick="saveReminder('${h.id}')" type="button" style="margin-top:8px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgSave" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#047857"/></linearGradient></defs><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 21v-8H7v8M7 3v5h8" stroke="url(#svgSave)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>${S('profile','save_btn')}
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('reminders-content').innerHTML = `
+    <div class="rem-info-card">
+      <div class="rem-info-icon"><svg width="28" height="28" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgBellInf" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M13 3C13 3 8 6 8 13v5H5l2 2h12l2-2h-3v-5c0-7-5-10-5-10z" fill="url(#svgBellInf)" opacity="0.85"/><circle cx="13" cy="22" r="1.5" fill="url(#svgBellInf)"/></svg></div>
+      <div class="rem-info-text">
+        <div class="rem-info-title">${S('reminders','reminder_settings')}</div>
+        <div class="rem-info-sub">${S('msg','rem_info')}</div>
+      </div>
+    </div>
+    <div class="section-title">${S('reminders','habits_count')} (${habits.length})</div>
+    ${cardsHtml}
+    <div class="toast" id="toast-rem"></div>`;
+}
+
+function toggleReminder(hid, labelEl) {
+  const card   = document.getElementById('remcard-' + hid);
+  const body   = document.getElementById('rembody-' + hid);
+  const tog    = document.getElementById('tog-' + hid);
+  const enabled = tog.checked;
+  card.classList.toggle('disabled', !enabled);
+  body.style.opacity       = enabled ? '1' : '0.4';
+  body.style.pointerEvents = enabled ? 'auto' : 'none';
+  // rep butonlarni ham disable/enable
+  ['daily','weekdays','weekends'].forEach(r => {
+    const btn = document.getElementById(`rep-${hid}-${r}`);
+    if (btn) btn.disabled = !enabled;
+  });
+}
+
+function setRepeat(hid, val) {
+  ['daily','weekdays','weekends'].forEach(r => {
+    const btn = document.getElementById(`rep-${hid}-${r}`);
+    if (btn) {
+      btn.classList.toggle('active', r === val);
+    }
+  });
+  // rem-body pointer-events ni tiklash
+  const body = document.getElementById('rembody-' + hid);
+  if (body) body.style.pointerEvents = 'auto';
+}
+
+function clearTime(hid) {
+  const inp = document.getElementById('time-' + hid);
+  if (inp) inp.value = '';
+}
+
+function addTime(hid) {
+  const list = document.getElementById('times-list-' + hid);
+  if (!list) return;
+  const rows = list.querySelectorAll('.time-row');
+  if (rows.length >= 10) return;
+  const i = rows.length;
+  const div = document.createElement('div');
+  div.className = 'time-row';
+  div.id = 'trow-' + hid + '-' + i;
+  div.innerHTML = `<span class="time-lbl">${S('msg','time_slot_n').replace('{n}', i+1)}</span>
+    <input class="time-input" type="time" id="tval-${hid}-${i}">
+    <button class="time-clear" onclick="removeTime('${hid}',${i})" type="button" title="${S('msg','delete_btn')}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>`;
+  list.appendChild(div);
+}
+
+function removeTime(hid, idx) {
+  const row = document.getElementById('trow-' + hid + '-' + idx);
+  if (row) row.remove();
+  // Qayta raqamlash
+  const list = document.getElementById('times-list-' + hid);
+  if (!list) return;
+  list.querySelectorAll('.time-row').forEach((r, i) => {
+    r.id = 'trow-' + hid + '-' + i;
+    const lbl = r.querySelector('.time-lbl');
+    if (lbl) lbl.textContent = S('msg','time_slot_n').replace('{n}', i+1);
+    const inp = r.querySelector('input[type=time]');
+    if (inp) inp.id = 'tval-' + hid + '-' + i;
+    const btn = r.querySelector('.time-clear');
+    if (btn) btn.setAttribute('onclick', "removeTime('" + hid + "'," + i + ")");
+  });
+}
+
+async function saveReminder(hid) {
+  const tog    = document.getElementById('tog-' + hid);
+  const timeEl = document.getElementById('time-' + hid);
+  const saveBtn= document.getElementById('rsave-' + hid);
+  const enabled = tog ? tog.checked : true;
+  const time    = timeEl ? timeEl.value : '';
+  const repeat  = ['daily','weekdays','weekends'].find(r => {
+    const btn = document.getElementById(`rep-${hid}-${r}`);
+    return btn && btn.classList.contains('active');
+  }) || 'daily';
+
+  if (saveBtn) { saveBtn.textContent = S('profile','saving'); saveBtn.disabled = true; }
+
+  // Vaqtlar ro'yxatini yig'ish
+  const timesList = document.getElementById('times-list-' + hid);
+  const timesArr = [];
+  if (timesList) {
+    timesList.querySelectorAll('input[type=time]').forEach(inp => {
+      if (inp.value) timesArr.push(inp.value);
+    });
+  }
+  const firstTime = timesArr[0] || '';
+
+  try {
+    const res = await fetch(`${API}/reminder/${userId}/${hid}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Init-Data': initData, 'X-User-Id': userId },
+      body: JSON.stringify({
+        time:    firstTime || 'vaqtsiz',
+        times:   timesArr,
+        enabled: enabled,
+        repeat:  repeat,
+      })
+    });
+    const result = await res.json();
+    if (!result.ok) throw new Error(result.error);
+
+    if (saveBtn) {
+      saveBtn.textContent = S('profile','saved');
+      saveBtn.classList.add('saved');
+      setTimeout(() => {
+        saveBtn.textContent = S('profile','save');
+        saveBtn.classList.remove('saved');
+        saveBtn.disabled = false;
+      }, 2000);
+    }
+    showRemToast(enabled && time ? S('msg','rem_set_on').replace('{time}', time) : S('msg','rem_set_off'));
+    loaded.habits = false;
+  } catch(e) {
+    if (saveBtn) { saveBtn.textContent = S('profile','save'); saveBtn.disabled = false; }
+    showRemToast('❌ ' + S('msg','error_label') + ': ' + e.message, true);
+  }
+}
+
+function showRemToast(msg, err = false) {
+  const t = document.getElementById('toast-rem');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = 'toast show' + (err ? ' err' : '');
+  setTimeout(() => { t.className = 'toast'; }, 2500);
+}
+
+// ── YUTUQLAR ──
+let achFilter = 'all';
+
+async function loadAchievements() {
+  try {
+    const d = await apiFetch(`achievements/${userId}`);
+    data.achievements = d;
+    renderAchievements(d, achFilter);
+  } catch(e) {
+    document.getElementById('achievements-content').innerHTML =
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FBBF24"/><stop offset="100%" stop-color="#F59E0B"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>${S('msg','data_error')}.</div>`;
+  }
+}
+
+function renderAchievements(d, filter = 'all') {
+  const { achievements, cats, earned_count, total_count } = d;
+
+  // Ring SVG
+  const pct  = total_count ? Math.round(earned_count / total_count * 100) : 0;
+  const r    = 34; const circ = 2 * Math.PI * r;
+  const dash = circ * pct / 100;
+  const ringColor = pct >= 80 ? '#10B981' : pct >= 40 ? '#059669' : '#059669';
+  const ringSvg = `<svg width="80" height="80" viewBox="0 0 80 80">
+    <circle cx="40" cy="40" r="${r}" fill="none" stroke="#B4BDB8" stroke-width="6"/>
+    <circle cx="40" cy="40" r="${r}" fill="none" stroke="${ringColor}" stroke-width="6"
+      stroke-dasharray="${dash} ${circ}" stroke-dashoffset="${circ/4}" stroke-linecap="round"/>
+  </svg>`;
+
+  const sumHtml = `
+    <div class="ach-summary">
+      <div class="ach-ring-wrap">
+        ${ringSvg}
+        <div class="ach-ring-center">
+          <div class="ach-ring-num">${pct}%</div>
+        </div>
+      </div>
+      <div class="ach-sum-info">
+        <div class="ach-sum-title">${S('achievements','title')}</div>
+        <div class="ach-sum-sub">${earned_count} / ${total_count} ${S('achievements','earned_of')}</div>
+      </div>
+    </div>`;
+
+  // Category tabs
+  const allCats = [{id:'all',label:S('today','all_filter')}, ...cats];
+  const catTabsHtml = allCats.map(c => `
+    <button class="ach-cat-btn ${filter === c.id ? 'active' : ''}"
+      onclick="filterAch('${c.id}')">${c.label}</button>`
+  ).join('');
+
+  // Cards
+  const filtered = filter === 'all' ? achievements : achievements.filter(a => a.cat === filter);
+
+  // Avval qozonilganlar
+  const sorted = [...filtered].sort((a,b) => b.earned - a.earned);
+
+  const cardsHtml = sorted.map(a => {
+    const progPct   = a.req ? Math.round(a.current / a.req * 100) : 0;
+    const progColor = a.earned ? '#10B981' : progPct >= 50 ? '#059669' : '#059669';
+    return `
+      <div class="ach-card ${a.earned ? 'earned' : 'locked'}">
+        <div class="ach-badge">
+          ${a.icon}
+          ${a.earned ? '<div class="ach-badge-check"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgTick" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#047857"/></linearGradient></defs><path d="M4 10l5 5 7-8" stroke="url(#svgTick)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' : ''}
+        </div>
+        <div class="ach-info">
+          <div class="ach-title">${a.title}</div>
+          <div class="ach-desc">${a.desc}</div>
+          ${!a.earned ? `
+          <div class="ach-prog-wrap">
+            <div class="ach-prog-bg">
+              <div class="ach-prog-fill" style="width:${progPct}%;background:${progColor}"></div>
+            </div>
+            <div class="ach-prog-txt">${a.current} / ${a.req}</div>
+          </div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('achievements-content').innerHTML = `
+    ${sumHtml}
+    <div class="ach-cat-tabs">${catTabsHtml}</div>
+    ${cardsHtml || `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgLock" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#6B8C80"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs><rect x="5" y="11" width="14" height="10" rx="2" stroke="url(#svgLock)" stroke-width="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="url(#svgLock)" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="url(#svgLock)"/></svg></div>${S('achievements','empty')}</div>`}`;
+}
+
+function filterAch(cat) {
+  achFilter = cat;
+  if (data.achievements) renderAchievements(data.achievements, cat);
+}
+
+// Badge popup (check-in dan keyin)
+let popupQueue = [];
+let popupBusy  = false;
+
+function showBadgePopup(icon, title, desc) {
+  popupQueue.push({icon, title, desc});
+  if (!popupBusy) nextPopup();
+}
+
+function nextPopup() {
+  if (!popupQueue.length) { popupBusy = false; return; }
+  popupBusy = true;
+  const {icon, title, desc} = popupQueue.shift();
+  const el = document.getElementById('badge-popup');
+  document.getElementById('bp-icon').textContent  = icon;
+  document.getElementById('bp-title').innerHTML = '<svg width="16" height="16" viewBox="0 0 32 32" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgPartyJ" x1="0" y1="32" x2="32" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs><path d="M4 28L14 4l14 14L4 28z" fill="url(#svgPartyJ)" opacity="0.85"/><circle cx="24" cy="6" r="2" fill="#34D399"/><circle cx="28" cy="12" r="1.5" fill="#34D399"/><circle cx="20" cy="4" r="1" fill="#10B981"/></svg>' + title;
+  document.getElementById('bp-sub').textContent   = desc;
+  el.classList.add('show');
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(nextPopup, 400);
+  }, 3000);
+}
+
