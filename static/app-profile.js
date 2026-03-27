@@ -304,9 +304,23 @@ function previewEpPhoto(input) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    _epPhotoDataUrl = e.target.result;
-    const epAv = document.getElementById('ep-avatar');
-    if (epAv) epAv.innerHTML = `<img src="${_epPhotoDataUrl}" style="width:100%;height:100%;object-fit:cover">`;
+    const img = new Image();
+    img.onload = () => {
+      // Canvas orqali 200x200 ga resize + JPEG 70% compress
+      const size = 200;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      // Markazdan kvadrat qirqish (crop)
+      const min = Math.min(img.width, img.height);
+      const sx = (img.width - min) / 2;
+      const sy = (img.height - min) / 2;
+      ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+      _epPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      const epAv = document.getElementById('ep-avatar');
+      if (epAv) epAv.innerHTML = `<img src="${_epPhotoDataUrl}" style="width:100%;height:100%;object-fit:cover">`;
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
