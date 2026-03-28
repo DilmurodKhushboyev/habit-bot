@@ -85,7 +85,7 @@ function renderToday(d) {
             return '<div style="margin-top:5px" onclick="event.stopPropagation()">'
               + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'
               + '<div style="font-size:8px;color:var(--sub);font-weight:600;letter-spacing:.5px">\uD83C\uDFAF ' + d66 + '/66</div>'
-              + '<div style="font-size:8px;font-weight:600;color:' + c66 + '">' + label66 + '</div>'
+              + '<div style="font-size:7px;font-weight:600;color:' + c66 + '">' + label66 + '</div>'
               + '</div>'
               + '<div style="height:3px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">'
               + '<div style="height:100%;border-radius:2px;width:' + pct66 + '%;background:linear-gradient(90deg,' + c66 + '99,' + c66 + ');transition:width .6s ease"></div>'
