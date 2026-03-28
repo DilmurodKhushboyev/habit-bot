@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Super Habits</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=420">
+<script src="strings.js?v=420"></script>
+<script src="app-core.js?v=420"></script>
+</head>
+<body>
+
+<!-- OB HINT -->
+<div id="ob-hint">
+  <div class="obh-top">
+    <div class="obh-icon" id="obh-icon"></div>
+    <div class="obh-body">
+      <div class="obh-title" id="obh-title"></div>
+      <div class="obh-desc"  id="obh-desc"></div>
+      <div class="obh-arrow" id="obh-arrow"></div>
+    </div>
+    <button class="obh-close" onclick="hideObHint()">✕</button>
+  </div>
+</div>
+
+<!-- ONBOARDING MODAL -->
+<div id="onboard-backdrop" onclick="closeOnboard()"></div>
+<div id="onboard-modal">
+  <div class="ob-handle"></div>
+  <div class="ob-title" id="ob-title"></div>
+  <div class="ob-sub"   id="ob-sub"></div>
+  <div class="ob-dots"  id="ob-dots"></div>
+  <div class="ob-steps" id="ob-steps"></div>
+  <button class="ob-close" id="ob-close" onclick="closeOnboard()"></button>
+</div>
+
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo-wrap">
+      <div class="logo-icon"><img src="data:image/png;base64,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" width="30" height="30" style="border-radius:6px;display:block" alt="logo"/></div>
+      <div>
+        <div class="header-title">Super Habits</div>
+        <div class="header-sub">@Super_habits_bot</div>
+      </div>
+    </div>
+    <div class="pts-chip" id="header-pts">⭐ —</div>
+  </div>
+  <!-- Orqaga qaytish satri -->
+  <div id="back-bar" onclick="goBack()" style="display:none;align-items:center;gap:8px;
+    padding:8px 0 4px;cursor:pointer;color:var(--sub)">
+    <span style="font-size:18px;line-height:1">‹</span>
+    <span id="back-label" style="font-size:13px;font-weight:600">Orqaga</span>
+  </div>
+</div>
+
+<!-- PTR (global — barcha sahifalar uchun) -->
+<div id="ptr-indicator"><div id="ptr-spinner"></div><span id="ptr-text">Yangilash uchun torting</span></div>
+
+<!-- PAGES -->
+<div class="tabs-wrap" style="display:none" id="tabs-wrap">
+  <div class="tabs" id="tabs-inner"></div>
+</div>
+
+<!-- BUGUN -->
+<div class="page active" id="page-today">
+  <div id="today-content">
+    <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+  </div>
+</div>
+
+<!-- REYTING (Statistika ichida ko'rsatiladi) -->
+
+<!-- PROFIL -->
+<div class="page" id="page-profile">
+  <div id="profile-content">
+    <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+  </div>
+</div>
+
+<!-- ODATLAR -->
+<div class="page" id="page-habits">
+  <div id="habits-content">
+    <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+  </div>
+</div>
+
+<!-- ESLATMALAR -->
+<div class="page" id="page-reminders">
+  <div id="reminders-content">
+    <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+  </div>
+</div>
+
+<!-- YUTUQLAR -->
+<div class="page" id="page-achievements">
+  <div id="achievements-content">
+    <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+  </div>
+</div>
+
+<!-- STATISTIKA -->
+<div class="page" id="page-stats" style="padding:0">
+  <div class="period-switch" style="margin-bottom:0;position:sticky;top:0;z-index:8;background:var(--bg);padding:12px 20px">
+    <button class="period-btn active" id="ssub-rating"  onclick="setStatSub('rating')"  type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="gRate" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="url(#gRate)"/></svg>Reyting</button>
+    <button class="period-btn" id="ssub-stats"   onclick="setStatSub('stats')"   type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="gStat" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><rect x="3" y="14" width="4" height="7" rx="1.5" fill="url(#gStat)" opacity="0.5"/><rect x="10" y="9" width="4" height="12" rx="1.5" fill="url(#gStat)" opacity="0.75"/><rect x="17" y="4" width="4" height="17" rx="1.5" fill="url(#gStat)"/></svg>Statistika</button>
+    <button class="period-btn"        id="ssub-friends" onclick="setStatSub('friends')" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="gFrnd" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="9" cy="8" r="4" fill="url(#gFrnd)"/><circle cx="17" cy="8" r="3" fill="url(#gFrnd)" opacity="0.6"/><path d="M1 20c0-4 3.6-7 8-7s8 3 8 7" stroke="url(#gFrnd)" stroke-width="2" fill="none"/></svg>Guruh/Do'st</button>
+  </div>
+  <div id="ssub-panel-stats" style="display:none;padding:0 20px">
+    <div id="stats-content">
+      <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+    </div>
+  </div>
+  <div id="ssub-panel-rating" style="padding:0 20px">
+    <div id="rating-content">
+      <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+    </div>
+  </div>
+  <div id="ssub-panel-friends" style="display:none;padding:0">
+    <div class="period-switch" style="margin:0 20px 0">
+      <button class="period-btn active" id="gsub-groups"  onclick="setGroupSub('groups')"  type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="gFrnd" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="9" cy="8" r="4" fill="url(#gFrnd)"/><circle cx="17" cy="8" r="3" fill="url(#gFrnd)" opacity="0.6"/><path d="M1 20c0-4 3.6-7 8-7s8 3 8 7" stroke="url(#gFrnd)" stroke-width="2" fill="none"/></svg>Guruh</button>
+      <button class="period-btn"        id="gsub-friends" onclick="setGroupSub('friends')" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="gHand2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="8" cy="6" r="3" fill="url(#gHand2)"/><circle cx="16" cy="6" r="3" fill="url(#gHand2)" opacity="0.7"/><path d="M2 19c0-3.3 2.7-6 6-6h1" stroke="url(#gHand2)" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M22 19c0-3.3-2.7-6-6-6h-1" stroke="url(#gHand2)" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/><path d="M11 16l1.5 1.5L16 13" stroke="url(#gHand2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Do'st</button>
+    </div>
+    <div style="padding:0 20px">
+      <div id="groups-content">
+        <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+      </div>
+      <div id="friends-content" style="display:none">
+        <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOZOR -->
+<div class="page" id="page-bozor">
+  <div id="bozor-content">
+    <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+  </div>
+</div>
+
+<div class="page" id="page-premium">
+  <div id="premium-content">
+    <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+  </div>
+</div>
+
+
+
+<!-- CHALLENGE MODAL -->
+<div id="challenge-modal" class="modal-overlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);align-items:flex-end;justify-content:center">
+  <div style="background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;box-shadow:0 -4px 30px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-size:16px;font-weight:700;color:var(--text)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:6px"><defs><linearGradient id="svgTgtH" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="9" stroke="url(#svgTgtH)" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="url(#svgTgtH)" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="url(#svgTgtH)"/></svg><span id="ch-lbl-title">Challenge yuborish</span></div>
+      <button onclick="closeChallengeModal()" style="background:none;border:none;font-size:20px;color:var(--sub);cursor:pointer" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
+    </div>
+    <div style="font-size:12px;color:var(--sub);margin-bottom:16px"><span id="ch-lbl-opponent">Raqib:</span> <b id="ch-receiver-name" style="color:var(--text)"></b></div>
+    <input type="hidden" id="ch-receiver-id">
+    <div style="margin-bottom:12px">
+      <label id="ch-lbl-habit" style="font-size:11px;color:var(--sub);display:block;margin-bottom:6px">Odat nomi</label>
+      <input id="ch-habit" type="text" placeholder="Masalan: Kitob o'qish..." 
+        style="width:100%;box-sizing:border-box;background:var(--bg);border:none;border-radius:12px;padding:12px 14px;color:var(--text);font-size:14px;box-shadow:var(--sh-in);outline:none">
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="flex:1">
+        <label id="ch-lbl-duration" style="font-size:11px;color:var(--sub);display:block;margin-bottom:6px">Muddat (kun)</label>
+        <input id="ch-days" type="number" value="7" min="1" max="90"
+          style="width:100%;box-sizing:border-box;background:var(--bg);border:none;border-radius:12px;padding:12px 14px;color:var(--text);font-size:14px;box-shadow:var(--sh-in);outline:none">
+      </div>
+      <div style="flex:1">
+        <label id="ch-lbl-bet" style="font-size:11px;color:var(--sub);display:block;margin-bottom:6px">Garov (ball)</label>
+        <input id="ch-bet" type="number" value="50" min="10" max="500"
+          style="width:100%;box-sizing:border-box;background:var(--bg);border:none;border-radius:12px;padding:12px 14px;color:var(--text);font-size:14px;box-shadow:var(--sh-in);outline:none">
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--sub);margin-bottom:16px;background:var(--bg);border-radius:10px;padding:10px 12px;box-shadow:var(--sh-in)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgWarnSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarnSm)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarnSm)" stroke-width="2" stroke-linecap="round"/></svg><span id="ch-lbl-info">Garov ikkalangizdan yechiladi. G'olib 2× ball oladi. Yutqazgan hech narsa olmaydi.</span>
+    </div>
+    <button id="ch-send-btn" onclick="sendChallenge()" 
+      style="width:100%;padding:14px;background:linear-gradient(135deg,#5B8DEF,#4CAF7D);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer" type="button">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgTgtBtn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="12" cy="12" r="9" stroke="url(#svgTgtBtn)" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="url(#svgTgtBtn)" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="url(#svgTgtBtn)"/></svg><span id="ch-lbl-send">Yuborish</span>
+    </button>
+  </div>
+</div>
+
+<!-- PTR BOTTOM (global — barcha sahifalar uchun) -->
+<div id="ptr-bottom"><div id="ptr-bottom-spinner"></div><span id="ptr-bottom-text">Yangilash uchun torting</span></div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottom-nav">
+  <svg class="nav-bg" id="nav-bg" preserveAspectRatio="none"><path id="nav-bg-path" fill="var(--bg)"/></svg>
+  <div class="nav-ball" id="nav-ball"><div class="nav-ball-icon" id="nav-ball-icon"></div><span class="nav-ball-label" id="nav-ball-label"></span></div>
+  <button class="nav-item active" id="nav-today" onclick="switchTab('today', this)">
+    <span class="nav-icon">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
+        <defs><linearGradient id="ni1" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs>
+        <circle cx="13" cy="13" r="5.5" fill="url(#ni1)"/>
+        <line x1="13" y1="2" x2="13" y2="5" stroke="url(#ni1)" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="13" y1="21" x2="13" y2="24" stroke="url(#ni1)" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="2" y1="13" x2="5" y2="13" stroke="url(#ni1)" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="21" y1="13" x2="24" y2="13" stroke="url(#ni1)" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="4.8" y1="4.8" x2="7" y2="7" stroke="url(#ni1)" stroke-width="2" stroke-linecap="round"/>
+        <line x1="19" y1="19" x2="21.2" y2="21.2" stroke="url(#ni1)" stroke-width="2" stroke-linecap="round"/>
+        <line x1="4.8" y1="21.2" x2="7" y2="19" stroke="url(#ni1)" stroke-width="2" stroke-linecap="round"/>
+        <line x1="19" y1="7" x2="21.2" y2="4.8" stroke="url(#ni1)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <span class="nav-label">Odatlar</span>
+  </button>
+  <button class="nav-item" id="nav-stats" onclick="switchTab('stats', this)">
+    <span class="nav-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <defs><linearGradient id="ni2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs>
+        <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="url(#ni2)"/>
+      </svg>
+    </span>
+    <span class="nav-label">Reyting</span>
+  </button>
+  <button class="nav-item" id="nav-habits" onclick="switchTab('habits', this)" type="button">
+    <span class="nav-icon">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
+        <defs><linearGradient id="ni3" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs>
+        <path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="url(#ni3)" opacity="0.85"/>
+        <path d="M15 6L20 11" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+        <path d="M5 16L10 21" stroke="white" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+      </svg>
+    </span>
+    <span class="nav-label">Tahrirlash</span>
+  </button>
+  <button class="nav-item" id="nav-bozor" onclick="switchTab('bozor', this)">
+    <span class="nav-icon">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
+        <defs><linearGradient id="ni4" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs>
+        <path d="M3 4H5.5L8 16H20L22 8H6.5" stroke="url(#ni4)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="10" cy="20" r="1.8" fill="url(#ni4)"/>
+        <circle cx="18" cy="20" r="1.8" fill="url(#ni4)"/>
+      </svg>
+    </span>
+    <span class="nav-label">Bozor</span>
+  </button>
+  <button class="nav-item" id="nav-profile" onclick="switchTab('profile', this)">
+    <span class="nav-icon">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
+        <defs><linearGradient id="ni5" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs>
+        <circle cx="13" cy="9" r="4.5" fill="url(#ni5)"/>
+        <path d="M4 22C4 17.582 8.029 14 13 14C17.971 14 22 17.582 22 22" stroke="url(#ni5)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      </svg>
+    </span>
+    <span class="nav-label">Profil</span>
+  </button>
+</nav>
+
+<!-- Badge popup -->
+<div class="badge-popup" id="badge-popup">
+  <div class="bp-icon" id="bp-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="svgTrophyLg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6E27A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 28h12M16 22v6M6 4h20v11a10 10 0 01-20 0V4z" stroke="url(#svgTrophyLg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M6 8H2v4a4 4 0 004 4M26 8h4v4a4 4 0 01-4 4" stroke="url(#svgTrophyLg)" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg></div>
+  <div class="bp-text">
+    <div class="bp-title" id="bp-title">Yangi yutuq!</div>
+    <div class="bp-sub"  id="bp-sub">Tabriklaymiz!</div>
+  </div>
+</div>
+
+<script src="app-pages.js?v=420"></script>
+<script src="app-stats.js?v=420"></script>
+<script src="app-profile.js?v=420"></script>
+<script src="app-habits.js?v=420"></script>
+<script src="app-social.js?v=420"></script>
+</body>
+</html>

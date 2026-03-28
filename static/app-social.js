@@ -1153,3 +1153,55 @@ function playProgressSound(step, total) {
     }
   }, { passive: true });
 })();
+
+// ── BOTTOM PULL TO REFRESH (barcha sahifalar uchun) ──
+(function() {
+  var startY = 0;
+  var pulling = false;
+  var threshold = 72;
+  var skipTabs = ['achievements', 'reminders', 'premium'];
+
+  function isAtBottom() {
+    return (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 5);
+  }
+
+  document.addEventListener('touchstart', function(e) {
+    if (skipTabs.indexOf(_curTab) !== -1) return;
+    if (!isAtBottom()) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!pulling) return;
+    if (skipTabs.indexOf(_curTab) !== -1) { pulling = false; return; }
+    // Pastga tortish = barmaq yuqoriga ketadi = dist manfiy
+    var dist = startY - e.touches[0].clientY;
+    if (dist <= 0) { pulling = false; return; }
+    var ind = document.getElementById('ptr-bottom');
+    var txt = document.getElementById('ptr-bottom-text');
+    if (!ind) return;
+    ind.classList.add('visible');
+    ind.classList.remove('spinning');
+    txt.textContent = dist >= threshold ? S('msg','ptr_release') : S('msg','ptr_pull');
+    document.getElementById('ptr-bottom-spinner').style.transform = 'rotate(' + Math.min(dist * 2.5, 360) + 'deg)';
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    if (!pulling) return;
+    pulling = false;
+    var dist = startY - e.changedTouches[0].clientY;
+    var ind = document.getElementById('ptr-bottom');
+    if (!ind) return;
+    if (dist >= threshold && skipTabs.indexOf(_curTab) === -1) {
+      ind.classList.add('spinning');
+      document.getElementById('ptr-bottom-text').textContent = S('msg','ptr_loading');
+      loaded[_curTab] = false;
+      loadTab(_curTab).finally(function() {
+        ind.classList.remove('visible', 'spinning');
+      });
+    } else {
+      ind.classList.remove('visible', 'spinning');
+    }
+  }, { passive: true });
+})();
