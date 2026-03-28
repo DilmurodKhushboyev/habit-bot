@@ -1,6 +1,8 @@
 // ── STATISTIKA ──
 async function loadStats() {
-  setStatSub('rating');
+  // PTR yangilashda joriy sub-tab saqlanadi; birinchi marta — rating
+  _friendsLoaded = false;
+  setStatSub(_statSub || 'rating');
   obMarkDone('stats');
   try {
     const d = await apiFetch(`stats/${userId}`);
