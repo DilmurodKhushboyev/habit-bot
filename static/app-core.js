@@ -156,9 +156,9 @@ function drawNavNotch(cx) {
   svgEl.setAttribute('width', w);
   svgEl.setAttribute('height', h);
 
-  // Notch parameters — ball sits half into panel
-  var r = 38;   // notch half-width
-  var d = 18;   // notch depth matching ball sink
+  // Notch parameters — ball sits deep into panel for visible cutout
+  var r = 44;   // notch half-width (wider to wrap around 62px ball)
+  var d = 26;   // notch depth (deeper so cutout is clearly visible)
   var top = 6;  // top edge offset
 
   var nleft = cx - r;
@@ -167,8 +167,8 @@ function drawNavNotch(cx) {
   // Smooth cubic bezier notch — panel wraps around the ball
   var path = 'M0,' + top
     + ' L' + Math.max(0, nleft) + ',' + top
-    + ' C' + (nleft + r * 0.25) + ',' + top + ' ' + (nleft + r * 0.35) + ',' + (top + d) + ' ' + cx + ',' + (top + d)
-    + ' C' + (nright - r * 0.35) + ',' + (top + d) + ' ' + (nright - r * 0.25) + ',' + top + ' ' + Math.min(w, nright) + ',' + top
+    + ' C' + (nleft + r * 0.3) + ',' + top + ' ' + (nleft + r * 0.4) + ',' + (top + d) + ' ' + cx + ',' + (top + d)
+    + ' C' + (nright - r * 0.4) + ',' + (top + d) + ' ' + (nright - r * 0.3) + ',' + top + ' ' + Math.min(w, nright) + ',' + top
     + ' L' + w + ',' + top
     + ' L' + w + ',' + h
     + ' L0,' + h + ' Z';
