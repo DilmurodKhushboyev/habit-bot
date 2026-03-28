@@ -76,6 +76,22 @@ function renderToday(d) {
           <div class="checkin-name">${h.name}</div>
           <div class="checkin-meta">${isRepeat ? rc+' '+S('today','times_per_day')+' · ' : (h.time !== 'vaqtsiz' ? `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> `+h.time+' · ' : '')}<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak} ${S('today','days_streak')}</div>
           ${dotsHtml}
+          ${(() => {
+            const d66 = h.days_66_done || 0;
+            if (d66 <= 0) return '';
+            const pct66 = Math.min(100, Math.round(d66 / 66 * 100));
+            const c66 = d66 >= 66 ? '#4CAF7D' : d66 >= 33 ? '#5B8DEF' : '#E07040';
+            const left66 = Math.max(0, 66 - d66);
+            const label66 = d66 >= 66 ? S('msg','habit_formed') : S('msg','days_left').replace('{n}', left66);
+            return '<div style="margin-top:5px" onclick="event.stopPropagation()">'
+              + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'
+              + '<div style="font-size:8px;color:var(--sub);font-weight:600;letter-spacing:.5px">\uD83C\uDFAF ' + d66 + '/66</div>'
+              + '<div style="font-size:8px;font-weight:600;color:' + c66 + '">' + label66 + '</div>'
+              + '</div>'
+              + '<div style="height:3px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">'
+              + '<div style="height:100%;border-radius:2px;width:' + pct66 + '%;background:linear-gradient(90deg,' + c66 + '99,' + c66 + ');transition:width .6s ease"></div>'
+              + '</div></div>';
+          })()}
         </div>
         <button class="checkin-btn" id="cbtn-${h.id}" style="${isRepeat && !h.done && tc>0 ? 'font-size:11px;font-weight:700' : ''}">${btnContent}</button>
         <div class="confetti-pop" id="pop-${h.id}">✨</div>
