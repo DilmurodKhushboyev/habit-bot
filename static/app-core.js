@@ -236,9 +236,27 @@ function moveNavBall(targetEl, animate) {
     ball.style.transform = 'translate(' + targetX + 'px, 0)';
     ball._lastX = targetX;
     ball.removeEventListener('animationend', onEnd);
+    // Toʻlqin (ripple) effekti — shar tushganda panel jilvalanadi
+    spawnNavRipple(centerX);
   });
 
   ball._lastX = targetX;
+}
+
+function spawnNavRipple(cx) {
+  var nav = document.getElementById('bottom-nav');
+  if (!nav) return;
+  var size = 60;
+  for (var i = 0; i < 2; i++) {
+    var rip = document.createElement('div');
+    rip.className = 'nav-ripple' + (i === 1 ? ' ripple-2' : '');
+    rip.style.width = size + 'px';
+    rip.style.height = size + 'px';
+    rip.style.left = (cx - size / 2) + 'px';
+    rip.style.top = '-6px';
+    nav.appendChild(rip);
+    rip.addEventListener('animationend', function() { this.remove(); });
+  }
 }
 
 function switchTab(tab, el) {
