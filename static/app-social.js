@@ -1106,14 +1106,16 @@ function playProgressSound(step, total) {
   } catch(e) { console.error('audio:', e); }
 }
 
-// ── PULL TO REFRESH ──
+// ── PULL TO REFRESH (barcha sahifalar uchun) ──
 (function() {
   var startY = 0;
   var pulling = false;
   var threshold = 72;
+  // PTR ishlamaydigan ichki sahifalar
+  var skipTabs = ['achievements', 'reminders', 'premium'];
 
   document.addEventListener('touchstart', function(e) {
-    if (_curTab !== 'today') return;
+    if (skipTabs.indexOf(_curTab) !== -1) return;
     if (window.scrollY > 0) return;
     startY = e.touches[0].clientY;
     pulling = true;
@@ -1121,7 +1123,7 @@ function playProgressSound(step, total) {
 
   document.addEventListener('touchmove', function(e) {
     if (!pulling) return;
-    if (_curTab !== 'today') return;
+    if (skipTabs.indexOf(_curTab) !== -1) { pulling = false; return; }
     var dist = e.touches[0].clientY - startY;
     if (dist <= 0) { pulling = false; return; }
     var ind = document.getElementById('ptr-indicator');
@@ -1139,11 +1141,11 @@ function playProgressSound(step, total) {
     var dist = e.changedTouches[0].clientY - startY;
     var ind = document.getElementById('ptr-indicator');
     if (!ind) return;
-    if (dist >= threshold && _curTab === 'today') {
+    if (dist >= threshold && skipTabs.indexOf(_curTab) === -1) {
       ind.classList.add('spinning');
       document.getElementById('ptr-text').textContent = S('msg','ptr_loading');
-      loaded.today = false;
-      loadToday().finally(function() {
+      loaded[_curTab] = false;
+      loadTab(_curTab).finally(function() {
         ind.classList.remove('visible', 'spinning');
       });
     } else {
