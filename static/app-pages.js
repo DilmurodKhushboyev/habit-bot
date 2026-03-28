@@ -78,9 +78,8 @@ function renderToday(d) {
           ${dotsHtml}
           ${(() => {
             const d66 = h.days_66_done || 0;
-            if (d66 <= 0) return '';
             const pct66 = Math.min(100, Math.round(d66 / 66 * 100));
-            const c66 = d66 >= 66 ? '#4CAF7D' : d66 >= 33 ? '#5B8DEF' : '#E07040';
+            const c66 = '#4CAF7D';
             const left66 = Math.max(0, 66 - d66);
             const label66 = d66 >= 66 ? S('msg','habit_formed') : S('msg','days_left').replace('{n}', left66);
             return '<div style="margin-top:5px" onclick="event.stopPropagation()">'
