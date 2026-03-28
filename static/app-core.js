@@ -156,21 +156,19 @@ function drawNavNotch(cx) {
   svgEl.setAttribute('width', w);
   svgEl.setAttribute('height', h);
 
-  // Notch parameters
-  var r = 34;  // notch radius (slightly larger than ball)
-  var d = 8;   // depth below top edge
-  var top = 8; // top padding
+  // Notch parameters — deep enough so panel splits around ball
+  var r = 40;   // notch half-width
+  var d = 30;   // notch depth — panel level deep
+  var top = 6;  // top edge offset
 
-  // Build path: left edge → curve into notch → curve out → right edge → bottom
   var nleft = cx - r;
   var nright = cx + r;
 
+  // Smooth cubic bezier notch — panel wraps around the ball
   var path = 'M0,' + top
-    + ' L' + Math.max(0, nleft - 6) + ',' + top
-    + ' C' + (nleft + 4) + ',' + top + ' ' + (nleft + 8) + ',' + (top + d * 0.3) + ' ' + (cx - r * 0.7) + ',' + (top + d * 0.7)
-    + ' C' + (cx - r * 0.35) + ',' + (top + d) + ' ' + (cx - r * 0.15) + ',' + (top + d + 2) + ' ' + cx + ',' + (top + d + 2)
-    + ' C' + (cx + r * 0.15) + ',' + (top + d + 2) + ' ' + (cx + r * 0.35) + ',' + (top + d) + ' ' + (cx + r * 0.7) + ',' + (top + d * 0.7)
-    + ' C' + (nright - 8) + ',' + (top + d * 0.3) + ' ' + (nright - 4) + ',' + top + ' ' + Math.min(w, nright + 6) + ',' + top
+    + ' L' + Math.max(0, nleft) + ',' + top
+    + ' C' + (nleft + r * 0.25) + ',' + top + ' ' + (nleft + r * 0.35) + ',' + (top + d) + ' ' + cx + ',' + (top + d)
+    + ' C' + (nright - r * 0.35) + ',' + (top + d) + ' ' + (nright - r * 0.25) + ',' + top + ' ' + Math.min(w, nright) + ',' + top
     + ' L' + w + ',' + top
     + ' L' + w + ',' + h
     + ' L0,' + h + ' Z';
@@ -181,18 +179,24 @@ function drawNavNotch(cx) {
 function moveNavBall(targetEl, animate) {
   var ball = document.getElementById('nav-ball');
   var ballIcon = document.getElementById('nav-ball-icon');
+  var ballLabel = document.getElementById('nav-ball-label');
   var nav  = document.getElementById('bottom-nav');
   if (!ball || !nav || !targetEl) return;
 
   var navRect = nav.getBoundingClientRect();
   var tRect   = targetEl.getBoundingClientRect();
-  var targetX = tRect.left - navRect.left + tRect.width / 2 - 27; // 27 = ball 54/2
+  var halfBall = 31; // 62/2
+  var targetX = tRect.left - navRect.left + tRect.width / 2 - halfBall;
   var centerX = tRect.left - navRect.left + tRect.width / 2;
 
-  // Clone active tab icon into ball
+  // Clone active tab icon + label into ball
   var srcIcon = targetEl.querySelector('.nav-icon');
+  var srcLabel = targetEl.querySelector('.nav-label');
   if (srcIcon && ballIcon) {
     ballIcon.innerHTML = srcIcon.innerHTML;
+  }
+  if (srcLabel && ballLabel) {
+    ballLabel.textContent = srcLabel.textContent;
   }
 
   if (!animate || ball._lastX === undefined) {
@@ -205,14 +209,13 @@ function moveNavBall(targetEl, animate) {
   var startX = ball._lastX;
   var midX   = (startX + targetX) / 2;
 
-  // Animate notch
-  var startCx = startX + 27;
+  // Animate notch sliding with ball
+  var startCx = startX + halfBall;
   var endCx   = centerX;
   var notchStart = performance.now();
   var notchDur = 480;
   function animateNotch(now) {
     var t = Math.min((now - notchStart) / notchDur, 1);
-    // ease out cubic
     var ease = 1 - Math.pow(1 - t, 3);
     var cx = startCx + (endCx - startCx) * ease;
     drawNavNotch(cx);
