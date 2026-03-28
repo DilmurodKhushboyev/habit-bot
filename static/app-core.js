@@ -143,24 +143,82 @@ async function buyPremium(type) {
 }
 
 
-// ── NAV BALL ──
+// ── NAV BALL + NOTCH ──
+function drawNavNotch(cx) {
+  var nav = document.getElementById('bottom-nav');
+  var svgPath = document.getElementById('nav-bg-path');
+  var svgEl = document.getElementById('nav-bg');
+  if (!nav || !svgPath || !svgEl) return;
+
+  var w = nav.offsetWidth;
+  var h = nav.offsetHeight;
+  svgEl.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+  svgEl.setAttribute('width', w);
+  svgEl.setAttribute('height', h);
+
+  // Notch parameters
+  var r = 34;  // notch radius (slightly larger than ball)
+  var d = 8;   // depth below top edge
+  var top = 8; // top padding
+
+  // Build path: left edge → curve into notch → curve out → right edge → bottom
+  var nleft = cx - r;
+  var nright = cx + r;
+
+  var path = 'M0,' + top
+    + ' L' + Math.max(0, nleft - 6) + ',' + top
+    + ' C' + (nleft + 4) + ',' + top + ' ' + (nleft + 8) + ',' + (top + d * 0.3) + ' ' + (cx - r * 0.7) + ',' + (top + d * 0.7)
+    + ' C' + (cx - r * 0.35) + ',' + (top + d) + ' ' + (cx - r * 0.15) + ',' + (top + d + 2) + ' ' + cx + ',' + (top + d + 2)
+    + ' C' + (cx + r * 0.15) + ',' + (top + d + 2) + ' ' + (cx + r * 0.35) + ',' + (top + d) + ' ' + (cx + r * 0.7) + ',' + (top + d * 0.7)
+    + ' C' + (nright - 8) + ',' + (top + d * 0.3) + ' ' + (nright - 4) + ',' + top + ' ' + Math.min(w, nright + 6) + ',' + top
+    + ' L' + w + ',' + top
+    + ' L' + w + ',' + h
+    + ' L0,' + h + ' Z';
+
+  svgPath.setAttribute('d', path);
+}
+
 function moveNavBall(targetEl, animate) {
-  const ball = document.getElementById('nav-ball');
-  const nav  = document.querySelector('.bottom-nav');
+  var ball = document.getElementById('nav-ball');
+  var ballIcon = document.getElementById('nav-ball-icon');
+  var nav  = document.getElementById('bottom-nav');
   if (!ball || !nav || !targetEl) return;
 
-  const navRect = nav.getBoundingClientRect();
-  const tRect   = targetEl.getBoundingClientRect();
-  const targetX = tRect.left - navRect.left + tRect.width / 2 - 26; // 26 = ball 52/2
+  var navRect = nav.getBoundingClientRect();
+  var tRect   = targetEl.getBoundingClientRect();
+  var targetX = tRect.left - navRect.left + tRect.width / 2 - 27; // 27 = ball 54/2
+  var centerX = tRect.left - navRect.left + tRect.width / 2;
+
+  // Clone active tab icon into ball
+  var srcIcon = targetEl.querySelector('.nav-icon');
+  if (srcIcon && ballIcon) {
+    ballIcon.innerHTML = srcIcon.innerHTML;
+  }
 
   if (!animate || ball._lastX === undefined) {
     ball.style.transform = 'translate(' + targetX + 'px, 0)';
     ball._lastX = targetX;
+    drawNavNotch(centerX);
     return;
   }
 
   var startX = ball._lastX;
   var midX   = (startX + targetX) / 2;
+
+  // Animate notch
+  var startCx = startX + 27;
+  var endCx   = centerX;
+  var notchStart = performance.now();
+  var notchDur = 480;
+  function animateNotch(now) {
+    var t = Math.min((now - notchStart) / notchDur, 1);
+    // ease out cubic
+    var ease = 1 - Math.pow(1 - t, 3);
+    var cx = startCx + (endCx - startCx) * ease;
+    drawNavNotch(cx);
+    if (t < 1) requestAnimationFrame(animateNotch);
+  }
+  requestAnimationFrame(animateNotch);
 
   ball.classList.remove('jumping');
   ball.style.setProperty('--ball-sx', startX + 'px');
@@ -191,7 +249,7 @@ function switchTab(tab, el) {
   const backPages = ['achievements','reminders'];
   const backBar   = document.getElementById('back-bar');
   if (backBar) backBar.style.display = backPages.includes(tab) ? 'flex' : 'none';
-  // Nav ball animation
+  // Nav ball
   var navTarget = el || document.getElementById('nav-' + tab);
   if (navTarget) moveNavBall(navTarget, true);
   if (!loaded[tab]) loadTab(tab);
@@ -275,8 +333,12 @@ function jonRingHTML(jon, size = 80) {
 }
 
 
-// ── INIT NAV BALL on load ──
+// ── INIT NAV BALL + NOTCH on load ──
 document.addEventListener('DOMContentLoaded', function() {
   var firstActive = document.querySelector('.nav-item.active');
-  if (firstActive) setTimeout(function() { moveNavBall(firstActive, false); }, 100);
+  if (firstActive) setTimeout(function() { moveNavBall(firstActive, false); }, 80);
+});
+window.addEventListener('resize', function() {
+  var act = document.querySelector('.nav-item.active');
+  if (act) moveNavBall(act, false);
 });
