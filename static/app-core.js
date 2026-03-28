@@ -156,9 +156,9 @@ function drawNavNotch(cx) {
   svgEl.setAttribute('width', w);
   svgEl.setAttribute('height', h);
 
-  // Notch parameters — deep enough so panel splits around ball
-  var r = 40;   // notch half-width
-  var d = 30;   // notch depth — panel level deep
+  // Notch parameters — ball sits half into panel
+  var r = 38;   // notch half-width
+  var d = 18;   // notch depth matching ball sink
   var top = 6;  // top edge offset
 
   var nleft = cx - r;
