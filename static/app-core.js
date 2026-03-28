@@ -1,6 +1,13 @@
 // ── TELEGRAM WEB APP ──
 const tg      = window.Telegram?.WebApp;
-if (tg) { tg.ready(); tg.expand(); }
+if (tg) {
+  tg.ready();
+  tg.expand();
+  // To'liq ekran rejimi (Telegram header'ni yashiradi)
+  if (tg.requestFullscreen) tg.requestFullscreen();
+  // Pastga tortib yopishni bloklash
+  if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+}
 if (localStorage.getItem('sh_dark') === '1') document.body.classList.add('dark');
 
 const user     = tg?.initDataUnsafe?.user || { id: 0, first_name: 'Test' };
