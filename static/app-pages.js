@@ -215,6 +215,9 @@ async function checkin(hid, cardEl) {
       const diffTxt = isDone ? `+${earnedAbs} ⭐` : `-${earnedAbs} ⭐`;
       showTodayToast(isDone ? S('msg','done_toast') + ' ' + diffTxt : S('msg','undone_toast') + ' ' + diffTxt);
       playHabitSound(isDone);
+    } else if (rc2 > 1 && tc2 > 0 && tc2 < rc2) {
+      // Repeat odat oraliq progress — ko'tariluvchi "pop" ovozi
+      playProgressSound(tc2, rc2);
     }
     loaded.profile = false; loaded.rating = false; loaded.achievements = false; loaded.stats = false;
     if (document.getElementById('page-stats')?.classList.contains('active')) { loadStats(); }

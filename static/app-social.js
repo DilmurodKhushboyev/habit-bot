@@ -993,36 +993,116 @@ function playHabitSound(isDone) {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (isDone) {
-      // Chiroyli "ding-dong" — 3 ta ko'tariluvchi nota
-      const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
-      notes.forEach((freq, i) => {
-        const osc  = ctx.createOscillator();
+      // ✅ Trend "celebration chime" — yumshoq marimba uslubida ko'tariluvchi akkord
+      const notes = [
+        { freq: 587.33, delay: 0,    dur: 0.4,  vol: 0.22 },
+        { freq: 739.99, delay: 0.08, dur: 0.35, vol: 0.20 },
+        { freq: 880.00, delay: 0.16, dur: 0.45, vol: 0.18 },
+        { freq: 1174.66, delay: 0.28, dur: 0.5, vol: 0.12 }
+      ];
+      notes.forEach(n => {
+        const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.connect(gain);
+        const filter = ctx.createBiquadFilter();
+        osc.connect(filter);
+        filter.connect(gain);
         gain.connect(ctx.destination);
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
-        gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.12);
-        gain.gain.linearRampToValueAtTime(0.28, ctx.currentTime + i * 0.12 + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.35);
-        osc.start(ctx.currentTime + i * 0.12);
-        osc.stop(ctx.currentTime + i * 0.12 + 0.35);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(3000, ctx.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + n.delay + n.dur);
+        osc.frequency.setValueAtTime(n.freq, ctx.currentTime + n.delay);
+        gain.gain.setValueAtTime(0, ctx.currentTime + n.delay);
+        gain.gain.linearRampToValueAtTime(n.vol, ctx.currentTime + n.delay + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + n.delay + n.dur);
+        osc.start(ctx.currentTime + n.delay);
+        osc.stop(ctx.currentTime + n.delay + n.dur);
       });
+      // Shimmer layer — yuqori oktava pads
+      const shimmer = ctx.createOscillator();
+      const sGain = ctx.createGain();
+      shimmer.connect(sGain);
+      sGain.connect(ctx.destination);
+      shimmer.type = 'triangle';
+      shimmer.frequency.setValueAtTime(1760, ctx.currentTime + 0.12);
+      sGain.gain.setValueAtTime(0, ctx.currentTime + 0.12);
+      sGain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.14);
+      sGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
+      shimmer.start(ctx.currentTime + 0.12);
+      shimmer.stop(ctx.currentTime + 0.75);
     } else {
-      // Xunuk "dunk" — pasayuvchi, bo'g'iq tovush
-      const osc  = ctx.createOscillator();
+      // ❌ Soft "whomp-down" — yumshoq pasayish, xunuk lekin shovqinsiz
+      const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.connect(gain);
+      const filter = ctx.createBiquadFilter();
+      osc.connect(filter);
+      filter.connect(gain);
       gain.connect(ctx.destination);
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(220, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.25);
-      gain.gain.setValueAtTime(0.22, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
+      osc.type = 'triangle';
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(600, ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.3);
+      osc.frequency.setValueAtTime(330, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
       osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.3);
+      osc.stop(ctx.currentTime + 0.35);
+      // Ikkinchi "thud" qatlam
+      const osc2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      osc2.connect(g2);
+      g2.connect(ctx.destination);
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(180, ctx.currentTime + 0.05);
+      osc2.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.2);
+      g2.gain.setValueAtTime(0.12, ctx.currentTime + 0.05);
+      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+      osc2.start(ctx.currentTime + 0.05);
+      osc2.stop(ctx.currentTime + 0.3);
     }
     setTimeout(() => ctx.close(), 1500);
+  } catch(e) { console.error('audio:', e); }
+}
+
+// Repeat odat progress ovozi — har bir qadam uchun ko'tariluvchi "pop"
+function playProgressSound(step, total) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ratio = step / total;
+    // Qadamga qarab chastota ko'tariladi — 440 dan 880 gacha
+    const baseFreq = 440 + (ratio * 440);
+    // Asosiy "pop" nota
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(2500, ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.25);
+    osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(baseFreq * 1.02, ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.28);
+    // Ikkinchi harmonik — ring effekti
+    const osc2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    osc2.connect(g2);
+    g2.connect(ctx.destination);
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(baseFreq * 2, ctx.currentTime);
+    g2.gain.setValueAtTime(0, ctx.currentTime);
+    g2.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.01);
+    g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+    osc2.start(ctx.currentTime);
+    osc2.stop(ctx.currentTime + 0.2);
+    setTimeout(() => ctx.close(), 800);
   } catch(e) { console.error('audio:', e); }
 }
 
