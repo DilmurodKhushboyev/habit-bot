@@ -7,6 +7,16 @@ if (tg) {
   if (tg.requestFullscreen) tg.requestFullscreen();
   // Pastga tortib yopishni bloklash
   if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+  // Safe area: fullscreen da content status bar ostiga tushmasligi uchun
+  function applySafeArea() {
+    var si = tg.safeAreaInset || {};
+    var ci = tg.contentSafeAreaInset || {};
+    var top = (si.top || 0) + (ci.top || 0);
+    document.documentElement.style.setProperty('--tg-safe-top', top + 'px');
+  }
+  applySafeArea();
+  tg.onEvent('safeAreaChanged', applySafeArea);
+  tg.onEvent('contentSafeAreaChanged', applySafeArea);
 }
 if (localStorage.getItem('sh_dark') === '1') document.body.classList.add('dark');
 
