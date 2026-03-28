@@ -151,24 +151,22 @@ function moveNavBall(targetEl, animate) {
 
   const navRect = nav.getBoundingClientRect();
   const tRect   = targetEl.getBoundingClientRect();
-  const targetX = tRect.left - navRect.left + tRect.width / 2 - 5; // 5 = ball width/2
+  const targetX = tRect.left - navRect.left + tRect.width / 2 - 26; // 26 = ball 52/2
 
-  if (!animate || !ball._lastX && ball._lastX !== 0) {
-    // First load — just place without animation
+  if (!animate || ball._lastX === undefined) {
     ball.style.transform = 'translate(' + targetX + 'px, 0)';
     ball._lastX = targetX;
     return;
   }
 
-  const startX = ball._lastX;
-  const midX   = (startX + targetX) / 2;
+  var startX = ball._lastX;
+  var midX   = (startX + targetX) / 2;
 
   ball.classList.remove('jumping');
   ball.style.setProperty('--ball-sx', startX + 'px');
   ball.style.setProperty('--ball-mid', midX + 'px');
   ball.style.setProperty('--ball-ex', targetX + 'px');
 
-  // Force reflow then animate
   void ball.offsetWidth;
   ball.classList.add('jumping');
 
@@ -194,7 +192,7 @@ function switchTab(tab, el) {
   const backBar   = document.getElementById('back-bar');
   if (backBar) backBar.style.display = backPages.includes(tab) ? 'flex' : 'none';
   // Nav ball animation
-  const navTarget = el || document.getElementById('nav-' + tab);
+  var navTarget = el || document.getElementById('nav-' + tab);
   if (navTarget) moveNavBall(navTarget, true);
   if (!loaded[tab]) loadTab(tab);
   else if (tab === 'habits') { loaded.habits = false; loadTab('habits'); }
@@ -275,6 +273,7 @@ function jonRingHTML(jon, size = 80) {
       font-family="DM Mono,monospace" font-size="18" font-weight="600" fill="#3A3D4A">${jon}%</text>
   </svg>`;
 }
+
 
 // ── INIT NAV BALL on load ──
 document.addEventListener('DOMContentLoaded', function() {
