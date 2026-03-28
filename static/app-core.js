@@ -156,9 +156,9 @@ function drawNavNotch(cx) {
   svgEl.setAttribute('width', w);
   svgEl.setAttribute('height', h);
 
-  // Notch parameters — ball sits deep into panel for visible cutout
-  var r = 44;   // notch half-width (wider to wrap around 62px ball)
-  var d = 26;   // notch depth (deeper so cutout is clearly visible)
+  // Notch parameters — ball floats above panel, notch wraps its bottom
+  var r = 46;   // notch half-width (wider to fully wrap 62px ball + gap)
+  var d = 34;   // notch depth (deep enough so panel curves around ball bottom)
   var top = 6;  // top edge offset
 
   var nleft = cx - r;
