@@ -7,11 +7,13 @@ if (tg) {
   if (tg.requestFullscreen) tg.requestFullscreen();
   // Pastga tortib yopishni bloklash
   if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
-  // Safe area: fullscreen da content status bar ostiga tushmasligi uchun
+  // Safe area: content Telegram paneli ostiga tushmasligi uchun
   function applySafeArea() {
     var si = tg.safeAreaInset || {};
     var ci = tg.contentSafeAreaInset || {};
     var top = (si.top || 0) + (ci.top || 0);
+    // Fallback: agar safe area 0 qaytarsa — Telegram header balandligi ~56px
+    if (top < 10) top = 56;
     document.documentElement.style.setProperty('--tg-safe-top', top + 'px');
   }
   applySafeArea();
