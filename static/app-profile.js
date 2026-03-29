@@ -46,10 +46,9 @@ function renderProfile(d) {
     ? '<span style="background:#5B8DEF22;color:#5B8DEF;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700;margin-left:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgVip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 2l1.8 5.5H20l-4.9 3.6 1.8 5.5L12 13l-4.9 3.6 1.8-5.5L4 7.5h6.2z" fill="url(#svgVip)"/></svg> VIP</span>'
     : '';
 
-  // Premium badge
-  const premiumBadge = d.is_premium
-    ? `<span onclick="showPremiumPage()" style="cursor:pointer;background:linear-gradient(90deg,#F6C93E22,#A78BFA22);color:#C4983A;border-radius:8px;padding:2px 10px;font-size:11px;font-weight:700;margin-left:6px;border:1px solid #F6C93E44">💎 Premium</span>`
-    : `<span onclick="showPremiumPage()" style="cursor:pointer;background:var(--card);color:var(--sub);border-radius:8px;padding:2px 10px;font-size:11px;font-weight:600;margin-left:6px;border:1px solid var(--border)">💎 Free</span>`;
+  // ── VAQTINCHA O'CHIRILGAN: Premium badge (Free/Premium yozuvi) ──
+  // Bot mukammal darajaga yetgandan keyin qayta yoqiladi.
+  const premiumBadge = '';
 
   // Yutuqlar progress
   const achPct = d.total_ach ? Math.round(d.earned_ach / d.total_ach * 100) : 0;
