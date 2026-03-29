@@ -253,12 +253,12 @@ async function groupCheckin(gid, btn) {
 }
 
 // ── STATISTIKA SUB-TAB ──
-let _statSub = 'stats';
+let _statSub = 'rating';
 let _friendsLoaded = false;
 
 function setStatSub(sub) {
   _statSub = sub;
-  ['stats','rating','friends'].forEach(s => {
+  ['rating','friends'].forEach(s => {
     document.getElementById('ssub-' + s)?.classList.toggle('active', sub === s);
     document.getElementById('ssub-panel-' + s).style.display = sub === s ? '' : 'none';
   });

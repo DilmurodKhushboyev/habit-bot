@@ -316,7 +316,7 @@ async function loadTab(tab) {
     if (tab === 'achievements') await loadAchievements();
     if (tab === 'reminders')    await loadReminders();
     if (tab === 'profile')      await loadProfile();
-    if (tab === 'habits')       await loadHabits();
+    if (tab === 'habits')       await loadStatsPage();
     if (tab === 'bozor') {
       await loadShop();
     }

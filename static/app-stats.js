@@ -1,15 +1,20 @@
 // ── STATISTIKA ──
+
+// Reyting sahifasi uchun (page-stats) — faqat rating + guruh/do'st
 async function loadStats() {
-  // PTR yangilashda joriy sub-tab saqlanadi; birinchi marta — rating
   _friendsLoaded = false;
   setStatSub(_statSub || 'rating');
   obMarkDone('stats');
+}
+
+// Statistika sahifasi uchun (page-habits → yangi statistika tab)
+async function loadStatsPage() {
   try {
     const d = await apiFetch(`stats/${userId}`);
     data.stats = d;
     renderStats(d);
   } catch(e) {
-    document.getElementById('stats-content').innerHTML =
+    document.getElementById('stats-detail-content').innerHTML =
       `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>${S('msg','data_error')}.<br><small>${e}</small></div>`;
   }
 }
@@ -344,7 +349,7 @@ function renderStats(d) {
       </div>`;
   });
 
-  document.getElementById('stats-content').innerHTML = `
+  document.getElementById('stats-detail-content').innerHTML = `
     <div class="section-title">${S('stats','general')}</div>
     ${sumHtml}
     ${barChartHtml}

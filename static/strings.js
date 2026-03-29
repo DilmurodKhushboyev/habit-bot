@@ -2,7 +2,7 @@ let selectedLang = null;
 let currentLang = localStorage.getItem('sh_lang') || 'uz';
 const STRINGS = {
   uz: {
-    nav: { today:'Odatlar', stats:'Reyting', habits:'Tahrirlash', bozor:'Bozor', profile:'Profil' },
+    nav: { today:'Odatlar', stats:'Reyting', habits:'Statistika', bozor:'Bozor', profile:'Profil' },
     profile: {
       ball:'Ball', streak:'Streak', done:'Bajarildi', rekord:'rekord',
       done_label:'Bajarildi', not_done:'Bajarilmadi', kun:'kun',
@@ -297,7 +297,7 @@ const STRINGS = {
     },
   },
   ru: {
-    nav: { today:'Привычки', stats:'Рейтинг', habits:'Редактор', bozor:'Магазин', profile:'Профиль' },
+    nav: { today:'Привычки', stats:'Рейтинг', habits:'Статистика', bozor:'Магазин', profile:'Профиль' },
     profile: {
       ball:'Очки', streak:'Стрик', done:'Выполнено', rekord:'рекорд',
       done_label:'Выполнено', not_done:'Не выполнено', kun:'дней',
@@ -591,7 +591,7 @@ const STRINGS = {
     },
   },
   en: {
-    nav: { today:'Habits', stats:'Ranking', habits:'Edit', bozor:'Store', profile:'Profile' },
+    nav: { today:'Habits', stats:'Ranking', habits:'Statistics', bozor:'Store', profile:'Profile' },
     profile: {
       ball:'Points', streak:'Streak', done:'Done', rekord:'record',
       done_label:'Done', not_done:'Not done', kun:'days',
