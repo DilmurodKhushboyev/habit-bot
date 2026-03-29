@@ -351,16 +351,42 @@ async function deleteHabit(id) {
 }
 
 // ── DINAMIK VAQT INPUTLARI (odat yaratish/tahrirlash uchun) ──
+function _sortHabitTimes() {
+  const list = document.getElementById('h-times-list');
+  if (!list) return;
+  const vals = [];
+  list.querySelectorAll('input[type=time]').forEach(function(inp) {
+    vals.push(inp.value || '');
+  });
+  // Bo'sh va to'ldirilganlarni ajratish, to'ldirilganlarni tartiblash
+  const filled = vals.filter(function(v) { return v !== ''; });
+  const empty  = vals.filter(function(v) { return v === ''; });
+  filled.sort();
+  const sorted = filled.concat(empty);
+  list.querySelectorAll('input[type=time]').forEach(function(inp, i) {
+    inp.value = sorted[i] || '';
+  });
+}
+
 function _buildTimeInputs(count, existingTimes) {
   const list = document.getElementById('h-times-list');
   if (!list) return;
   const n = Math.max(1, count);
+  // Mavjud vaqtlarni tartiblash (bo'shlarni oxirga)
+  let sorted = [];
+  if (existingTimes && existingTimes.length) {
+    const filled = existingTimes.filter(function(v) { return v && v !== ''; });
+    const emptyCount = n - filled.length;
+    filled.sort();
+    sorted = filled.slice();
+    for (let e = 0; e < emptyCount; e++) sorted.push('');
+  }
   let html = '';
   for (let i = 0; i < n; i++) {
-    const val = (existingTimes && existingTimes[i]) || '';
+    const val = (sorted[i]) || '';
     html += '<div class="time-row" id="ht-row-' + i + '">'
       + '<span class="time-lbl">' + S('msg','time_slot_n').replace('{n}', i + 1) + '</span>'
-      + '<input class="time-input" type="time" id="ht-val-' + i + '" value="' + val + '">'
+      + '<input class="time-input" type="time" id="ht-val-' + i + '" value="' + val + '" onchange="_sortHabitTimes()">'
       + '</div>';
   }
   list.innerHTML = html;
@@ -379,7 +405,7 @@ function addHabitTime() {
   div.className = 'time-row';
   div.id = 'ht-row-' + i;
   div.innerHTML = '<span class="time-lbl">' + S('msg','time_slot_n').replace('{n}', i + 1) + '</span>'
-    + '<input class="time-input" type="time" id="ht-val-' + i + '">';
+    + '<input class="time-input" type="time" id="ht-val-' + i + '" onchange="_sortHabitTimes()">';
   list.appendChild(div);
 }
 
