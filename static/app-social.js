@@ -979,8 +979,47 @@ document.addEventListener('visibilitychange', function() {
 });
 
 window.onload = function() {
+  // ── Splash particles yaratish ──
+  (function initSplashParticles() {
+    var cont = document.getElementById('splash-particles');
+    if (!cont) return;
+    for (var i = 0; i < 20; i++) {
+      var p = document.createElement('div');
+      p.className = 'splash-particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.bottom = -(Math.random() * 40) + 'px';
+      p.style.animationDuration = (4 + Math.random() * 6) + 's';
+      p.style.animationDelay = (Math.random() * 4) + 's';
+      p.style.width = p.style.height = (2 + Math.random() * 4) + 'px';
+      var colors = ['rgba(16,185,129,.5)','rgba(91,141,239,.4)','rgba(167,139,250,.4)','rgba(255,255,255,.2)'];
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      cont.appendChild(p);
+    }
+  })();
+
+  // ── Splash subtitle tilga moslash ──
+  var splSub = document.getElementById('splash-subtitle');
+  if (splSub) {
+    var splTexts = { uz: 'Odatlaringizni shakllantiring', ru: '\u0424\u043e\u0440\u043c\u0438\u0440\u0443\u0439\u0442\u0435 \u043f\u0440\u0438\u0432\u044b\u0447\u043a\u0438', en: 'Build your habits' };
+    splSub.textContent = splTexts[currentLang] || splTexts.uz;
+  }
+
   // Saqlangan tilni darhol qo'llash (loading matnlari uchun)
   updateNavLabels();
+
+  // ── Splash yashirish funksiyasi ──
+  function hideSplash() {
+    var spl = document.getElementById('splash-screen');
+    if (spl && !spl.classList.contains('hide')) {
+      spl.classList.add('hide');
+      setTimeout(function() { spl.remove(); }, 700);
+    }
+  }
+
+  // 5 soniyadan keyin splash yashiriladi (garantiya)
+  var _splashTimer = setTimeout(hideSplash, 5000);
+  // Agar data tezroq yuklansa, splash ertaroq yashirilmaydi — faqat 5s
+
   // Telegram WebApp userId tayyor bo'lishini kutamiz
   if (!userId || userId === 0) {
     let tries = 0;
@@ -989,15 +1028,20 @@ window.onload = function() {
       if (u && u.id) { clearInterval(waitUid); location.reload(); return; }
       if (++tries >= 30) {
         clearInterval(waitUid);
+        hideSplash();
         document.getElementById('today-content').innerHTML =
-          '<div class="empty-state"><div class="icon">⚠️</div>' +
+          '<div class="empty-state"><div class="icon">\u26a0\ufe0f</div>' +
           '<div>' + S('msg','err_reopen') + '</div>' +
           '<button onclick="location.reload()" style="margin-top:14px;padding:10px 20px;border-radius:12px;border:none;background:var(--card);box-shadow:var(--sh);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">' + S('msg','btn_refresh') + '</button></div>';
       }
     }, 100);
     return;
   }
-  loadToday();
+
+  // Data yuklanadi, 5 soniyada splash yashiriladi
+  loadToday().then(function() {
+    // Data tayyor — lekin splash 5 soniya ko'rsatiladi
+  }).catch(function() {});
 };
 
 // ── OVOZ EFFEKTLARI (Web Audio API) ──
