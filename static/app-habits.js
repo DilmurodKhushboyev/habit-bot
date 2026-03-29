@@ -49,7 +49,7 @@ function renderHabits(habits, jon = 100) {
             <div class="habit-card-meta"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> ${h.time||'vaqtsiz'} &nbsp;<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${S('msg','streak_days').replace('{n}', h.streak)}</div>
           </div>
           <div class="habit-card-actions">
-            <button class="hbtn" onclick="openEdit('${h.id}','${h.name.replace(/'/g,"\\'")}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1})"><svg width="13" height="13" viewBox="0 0 26 26" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgPenBtn" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="url(#svgPenBtn)" opacity="0.85"/></svg></button>
+            <button class="hbtn" onclick="openEdit('${h.id}','${h.name.replace(/'/g,"\\'")}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}')"><svg width="13" height="13" viewBox="0 0 26 26" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgPenBtn" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="url(#svgPenBtn)" opacity="0.85"/></svg></button>
             <button class="hbtn" onclick="deleteHabit('${h.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgTrash" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="url(#svgTrash)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="url(#svgTrash)" stroke-width="2" stroke-linecap="round"/></svg></button>
           </div>
         </div>
@@ -96,13 +96,14 @@ function renderHabits(habits, jon = 100) {
         <div class="field">
           <label id="lbl-habit-type">Kuniga necha marta?</label>
           <div style="display:flex;align-items:center;gap:10px">
-            <input id="h-repeat-count" type="number" min="1" max="99" value="1" style="width:70px;text-align:center;font-size:16px;font-weight:700">
+            <input id="h-repeat-count" type="number" min="1" max="99" value="1" onchange="_onRepeatCountChange()" oninput="_onRepeatCountChange()" style="width:70px;text-align:center;font-size:16px;font-weight:700">
             <span style="font-size:11px;color:var(--sub);line-height:1.3" id="lbl-per-day-hint">1 = oddiy, 2+ = kuniga bir necha marta</span>
           </div>
         </div>
         <div class="field">
           <label id="lbl-time">${S('habits','time_label')}</label>
-          <input id="h-time" type="text" placeholder="Masalan: 07:00 yoki vaqtsiz">
+          <div id="h-times-list"></div>
+          <button type="button" class="rep-btn" style="width:100%;margin-top:6px;justify-content:center" onclick="addHabitTime()">${S('reminders','add_time')}</button>
         </div>
         <div class="field">
           <label id="lbl-icon-pick">Icon tanlang</label>
@@ -152,8 +153,6 @@ function _translateHabitModal() {
   m('lbl-icon-pick', 'habits', 'icon_label');
   const hn = document.getElementById('h-name');
   if (hn) hn.placeholder = S('msg','ph_habit_name');
-  const ht = document.getElementById('h-time');
-  if (ht) ht.placeholder = S('msg','ph_habit_time');
 }
 function openAdd() {
   // Premium limit tekshiruvi
@@ -175,9 +174,9 @@ function openAdd() {
   document.getElementById('modal-title').textContent = S('habits','add_new');
   _translateHabitModal();
   document.getElementById('h-name').value = '';
-  document.getElementById('h-time').value = '';
   const rcEl = document.getElementById('h-repeat-count');
   if (rcEl) rcEl.value = 1;
+  _buildTimeInputs(1, []);
   document.querySelectorAll('.icon-opt').forEach(e => e.classList.remove('selected'));
   document.querySelector('.icon-opt')?.classList.add('selected');
   document.getElementById('habit-modal').classList.add('open');
@@ -186,14 +185,18 @@ function openAdd() {
     if (inp) inp.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 320);
 }
-function openEdit(id, name, icon, time, type, repeatCount) {
+function openEdit(id, name, icon, time, type, repeatCount, timesJson) {
   editingHabitId = id;
   document.getElementById('modal-title').textContent = S('habits','edit_title');
   _translateHabitModal();
   document.getElementById('h-name').value = name;
-  document.getElementById('h-time').value = time === 'vaqtsiz' ? '' : time;
   const rcEl = document.getElementById('h-repeat-count');
   if (rcEl) rcEl.value = repeatCount || 1;
+  // Vaqtlarni parse qilish
+  let times = [];
+  try { times = JSON.parse(decodeURIComponent(timesJson || '[]')); } catch(e) { times = []; }
+  if (!times.length && time && time !== 'vaqtsiz') times = [time];
+  _buildTimeInputs(repeatCount || 1, times);
   document.querySelectorAll('.icon-opt').forEach(e => {
     e.classList.toggle('selected', e.dataset.icon === icon);
   });
@@ -226,11 +229,19 @@ async function saveHabit() {
   const saveBtn = document.getElementById('habit-save-txt');
   if (saveBtn && saveBtn.dataset.saving === '1') return;
   const name = document.getElementById('h-name').value.trim();
-  const timeRaw = (document.getElementById('h-time').value.trim() || '');
-  const timeFinal = timeRaw === '' ? 'vaqtsiz' : timeRaw;
   const icon = document.querySelector('.icon-opt.selected')?.dataset.icon || '✅';
   const repeatCount = parseInt(document.getElementById('h-repeat-count').value) || 1;
   const isRepeat = repeatCount >= 2;
+
+  // Barcha vaqt inputlarini yigʻish
+  const timesArr = [];
+  const timesList = document.getElementById('h-times-list');
+  if (timesList) {
+    timesList.querySelectorAll('input[type=time]').forEach(inp => {
+      if (inp.value) timesArr.push(inp.value);
+    });
+  }
+  const timeFinal = timesArr.length > 0 ? timesArr[0] : 'vaqtsiz';
 
   if (!name) { showToast(S('msg','enter_name'), true); return; }
 
@@ -239,13 +250,13 @@ async function saveHabit() {
     showToast(S('msg','bad_repeat'), true); return;
   }
 
-  // Vaqt validatsiyasi
-  if (timeFinal !== 'vaqtsiz') {
-    const timePattern = /^\d{2}:\d{2}$/;
-    if (!timePattern.test(timeFinal)) {
+  // Vaqt validatsiyasi — barcha kiritilgan vaqtlarni tekshirish
+  const timePattern = /^\d{2}:\d{2}$/;
+  for (const tv of timesArr) {
+    if (!timePattern.test(tv)) {
       showToast(S('msg','bad_time'), true); return;
     }
-    const [hh, mm] = timeFinal.split(':').map(Number);
+    const [hh, mm] = tv.split(':').map(Number);
     if (hh > 23 || mm > 59) {
       showToast(S('msg','err_bad_time_range'), true); return;
     }
@@ -253,13 +264,12 @@ async function saveHabit() {
 
   // Barcha validatsiyalar o'tdi — tugmani bloklash
   if (saveBtn) { saveBtn.dataset.saving = '1'; saveBtn.textContent = S('habits','saving') || S('profile','saving'); }
-  const time = timeFinal;
   try {
     if (editingHabitId) {
       const res = await fetch(`${API}/habits/${userId}/${editingHabitId}`, {
         method: 'PUT',
         headers: {'Content-Type':'application/json','X-Init-Data':initData,'X-User-Id':userId},
-        body: JSON.stringify({name, icon, time, type: isRepeat ? 'repeat' : 'simple', repeat_count: repeatCount})
+        body: JSON.stringify({name, icon, time: timeFinal, type: isRepeat ? 'repeat' : 'simple', repeat_count: repeatCount, repeat_times: isRepeat ? timesArr : []})
       });
       const rj = await res.json().catch(() => ({}));
       if (!res.ok || rj.ok === false) { showToast('❌ ' + (rj.error || S('msg','error_label')), true); return; }
@@ -268,7 +278,7 @@ async function saveHabit() {
       const res = await fetch(`${API}/habits/${userId}`, {
         method: 'POST',
         headers: {'Content-Type':'application/json','X-Init-Data':initData,'X-User-Id':userId},
-        body: JSON.stringify({name, icon, time, type: isRepeat ? 'repeat' : 'simple', repeat_count: repeatCount})
+        body: JSON.stringify({name, icon, time: timeFinal, type: isRepeat ? 'repeat' : 'simple', repeat_count: repeatCount, repeat_times: isRepeat ? timesArr : []})
       });
       const rj = await res.json().catch(() => ({}));
       if (!res.ok || rj.ok === false) { showToast('❌ ' + (rj.error || S('msg','error_label')), true); return; }
@@ -301,5 +311,50 @@ async function deleteHabit(id) {
     loaded.habits = false;
     await loadHabits();
   } catch(e) { showToast(S('msg','error_label'), true); }
+}
+
+// ── DINAMIK VAQT INPUTLARI (odat yaratish/tahrirlash uchun) ──
+function _buildTimeInputs(count, existingTimes) {
+  const list = document.getElementById('h-times-list');
+  if (!list) return;
+  const n = Math.max(1, count);
+  let html = '';
+  for (let i = 0; i < n; i++) {
+    const val = (existingTimes && existingTimes[i]) || '';
+    html += '<div class="time-row" id="ht-row-' + i + '">'
+      + '<span class="time-lbl">' + S('msg','time_slot_n').replace('{n}', i + 1) + '</span>'
+      + '<input class="time-input" type="time" id="ht-val-' + i + '" value="' + val + '">'
+      + '</div>';
+  }
+  list.innerHTML = html;
+}
+
+function addHabitTime() {
+  const list = document.getElementById('h-times-list');
+  if (!list) return;
+  const rows = list.querySelectorAll('.time-row');
+  if (rows.length >= 20) return;
+  const i = rows.length;
+  // repeat_count ni ham oshirish
+  const rcEl = document.getElementById('h-repeat-count');
+  if (rcEl && parseInt(rcEl.value) < i + 1) rcEl.value = i + 1;
+  const div = document.createElement('div');
+  div.className = 'time-row';
+  div.id = 'ht-row-' + i;
+  div.innerHTML = '<span class="time-lbl">' + S('msg','time_slot_n').replace('{n}', i + 1) + '</span>'
+    + '<input class="time-input" type="time" id="ht-val-' + i + '">';
+  list.appendChild(div);
+}
+
+function _onRepeatCountChange() {
+  const rc = parseInt(document.getElementById('h-repeat-count').value) || 1;
+  const list = document.getElementById('h-times-list');
+  if (!list) return;
+  // Mavjud vaqtlarni saqlash
+  const existing = [];
+  list.querySelectorAll('input[type=time]').forEach(function(inp) {
+    existing.push(inp.value || '');
+  });
+  _buildTimeInputs(rc, existing);
 }
 
