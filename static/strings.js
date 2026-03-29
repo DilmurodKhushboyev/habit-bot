@@ -99,6 +99,8 @@ const STRINGS = {
       time_slot:'vaqt',
       per_day:'marta / kun',
       per_day_hint:'1 = oddiy, 2+ = kuniga bir necha marta',
+      edit_btn:'Tahrirlash',
+      delete_btn:"O'chirish",
     },
     groups: {
       add_new:"＋ Yangi guruh yaratish",
@@ -391,6 +393,8 @@ const STRINGS = {
       time_slot:'время',
       per_day:'раз / день',
       per_day_hint:'1 = обычная, 2+ = несколько раз в день',
+      edit_btn:'Редактировать',
+      delete_btn:'Удалить',
     },
     groups: {
       add_new:'＋ Создать новую группу',
@@ -683,6 +687,8 @@ const STRINGS = {
       time_slot:'time',
       per_day:'times / day',
       per_day_hint:'1 = once a day, 2+ = multiple times',
+      edit_btn:'Edit',
+      delete_btn:'Delete',
     },
     groups: {
       add_new:'＋ Create new group',

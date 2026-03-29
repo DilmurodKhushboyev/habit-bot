@@ -38,19 +38,40 @@ async function loadHabits() {
 }
 
 function renderHabits(habits, jon = 100) {
+  const _esc = (s) => s.replace(/'/g, "\\'");
   let rows = '';
   habits.forEach(h => {
+    const editArgs = `'${h.id}','${_esc(h.name)}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}'`;
     rows += `
       <div class="habit-card" id="hcard-${h.id}">
-        <div class="habit-card-top">
+        <div class="habit-card-actions-bg">
+          <button class="hswipe-btn hswipe-edit" onclick="openEdit(${editArgs})">
+            <svg width="18" height="18" viewBox="0 0 26 26" fill="none"><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="#fff" opacity="0.9"/></svg>
+            <span>${S('habits','edit_btn')}</span>
+          </button>
+          <button class="hswipe-btn hswipe-del" onclick="deleteHabit('${h.id}')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+            <span>${S('habits','delete_btn')}</span>
+          </button>
+        </div>
+        <div class="habit-card-front" data-hid="${h.id}">
           <div class="habit-card-icon">${h.icon||'<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDefIcon" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgDefIcon)" opacity="0.2"/><path d="M7 12l4 4 6-7" stroke="url(#svgDefIcon)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</div>
           <div class="habit-card-info">
             <div class="habit-card-name">${h.name}</div>
             <div class="habit-card-meta"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> ${h.time||'vaqtsiz'} &nbsp;<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${S('msg','streak_days').replace('{n}', h.streak)}</div>
           </div>
-          <div class="habit-card-actions">
-            <button class="hbtn" onclick="openEdit('${h.id}','${h.name.replace(/'/g,"\\'")}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}')"><svg width="13" height="13" viewBox="0 0 26 26" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgPenBtn" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A78BFA"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="url(#svgPenBtn)" opacity="0.85"/></svg></button>
-            <button class="hbtn" onclick="deleteHabit('${h.id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgTrash" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="url(#svgTrash)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="url(#svgTrash)" stroke-width="2" stroke-linecap="round"/></svg></button>
+          <button class="habit-dots-btn" onclick="event.stopPropagation();toggleHabitDrop('${h.id}')">
+            <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="8" r="2"/><circle cx="2" cy="14" r="2"/></svg>
+          </button>
+          <div class="habit-dropdown" id="hdrop-${h.id}">
+            <button class="habit-dropdown-item" onclick="event.stopPropagation();closeAllHabitDrops();openEdit(${editArgs})">
+              <svg width="15" height="15" viewBox="0 0 26 26" fill="none"><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="var(--accent2)" opacity="0.85"/></svg>
+              ${S('habits','edit_btn')}
+            </button>
+            <button class="habit-dropdown-item danger" onclick="event.stopPropagation();closeAllHabitDrops();deleteHabit('${h.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="var(--red)" stroke-width="2" stroke-linecap="round"/></svg>
+              ${S('habits','delete_btn')}
+            </button>
           </div>
         </div>
       </div>`;
@@ -112,6 +133,9 @@ function renderHabits(habits, jon = 100) {
         <button class="save-btn" onclick="saveHabit()"><span id="habit-save-txt">${S("profile","save_btn")}</span></button>
       </div>
     </div>`;
+
+  // Swipe handlerlarni ulash
+  setTimeout(() => _initHabitSwipe(), 50);
 }
 
 function selectIconCat(btn, idx) {
@@ -358,3 +382,74 @@ function _onRepeatCountChange() {
   _buildTimeInputs(rc, existing);
 }
 
+// ── SWIPE-TO-REVEAL (chapga surish) ──
+function _initHabitSwipe() {
+  document.querySelectorAll('.habit-card-front').forEach(front => {
+    let startX = 0, curX = 0, swiping = false, startY = 0, locked = false;
+    front.addEventListener('touchstart', e => {
+      closeAllHabitDrops();
+      closeAllHabitSwipes(front);
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      curX = 0; swiping = true; locked = false;
+      front.style.transition = 'none';
+    }, {passive: true});
+
+    front.addEventListener('touchmove', e => {
+      if (!swiping) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      // Vertikal scroll bo'lsa — swipeni bekor qilish
+      if (!locked) {
+        if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) { swiping = false; front.style.transition = ''; front.style.transform = ''; return; }
+        if (Math.abs(dx) > 8) locked = true;
+      }
+      curX = dx;
+      if (curX > 0) curX = 0;
+      if (curX < -130) curX = -130;
+      front.style.transform = 'translateX(' + curX + 'px)';
+    }, {passive: true});
+
+    front.addEventListener('touchend', () => {
+      if (!swiping) return;
+      swiping = false;
+      front.style.transition = '';
+      if (curX < -50) {
+        front.classList.add('swiped');
+      } else {
+        front.classList.remove('swiped');
+      }
+      front.style.transform = '';
+    });
+  });
+}
+
+function closeAllHabitSwipes(except) {
+  document.querySelectorAll('.habit-card-front.swiped').forEach(f => {
+    if (f !== except) f.classList.remove('swiped');
+  });
+}
+
+// ── 3-NUQTA DROPDOWN ──
+function toggleHabitDrop(hid) {
+  const drop = document.getElementById('hdrop-' + hid);
+  if (!drop) return;
+  const wasOpen = drop.classList.contains('open');
+  closeAllHabitDrops();
+  closeAllHabitSwipes();
+  if (!wasOpen) drop.classList.add('open');
+}
+
+function closeAllHabitDrops() {
+  document.querySelectorAll('.habit-dropdown.open').forEach(d => d.classList.remove('open'));
+}
+
+// Global tap — dropdown va swipeni yopish
+document.addEventListener('click', e => {
+  if (!e.target.closest('.habit-dots-btn') && !e.target.closest('.habit-dropdown')) {
+    closeAllHabitDrops();
+  }
+  if (!e.target.closest('.habit-card')) {
+    closeAllHabitSwipes();
+  }
+});
