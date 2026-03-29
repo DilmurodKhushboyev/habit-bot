@@ -979,24 +979,6 @@ document.addEventListener('visibilitychange', function() {
 });
 
 window.onload = function() {
-  // ── Splash particles yaratish ──
-  (function initSplashParticles() {
-    var cont = document.getElementById('splash-particles');
-    if (!cont) return;
-    for (var i = 0; i < 20; i++) {
-      var p = document.createElement('div');
-      p.className = 'splash-particle';
-      p.style.left = Math.random() * 100 + '%';
-      p.style.bottom = -(Math.random() * 40) + 'px';
-      p.style.animationDuration = (4 + Math.random() * 6) + 's';
-      p.style.animationDelay = (Math.random() * 4) + 's';
-      p.style.width = p.style.height = (2 + Math.random() * 4) + 'px';
-      var colors = ['rgba(16,185,129,.5)','rgba(91,141,239,.4)','rgba(167,139,250,.4)','rgba(255,255,255,.2)'];
-      p.style.background = colors[Math.floor(Math.random() * colors.length)];
-      cont.appendChild(p);
-    }
-  })();
-
   // ── Splash subtitle tilga moslash ──
   var splSub = document.getElementById('splash-subtitle');
   if (splSub) {
@@ -1012,13 +994,12 @@ window.onload = function() {
     var spl = document.getElementById('splash-screen');
     if (spl && !spl.classList.contains('hide')) {
       spl.classList.add('hide');
-      setTimeout(function() { spl.remove(); }, 700);
+      setTimeout(function() { spl.remove(); }, 600);
     }
   }
 
-  // 5 soniyadan keyin splash yashiriladi (garantiya)
-  var _splashTimer = setTimeout(hideSplash, 5000);
-  // Agar data tezroq yuklansa, splash ertaroq yashirilmaydi — faqat 5s
+  // 5 soniyadan keyin splash yashiriladi
+  setTimeout(hideSplash, 5000);
 
   // Telegram WebApp userId tayyor bo'lishini kutamiz
   if (!userId || userId === 0) {
@@ -1039,9 +1020,7 @@ window.onload = function() {
   }
 
   // Data yuklanadi, 5 soniyada splash yashiriladi
-  loadToday().then(function() {
-    // Data tayyor — lekin splash 5 soniya ko'rsatiladi
-  }).catch(function() {});
+  loadToday().then(function() {}).catch(function() {});
 };
 
 // ── OVOZ EFFEKTLARI (Web Audio API) ──
