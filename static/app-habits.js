@@ -179,21 +179,21 @@ function _translateHabitModal() {
   if (hn) hn.placeholder = S('msg','ph_habit_name');
 }
 function openAdd() {
-  // Premium limit tekshiruvi
-  const _habitCount = (data.today && data.today.habits) ? data.today.habits.length : (data.profile && data.profile.habit_limit !== undefined ? 0 : 0);
-  const _allHabits = data.habits ? data.habits.length : (_habitCount);
-  const _limit = data.profile && data.profile.habit_limit !== undefined ? data.profile.habit_limit : (data.profile && data.profile.is_premium ? 15 : 3);
-  const _isPrem = data.profile && data.profile.is_premium;
-  // habits sahifasidan ochilganda habits.length dan foydalanamiz
-  const _currentCount = (typeof habits !== 'undefined' && habits) ? habits.length : _allHabits;
-  if (_currentCount >= _limit) {
-    if (_isPrem) {
-      showToast(S('habits','limit_reached') || '⚠️ Maksimal limit!', true);
-    } else {
-      showPremiumPage();
-    }
-    return;
-  }
+  // ── VAQTINCHA O'CHIRILGAN: Premium limit tekshiruvi ──
+  // Bot mukammal darajaga yetgandan keyin qayta yoqiladi.
+  // const _habitCount = (data.today && data.today.habits) ? data.today.habits.length : (data.profile && data.profile.habit_limit !== undefined ? 0 : 0);
+  // const _allHabits = data.habits ? data.habits.length : (_habitCount);
+  // const _limit = data.profile && data.profile.habit_limit !== undefined ? data.profile.habit_limit : (data.profile && data.profile.is_premium ? 15 : 3);
+  // const _isPrem = data.profile && data.profile.is_premium;
+  // const _currentCount = (typeof habits !== 'undefined' && habits) ? habits.length : _allHabits;
+  // if (_currentCount >= _limit) {
+  //   if (_isPrem) {
+  //     showToast(S('habits','limit_reached') || '⚠️ Maksimal limit!', true);
+  //   } else {
+  //     showPremiumPage();
+  //   }
+  //   return;
+  // }
   editingHabitId = null;
   document.getElementById('modal-title').textContent = S('habits','add_new');
   _translateHabitModal();
