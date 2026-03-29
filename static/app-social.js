@@ -993,8 +993,47 @@ window.onload = function() {
   function hideSplash() {
     var spl = document.getElementById('splash-screen');
     if (spl && !spl.classList.contains('hide')) {
-      spl.classList.add('hide');
-      setTimeout(function() { spl.remove(); }, 600);
+      // 1. Matn, dots, orbit yashiriladi
+      spl.classList.add('fly');
+
+      var logo = document.getElementById('splash-logo');
+      var headerLogo = document.querySelector('.logo-icon');
+
+      if (logo && headerLogo) {
+        // Splash logoning hozirgi markaziy pozitsiyasi
+        var splRect = logo.getBoundingClientRect();
+        // Header logoning maqsad pozitsiyasi
+        var hdrRect = headerLogo.getBoundingClientRect();
+
+        // Markazdan markazga deltaX, deltaY
+        var splCX = splRect.left + splRect.width / 2;
+        var splCY = splRect.top + splRect.height / 2;
+        var hdrCX = hdrRect.left + hdrRect.width / 2;
+        var hdrCY = hdrRect.top + hdrRect.height / 2;
+        var dx = hdrCX - splCX;
+        var dy = hdrCY - splCY;
+
+        // Nisbiy kichrayish: 42px / 88px
+        var sc = 42 / 88;
+
+        // Animatsiyani ishga tushirish
+        logo.classList.add('fly-logo');
+        // requestAnimationFrame — transition ni ishga tushirish uchun
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            logo.style.transform = 'translate(' + dx + 'px, ' + dy + 'px) scale(' + sc + ')';
+            logo.style.width = '88px';
+            logo.style.height = '88px';
+            logo.style.borderRadius = '14px';
+          });
+        });
+      }
+
+      // 2. Logo uchib borgach splash yashiriladi
+      setTimeout(function() {
+        spl.classList.add('hide');
+        setTimeout(function() { spl.remove(); }, 600);
+      }, 550);
     }
   }
 
