@@ -80,18 +80,7 @@ function renderHabits(habits, jon = 100) {
   const jonPct = Math.round(jon);
   const jonDoira = jonRingHTML(jonPct, 72);
 
-  const iconGrid = `
-    <div class="icon-cat-tabs" id="icon-cat-tabs">
-      ${Object.keys(ICON_CATS).map((cat, i) =>
-        `<button type="button" class="icon-cat-btn${cat === _iconCat ? ' active' : ''}"
-          onclick="selectIconCat(this,${i})">${_iconCatLabel(cat)}</button>`
-      ).join('')}
-    </div>
-    <div class="icon-grid" id="icon-grid-inner">
-      ${ICON_CATS[_iconCat].map(ic =>
-        `<div class="icon-opt" data-icon="${ic}" onclick="selectIcon(this)">${ic}</div>`
-      ).join('')}
-    </div>`;
+  const iconGrid = _buildIconGrid();
 
   document.getElementById('habits-content').innerHTML = `
     <div>
@@ -157,14 +146,59 @@ function selectIcon(el) {
 }
 let _returnToToday = false;
 
+function _buildIconGrid() {
+  return `
+    <div class="icon-cat-tabs" id="icon-cat-tabs">
+      ${Object.keys(ICON_CATS).map((cat, i) =>
+        `<button type="button" class="icon-cat-btn${cat === _iconCat ? ' active' : ''}"
+          onclick="selectIconCat(this,${i})">${_iconCatLabel(cat)}</button>`
+      ).join('')}
+    </div>
+    <div class="icon-grid" id="icon-grid-inner">
+      ${ICON_CATS[_iconCat].map(ic =>
+        `<div class="icon-opt" data-icon="${ic}" onclick="selectIcon(this)">${ic}</div>`
+      ).join('')}
+    </div>`;
+}
+
+function _ensureHabitModal() {
+  if (document.getElementById('habit-modal')) return;
+  const iconGrid = _buildIconGrid();
+  const div = document.createElement('div');
+  div.innerHTML = `<div class="modal-overlay" id="habit-modal">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <button class="modal-close" onclick="closeModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
+        <div class="modal-title" id="modal-title">Yangi odat</div>
+        <div class="field">
+          <label id="lbl-habit-name">Nomi</label>
+          <input id="h-name" type="text" placeholder="Masalan: Kitob o'qish" maxlength="60">
+        </div>
+        <div class="field">
+          <label id="lbl-habit-type">Kuniga necha marta?</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input id="h-repeat-count" type="number" min="1" max="99" value="1" onchange="_onRepeatCountChange()" oninput="_onRepeatCountChange()" style="width:70px;text-align:center;font-size:16px;font-weight:700">
+            <span style="font-size:11px;color:var(--sub);line-height:1.3" id="lbl-per-day-hint">1 = oddiy, 2+ = kuniga bir necha marta</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="lbl-time">${S('habits','time_label')}</label>
+          <div id="h-times-list"></div>
+          <button type="button" class="rep-btn" style="width:100%;margin-top:6px;justify-content:center" onclick="addHabitTime()">${S('reminders','add_time')}</button>
+        </div>
+        <div class="field">
+          <label id="lbl-icon-pick">Icon tanlang</label>
+          ${iconGrid}
+        </div>
+        <button class="save-btn" onclick="saveHabit()"><span id="habit-save-txt">${S("profile","save_btn")}</span></button>
+      </div>
+    </div>`;
+  document.body.appendChild(div.firstElementChild);
+}
+
 async function openAddFromToday() {
   _returnToToday = true;
-  await loadHabits();
-  // habit-modal ni body ga ko'chirish — page-today ustida ko'rinsin
-  const modal = document.getElementById('habit-modal');
-  if (modal && modal.parentElement !== document.body) {
-    document.body.appendChild(modal);
-  }
+  _ensureHabitModal();
   openAdd();
 }
 
@@ -210,18 +244,12 @@ function openAdd() {
   }, 320);
 }
 async function openEdit(id, name, icon, time, type, repeatCount, timesJson) {
-  // Modal renderHabits() ichida yaratiladi — sahifa ochilmagan bo'lsa yo'q bo'ladi
-  // Shuning uchun avval modal mavjudligini tekshiramiz
-  if (!document.getElementById('habit-modal')) {
+  _ensureHabitModal();
+  // Habits sahifasida emas — body ga ko'chirish
+  const m = document.getElementById('habit-modal');
+  if (m && m.parentElement !== document.body) {
     _returnToToday = true;
-    await loadHabits();
-    // Modal yaratilgandan keyin body ga ko'chirish
-    const m = document.getElementById('habit-modal');
-    if (m && m.parentElement !== document.body) document.body.appendChild(m);
-  } else {
-    // Habits sahifasida emas — body ga ko'chirish
-    const m = document.getElementById('habit-modal');
-    if (m && m.parentElement !== document.body) document.body.appendChild(m);
+    document.body.appendChild(m);
   }
   editingHabitId = id;
   document.getElementById('modal-title').textContent = S('habits','edit_title');
