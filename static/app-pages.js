@@ -685,12 +685,17 @@ function closeAllCheckinSwipes(except) {
 
 // ── CHECKIN CARD: 3-NUQTA DROPDOWN ──
 function toggleCheckinDrop(hid) {
-  const drop = document.getElementById('cdrop-' + hid);
-  if (!drop) return;
-  const wasOpen = drop.classList.contains('open');
-  closeAllCheckinDrops();
+  const card = document.getElementById('ccard-' + hid);
+  if (!card) return;
+  const front = card.querySelector('.checkin-front');
+  if (!front) return;
+  const wasOpen = front.classList.contains('swiped');
   closeAllCheckinSwipes();
-  if (!wasOpen) drop.classList.add('open');
+  closeAllCheckinDrops();
+  if (!wasOpen) {
+    front.classList.add('swiped');
+    _checkinSwiped = true;
+  }
 }
 
 function closeAllCheckinDrops() {
