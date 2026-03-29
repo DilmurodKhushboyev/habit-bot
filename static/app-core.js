@@ -278,7 +278,11 @@ function spawnNavRipple(cx) {
   }
 }
 
+let _tabLoading = false;
+
 function switchTab(tab, el) {
+  // Agar tab hali yuklanayotgan bo'lsa — takroriy bosishni e'tiborsiz qoldir
+  if (_tabLoading) return;
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   if (el) el.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -305,16 +309,21 @@ function goBack() {
 }
 
 async function loadTab(tab) {
-  if (tab === 'today')        await loadToday();
-  if (tab === 'stats')        await loadStats();
-  if (tab === 'achievements') await loadAchievements();
-  if (tab === 'reminders')    await loadReminders();
-  if (tab === 'profile')      await loadProfile();
-  if (tab === 'habits')       await loadHabits();
-  if (tab === 'bozor') {
-    await loadShop();
+  _tabLoading = true;
+  try {
+    if (tab === 'today')        await loadToday();
+    if (tab === 'stats')        await loadStats();
+    if (tab === 'achievements') await loadAchievements();
+    if (tab === 'reminders')    await loadReminders();
+    if (tab === 'profile')      await loadProfile();
+    if (tab === 'habits')       await loadHabits();
+    if (tab === 'bozor') {
+      await loadShop();
+    }
+    loaded[tab] = true;
+  } finally {
+    _tabLoading = false;
   }
-  loaded[tab] = true;
 }
 
 // ── FETCH ──
