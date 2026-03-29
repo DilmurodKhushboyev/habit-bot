@@ -210,6 +210,12 @@ function openAdd() {
   }, 320);
 }
 function openEdit(id, name, icon, time, type, repeatCount, timesJson) {
+  // Modal page-habits ichida bo'lishi mumkin — today/boshqa sahifadan chaqirilganda
+  // body ga ko'chirish kerak (xuddi openAddFromToday kabi)
+  const modal = document.getElementById('habit-modal');
+  if (modal && modal.parentElement !== document.body) {
+    document.body.appendChild(modal);
+  }
   editingHabitId = id;
   document.getElementById('modal-title').textContent = S('habits','edit_title');
   _translateHabitModal();
