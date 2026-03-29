@@ -69,31 +69,63 @@ function renderToday(d) {
             '<div style="width:8px;height:8px;border-radius:50%;background:'+(i<tc?'var(--green)':'var(--bg)')+';box-shadow:'+(i<tc?'none':'var(--sh-in)')+'"></div>'
           ).join('') + '</div>';
     }
+    const _esc = (s) => (s||'').replace(/'/g, "\\'");
     cardsHtml += `
-      <div class="checkin-card ${h.done ? 'done' : ''}" id="ccard-${h.id}" onclick="checkin('${h.id}', this)">
-        <div class="checkin-icon">${h.icon || '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDefIcon" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgDefIcon)" opacity="0.2"/><path d="M7 12l4 4 6-7" stroke="url(#svgDefIcon)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</div>
-        <div class="checkin-info">
-          <div class="checkin-name">${h.name}</div>
-          <div class="checkin-meta">${isRepeat ? rc+' '+S('today','times_per_day')+' · ' : (h.time !== 'vaqtsiz' ? `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> `+h.time+' · ' : '')}<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak} ${S('today','days_streak')}</div>
-          ${dotsHtml}
-          ${(() => {
-            const d66 = h.days_66_done || 0;
-            const pct66 = Math.min(100, Math.round(d66 / 66 * 100));
-            const c66 = '#4CAF7D';
-            const left66 = Math.max(0, 66 - d66);
-            const label66 = d66 >= 66 ? S('msg','habit_formed') : S('msg','days_left').replace('{n}', left66);
-            return '<div style="margin-top:5px" onclick="event.stopPropagation()">'
-              + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'
-              + '<div style="font-size:8px;color:var(--sub);font-weight:600;letter-spacing:.5px">\uD83C\uDFAF ' + d66 + '/66</div>'
-              + '<div style="font-size:7px;font-weight:600;color:' + c66 + '">' + label66 + '</div>'
-              + '</div>'
-              + '<div style="height:3px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">'
-              + '<div style="height:100%;border-radius:2px;width:' + pct66 + '%;background:linear-gradient(90deg,' + c66 + '99,' + c66 + ');transition:width .6s ease"></div>'
-              + '</div></div>';
-          })()}
+      <div class="checkin-card ${h.done ? 'done' : ''}" id="ccard-${h.id}">
+        <div class="checkin-actions-bg">
+          <button class="cswipe-btn cswipe-close" onclick="event.stopPropagation();closeAllCheckinSwipes()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+          </button>
+          <button class="cswipe-btn cswipe-edit" onclick="event.stopPropagation();openEdit('${h.id}','${_esc(h.name)}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}')">
+            <svg width="18" height="18" viewBox="0 0 26 26" fill="none"><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="#fff" opacity="0.9"/></svg>
+            <span>${S('habits','edit_btn')}</span>
+          </button>
+          <button class="cswipe-btn cswipe-del" onclick="event.stopPropagation();deleteHabit('${h.id}')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+            <span>${S('habits','delete_btn')}</span>
+          </button>
         </div>
-        <button class="checkin-btn" id="cbtn-${h.id}" style="${isRepeat && !h.done && tc>0 ? 'font-size:11px;font-weight:700' : ''}">${btnContent}</button>
-        <div class="confetti-pop" id="pop-${h.id}">✨</div>
+        <div class="checkin-front" data-hid="${h.id}" onclick="checkinFromFront('${h.id}', this)">
+          <div class="checkin-icon">${h.icon || '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDefIcon" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgDefIcon)" opacity="0.2"/><path d="M7 12l4 4 6-7" stroke="url(#svgDefIcon)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</div>
+          <div class="checkin-info">
+            <div class="checkin-name">${h.name}</div>
+            <div class="checkin-meta">${isRepeat ? rc+' '+S('today','times_per_day')+' · ' : (h.time !== 'vaqtsiz' ? `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> `+h.time+' · ' : '')}<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak} ${S('today','days_streak')}</div>
+            ${dotsHtml}
+            ${(() => {
+              const d66 = h.days_66_done || 0;
+              const pct66 = Math.min(100, Math.round(d66 / 66 * 100));
+              const c66 = '#4CAF7D';
+              const left66 = Math.max(0, 66 - d66);
+              const label66 = d66 >= 66 ? S('msg','habit_formed') : S('msg','days_left').replace('{n}', left66);
+              return '<div style="margin-top:5px" onclick="event.stopPropagation()">'
+                + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'
+                + '<div style="font-size:8px;color:var(--sub);font-weight:600;letter-spacing:.5px">\uD83C\uDFAF ' + d66 + '/66</div>'
+                + '<div style="font-size:7px;font-weight:600;color:' + c66 + '">' + label66 + '</div>'
+                + '</div>'
+                + '<div style="height:3px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">'
+                + '<div style="height:100%;border-radius:2px;width:' + pct66 + '%;background:linear-gradient(90deg,' + c66 + '99,' + c66 + ');transition:width .6s ease"></div>'
+                + '</div></div>';
+            })()}
+          </div>
+          <button class="checkin-dots-btn" onclick="event.stopPropagation();toggleCheckinDrop('${h.id}')">
+            <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="8" r="2"/><circle cx="2" cy="14" r="2"/></svg>
+          </button>
+          <button class="checkin-btn" id="cbtn-${h.id}" onclick="event.stopPropagation();checkin('${h.id}', document.getElementById('ccard-${h.id}'))" style="${isRepeat && !h.done && tc>0 ? 'font-size:11px;font-weight:700' : ''}">${btnContent}</button>
+          <div class="checkin-dropdown" id="cdrop-${h.id}">
+            <button class="checkin-dropdown-close" onclick="event.stopPropagation();closeAllCheckinDrops()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </button>
+            <button class="checkin-dropdown-item" onclick="event.stopPropagation();closeAllCheckinDrops();openEdit('${h.id}','${_esc(h.name)}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}')">
+              <svg width="15" height="15" viewBox="0 0 26 26" fill="none"><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="var(--accent2)" opacity="0.85"/></svg>
+              ${S('habits','edit_btn')}
+            </button>
+            <button class="checkin-dropdown-item danger" onclick="event.stopPropagation();closeAllCheckinDrops();deleteHabit('${h.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="var(--red)" stroke-width="2" stroke-linecap="round"/></svg>
+              ${S('habits','delete_btn')}
+            </button>
+          </div>
+          <div class="confetti-pop" id="pop-${h.id}">✨</div>
+        </div>
       </div>`;
   });
 
@@ -128,6 +160,9 @@ function renderToday(d) {
     <div style="font-size:11px;color:var(--green);margin:-6px 0 10px 2px">${S('today','tap_hint')}</div>
     ${cardsHtml || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>' + S('msg','no_habits_yet') + '</div>'}
     <div class="toast" id="toast-today"></div>`;
+
+  // Swipe handlerlarni ulash
+  setTimeout(() => _initCheckinSwipe(), 50);
 }
 
 async function checkin(hid, cardEl) {
@@ -583,3 +618,81 @@ function nextPopup() {
   }, 3000);
 }
 
+// ── CHECKIN CARD: SWIPE-TO-REVEAL ──
+let _checkinSwiped = false; // swipe bo'lganda checkin qilmaslik uchun flag
+
+function checkinFromFront(hid, frontEl) {
+  // Agar swipe ochiq bo'lsa — yopamiz, checkin qilmaymiz
+  if (frontEl.classList.contains('swiped')) {
+    frontEl.classList.remove('swiped');
+    return;
+  }
+  if (_checkinSwiped) { _checkinSwiped = false; return; }
+  const card = document.getElementById('ccard-' + hid);
+  if (card) checkin(hid, card);
+}
+
+function _initCheckinSwipe() {
+  document.querySelectorAll('.checkin-front').forEach(front => {
+    let startX = 0, curX = 0, swiping = false, startY = 0, locked = false;
+    front.addEventListener('touchstart', e => {
+      closeAllCheckinDrops();
+      closeAllCheckinSwipes(front);
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      curX = 0; swiping = true; locked = false;
+      _checkinSwiped = false;
+      front.style.transition = 'none';
+    }, {passive: true});
+
+    front.addEventListener('touchmove', e => {
+      if (!swiping) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      // Vertikal scroll — swipeni bekor qilish
+      if (!locked) {
+        if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) {
+          swiping = false; front.style.transition = ''; front.style.transform = ''; return;
+        }
+        if (Math.abs(dx) > 8) locked = true;
+      }
+      curX = dx;
+      if (curX > 0) curX = 0;
+      if (curX < -170) curX = -170;
+      front.style.transform = 'translateX(' + curX + 'px)';
+    }, {passive: true});
+
+    front.addEventListener('touchend', () => {
+      if (!swiping) return;
+      swiping = false;
+      front.style.transition = '';
+      if (curX < -50) {
+        front.classList.add('swiped');
+        _checkinSwiped = true; // checkin qilmaslik
+      } else {
+        front.classList.remove('swiped');
+      }
+      front.style.transform = '';
+    });
+  });
+}
+
+function closeAllCheckinSwipes(except) {
+  document.querySelectorAll('.checkin-front.swiped').forEach(f => {
+    if (f !== except) f.classList.remove('swiped');
+  });
+}
+
+// ── CHECKIN CARD: 3-NUQTA DROPDOWN ──
+function toggleCheckinDrop(hid) {
+  const drop = document.getElementById('cdrop-' + hid);
+  if (!drop) return;
+  const wasOpen = drop.classList.contains('open');
+  closeAllCheckinDrops();
+  closeAllCheckinSwipes();
+  if (!wasOpen) drop.classList.add('open');
+}
+
+function closeAllCheckinDrops() {
+  document.querySelectorAll('.checkin-dropdown.open').forEach(d => d.classList.remove('open'));
+}
