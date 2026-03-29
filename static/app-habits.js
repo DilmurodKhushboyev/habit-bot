@@ -373,8 +373,16 @@ async function deleteHabit(id) {
     const rj = await res.json().catch(() => ({}));
     if (!res.ok || rj.ok === false) { showToast('❌ ' + (rj.error || S('msg','error_label')), true); return; }
     showToast('🗑️ O\'chirildi!');
-    loaded.habits = false;
-    await loadHabits();
+    // Today sahifasida bo'lsa — today ni yangilash
+    const todayPage = document.getElementById('page-today');
+    const isOnToday = todayPage && todayPage.style.display !== 'none' && todayPage.offsetParent !== null;
+    if (isOnToday) {
+      loaded.today = false;
+      await loadToday();
+    } else {
+      loaded.habits = false;
+      await loadHabits();
+    }
   } catch(e) { showToast(S('msg','error_label'), true); }
 }
 
