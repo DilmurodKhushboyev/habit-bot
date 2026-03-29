@@ -294,6 +294,8 @@ function switchTab(tab, el) {
   if (navTarget) moveNavBall(navTarget, true);
   if (!loaded[tab]) loadTab(tab);
   else if (tab === 'habits') { loaded.habits = false; loadTab('habits'); }
+  else if (tab === 'profile') { loaded.profile = false; loadTab('profile'); }
+  else if (tab === 'bozor') { loaded.bozor = false; loadTab('bozor'); }
   else refreshHabitsJon();
 }
 

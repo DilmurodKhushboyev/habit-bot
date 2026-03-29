@@ -27,7 +27,7 @@ function renderProfile(d) {
   currentLang = lang;
   localStorage.setItem('sh_lang', lang);
   updateNavLabels();
-  const photoUrl = user.photo_url || '';
+  const photoUrl = d.photo_url || user.photo_url || '';
 
   // Avatar: rasm yoki harf
   const avatarHtml = photoUrl

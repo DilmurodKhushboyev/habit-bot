@@ -643,6 +643,12 @@ async function buyItem(itemId, method) {
       if (item) { item.owned = r.owned; item.can_buy = item.owned < item.max_own; }
       renderShop(_shopData);
     }
+    // Global profil balini ham yangilash (boshqa sahifalarda koʻrinishi uchun)
+    if (data.profile && typeof r.points === 'number') {
+      data.profile.points = r.points;
+    }
+    // Profil cache tozalash — keyingi ochilishda yangi ball koʻrinadi
+    loaded.profile = false;
     const toast = document.getElementById('toast-shop');
     if (toast) { toast.textContent = S('shop','buy_success'); toast.className = 'toast show'; setTimeout(()=>toast.className='toast',2500); }
   } catch(e) { showToast('❌ ' + S('msg','network_error'), true); }
@@ -667,6 +673,12 @@ async function sellItem(itemId, itemName, refund) {
     if (_toast) { _toast.textContent = S('msg','sold_toast').replace('{n}', r.refund); _toast.className = 'toast show'; setTimeout(()=>_toast.className='toast',2500); }
     if (_shopData) {
       _shopData.points = r.points;
+      // Global profil balini ham yangilash
+      if (data.profile && typeof r.points === 'number') {
+        data.profile.points = r.points;
+      }
+      // Profil cache tozalash — keyingi ochilishda yangi ball koʻrinadi
+      loaded.profile = false;
       // inventory dict narsalari
       const inv = _shopData.inventory || {};
       if (inv[itemId] > 1) inv[itemId]--;
