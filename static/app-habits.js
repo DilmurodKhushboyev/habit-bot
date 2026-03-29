@@ -209,12 +209,19 @@ function openAdd() {
     if (inp) inp.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 320);
 }
-function openEdit(id, name, icon, time, type, repeatCount, timesJson) {
-  // Modal page-habits ichida bo'lishi mumkin — today/boshqa sahifadan chaqirilganda
-  // body ga ko'chirish kerak (xuddi openAddFromToday kabi)
-  const modal = document.getElementById('habit-modal');
-  if (modal && modal.parentElement !== document.body) {
-    document.body.appendChild(modal);
+async function openEdit(id, name, icon, time, type, repeatCount, timesJson) {
+  // Modal renderHabits() ichida yaratiladi — sahifa ochilmagan bo'lsa yo'q bo'ladi
+  // Shuning uchun avval modal mavjudligini tekshiramiz
+  if (!document.getElementById('habit-modal')) {
+    _returnToToday = true;
+    await loadHabits();
+    // Modal yaratilgandan keyin body ga ko'chirish
+    const m = document.getElementById('habit-modal');
+    if (m && m.parentElement !== document.body) document.body.appendChild(m);
+  } else {
+    // Habits sahifasida emas — body ga ko'chirish
+    const m = document.getElementById('habit-modal');
+    if (m && m.parentElement !== document.body) document.body.appendChild(m);
   }
   editingHabitId = id;
   document.getElementById('modal-title').textContent = S('habits','edit_title');
