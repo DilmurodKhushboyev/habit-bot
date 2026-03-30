@@ -22,91 +22,135 @@ async function loadStatsPage() {
 function renderStats(d) {
   const { summary, weekly, heatmap, days_30, habit_stats, today, trend } = d;
 
-  // ── Summary card data ──
+  // ── Summary card data (Variant C — Mini Charts) ──
+  const todayDone  = summary.today_done  || 0;
+  const todayTotal = summary.today_total || 1;
+  const todayPct   = todayTotal ? Math.round(todayDone / todayTotal * 100) : 0;
+
   const bestStreak = summary.best_streak || Math.max(summary.streak, 1);
-  const streakPct  = Math.min(100, Math.round(summary.streak / Math.max(bestStreak, 1) * 100));
-  const ballMax = Math.max(summary.points, 500);
-  const ballPct = Math.min(100, Math.round(summary.points / ballMax * 100));
+
+  const topName = summary.top_habit_name || S('stats','no_habits');
+  const topIcon = summary.top_habit_icon || '\u{1F4CA}';
+  const topPct  = summary.top_habit_pct  || 0;
+
+  const worstName = summary.worst_habit_name || '';
+  const worstIcon = summary.worst_habit_icon || '\u26A1';
+  const worstPct  = summary.worst_habit_pct  || 0;
+  const worstColor = worstPct <= 20 ? '#E05252' : worstPct <= 40 ? '#E07040' : '#D4963A';
+
+  // Streak sparkline: oxirgi 7 kunlik heatmap dan
+  const sparkDots = (() => {
+    if (!days_30 || days_30.length < 7) return [];
+    const last7 = days_30.slice(-7);
+    return last7.map(day => heatmap[day] ? 1 : 0);
+  })();
+  const sparkPath = (() => {
+    if (sparkDots.length < 2) return {line:'', area:''};
+    const W = 120, H = 32, pad = 2;
+    let cumStreak = 0;
+    const vals = sparkDots.map(v => { cumStreak = v ? cumStreak + 1 : 0; return cumStreak; });
+    const maxV = Math.max(...vals, 1);
+    const pts = vals.map((v, i) => ({
+      x: pad + (i / (vals.length - 1)) * (W - 2 * pad),
+      y: pad + (1 - v / maxV) * (H - 2 * pad)
+    }));
+    const line = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+    const area = line + ' L' + pts[pts.length-1].x.toFixed(1) + ',' + H + ' L' + pts[0].x.toFixed(1) + ',' + H + ' Z';
+    return {line, area, last: pts[pts.length-1]};
+  })();
+
+  // Bugungi mini bars — har bir odat uchun done/undone
+  const todayBars = (() => {
+    const bars = [];
+    for (let i = 0; i < todayTotal; i++) {
+      bars.push(i < todayDone);
+    }
+    return bars;
+  })();
 
   const sumHtml = `
     <div class="summary-grid">
 
-      <!-- 1. STREAK — animated arc gauge -->
-      <div class="sum-card sum-card-anim" style="color:#E07040">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%">
-          <span class="sum-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siFire" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#E07040"/><stop offset="100%" stop-color="#F6C93E"/></linearGradient></defs><path d="M12 23c-4.97 0-8-3.58-8-7.5 0-3.07 2.17-5.77 4.5-7.5.5-.37 1.2.1 1.05.7-.42 1.64.22 3.16 1.45 3.8.36.19.8-.04.84-.44.52-4.78 3.66-7.56 4.66-8.06.47-.23 1.02.17.9.68-.58 2.44.52 4.82 2.6 5.82.36.17.57.54.57.93 0 2.87-.5 5.07-2.07 7.07C16.5 21 14.5 23 12 23z" fill="url(#siFire)"/></svg></span>
-          <svg width="46" height="46" viewBox="0 0 46 46">
-            <circle cx="23" cy="23" r="18" fill="none" stroke="var(--bg)" stroke-width="5" opacity=".5"/>
-            <circle cx="23" cy="23" r="18" fill="none" stroke="url(#gStrk)" stroke-width="5"
-              stroke-dasharray="${(2*Math.PI*18*streakPct/100).toFixed(1)} ${(2*Math.PI*18).toFixed(1)}"
-              stroke-dashoffset="${(2*Math.PI*18*0.25).toFixed(1)}" stroke-linecap="round" class="sum-ring"/>
-            <defs><linearGradient id="gStrk" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs>
-            <text x="23" y="27" text-anchor="middle" font-size="11" font-weight="900" fill="#E07040" font-family="DM Mono,monospace">${streakPct}%</text>
-          </svg>
+      <!-- 1. BUGUNGI MOMENTUM — mini bar chart -->
+      <div class="sc-card sc-card-anim" style="--sc-color:#4CAF7D">
+        <div class="sc-header">
+          <div>
+            <div class="sc-val">${todayDone}<span class="sc-val-sub">/${todayTotal}</span></div>
+            <div class="sc-lbl">${S('stats','today_momentum')}</div>
+          </div>
+          <div class="sc-badge">${todayPct}%</div>
         </div>
-        <div class="sum-val" style="color:#E07040">${summary.streak}</div>
-        <div class="sum-lbl">${S('stats','streak_label')}</div>
-        <div class="sum-progress">
-          <div class="sum-bar-fill" style="height:100%;width:${streakPct}%;background:linear-gradient(90deg,#F6C93E,#E07040);border-radius:3px"></div>
+        <div class="sc-chart">
+          <div class="sc-mini-bars">
+            ${todayBars.map((done, i) => `<div class="sc-mini-bar ${done ? 'sc-done' : ''}" style="animation-delay:${i * 60}ms"></div>`).join('')}
+          </div>
         </div>
-        <div class="sum-record"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z" fill="#E07040"/></svg>record: ${bestStreak}</div>
       </div>
 
-      <!-- 2. BALL — animated donut -->
-      <div class="sum-card sum-card-anim" style="color:#D4963A">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%">
-          <span class="sum-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siStar" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#D4963A"/><stop offset="100%" stop-color="#FFE566"/></linearGradient></defs><path d="M12 2l2.94 6.34L22 9.27l-5.04 4.63L18.18 21 12 17.27 5.82 21l1.22-7.1L2 9.27l7.06-.93L12 2z" fill="url(#siStar)"/></svg></span>
-          <svg width="46" height="46" viewBox="0 0 46 46">
-            <circle cx="23" cy="23" r="18" fill="none" stroke="var(--bg)" stroke-width="5" opacity=".5"/>
-            <circle cx="23" cy="23" r="18" fill="none" stroke="url(#gBall2)" stroke-width="5"
-              stroke-dasharray="${(2*Math.PI*18*ballPct/100).toFixed(1)} ${(2*Math.PI*18).toFixed(1)}"
-              stroke-dashoffset="${(2*Math.PI*18*0.25).toFixed(1)}" stroke-linecap="round" class="sum-ring"/>
-            <defs><linearGradient id="gBall2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FFE566"/><stop offset="100%" stop-color="#D4963A"/></linearGradient></defs>
-            <text x="23" y="27" text-anchor="middle" font-size="11" font-weight="900" fill="#D4963A" font-family="DM Mono,monospace">${ballPct}%</text>
+      <!-- 2. STREAK — sparkline -->
+      <div class="sc-card sc-card-anim" style="--sc-color:#E07040">
+        <div class="sc-header">
+          <div>
+            <div class="sc-val">${summary.streak}</div>
+            <div class="sc-lbl">${S('stats','streak_label')}</div>
+          </div>
+          <div class="sc-badge">\u{1F525}</div>
+        </div>
+        <div class="sc-chart">
+          <svg width="100%" viewBox="0 0 120 32" preserveAspectRatio="none" style="display:block;overflow:visible">
+            <defs>
+              <linearGradient id="scSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E07040" stop-opacity="0.25"/><stop offset="100%" stop-color="#E07040" stop-opacity="0"/></linearGradient>
+              <linearGradient id="scSparkLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient>
+            </defs>
+            ${sparkPath.area ? '<path d="' + sparkPath.area + '" fill="url(#scSparkFill)"/>' : ''}
+            ${sparkPath.line ? '<path d="' + sparkPath.line + '" fill="none" stroke="url(#scSparkLine)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' : ''}
+            ${sparkPath.last ? '<circle cx="' + sparkPath.last.x.toFixed(1) + '" cy="' + sparkPath.last.y.toFixed(1) + '" r="3" fill="#E07040" stroke="#fff" stroke-width="1.5"/>' : ''}
           </svg>
         </div>
-        <div class="sum-val" style="color:#D4963A">${summary.points}</div>
-        <div class="sum-lbl">${S('stats','points_label')}</div>
-        <div class="sum-record"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M4 14l4-9h8l4 9M6 14h12M10 14l1 7h2l1-7" stroke="#D4963A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>max: ${ballMax} ⭐</div>
+        <div class="sc-foot">\u2B50 record: ${bestStreak}</div>
       </div>
 
-      <!-- 3. FAOL KUN — animated arc + grid -->
-      <div class="sum-card sum-card-anim" style="color:#4CAF7D">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%">
-          <span class="sum-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siCheck" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#6EDAA0"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="url(#siCheck)" opacity=".18"/><circle cx="12" cy="12" r="10" stroke="url(#siCheck)" stroke-width="2" fill="none"/><path d="M8 12.5l2.5 3 5.5-6" stroke="url(#siCheck)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          <svg width="46" height="46" viewBox="0 0 46 46">
-            <circle cx="23" cy="23" r="18" fill="none" stroke="var(--bg)" stroke-width="5" opacity=".5"/>
-            <circle cx="23" cy="23" r="18" fill="none" stroke="url(#gAct)" stroke-width="5"
-              stroke-dasharray="${(2*Math.PI*18*Math.round(summary.active_days_30/30*100)/100).toFixed(1)} ${(2*Math.PI*18).toFixed(1)}"
-              stroke-dashoffset="${(2*Math.PI*18*0.25).toFixed(1)}" stroke-linecap="round" class="sum-ring"/>
-            <defs><linearGradient id="gAct" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6EDAA0"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs>
-            <text x="23" y="27" text-anchor="middle" font-size="11" font-weight="900" fill="#4CAF7D" font-family="DM Mono,monospace">${Math.round(summary.active_days_30/30*100)}%</text>
-          </svg>
+      <!-- 3. ENG ZAIF ODAT — warning progress -->
+      <div class="sc-card sc-card-anim" style="--sc-color:${worstColor}">
+        <div class="sc-header">
+          <div>
+            <div class="sc-val">${worstPct}%</div>
+            <div class="sc-lbl">${S('stats','worst_habit')}</div>
+          </div>
+          <span style="font-size:18px">\u26A1</span>
         </div>
-        <div class="sum-val" style="color:#4CAF7D">${summary.active_days_30}</div>
-        <div class="sum-lbl">${S('stats','faol_kun')}</div>
-        <div class="sum-progress">
-          <div class="sum-bar-fill" style="height:100%;width:${Math.round(summary.active_days_30/30*100)}%;background:linear-gradient(90deg,#6EDAA0,#4CAF7D);border-radius:3px"></div>
+        <div class="sc-chart" style="flex-direction:column;justify-content:flex-end;gap:4px">
+          <div class="sc-warn-bar-wrap">
+            <div class="sc-warn-bar">
+              <div class="sc-warn-bar-fill" style="width:${worstPct}%;background:${worstColor}"></div>
+            </div>
+            <div class="sc-warn-pct" style="color:${worstColor}">${worstPct}%</div>
+          </div>
+          <div class="sc-warn-label" style="color:${worstColor}">\u26A0\uFE0F ${S('stats','worst_warn')}</div>
         </div>
-        <div class="sum-record"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="3" stroke="#4CAF7D" stroke-width="2" fill="none"/><path d="M3 10h18" stroke="#4CAF7D" stroke-width="2"/></svg>${summary.active_days_30}/30</div>
+        <div class="sc-foot" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${worstIcon} ${worstName}</div>
       </div>
 
-      <!-- 4. ODAT — animated ring + count -->
-      <div class="sum-card sum-card-anim" style="color:#5B8DEF">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%">
-          <span class="sum-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siClip" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#7FAAFF"/></linearGradient></defs><rect x="5" y="4" width="14" height="17" rx="2.5" stroke="url(#siClip)" stroke-width="2"/><rect x="8" y="2" width="8" height="4" rx="1.5" fill="url(#siClip)"/><path d="M8 11h8M8 14.5h5" stroke="url(#siClip)" stroke-width="2" stroke-linecap="round"/></svg></span>
-          <svg width="46" height="46" viewBox="0 0 46 46">
-            <circle cx="23" cy="23" r="18" fill="none" stroke="var(--bg)" stroke-width="5" opacity=".5"/>
-            <circle cx="23" cy="23" r="18" fill="none" stroke="url(#gHab)" stroke-width="5"
-              stroke-dasharray="${(2*Math.PI*18*Math.min(100,Math.round(summary.total_habits/15*100))/100).toFixed(1)} ${(2*Math.PI*18).toFixed(1)}"
-              stroke-dashoffset="${(2*Math.PI*18*0.25).toFixed(1)}" stroke-linecap="round" class="sum-ring"/>
-            <defs><linearGradient id="gHab" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7FAAFF"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs>
-            <text x="23" y="27" text-anchor="middle" font-size="11" font-weight="900" fill="#5B8DEF" font-family="DM Mono,monospace">${Math.round(summary.total_habits/15*100)}%</text>
+      <!-- 4. ENG BARQAROR ODAT — donut -->
+      <div class="sc-card sc-card-anim" style="--sc-color:#D4963A">
+        <div class="sc-header">
+          <div>
+            <div class="sc-val">${topPct}%</div>
+            <div class="sc-lbl">${S('stats','top_habit')}</div>
+          </div>
+          <span style="font-size:18px">\u{1F3C6}</span>
+        </div>
+        <div class="sc-chart" style="align-items:center;justify-content:center">
+          <svg width="56" height="56" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="22" fill="none" stroke="var(--bg)" stroke-width="5" class="sc-ring-bg"/>
+            <circle cx="28" cy="28" r="22" fill="none" stroke="url(#scDonutG)" stroke-width="5"
+              stroke-dasharray="${(2*Math.PI*22*topPct/100).toFixed(1)} ${(2*Math.PI*22).toFixed(1)}"
+              stroke-dashoffset="${(2*Math.PI*22*0.25).toFixed(1)}" stroke-linecap="round" class="sc-ring-fill"/>
+            <defs><linearGradient id="scDonutG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FFE566"/><stop offset="100%" stop-color="#D4963A"/></linearGradient></defs>
+            <text x="28" y="31" text-anchor="middle" font-size="13" font-weight="800" fill="#D4963A" font-family="DM Mono,monospace">${topIcon}</text>
           </svg>
         </div>
-        <div class="sum-val" style="color:#5B8DEF">${summary.total_habits}</div>
-        <div class="sum-lbl">${S('stats','habits_label')}</div>
-        <div class="sum-record"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="#5B8DEF" stroke-width="2" fill="none"/><rect x="9" y="3" width="6" height="4" rx="1" stroke="#5B8DEF" stroke-width="2" fill="none"/></svg>${S('stats','total_label')}: ${summary.total_habits}/15</div>
+        <div class="sc-foot" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center">${topIcon} ${topName}</div>
       </div>
 
     </div>`;
