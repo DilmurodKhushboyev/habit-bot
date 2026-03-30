@@ -22,33 +22,27 @@ async function loadStatsPage() {
 function renderStats(d) {
   const { summary, weekly, heatmap, days_30, habit_stats, today, trend } = d;
 
-  // ── Summary card data (Variant C — Mini Charts) ──
+
+  // ── Summary card data (Variant C — Mini Charts v2) ──
   const todayDone  = summary.today_done  || 0;
   const todayTotal = summary.today_total || 1;
   const todayPct   = todayTotal ? Math.round(todayDone / todayTotal * 100) : 0;
+  const todayLeft  = Math.max(0, todayTotal - todayDone);
 
   const bestStreak = summary.best_streak || Math.max(summary.streak, 1);
 
   const topName = summary.top_habit_name || S('stats','no_habits');
-  const topIcon = summary.top_habit_icon || '\u{1F4CA}';
   const topPct  = summary.top_habit_pct  || 0;
 
   const worstName = summary.worst_habit_name || '';
-  const worstIcon = summary.worst_habit_icon || '\u26A1';
   const worstPct  = summary.worst_habit_pct  || 0;
   const worstColor = worstPct <= 20 ? '#E05252' : worstPct <= 40 ? '#E07040' : '#D4963A';
 
-  // Streak sparkline: oxirgi 7 kunlik heatmap dan
-  const sparkDots = (() => {
-    if (!days_30 || days_30.length < 7) return [];
-    const last7 = days_30.slice(-7);
-    return last7.map(day => heatmap[day] ? 1 : 0);
-  })();
-  const sparkPath = (() => {
-    if (sparkDots.length < 2) return {line:'', area:''};
+  // Streak sparkline: haftalik bajarilish % dan (weekly array)
+  const streakSpark = (() => {
+    if (!weekly || weekly.length < 2) return {line:'', area:'', last:null};
     const W = 120, H = 32, pad = 2;
-    let cumStreak = 0;
-    const vals = sparkDots.map(v => { cumStreak = v ? cumStreak + 1 : 0; return cumStreak; });
+    const vals = weekly.map(w => w.total ? Math.round(w.count / w.total * 100) : 0);
     const maxV = Math.max(...vals, 1);
     const pts = vals.map((v, i) => ({
       x: pad + (i / (vals.length - 1)) * (W - 2 * pad),
@@ -59,42 +53,58 @@ function renderStats(d) {
     return {line, area, last: pts[pts.length-1]};
   })();
 
-  // Bugungi mini bars — har bir odat uchun done/undone
-  const todayBars = (() => {
-    const bars = [];
-    for (let i = 0; i < todayTotal; i++) {
-      bars.push(i < todayDone);
-    }
-    return bars;
-  })();
+  // Bugungi mini bars
+  const todayBars = [];
+  for (let i = 0; i < todayTotal; i++) todayBars.push(i < todayDone);
+
+  // SVG icon helpers (professional gradient icons)
+  const svgTarget = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siTgt" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#6EDAA0"/></linearGradient></defs><circle cx="12" cy="12" r="10" stroke="url(#siTgt)" stroke-width="2"/><circle cx="12" cy="12" r="6" stroke="url(#siTgt)" stroke-width="2"/><circle cx="12" cy="12" r="2.5" fill="url(#siTgt)"/></svg>';
+  const svgFire = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siFlm" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#E07040"/><stop offset="100%" stop-color="#F6C93E"/></linearGradient></defs><path d="M12 23c-4.97 0-8-3.58-8-7.5 0-3.07 2.17-5.77 4.5-7.5.5-.37 1.2.1 1.05.7-.42 1.64.22 3.16 1.45 3.8.36.19.8-.04.84-.44.52-4.78 3.66-7.56 4.66-8.06.47-.23 1.02.17.9.68-.58 2.44.52 4.82 2.6 5.82.36.17.57.54.57.93 0 2.87-.5 5.07-2.07 7.07C16.5 21 14.5 23 12 23z" fill="url(#siFlm)"/></svg>';
+  const svgWarn = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siWrn" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#E05252"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#siWrn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="url(#siWrn)" fill-opacity=".12"/><path d="M12 10v5" stroke="url(#siWrn)" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="17.5" r="1.2" fill="url(#siWrn)"/></svg>';
+  const svgTrophy = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siTrp" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#D4963A"/><stop offset="100%" stop-color="#FFE566"/></linearGradient></defs><path d="M6 4h12v2c0 4-2.5 7-5 8v2h2a2 2 0 012 2H7a2 2 0 012-2h2v-2c-2.5-1-5-4-5-8V4z" fill="url(#siTrp)" fill-opacity=".15" stroke="url(#siTrp)" stroke-width="1.8"/><path d="M6 6H4a1 1 0 00-1 1v1c0 2 1.5 3.5 3 4" stroke="url(#siTrp)" stroke-width="1.8" stroke-linecap="round"/><path d="M18 6h2a1 1 0 011 1v1c0 2-1.5 3.5-3 4" stroke="url(#siTrp)" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  const svgStar = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z" fill="#E07040"/></svg>';
+
+  // Donut helper — ikki odat kartasi uchun bir xil chart
+  const donutSVG = (pct, gradId, c1, c2, textColor) => {
+    const r = 22, circ = 2 * Math.PI * r;
+    return '<svg width="56" height="56" viewBox="0 0 56 56">'
+      + '<circle cx="28" cy="28" r="' + r + '" fill="none" stroke="var(--bg)" stroke-width="5" class="sc-ring-bg"/>'
+      + '<circle cx="28" cy="28" r="' + r + '" fill="none" stroke="url(#' + gradId + ')" stroke-width="5"'
+      + ' stroke-dasharray="' + (circ * pct / 100).toFixed(1) + ' ' + circ.toFixed(1) + '"'
+      + ' stroke-dashoffset="' + (circ * 0.25).toFixed(1) + '" stroke-linecap="round" class="sc-ring-fill"/>'
+      + '<defs><linearGradient id="' + gradId + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="' + c1 + '"/><stop offset="100%" stop-color="' + c2 + '"/></linearGradient></defs>'
+      + '<text x="28" y="32" text-anchor="middle" font-size="13" font-weight="800" fill="' + textColor + '" font-family="DM Mono,monospace">' + pct + '%</text>'
+      + '</svg>';
+  };
 
   const sumHtml = `
     <div class="summary-grid">
 
-      <!-- 1. BUGUNGI MOMENTUM — mini bar chart -->
+      <!-- 1. BUGUNGI NATIJA — mini bar chart -->
       <div class="sc-card sc-card-anim" style="--sc-color:#4CAF7D">
         <div class="sc-header">
           <div>
             <div class="sc-val">${todayDone}<span class="sc-val-sub">/${todayTotal}</span></div>
             <div class="sc-lbl">${S('stats','today_momentum')}</div>
           </div>
-          <div class="sc-badge">${todayPct}%</div>
+          <div class="sc-badge-icon">${svgTarget}</div>
         </div>
         <div class="sc-chart">
           <div class="sc-mini-bars">
-            ${todayBars.map((done, i) => `<div class="sc-mini-bar ${done ? 'sc-done' : ''}" style="animation-delay:${i * 60}ms"></div>`).join('')}
+            ${todayBars.map((done, i) => '<div class="sc-mini-bar ' + (done ? 'sc-done' : '') + '" style="animation-delay:' + (i * 60) + 'ms"></div>').join('')}
           </div>
         </div>
+        <div class="sc-foot">${todayPct}% &middot; ${todayLeft > 0 ? todayLeft + ' ' + S('stats','left_today') : S('stats','all_done')}</div>
       </div>
 
-      <!-- 2. STREAK — sparkline -->
+      <!-- 2. STREAK — sparkline (haftalik bajarilish %) -->
       <div class="sc-card sc-card-anim" style="--sc-color:#E07040">
         <div class="sc-header">
           <div>
             <div class="sc-val">${summary.streak}</div>
             <div class="sc-lbl">${S('stats','streak_label')}</div>
           </div>
-          <div class="sc-badge">\u{1F525}</div>
+          <div class="sc-badge-icon">${svgFire}</div>
         </div>
         <div class="sc-chart">
           <svg width="100%" viewBox="0 0 120 32" preserveAspectRatio="none" style="display:block;overflow:visible">
@@ -102,59 +112,45 @@ function renderStats(d) {
               <linearGradient id="scSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E07040" stop-opacity="0.25"/><stop offset="100%" stop-color="#E07040" stop-opacity="0"/></linearGradient>
               <linearGradient id="scSparkLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient>
             </defs>
-            ${sparkPath.area ? '<path d="' + sparkPath.area + '" fill="url(#scSparkFill)"/>' : ''}
-            ${sparkPath.line ? '<path d="' + sparkPath.line + '" fill="none" stroke="url(#scSparkLine)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' : ''}
-            ${sparkPath.last ? '<circle cx="' + sparkPath.last.x.toFixed(1) + '" cy="' + sparkPath.last.y.toFixed(1) + '" r="3" fill="#E07040" stroke="#fff" stroke-width="1.5"/>' : ''}
+            ${streakSpark.area ? '<path d="' + streakSpark.area + '" fill="url(#scSparkFill)"/>' : ''}
+            ${streakSpark.line ? '<path d="' + streakSpark.line + '" fill="none" stroke="url(#scSparkLine)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' : ''}
+            ${streakSpark.last ? '<circle cx="' + streakSpark.last.x.toFixed(1) + '" cy="' + streakSpark.last.y.toFixed(1) + '" r="3" fill="#E07040" stroke="#fff" stroke-width="1.5"/>' : ''}
           </svg>
         </div>
-        <div class="sc-foot">\u2B50 record: ${bestStreak}</div>
+        <div class="sc-foot">${svgStar} record: ${bestStreak}</div>
       </div>
 
-      <!-- 3. ENG ZAIF ODAT — warning progress -->
+      <!-- 3. ENG ZAIF ODAT — donut -->
       <div class="sc-card sc-card-anim" style="--sc-color:${worstColor}">
         <div class="sc-header">
           <div>
-            <div class="sc-val">${worstPct}%</div>
+            <div class="sc-val" style="color:${worstColor}">${worstPct}%</div>
             <div class="sc-lbl">${S('stats','worst_habit')}</div>
           </div>
-          <span style="font-size:18px">\u26A1</span>
+          <div class="sc-badge-icon">${svgWarn}</div>
         </div>
-        <div class="sc-chart" style="flex-direction:column;justify-content:flex-end;gap:4px">
-          <div class="sc-warn-bar-wrap">
-            <div class="sc-warn-bar">
-              <div class="sc-warn-bar-fill" style="width:${worstPct}%;background:${worstColor}"></div>
-            </div>
-            <div class="sc-warn-pct" style="color:${worstColor}">${worstPct}%</div>
-          </div>
-          <div class="sc-warn-label" style="color:${worstColor}">\u26A0\uFE0F ${S('stats','worst_warn')}</div>
+        <div class="sc-chart" style="align-items:center;justify-content:center">
+          ${donutSVG(worstPct, 'scDonutW', worstColor, '#E07040', worstColor)}
         </div>
-        <div class="sc-foot" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${worstIcon} ${worstName}</div>
+        <div class="sc-foot sc-foot-trunc">${worstName || S('stats','no_habits')}</div>
       </div>
 
       <!-- 4. ENG BARQAROR ODAT — donut -->
-      <div class="sc-card sc-card-anim" style="--sc-color:#D4963A">
+      <div class="sc-card sc-card-anim" style="--sc-color:#4CAF7D">
         <div class="sc-header">
           <div>
-            <div class="sc-val">${topPct}%</div>
+            <div class="sc-val" style="color:#4CAF7D">${topPct}%</div>
             <div class="sc-lbl">${S('stats','top_habit')}</div>
           </div>
-          <span style="font-size:18px">\u{1F3C6}</span>
+          <div class="sc-badge-icon">${svgTrophy}</div>
         </div>
         <div class="sc-chart" style="align-items:center;justify-content:center">
-          <svg width="56" height="56" viewBox="0 0 56 56">
-            <circle cx="28" cy="28" r="22" fill="none" stroke="var(--bg)" stroke-width="5" class="sc-ring-bg"/>
-            <circle cx="28" cy="28" r="22" fill="none" stroke="url(#scDonutG)" stroke-width="5"
-              stroke-dasharray="${(2*Math.PI*22*topPct/100).toFixed(1)} ${(2*Math.PI*22).toFixed(1)}"
-              stroke-dashoffset="${(2*Math.PI*22*0.25).toFixed(1)}" stroke-linecap="round" class="sc-ring-fill"/>
-            <defs><linearGradient id="scDonutG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FFE566"/><stop offset="100%" stop-color="#D4963A"/></linearGradient></defs>
-            <text x="28" y="31" text-anchor="middle" font-size="13" font-weight="800" fill="#D4963A" font-family="DM Mono,monospace">${topIcon}</text>
-          </svg>
+          ${donutSVG(topPct, 'scDonutT', '#6EDAA0', '#4CAF7D', '#4CAF7D')}
         </div>
-        <div class="sc-foot" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center">${topIcon} ${topName}</div>
+        <div class="sc-foot sc-foot-trunc">${topName}</div>
       </div>
 
     </div>`;
-
   // ── Bar chart (haftalik) ──
   const maxCount = Math.max(...weekly.map(w => w.total), 1);
   const dayLabels = S('stats','day_abbr') || ['Ya','Du','Se','Ch','Pa','Ju','Sh'];
