@@ -1038,7 +1038,7 @@ window.onload = function() {
   }
 
   // 5 soniyadan keyin splash yashiriladi
-  setTimeout(hideSplash, 5000);
+  setTimeout(hideSplash, 3000);
 
   // Telegram WebApp userId tayyor bo'lishini kutamiz
   if (!userId || userId === 0) {
@@ -1059,7 +1059,7 @@ window.onload = function() {
   }
 
   // Data yuklanadi, 5 soniyada splash yashiriladi
-  loadToday().then(function() {}).catch(function() {});
+  loadToday().then(function() { hideSplash(); }).catch(function() { hideSplash(); });
 };
 
 // ── OVOZ EFFEKTLARI (Web Audio API) ──
