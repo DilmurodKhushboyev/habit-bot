@@ -75,7 +75,10 @@ def callback_handler(call):
         lang_msg_id = u.pop("lang_msg_id", None)
         from_settings = u.pop("lang_from_settings", False)
         save_user(uid, u)
-        bot.answer_callback_query(call.id, T(uid, "lang_set"))
+        try:
+            bot.answer_callback_query(call.id, T(uid, "lang_set"))
+        except Exception:
+            pass
         # O'chiriladigan xabarlarni to'plash
         _lang_cleanup = []
         _lang_cleanup.append(call.message.message_id)
