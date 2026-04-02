@@ -405,6 +405,32 @@ def register_data_routes(app):
                 "days_66":      _days_66,
                 "days_66_done": _days_66_done,
             })
+        # ── Yangi summary fieldlar ──
+        # Eng barqaror odat (eng yuqori percent)
+        top_habit_name = ""
+        top_habit_icon = ""
+        top_habit_pct  = 0
+        # Eng zaif odat (eng past percent, lekin 0% bo'lmagan)
+        worst_habit_name = ""
+        worst_habit_icon = ""
+        worst_habit_pct  = 101
+        for hs in habit_stats:
+            if hs["percent"] > top_habit_pct:
+                top_habit_pct  = hs["percent"]
+                top_habit_name = hs["name"]
+                top_habit_icon = hs["icon"]
+            if 0 < hs["percent"] < worst_habit_pct:
+                worst_habit_pct  = hs["percent"]
+                worst_habit_name = hs["name"]
+                worst_habit_icon = hs["icon"]
+        # Agar barcha odatlar 0% bo'lsa — eng birinchisini olish
+        if worst_habit_pct > 100 and habit_stats:
+            worst_habit_pct  = habit_stats[0]["percent"]
+            worst_habit_name = habit_stats[0]["name"]
+            worst_habit_icon = habit_stats[0]["icon"]
+        elif worst_habit_pct > 100:
+            worst_habit_pct = 0
+
         return jsonify({
             "today":   today,
             "summary": {
@@ -413,6 +439,14 @@ def register_data_routes(app):
                 "active_days_30": active_days_30,
                 "total_habits":  total,
                 "best_streak":   _calc_best_streak(u),
+                "today_done":    done_today,
+                "today_total":   total,
+                "top_habit_name": top_habit_name,
+                "top_habit_icon": top_habit_icon,
+                "top_habit_pct":  top_habit_pct,
+                "worst_habit_name": worst_habit_name,
+                "worst_habit_icon": worst_habit_icon,
+                "worst_habit_pct":  worst_habit_pct,
             },
             "weekly":      weekly,
             "monthly":     monthly,

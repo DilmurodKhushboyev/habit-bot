@@ -1037,15 +1037,29 @@ window.onload = function() {
     }
   }
 
-  // 5 soniyadan keyin splash yashiriladi
-  setTimeout(hideSplash, 5000);
+  // 3 soniyadan keyin splash yashiriladi (kafolat timer)
+  setTimeout(hideSplash, 3000);
 
-  // Telegram WebApp userId tayyor bo'lishini kutamiz
+  // ── userId ni aniqlash va data yuklash ──
+  function startApp(uid) {
+    loadToday().then(function() { hideSplash(); }).catch(function() { hideSplash(); });
+  }
+
+  // Telegram WebApp userId tayyor bo'lishini kutamiz (reload qilmasdan!)
   if (!userId || userId === 0) {
-    let tries = 0;
-    const waitUid = setInterval(() => {
-      const u = window.Telegram?.WebApp?.initDataUnsafe?.user;
-      if (u && u.id) { clearInterval(waitUid); location.reload(); return; }
+    var tries = 0;
+    var waitUid = setInterval(function() {
+      var u = window.Telegram && window.Telegram.WebApp &&
+              window.Telegram.WebApp.initDataUnsafe &&
+              window.Telegram.WebApp.initDataUnsafe.user;
+      if (u && u.id) {
+        clearInterval(waitUid);
+        // userId va initData ni yangilash (let bilan e'lon qilingan)
+        userId = u.id;
+        initData = window.Telegram.WebApp.initData || '';
+        startApp(u.id);
+        return;
+      }
       if (++tries >= 30) {
         clearInterval(waitUid);
         hideSplash();
@@ -1058,8 +1072,8 @@ window.onload = function() {
     return;
   }
 
-  // Data yuklanadi, 5 soniyada splash yashiriladi
-  loadToday().then(function() {}).catch(function() {});
+  // userId tayyor — darhol data yuklash
+  startApp(userId);
 };
 
 // ── OVOZ EFFEKTLARI (Web Audio API) ──

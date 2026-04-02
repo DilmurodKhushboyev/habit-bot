@@ -23,8 +23,8 @@ if (tg) {
 if (localStorage.getItem('sh_dark') === '1') document.body.classList.add('dark');
 
 const user     = tg?.initDataUnsafe?.user || { id: 0, first_name: 'Test' };
-const initData = tg?.initData || '';
-const userId   = user.id || 0;
+let   initData = tg?.initData || '';
+let   userId   = user.id || 0;
 const API      = window.location.origin + '/api';
 
 // ── STATE ──
