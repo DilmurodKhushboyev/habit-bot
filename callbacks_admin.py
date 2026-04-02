@@ -21,6 +21,15 @@ from menus import (admin_menu, admin_broadcast_menu, admin_stats_period_menu,
 def handle_admin_callbacks(call, uid, cdata, u):
     """Admin callback larini qayta ishlaydi. True qaytarsa = handled."""
 
+    def _clean_admin_msgs(uid, u):
+        """Admin panel ichidagi barcha eski so'rov xabarlarini o'chirish"""
+        for key in ("channel_msg_id", "give_points_msg_id", "bc_trigger_msg_id",
+                     "reply_msg_id", "notify_confirm_msg_id", "admin_msg_id"):
+            mid = u.pop(key, None)
+            if mid:
+                try: bot.delete_message(uid, mid)
+                except: pass
+
     if cdata == "admin_test_onboard":
         if uid != ADMIN_ID:
             return True
@@ -34,6 +43,7 @@ def handle_admin_callbacks(call, uid, cdata, u):
         if uid != ADMIN_ID:
             return True
         u["state"] = None
+        _clean_admin_msgs(uid, u)
         save_user(uid, u)
         bot.answer_callback_query(call.id)
         try:
@@ -96,6 +106,7 @@ def handle_admin_callbacks(call, uid, cdata, u):
         if uid != ADMIN_ID:
             return True
         u["state"] = None
+        _clean_admin_msgs(uid, u)
         save_user(uid, u)
         bot.answer_callback_query(call.id, "Bekor qilindi")
         try:
@@ -276,14 +287,14 @@ def handle_admin_callbacks(call, uid, cdata, u):
         try: bot.delete_message(uid, call.message.message_id)
         except Exception: pass
         settings = load_settings()
-        msg_text = "🔗 *Majburiy kanallar* (maksimal 3 ta)\n\n"
+        msg_text = "🔗 Majburiy kanallar (maksimal 3 ta)\n\n"
         kb2 = InlineKeyboardMarkup()
         for i in range(1, 4):
             ch    = settings.get(f"required_channel_{i}", None)
             title = settings.get(f"required_channel_title_{i}", None)
             if ch:
-                label = f"✅ {i}. {title or ch}"
-                msg_text += f"{i}. {title or ch} ({ch})\n"
+                display = title or ch
+                msg_text += f"{i}. {display} ({ch})\n"
                 kb2.row(
                     InlineKeyboardButton(f"✏️ {i}-ni o'zgartirish", callback_data=f"admin_ch_edit_{i}"),
                     InlineKeyboardButton(f"🗑 {i}-ni o'chirish",    callback_data=f"admin_ch_del_{i}")
@@ -291,13 +302,12 @@ def handle_admin_callbacks(call, uid, cdata, u):
             else:
                 msg_text += f"{i}. — (bo'sh)\n"
                 kb2.add(InlineKeyboardButton(f"➕ {i}-kanal qo'shish", callback_data=f"admin_ch_edit_{i}"))
-        # Eski format bilan moslik
         old_ch = settings.get("required_channel", None)
         if old_ch:
-            msg_text += f"\n_(Eski format: {old_ch})_"
+            msg_text += f"\n(Eski format: {old_ch})"
         msg_text += "\n\nQaysi kanalni boshqarmoqchisiz?"
         kb2.add(cBtn("❌ Bekor qilish", "admin_cancel", "danger"))
-        sent_ch = bot.send_message(uid, msg_text, parse_mode="Markdown", reply_markup=kb2)
+        sent_ch = bot.send_message(uid, msg_text, reply_markup=kb2)
         u["channel_msg_id"] = sent_ch.message_id
         save_user(uid, u)
         return True

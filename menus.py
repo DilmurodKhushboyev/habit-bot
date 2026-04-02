@@ -92,8 +92,9 @@ def check_subscription(user_id):
             member = bot.get_chat_member(channel, user_id)
             if member.status not in ("member", "administrator", "creator"):
                 return False
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[check_subscription] {channel} tekshirishda xato: {e}")
+            return False
     return True
 
 def send_sub_required(uid):

@@ -614,6 +614,11 @@ def handle_text(msg):
     if state == "admin_waiting_points_id" and uid == ADMIN_ID:
         try: bot.delete_message(uid, msg.message_id)
         except: pass
+        # Eski so'rov xabarini o'chirish
+        gp_msg_id = u.pop("give_points_msg_id", None)
+        if gp_msg_id:
+            try: bot.delete_message(uid, gp_msg_id)
+            except: pass
         try:
             target_id = int(text.strip())
         except ValueError:
@@ -647,6 +652,11 @@ def handle_text(msg):
     if state == "admin_waiting_points_amount" and uid == ADMIN_ID:
         try: bot.delete_message(uid, msg.message_id)
         except: pass
+        # Eski so'rov xabarini o'chirish
+        gp_msg_id = u.pop("give_points_msg_id", None)
+        if gp_msg_id:
+            try: bot.delete_message(uid, gp_msg_id)
+            except: pass
         try:
             amount = int(text.strip())
         except ValueError:
@@ -683,10 +693,19 @@ def handle_text(msg):
     if state and state.startswith("admin_waiting_channel_") and uid == ADMIN_ID:
         try: bot.delete_message(uid, msg.message_id)
         except: pass
+        # Eski so'rov xabarini o'chirish
+        ch_msg_id = u.pop("channel_msg_id", None)
+        if ch_msg_id:
+            try: bot.delete_message(uid, ch_msg_id)
+            except: pass
         slot = int(state.split("_")[-1])
         channel = text.strip()
-        if not channel.startswith("@"):
-            channel = "@" + channel
+        # URL formatlarini tozalash: https://t.me/kanal → @kanal
+        if "t.me/" in channel:
+            channel = channel.split("t.me/")[-1].strip("/")
+        # @ belgisini qo'shish
+        channel = channel.lstrip("@")
+        channel = "@" + channel
         settings = load_settings()
         settings[f"required_channel_{slot}"] = channel
         try:
@@ -697,7 +716,7 @@ def handle_text(msg):
         save_settings(settings)
         u["state"] = None
         save_user(uid, u)
-        sent_ok = bot.send_message(uid, f"✅ {slot}-kanal *{channel}* sifatida o'rnatildi!", parse_mode="Markdown")
+        sent_ok = bot.send_message(uid, f"✅ {slot}-kanal {channel} sifatida o'rnatildi!")
         def del_ok_ch(chat_id, mid):
             time.sleep(2)
             try: bot.delete_message(chat_id, mid)
@@ -862,6 +881,11 @@ def handle_text(msg):
 
     # ── Broadcast matn/media (admin) ──
     if state in ("admin_bc_private", "admin_bc_groups", "admin_bc_all") and uid == ADMIN_ID:
+        # Eski so'rov xabarini o'chirish
+        bc_trigger_id = u.pop("bc_trigger_msg_id", None)
+        if bc_trigger_id:
+            try: bot.delete_message(uid, bc_trigger_id)
+            except: pass
         bc_chat_id   = msg.chat.id
         media_grp_id = msg.media_group_id
         if media_grp_id:
