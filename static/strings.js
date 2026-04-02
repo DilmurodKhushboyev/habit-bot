@@ -680,7 +680,7 @@ const STRINGS = {
       streak_label:'Streak',
       points_label:'Points',
       habits_label:'Habits',
-      today_momentum:'Today\\'s result',
+      today_momentum:"Today's result",
       left_today:'left',
       best_week:'Best week',
       best_week_vs:'This week',
