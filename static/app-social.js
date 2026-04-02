@@ -955,13 +955,24 @@ function maybeShowOnboard(todayData) {
   const state = getObState();
   // Agar oldin tugatilgan bo'lsa — ko'rsatma
   if (state._done) return;
-  // Agar odatlar bo'sh bo'lsa — habit qadamini qayta ko'rsat (done deb belgilama)
-  if (todayData && (!todayData.habits || todayData.habits.length === 0)) {
-    delete state.habit;
-    saveObState(state);
+  // Agar odatlar bor bo'lsa — habit qadamini done deb belgilaymiz
+  if (todayData && todayData.habits && todayData.habits.length > 0) {
+    if (!state.habit) {
+      state.habit = true;
+      saveObState(state);
+    }
+  } else {
+    // Agar odatlar bo'sh bo'lsa — habit qadamini qayta ko'rsat
+    if (state.habit) {
+      delete state.habit;
+      saveObState(state);
+    }
   }
   const allDone = OB_TEXT[lang].steps.every(s => state[s.key]);
-  if (allDone) return;
+  if (allDone) {
+    closeOnboard(true);
+    return;
+  }
   renderOnboard();
   document.getElementById('onboard-modal').style.display   = 'block';
   document.getElementById('onboard-backdrop').style.display = 'block';
