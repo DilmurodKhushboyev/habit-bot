@@ -943,11 +943,18 @@ function hideObHint() {
 function closeOnboard(permanent) {
   document.getElementById('onboard-modal').style.display   = 'none';
   document.getElementById('onboard-backdrop').style.display = 'none';
+  if (permanent) {
+    const state = getObState();
+    state._done = true;
+    saveObState(state);
+  }
 }
 
 function maybeShowOnboard(todayData) {
   const lang = (currentLang && OB_TEXT[currentLang]) ? currentLang : 'uz';
   const state = getObState();
+  // Agar oldin tugatilgan bo'lsa — ko'rsatma
+  if (state._done) return;
   // Agar odatlar bo'sh bo'lsa — habit qadamini qayta ko'rsat (done deb belgilama)
   if (todayData && (!todayData.habits || todayData.habits.length === 0)) {
     delete state.habit;
