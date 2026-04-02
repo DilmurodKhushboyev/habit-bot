@@ -314,7 +314,7 @@ def handle_admin_callbacks(call, uid, cdata, u):
         kb2.add(cBtn("❌ Bekor qilish", "admin_cancel", "danger"))
         sent_ch = bot.send_message(
             uid,
-            f"🔗 {slot}-kanal username yozing:\n\n_Masalan: @mening_kanalim_",
+            f"🔗 {slot}-kanal username yozing:\n\nMasalan: `@mening_kanalim`",
             parse_mode="Markdown",
             reply_markup=kb2
         )

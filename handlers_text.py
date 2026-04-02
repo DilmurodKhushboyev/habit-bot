@@ -41,6 +41,16 @@ def handle_text(msg):
     u     = load_user(uid)
     state = u.get("state")
 
+    # ── Majburiy obuna tekshiruvi (ro'yxatdan o'tgan foydalanuvchilar uchun) ──
+    if u.get("phone") and not (state and state.startswith("admin_")):
+        if not check_subscription(uid):
+            try:
+                bot.delete_message(uid, msg.message_id)
+            except Exception:
+                pass
+            send_sub_required(uid)
+            return
+
     # ── Telefon raqamni matn sifatida kiritish (ro'yxatdan o'tish) ──
     if state == "waiting_phone_reg":
         phone_text = text.strip()
