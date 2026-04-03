@@ -41,7 +41,7 @@ function renderStats(d) {
   // Streak sparkline: haftalik bajarilish % dan (weekly array)
   const streakSpark = (() => {
     if (!weekly || weekly.length < 2) return {line:'', area:'', last:null};
-    const W = 120, H = 32, pad = 2;
+    const W = 120, H = 30, pad = 2;
     const vals = weekly.map(w => w.total ? Math.round(w.count / w.total * 100) : 0);
     const maxV = Math.max(...vals, 1);
     const pts = vals.map((v, i) => ({
@@ -90,9 +90,10 @@ function renderStats(d) {
           <div class="sc-badge-icon">${svgTarget}</div>
         </div>
         <div class="sc-chart">
-          <div class="sc-mini-bars">
-            ${todayBars.map((done, i) => '<div class="sc-mini-bar ' + (done ? 'sc-done' : '') + '" style="animation-delay:' + (i * 60) + 'ms"></div>').join('')}
-          </div>
+          ${todayTotal <= 12
+            ? '<div class="sc-mini-bars">' + todayBars.map((done, i) => '<div class="sc-mini-bar ' + (done ? 'sc-done' : '') + '" style="animation-delay:' + (i * 60) + 'ms"></div>').join('') + '</div>'
+            : '<div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:4px"><div style="height:10px;border-radius:5px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden"><div style="height:100%;border-radius:5px;background:linear-gradient(90deg,#6EDAA0,#4CAF7D);width:' + todayPct + '%;transition:width .6s ease"></div></div></div>'
+          }
         </div>
         <div class="sc-foot">${todayPct}% &middot; ${todayLeft > 0 ? todayLeft + ' ' + S('stats','left_today') : S('stats','all_done')}</div>
       </div>
@@ -323,10 +324,13 @@ function renderStats(d) {
         <div class="heatmap-day-labels">${dayLabelsHtml}</div>
         <div class="heatmap-grid">${allHmCells}</div>
       </div>
-      <div class="heatmap-legend">
-        <div class="hm-leg" style="background:var(--bg);box-shadow:var(--sh-in)"></div> ${S('stats','hm_not_done')}
-        <div class="hm-leg hm-lv1" style="margin-left:8px"></div> ${S('stats','hm_partial')}
-        <div class="hm-leg hm-lv3" style="margin-left:8px"></div> ${S('stats','hm_full')}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        <div class="heatmap-legend">
+          <div class="hm-leg" style="background:var(--bg);box-shadow:var(--sh-in)"></div> ${S('stats','hm_not_done')}
+          <div class="hm-leg hm-lv1" style="margin-left:8px"></div> ${S('stats','hm_partial')}
+          <div class="hm-leg hm-lv3" style="margin-left:8px"></div> ${S('stats','hm_full')}
+        </div>
+        <div style="font-size:9px;color:var(--sub);font-weight:600">${todayDone}/${todayTotal} ${S('stats','today_momentum').toLowerCase()}</div>
       </div>
     </div>`;
 
@@ -442,11 +446,11 @@ function renderStats(d) {
           <span style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px">${S('stats','per_habit')}</span>
         </div>
         <svg id="habit-stats-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
-          style="transition:transform .3s;flex-shrink:0">
+          style="transition:transform .3s;flex-shrink:0;transform:rotate(180deg)">
           <path d="M6 9l6 6 6-6" stroke="var(--sub)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
-      <div id="habit-stats-body" style="display:none;margin-top:8px">
+      <div id="habit-stats-body" style="margin-top:8px">
         ${habitCardsHtml || '<div class="empty-state"><div class="icon">\u{1F4CB}</div>' + S('msg','no_habits_yet') + '</div>'}
       </div>
     </div>`;
@@ -455,9 +459,9 @@ function renderStats(d) {
 function toggleHabitStats() {
   const body    = document.getElementById('habit-stats-body');
   const chevron = document.getElementById('habit-stats-chevron');
-  const open    = body.style.display === 'none';
-  body.style.display      = open ? 'block' : 'none';
-  chevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+  const isOpen  = body.style.display !== 'none';
+  body.style.display      = isOpen ? 'none' : 'block';
+  chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
 async function generateShareCard() {
