@@ -828,16 +828,19 @@ async function generateShareCard() {
         rrect(cx,cy,cellSz,cellSz,4);ctx.fillStyle=lvClr;ctx.fill();
         if(dd===d.today){ctx.strokeStyle=accent2;ctx.lineWidth=1.5;rrect(cx,cy,cellSz,cellSz,4);ctx.stroke();}
       });
-      // Legend
-      const legY=gridY+7*(cellSz+cellGap)+6;
-      ctx.textAlign='left';ctx.font=`500 10px ${FS}`;ctx.fillStyle=P.sub;
+      // Legend (grid o'ng tomonida, vertical)
+      const maxCol = Math.ceil(allCells.length / 7);
+      const legX = gridX + maxCol*(cellSz+cellGap) + 30;
+      ctx.textAlign='left';
       const legColors=[isDark?P.raised:P.bg2, green+'55', green+'99', green];
       const legLabels=[S('stats','hm_not_done'),S('stats','hm_partial'),'',S('stats','hm_full')];
-      let legX=pad+14;
+      let legItemY = gridY + 10;
       legColors.forEach((lc,li)=>{
-        rrect(legX,legY,10,10,2);ctx.fillStyle=lc;ctx.fill();
-        if(legLabels[li]){ctx.font=`500 10px ${FS}`;ctx.fillStyle=P.sub;ctx.fillText(legLabels[li],legX+14,legY+9);legX+=ctx.measureText(legLabels[li]).width+22;}
-        else{legX+=16;}
+        if(!legLabels[li]) return;
+        rrect(legX, legItemY, 10, 10, 2); ctx.fillStyle=lc; ctx.fill();
+        ctx.font=`500 11px ${FS}`; ctx.fillStyle=P.sub;
+        ctx.fillText(legLabels[li], legX+16, legItemY+9);
+        legItemY += 22;
       });
       Y+=hmH+40;
     }
