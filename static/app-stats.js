@@ -450,19 +450,15 @@ async function generateShareCard() {
     const s = d.summary;
     const w = d.weekly || [];
     const monthlyDays = d.monthly || w;
-    const hStats = d.habit_stats || [];
     const name = data.profile?.display_name || data.profile?.name || user.first_name || 'User';
 
     // ── Dinamik balandlik hisoblash ──
     const W = 1080;
     const pad=60, cW=W-pad*2, gap=30;
-    const habitCardH = 180;
-    const habitRows = Math.ceil(hStats.length / 2);
-    const baseH = 2600;
+    const baseH = 2200;
     const areaChartExtra = (monthlyDays && monthlyDays.length >= 2) ? 380 : 0;
     const heatmapExtra = (d.days_30 && d.days_30.length) ? 320 : 0;
-    const habitsExtra = habitRows > 0 ? (habitRows * (habitCardH + gap) + 80) : 0;
-    const H = baseH + areaChartExtra + heatmapExtra + habitsExtra;
+    const H = baseH + areaChartExtra + heatmapExtra;
 
     const canvas = document.getElementById('share-canvas') || document.createElement('canvas');
     canvas.width = W; canvas.height = H;
@@ -619,33 +615,19 @@ async function generateShareCard() {
     }
     Y+=todayH+gap;
 
-    // ── 3. 4 STAT CARDS (2x2 neumorphic) ──
-    const cards=[
-      {iconType:'fire',     val:s.streak,         lbl:S('stats','share_streak').toUpperCase(), color:accent,  grad:[accent,'#F4955C']},
-      {iconType:'star',     val:s.points,         lbl:S('stats','points_label').toUpperCase(), color:gold,    grad:[gold,'#F0C060']},
-      {iconType:'check',    val:s.active_days_30, lbl:S('stats','faol_kun').toUpperCase(),     color:green,   grad:[green,'#6FD8A0']},
-      {iconType:'clipboard',val:s.total_habits,   lbl:S('stats','habits_label').toUpperCase(), color:accent2, grad:[accent2,'#8FB4FF']},
-    ];
-    const cardW=(cW-gap)/2, cardH=168;
-
-    cards.forEach((c,i)=>{
-      const col=i%2, row=Math.floor(i/2);
-      const x=pad+col*(cardW+gap), y=Y+row*(cardH+gap);
-      neuCard(x,y,cardW,cardH,20);
-      rrect(x,y,5,cardH,3); ctx.fillStyle=c.color; ctx.fill();
-      drawIcon(c.iconType, x+46, y+46, 26, c.color);
-      const vG=ctx.createLinearGradient(x+cardW-160,y,x+cardW,y+70);
-      vG.addColorStop(0,c.grad[0]); vG.addColorStop(1,c.grad[1]);
-      ctx.font=`900 60px ${FM}`; ctx.fillStyle=vG; ctx.textAlign='right';
-      ctx.fillText(String(c.val), x+cardW-24, y+70);
-      ctx.font=`700 17px ${FS}`; ctx.fillStyle=P.sub; ctx.textAlign='left';
-      ctx.fillText(c.lbl, x+24, y+cardH-42);
-      rrect(x+24,y+cardH-22,cardW-48,6,3); ctx.fillStyle=isDark?P.raised:P.bg2; ctx.fill();
-      const pct=i===0?Math.min(100,s.streak/Math.max(s.best_streak||1,1)*100):i===1?Math.min(100,s.points/500*100):i===2?Math.min(100,s.active_days_30/30*100):Math.min(100,s.total_habits/15*100);
-      const bfw=(cardW-48)*pct/100;
-      if(bfw>0){rrect(x+24,y+cardH-22,bfw,6,3);const bg2=ctx.createLinearGradient(x+24,0,x+24+bfw,0);bg2.addColorStop(0,c.grad[0]);bg2.addColorStop(1,c.grad[1]);ctx.fillStyle=bg2;ctx.fill();}
-    });
-    Y+=cardH*2+gap+gap;
+    // ── 3. STREAK CARD (keng) ──
+    const streakH = 120;
+    const bestStreak = s.best_streak || s.streak || 0;
+    neuCard(pad,Y,cW,streakH,20);
+    drawIcon('fire',pad+40,Y+streakH/2,24,accent);
+    ctx.textAlign='left'; ctx.font=`700 20px ${FS}`; ctx.fillStyle=P.sub;
+    ctx.fillText(S('stats','share_streak').toUpperCase(), pad+66, Y+34);
+    ctx.font=`900 48px ${FM}`; ctx.fillStyle=accent;
+    ctx.fillText(String(s.streak), pad+66, Y+82);
+    const skW=ctx.measureText(String(s.streak)).width;
+    ctx.font=`500 20px ${FS}`; ctx.fillStyle=P.sub;
+    ctx.fillText(S('stats','record_label')+': '+bestStreak, pad+66+skW+20, Y+82);
+    Y+=streakH+gap;
 
     // ── 4. ENG ZAIF + ENG BARQAROR ODAT (2x1) ──
     const worstName = s.worst_habit_name || '';
@@ -726,35 +708,8 @@ async function generateShareCard() {
     ctx.fillText(S('stats','prev_week_pct')+': '+pwPct+'%', pad+cW-24, Y+40);
     Y+=trendH+gap;
 
-    // ── 6. BEST STREAK + WEEKLY AVG ──
-    const infoW2=(cW-gap)/2, infoH=106;
-    neuCard(pad,Y,infoW2,infoH,18);
-    ctx.font=`600 16px ${FS}`; ctx.fillStyle=P.sub; ctx.textAlign='left';
-    drawIcon('trophy',pad+32,Y+28,18,purple);
-    ctx.fillText(S('stats','share_best_streak').toUpperCase(), pad+48, Y+34);
-    const bsVal2=String(s.best_streak||s.streak||0);
-    ctx.font=`800 38px ${FM}`; ctx.fillStyle=purple;
-    ctx.fillText(bsVal2, pad+28, Y+82);
-    const bsNW=ctx.measureText(bsVal2).width;
-    ctx.font=`500 18px ${FS}`; ctx.fillStyle=P.sub;
-    ctx.fillText(S('stats','share_streak'), pad+28+bsNW+8, Y+82);
+    // ── 6. WEEKLY BAR CHART ──
     const avgPct=w.length?Math.round(w.reduce((a2,dd)=>a2+(dd.total?dd.count/dd.total*100:0),0)/w.length):0;
-    const avgX2=pad+infoW2+gap;
-    neuCard(avgX2,Y,infoW2,infoH,18);
-    ctx.font=`600 16px ${FS}`; ctx.fillStyle=P.sub; ctx.textAlign='left';
-    drawIcon('bar_chart',avgX2+32,Y+28,18,green);
-    ctx.fillText(S('stats','share_avg').toUpperCase(), avgX2+48, Y+34);
-    const avgClr2=avgPct>=70?green:avgPct>=40?accent2:accent;
-    const rCX=avgX2+infoW2-58,rCY=Y+58,rR=28;
-    ctx.beginPath();ctx.arc(rCX,rCY,rR,0,Math.PI*2);ctx.strokeStyle=avgClr2+'20';ctx.lineWidth=6;ctx.stroke();
-    const rS=-Math.PI/2,rE=rS+(Math.PI*2*avgPct/100);
-    ctx.beginPath();ctx.arc(rCX,rCY,rR,rS,rE);ctx.strokeStyle=avgClr2;ctx.lineWidth=6;ctx.lineCap='round';ctx.stroke();ctx.lineCap='butt';
-    ctx.font=`800 20px ${FM}`;ctx.fillStyle=avgClr2;ctx.textAlign='center';ctx.fillText(avgPct+'%',rCX,rCY+7);
-    ctx.font=`800 36px ${FM}`;ctx.fillStyle=avgClr2;ctx.textAlign='left';
-    ctx.fillText(avgPct+'%', avgX2+28, Y+82);
-    Y+=infoH+gap;
-
-    // ── 7. WEEKLY BAR CHART ──
     const chartH2=300;
     neuCard(pad-10,Y-10,cW+20,chartH2+86,22);
     ctx.textAlign='left'; ctx.font=`700 20px ${FS}`; ctx.fillStyle=P.sub;
@@ -887,54 +842,6 @@ async function generateShareCard() {
         else{legX+=20;}
       });
       Y+=hmH+50;
-    }
-
-    // ── 10. HAR BIR ODAT STATISTIKASI ──
-    if (hStats.length > 0) {
-      Y+=10;
-      ctx.textAlign='left'; ctx.font=`700 22px ${FS}`; ctx.fillStyle=P.sub;
-      ctx.fillText(S('stats','per_habit').toUpperCase(), pad, Y+10);
-      Y+=40;
-
-      const hCardW=(cW-gap)/2;
-      hStats.forEach((h,hIdx)=>{
-        const col=hIdx%2, row=Math.floor(hIdx/2);
-        const hx=pad+col*(hCardW+gap), hy=Y+row*(habitCardH+gap);
-        const pctClr=h.percent>=80?green:h.percent>=50?accent2:accent;
-
-        neuCard(hx,hy,hCardW,habitCardH,18);
-        // Icon + name
-        if(h.icon){ctx.font='28px serif';ctx.textAlign='left';ctx.fillText(h.icon,hx+18,hy+36);}
-        ctx.font=`700 17px ${FS}`; ctx.fillStyle=P.text; ctx.textAlign='left';
-        let hName=h.name||'';
-        while(ctx.measureText(hName).width>hCardW-130&&hName.length>3)hName=hName.slice(0,-1);
-        if(hName!==h.name)hName+='...';
-        ctx.fillText(hName, h.icon?hx+54:hx+18, hy+34);
-        // Streak
-        ctx.font=`600 13px ${FS}`; ctx.fillStyle=P.sub;
-        ctx.fillText(h.streak+' '+S('stats','streak_suffix'), h.icon?hx+54:hx+18, hy+54);
-        // Donut
-        drawDonut(hx+hCardW-50, hy+44, 26, h.percent, pctClr, pctClr, pctClr);
-        // Stats row: 7-kun / 30-kun / jami
-        const sRowY=hy+80;
-        const sColW=Math.floor((hCardW-36)/3);
-        [{v:h.done_7,l:S('msg','streak_days').replace('{n}','7')},{v:h.done_30,l:S('msg','streak_days').replace('{n}','30')},{v:h.total_done,l:S('stats','total_label')}].forEach((si,sii)=>{
-          const sx=hx+18+sii*sColW;
-          ctx.font=`800 22px ${FM}`;ctx.fillStyle=P.text;ctx.textAlign='left';ctx.fillText(String(si.v),sx,sRowY+18);
-          ctx.font=`500 11px ${FS}`;ctx.fillStyle=P.sub;ctx.fillText(si.l,sx,sRowY+34);
-        });
-        // 66-kun progress bar
-        const d66=h.days_66_done||0;
-        const pct66=Math.round(d66/66*100);
-        const c66=d66>=66?green:d66>=33?accent2:accent;
-        const barY66=hy+habitCardH-30;
-        ctx.font=`600 10px ${FS}`;ctx.fillStyle=P.sub;ctx.textAlign='left';
-        ctx.fillText('\u{1F3AF} '+d66+'/66', hx+18, barY66-4);
-        rrect(hx+18,barY66,hCardW-36,6,3);ctx.fillStyle=isDark?P.raised:P.bg2;ctx.fill();
-        const bfw66=(hCardW-36)*Math.min(pct66,100)/100;
-        if(bfw66>0){rrect(hx+18,barY66,bfw66,6,3);ctx.fillStyle=c66;ctx.fill();}
-      });
-      Y+=habitRows*(habitCardH+gap)+10;
     }
 
     // ── DIVIDER ──
