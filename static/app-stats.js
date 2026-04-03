@@ -235,32 +235,6 @@ function renderStats(d) {
     const barPrev = Math.max(2, trend.prev_week);
     const barMax  = Math.max(barThis, barPrev, 1);
 
-    // 30-kun sparkline
-    let sparkSvg = '';
-    if (days_30 && days_30.length >= 2) {
-      const span = days_30.length - 1;
-      const pts = days_30.map((day, si) => {
-        const match = (d.monthly || []).find(m => m.date === day);
-        const pct = match && match.total ? Math.round(match.count / match.total * 100) : (heatmap[day] ? 70 : 0);
-        return { x: Math.round(si / span * 300), y: Math.round((1 - pct / 100) * 54) + 3, pct };
-      });
-      let pathD = 'M' + pts[0].x + ',' + pts[0].y;
-      for (let si = 1; si < pts.length; si++) {
-        const cp = (pts[si].x - pts[si-1].x) / 2.5;
-        pathD += ' C' + (pts[si-1].x+cp) + ',' + pts[si-1].y + ' ' + (pts[si].x-cp) + ',' + pts[si].y + ' ' + pts[si].x + ',' + pts[si].y;
-      }
-      const areaD = pathD + ' L' + pts[pts.length-1].x + ',60 L' + pts[0].x + ',60 Z';
-      const lastPt = pts[pts.length-1];
-      sparkSvg = `<svg viewBox="0 0 300 64" width="100%" height="64" preserveAspectRatio="none" style="display:block;overflow:visible">
-        <defs><linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${aColor}" stop-opacity="0.25"/><stop offset="100%" stop-color="${aColor}" stop-opacity="0.02"/></linearGradient>
-        <linearGradient id="sparkLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${aColor}88"/><stop offset="100%" stop-color="${aColor}"/></linearGradient></defs>
-        <path d="${areaD}" fill="url(#sparkGrad)"/>
-        <path d="${pathD}" fill="none" stroke="url(#sparkLine)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="${lastPt.x}" cy="${lastPt.y}" r="4" fill="${aColor}" stroke="#fff" stroke-width="2"/>
-        <text x="${lastPt.x - 4}" y="${lastPt.y - 8}" font-size="10" font-weight="800" fill="${aColor}" text-anchor="end" font-family="DM Mono,monospace">${lastPt.pct}%</text>
-      </svg>`;
-    }
-
     trendHtml = `
       <div class="trend-card">
         <div class="trend-header">
@@ -283,8 +257,6 @@ function renderStats(d) {
           </div>
         </div>
         <div class="trend-msg" style="color:${aColor}">${msg}</div>
-        <div class="trend-spark-title">${S('stats','trend_30_title').toUpperCase()}</div>
-        ${sparkSvg}
       </div>`; 
   }
 
