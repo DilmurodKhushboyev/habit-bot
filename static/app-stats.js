@@ -449,13 +449,16 @@ async function generateShareCard() {
     if (!d) return;
     const s = d.summary;
     const w = d.weekly || [];
+    const monthlyDays = d.monthly || w;
     const name = data.profile?.display_name || data.profile?.name || user.first_name || 'User';
 
+    // ── Story format: 1080x1920 (9:16) ──
     const W = 1080, H = 1920;
+    const pad=50, cW=W-pad*2, gap=20;
+
     const canvas = document.getElementById('share-canvas') || document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
-
 
     // ── Theme detection ──
     const isDark = document.body.classList.contains('dark');
@@ -529,177 +532,346 @@ async function generateShareCard() {
         ctx.beginPath();ctx.moveTo(-4,7);ctx.lineTo(4,7);ctx.lineWidth=2.5;ctx.stroke();
       } else if(type==='bar_chart'){
         rrect(-8,0,4,8,1);ctx.fill();rrect(-2,-5,4,13,1);ctx.fill();rrect(4,-9,4,17,1);ctx.fill();
+      } else if(type==='target'){
+        ctx.beginPath();ctx.arc(0,0,10,0,Math.PI*2);ctx.lineWidth=2;ctx.stroke();
+        ctx.beginPath();ctx.arc(0,0,6,0,Math.PI*2);ctx.lineWidth=2;ctx.stroke();
+        ctx.beginPath();ctx.arc(0,0,2.5,0,Math.PI*2);ctx.fill();
+      } else if(type==='warn'){
+        ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(-10,8);ctx.lineTo(10,8);ctx.closePath();
+        ctx.globalAlpha=0.15;ctx.fill();ctx.globalAlpha=1;ctx.lineWidth=2;ctx.stroke();
+        ctx.beginPath();ctx.moveTo(0,-3);ctx.lineTo(0,3);ctx.lineWidth=2.5;ctx.stroke();
+        ctx.beginPath();ctx.arc(0,6,1.2,0,Math.PI*2);ctx.fill();
       }
       ctx.restore();
+    }
+
+    // ── Donut helper (Canvas) ──
+    function drawDonut(cx,cy,r,pct,clr1,clr2,textClr) {
+      ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+      ctx.strokeStyle=isDark?P.raised:P.bg2;ctx.lineWidth=5;ctx.stroke();
+      if(pct>0){
+        const startA=-Math.PI/2, endA=startA+(Math.PI*2*pct/100);
+        ctx.beginPath();ctx.arc(cx,cy,r,startA,endA);
+        const dg=ctx.createLinearGradient(cx-r,cy-r,cx+r,cy+r);
+        dg.addColorStop(0,clr1);dg.addColorStop(1,clr2);
+        ctx.strokeStyle=dg;ctx.lineWidth=5;ctx.lineCap='round';ctx.stroke();ctx.lineCap='butt';
+      }
+      const dFontSz = Math.max(12, Math.round(r * 0.7));
+      ctx.font=`800 ${dFontSz}px ${FM}`;ctx.fillStyle=textClr;ctx.textAlign='center';
+      ctx.fillText(pct+'%',cx,cy+Math.round(dFontSz/3.5));
     }
 
     // ── Decorative accent circles ──
     ctx.globalAlpha=isDark?0.04:0.06;
     ctx.fillStyle=accent2; ctx.beginPath();ctx.arc(900,180,250,0,Math.PI*2);ctx.fill();
     ctx.fillStyle=green; ctx.beginPath();ctx.arc(180,1500,200,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=purple; ctx.beginPath();ctx.arc(850,H-400,180,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=1;
 
     // ── Layout ──
-    const pad=60, cW=W-pad*2, gap=30;
-    let Y=68;
+    let Y=50;
 
-    // ── Header ──
-    ctx.fillStyle=P.text; ctx.font=`700 44px ${FS}`; ctx.textAlign='center';
-    ctx.fillText('\u{1F331} Super Habits', W/2, Y); Y+=42;
-    ctx.fillStyle=P.sub; ctx.font=`400 26px ${FS}`;
-    ctx.fillText(S('stats','share_title'), W/2, Y); Y+=50;
-    ctx.fillStyle=P.text; ctx.font=`800 54px ${FS}`;
-    ctx.fillText(name, W/2, Y); Y+=34;
+    // ── 1. HEADER ──
+    ctx.fillStyle=P.text; ctx.font=`700 36px ${FS}`; ctx.textAlign='center';
+    ctx.fillText('\u{1F331} Super Habits', W/2, Y); Y+=32;
+    ctx.fillStyle=P.sub; ctx.font=`400 22px ${FS}`;
+    ctx.fillText(S('stats','share_title'), W/2, Y); Y+=40;
+    ctx.fillStyle=P.text; ctx.font=`800 44px ${FS}`;
+    ctx.fillText(name, W/2, Y); Y+=28;
     const nowD=new Date();
     const dateStr=nowD.toLocaleDateString(currentLang==='ru'?'ru-RU':currentLang==='en'?'en-US':'uz-UZ',{day:'numeric',month:'long',year:'numeric'});
-    ctx.fillStyle=P.sub; ctx.font=`400 22px ${FS}`;
-    ctx.fillText(dateStr, W/2, Y); Y+=42;
+    ctx.fillStyle=P.sub; ctx.font=`400 20px ${FS}`;
+    ctx.fillText(dateStr, W/2, Y); Y+=34;
 
-    // ── 4 Stat cards (2x2 neumorphic) ──
-    const cards=[
-      {iconType:'fire',     val:s.streak,         lbl:S('stats','share_streak').toUpperCase(), color:accent,  grad:[accent,'#F4955C']},
-      {iconType:'star',     val:s.points,         lbl:S('stats','points_label').toUpperCase(), color:gold,    grad:[gold,'#F0C060']},
-      {iconType:'check',    val:s.active_days_30, lbl:S('stats','faol_kun').toUpperCase(),     color:green,   grad:[green,'#6FD8A0']},
-      {iconType:'clipboard',val:s.total_habits,   lbl:S('stats','habits_label').toUpperCase(), color:accent2, grad:[accent2,'#8FB4FF']},
-    ];
-    const cardW=(cW-gap)/2, cardH=168;
+    // ── 2. BUGUNGI NATIJA (keng card) ──
+    const todayDone  = s.today_done  || 0;
+    const todayTotal = s.today_total || 1;
+    const todayPct   = todayTotal ? Math.round(todayDone / todayTotal * 100) : 0;
+    const todayH = 90;
+    neuCard(pad,Y,cW,todayH,16);
+    drawIcon('target',pad+34,Y+todayH/2+2,20,green);
+    ctx.textAlign='left'; ctx.font=`700 15px ${FS}`; ctx.fillStyle=P.sub;
+    ctx.fillText(S('stats','today_momentum').toUpperCase(), pad+58, Y+30);
+    const todayValTxt = todayDone + '/' + todayTotal;
+    ctx.font=`900 36px ${FM}`; ctx.fillStyle=green;
+    ctx.fillText(todayValTxt, pad+58, Y+66);
+    const tvW=ctx.measureText(todayValTxt).width;
+    ctx.font=`600 17px ${FS}`; ctx.fillStyle=P.sub;
+    ctx.fillText(todayPct+'%', pad+58+tvW+12, Y+66);
+    // Mini bars
+    const mbX=pad+cW-180, mbY=Y+22, mbW=140, mbH=46;
+    const mbCount=Math.max(todayTotal,1);
+    const mbBarW=Math.min(12, (mbW-4)/mbCount);
+    for(let i=0;i<mbCount;i++){
+      const bx=mbX+(i*(mbBarW+2));
+      const done=i<todayDone;
+      const bh=done?mbH:10;
+      const by=mbY+mbH-bh;
+      rrect(bx,by,mbBarW,bh,3);
+      ctx.fillStyle=done?green:(isDark?P.raised:P.bg2);ctx.fill();
+    }
+    Y+=todayH+gap;
 
-    cards.forEach((c,i)=>{
-      const col=i%2, row=Math.floor(i/2);
-      const x=pad+col*(cardW+gap), y=Y+row*(cardH+gap);
-      neuCard(x,y,cardW,cardH,20);
-      // Accent left bar
-      rrect(x,y,5,cardH,3); ctx.fillStyle=c.color; ctx.fill();
-      // Icon
-      drawIcon(c.iconType, x+46, y+46, 26, c.color);
-      // Value
-      const vG=ctx.createLinearGradient(x+cardW-160,y,x+cardW,y+70);
-      vG.addColorStop(0,c.grad[0]); vG.addColorStop(1,c.grad[1]);
-      ctx.font=`900 60px ${FM}`; ctx.fillStyle=vG; ctx.textAlign='right';
-      ctx.fillText(String(c.val), x+cardW-24, y+70);
-      // Label
-      ctx.font=`700 17px ${FS}`; ctx.fillStyle=P.sub; ctx.textAlign='left';
-      ctx.fillText(c.lbl, x+24, y+cardH-42);
-      // Progress bar
-      rrect(x+24,y+cardH-22,cardW-48,6,3); ctx.fillStyle=isDark?P.raised:P.bg2; ctx.fill();
-      const pct=i===0?Math.min(100,s.streak/Math.max(s.best_streak||1,1)*100):i===1?Math.min(100,s.points/500*100):i===2?Math.min(100,s.active_days_30/30*100):Math.min(100,s.total_habits/15*100);
-      const bfw=(cardW-48)*pct/100;
-      if(bfw>0){rrect(x+24,y+cardH-22,bfw,6,3);const bg2=ctx.createLinearGradient(x+24,0,x+24+bfw,0);bg2.addColorStop(0,c.grad[0]);bg2.addColorStop(1,c.grad[1]);ctx.fillStyle=bg2;ctx.fill();}
-    });
-    Y+=cardH*2+gap+gap;
+    // ── 3. STREAK CARD (keng) ──
+    const streakH = 80;
+    const bestStreak = s.best_streak || s.streak || 0;
+    neuCard(pad,Y,cW,streakH,16);
+    drawIcon('fire',pad+34,Y+streakH/2,20,accent);
+    ctx.textAlign='left'; ctx.font=`700 16px ${FS}`; ctx.fillStyle=P.sub;
+    ctx.fillText(S('stats','share_streak').toUpperCase(), pad+58, Y+28);
+    ctx.font=`900 36px ${FM}`; ctx.fillStyle=accent;
+    ctx.fillText(String(s.streak), pad+58, Y+62);
+    const skW=ctx.measureText(String(s.streak)).width;
+    ctx.font=`500 17px ${FS}`; ctx.fillStyle=P.sub;
+    ctx.fillText(S('stats','record_label')+': '+bestStreak, pad+58+skW+16, Y+62);
+    Y+=streakH+gap;
 
-    // ── Trend card ──
+    // ── 4. ENG ZAIF + ENG BARQAROR ODAT (2x1) ──
+    const worstName = s.worst_habit_name || '';
+    const worstPct  = s.worst_habit_pct  || 0;
+    const worstIcon = s.worst_habit_icon || '';
+    const worstColor = worstPct <= 20 ? '#E05252' : worstPct <= 40 ? '#E07040' : '#D4963A';
+    const topName = s.top_habit_name || '';
+    const topPct  = s.top_habit_pct  || 0;
+    const topIcon = s.top_habit_icon || '';
+    const habitInfoW = (cW-gap)/2, habitInfoH = 110;
+
+    // Eng zaif
+    neuCard(pad, Y, habitInfoW, habitInfoH, 16);
+    drawIcon('warn', pad+30, Y+28, 18, worstColor);
+    ctx.textAlign='left'; ctx.font=`600 13px ${FS}`; ctx.fillStyle=P.sub;
+    ctx.fillText(S('stats','worst_habit').toUpperCase(), pad+50, Y+34);
+    drawDonut(pad+habitInfoW-44, Y+habitInfoH/2+10, 20, worstPct, worstColor, '#E07040', worstColor);
+    ctx.textAlign='left';
+    if(worstIcon){ctx.font='26px serif';ctx.fillText(worstIcon,pad+20,Y+68);}
+    ctx.font=`700 15px ${FS}`; ctx.fillStyle=P.text;
+    const wNameX = worstIcon ? pad+52 : pad+20;
+    const wDisplayName = worstName || S('stats','no_habits');
+    ctx.font=`700 15px ${FS}`;
+    let wTrunc = wDisplayName;
+    while(ctx.measureText(wTrunc).width > habitInfoW-120 && wTrunc.length > 3) wTrunc = wTrunc.slice(0,-1);
+    if(wTrunc !== wDisplayName) wTrunc += '...';
+    ctx.fillText(wTrunc, wNameX, Y+68);
+    ctx.font=`800 22px ${FM}`; ctx.fillStyle=worstColor;
+    ctx.fillText(worstPct+'%', wNameX, Y+94);
+
+    // Eng barqaror
+    const topX = pad+habitInfoW+gap;
+    neuCard(topX, Y, habitInfoW, habitInfoH, 16);
+    drawIcon('trophy', topX+30, Y+28, 18, green);
+    ctx.textAlign='left'; ctx.font=`600 13px ${FS}`; ctx.fillStyle=P.sub;
+    ctx.fillText(S('stats','top_habit').toUpperCase(), topX+50, Y+34);
+    drawDonut(topX+habitInfoW-44, Y+habitInfoH/2+10, 20, topPct, '#6EDAA0', '#4CAF7D', green);
+    ctx.textAlign='left';
+    if(topIcon){ctx.font='26px serif';ctx.fillText(topIcon,topX+20,Y+68);}
+    ctx.font=`700 15px ${FS}`; ctx.fillStyle=P.text;
+    const tNameX = topIcon ? topX+52 : topX+20;
+    const tDisplayName = topName || S('stats','no_habits');
+    ctx.font=`700 15px ${FS}`;
+    let tTrunc = tDisplayName;
+    while(ctx.measureText(tTrunc).width > habitInfoW-120 && tTrunc.length > 3) tTrunc = tTrunc.slice(0,-1);
+    if(tTrunc !== tDisplayName) tTrunc += '...';
+    ctx.fillText(tTrunc, tNameX, Y+68);
+    ctx.font=`800 22px ${FM}`; ctx.fillStyle=green;
+    ctx.fillText(topPct+'%', tNameX, Y+94);
+    Y+=habitInfoH+gap;
+
+    // ── 5. TREND CARD ──
     const tr=d.trend||{};
-    const trendH=108;
-    neuCard(pad,Y,cW,trendH,20);
-    ctx.textAlign='left'; ctx.font=`700 20px ${FS}`; ctx.fillStyle=P.sub;
-    drawIcon('trend_up',pad+36,Y+32,20,accent2);
-    ctx.fillText(S('stats','weekly_trend').toUpperCase(), pad+54, Y+40);
+    const trendH=85;
+    neuCard(pad,Y,cW,trendH,16);
+    ctx.textAlign='left'; ctx.font=`700 16px ${FS}`; ctx.fillStyle=P.sub;
+    drawIcon('trend_up',pad+30,Y+26,18,accent2);
+    ctx.fillText(S('stats','weekly_trend').toUpperCase(), pad+50, Y+32);
     const twPct=tr.this_week||0, pwPct=tr.prev_week||0;
     const twClr=twPct>=60?green:twPct>=30?accent2:accent;
-    ctx.font=`800 38px ${FM}`; ctx.fillStyle=twClr;
-    ctx.fillText(twPct+'%', pad+30, Y+88);
+    ctx.font=`800 30px ${FM}`; ctx.fillStyle=twClr;
+    ctx.fillText(twPct+'%', pad+26, Y+68);
     const twNW=ctx.measureText(twPct+'%').width;
-    ctx.font=`500 19px ${FS}`; ctx.fillStyle=P.sub;
-    ctx.fillText(S('stats','this_week'), pad+30+twNW+10, Y+88);
-    // Diff pill
+    ctx.font=`500 16px ${FS}`; ctx.fillStyle=P.sub;
+    ctx.fillText(S('stats','this_week'), pad+26+twNW+8, Y+68);
     const diff=tr.diff||0, dir=tr.direction||'same';
     const diffClr=dir==='up'?green:dir==='down'?'#E05050':accent2;
     const diffArr=dir==='up'?'\u2191':dir==='down'?'\u2193':'\u2192';
     const diffTxt=diffArr+' '+(diff>0?'+':'')+diff+'%';
-    ctx.font=`800 24px ${FM}`;
+    ctx.font=`800 20px ${FM}`;
     const dTW=ctx.measureText(diffTxt).width;
-    const pX=pad+cW-dTW-48;
-    rrect(pX-12,Y+64,dTW+24,34,12); ctx.fillStyle=diffClr+'18'; ctx.fill();
-    rrect(pX-12,Y+64,dTW+24,34,12); ctx.strokeStyle=diffClr+'40'; ctx.lineWidth=1; ctx.stroke();
-    ctx.fillStyle=diffClr; ctx.textAlign='left'; ctx.fillText(diffTxt,pX,Y+89);
-    ctx.font=`400 17px ${FS}`; ctx.fillStyle=P.sub2; ctx.textAlign='right';
-    ctx.fillText(S('stats','prev_week_pct')+': '+pwPct+'%', pad+cW-24, Y+40);
+    const pX=pad+cW-dTW-40;
+    rrect(pX-10,Y+50,dTW+20,28,10); ctx.fillStyle=diffClr+'18'; ctx.fill();
+    rrect(pX-10,Y+50,dTW+20,28,10); ctx.strokeStyle=diffClr+'40'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle=diffClr; ctx.textAlign='left'; ctx.fillText(diffTxt,pX,Y+70);
+    ctx.font=`400 14px ${FS}`; ctx.fillStyle=P.sub2; ctx.textAlign='right';
+    ctx.fillText(S('stats','prev_week_pct')+': '+pwPct+'%', pad+cW-20, Y+32);
     Y+=trendH+gap;
 
-    // ── Best streak + Weekly avg ──
-    const infoW2=(cW-gap)/2, infoH=106;
-    // Best streak
-    neuCard(pad,Y,infoW2,infoH,18);
-    ctx.font=`600 16px ${FS}`; ctx.fillStyle=P.sub; ctx.textAlign='left';
-    drawIcon('trophy',pad+32,Y+28,18,purple);
-    ctx.fillText(S('stats','share_best_streak').toUpperCase(), pad+48, Y+34);
-    const bsVal2=String(s.best_streak||s.streak||0);
-    ctx.font=`800 38px ${FM}`; ctx.fillStyle=purple;
-    ctx.fillText(bsVal2, pad+28, Y+82);
-    const bsNW=ctx.measureText(bsVal2).width;
-    ctx.font=`500 18px ${FS}`; ctx.fillStyle=P.sub;
-    ctx.fillText(S('stats','share_streak'), pad+28+bsNW+8, Y+82);
-    // Weekly avg
+    // ── 6. WEEKLY BAR CHART ──
     const avgPct=w.length?Math.round(w.reduce((a2,dd)=>a2+(dd.total?dd.count/dd.total*100:0),0)/w.length):0;
-    const avgX2=pad+infoW2+gap;
-    neuCard(avgX2,Y,infoW2,infoH,18);
-    ctx.font=`600 16px ${FS}`; ctx.fillStyle=P.sub; ctx.textAlign='left';
-    drawIcon('bar_chart',avgX2+32,Y+28,18,green);
-    ctx.fillText(S('stats','share_avg').toUpperCase(), avgX2+48, Y+34);
-    const avgClr2=avgPct>=70?green:avgPct>=40?accent2:accent;
-    // Donut ring
-    const rCX=avgX2+infoW2-58,rCY=Y+58,rR=28;
-    ctx.beginPath();ctx.arc(rCX,rCY,rR,0,Math.PI*2);ctx.strokeStyle=avgClr2+'20';ctx.lineWidth=6;ctx.stroke();
-    const rS=-Math.PI/2,rE=rS+(Math.PI*2*avgPct/100);
-    ctx.beginPath();ctx.arc(rCX,rCY,rR,rS,rE);ctx.strokeStyle=avgClr2;ctx.lineWidth=6;ctx.lineCap='round';ctx.stroke();ctx.lineCap='butt';
-    ctx.font=`800 20px ${FM}`;ctx.fillStyle=avgClr2;ctx.textAlign='center';ctx.fillText(avgPct+'%',rCX,rCY+7);
-    ctx.font=`800 36px ${FM}`;ctx.fillStyle=avgClr2;ctx.textAlign='left';
-    ctx.fillText(avgPct+'%', avgX2+28, Y+82);
-    Y+=infoH+gap;
-
-    // ── Weekly bar chart ──
-    const chartH2=300;
-    neuCard(pad-10,Y-10,cW+20,chartH2+86,22);
-    ctx.textAlign='left'; ctx.font=`700 20px ${FS}`; ctx.fillStyle=P.sub;
-    ctx.fillText(S('stats','week_chart').toUpperCase(), pad+14, Y+16);
-    const barGap3=18, barW3=(cW-20-barGap3*6)/7;
+    const chartH2=200;
+    neuCard(pad-10,Y-10,cW+20,chartH2+70,18);
+    ctx.textAlign='left'; ctx.font=`700 16px ${FS}`; ctx.fillStyle=P.sub;
+    ctx.fillText(S('stats','week_chart').toUpperCase(), pad+14, Y+14);
+    const barGap3=14, barW3=(cW-20-barGap3*6)/7;
     const dayAbbr=S('stats','day_abbr')||['Ya','Du','Se','Ch','Pa','Ju','Sh'];
-    const cTop=Y+36, cBot=Y+chartH2-10, cArea=cBot-cTop;
-    // Guides
+    const cTop=Y+30, cBot=Y+chartH2-10, cArea=cBot-cTop;
     ctx.globalAlpha=isDark?0.06:0.1;ctx.strokeStyle=P.sub;ctx.lineWidth=1;
     for(let gl=0;gl<=4;gl++){const gy3=cBot-(cArea*gl/4);ctx.beginPath();ctx.moveTo(pad+10,gy3);ctx.lineTo(pad+cW-10,gy3);ctx.stroke();}
     ctx.globalAlpha=1;
-
     w.forEach((day,i)=>{
       const pctD=day.total?Math.round(day.count/day.total*100):0;
-      const bH2=Math.max(8,cArea*pctD/100);
+      const bH2=Math.max(6,cArea*pctD/100);
       const bx2=pad+10+i*(barW3+barGap3);
       const by2=cBot-bH2;
       const clr2=pctD>=80?green:pctD>=40?accent2:pctD>0?accent:(isDark?'#2A2D42':'#D0D3DE');
-      if(pctD>0){ctx.globalAlpha=isDark?0.15:0.08;rrect(bx2+3,by2+3,barW3,bH2,10);ctx.fillStyle=isDark?'#000':'#B8BBCA';ctx.fill();ctx.globalAlpha=1;}
-      rrect(bx2,by2,barW3,bH2,10);
+      if(pctD>0){ctx.globalAlpha=isDark?0.15:0.08;rrect(bx2+3,by2+3,barW3,bH2,8);ctx.fillStyle=isDark?'#000':'#B8BBCA';ctx.fill();ctx.globalAlpha=1;}
+      rrect(bx2,by2,barW3,bH2,8);
       const bg4=ctx.createLinearGradient(bx2,by2,bx2,by2+bH2);bg4.addColorStop(0,clr2);bg4.addColorStop(1,clr2+(isDark?'66':'88'));ctx.fillStyle=bg4;ctx.fill();
-      if(pctD>0){rrect(bx2+3,by2,barW3-6,Math.min(bH2,12),8);ctx.fillStyle=isDark?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.30)';ctx.fill();}
-      if(pctD>0){ctx.font=`800 20px ${FM}`;ctx.fillStyle=clr2;ctx.textAlign='center';ctx.fillText(pctD+'%',bx2+barW3/2,by2-10);}
-      ctx.font=`600 18px ${FS}`;ctx.fillStyle=P.sub;ctx.textAlign='center';
-      ctx.fillText(dayAbbr[new Date(day.date).getDay()], bx2+barW3/2, cBot+28);
+      if(pctD>0){rrect(bx2+3,by2,barW3-6,Math.min(bH2,10),6);ctx.fillStyle=isDark?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.30)';ctx.fill();}
+      if(pctD>0){ctx.font=`800 16px ${FM}`;ctx.fillStyle=clr2;ctx.textAlign='center';ctx.fillText(pctD+'%',bx2+barW3/2,by2-8);}
+      ctx.font=`600 15px ${FS}`;ctx.fillStyle=P.sub;ctx.textAlign='center';
+      ctx.fillText(dayAbbr[new Date(day.date).getDay()], bx2+barW3/2, cBot+22);
     });
-    // Avg line
     const avgLY=cBot-cArea*avgPct/100;
-    ctx.setLineDash([8,5]);ctx.strokeStyle=purple+(isDark?'55':'77');ctx.lineWidth=2;
+    ctx.setLineDash([6,4]);ctx.strokeStyle=purple+(isDark?'55':'77');ctx.lineWidth=1.5;
     ctx.beginPath();ctx.moveTo(pad+10,avgLY);ctx.lineTo(pad+cW-10,avgLY);ctx.stroke();ctx.setLineDash([]);
-    const avgLbl2=avgPct+'% avg';ctx.font=`700 16px ${FM}`;
+    const avgLbl2=avgPct+'% avg';ctx.font=`700 13px ${FM}`;
     const avgLW2=ctx.measureText(avgLbl2).width;
-    rrect(pad+cW-avgLW2-40,avgLY-20,avgLW2+20,26,8);ctx.fillStyle=purple+'15';ctx.fill();
-    ctx.fillStyle=purple;ctx.textAlign='right';ctx.fillText(avgLbl2,pad+cW-24,avgLY-2);
-    Y+=chartH2+76;
+    rrect(pad+cW-avgLW2-36,avgLY-16,avgLW2+18,22,6);ctx.fillStyle=purple+'15';ctx.fill();
+    ctx.fillStyle=purple;ctx.textAlign='right';ctx.fillText(avgLbl2,pad+cW-20,avgLY-1);
+    Y+=chartH2+56;
 
-    // ── Divider ──
+    // ── 7. 30-KUN AREA CHART ──
+    if (monthlyDays && monthlyDays.length >= 2) {
+      const aW=cW, aH=150, aPadX=16, aPadY=10;
+      const pcts30 = monthlyDays.map(md => md.total ? Math.round(md.count / md.total * 100) : 0);
+      const maxP30 = Math.max(...pcts30, 1);
+      const avg30 = Math.round(pcts30.reduce((a,b)=>a+b,0) / pcts30.length);
+
+      neuCard(pad-10,Y-10,cW+20,aH+90,18);
+      ctx.textAlign='left'; ctx.font=`700 16px ${FS}`; ctx.fillStyle=P.sub;
+      ctx.fillText(S('stats','month_chart').toUpperCase(), pad+14, Y+14);
+      ctx.font=`900 28px ${FM}`; ctx.fillStyle=P.text;
+      const avg30Txt = avg30+'%';
+      ctx.fillText(avg30Txt, pad+14, Y+44);
+      const avg30W = ctx.measureText(avg30Txt).width;
+      ctx.font=`400 14px ${FS}`; ctx.fillStyle=P.sub;
+      ctx.fillText(S('stats','avg_30'), pad+18+avg30W, Y+44);
+
+      const chartTop=Y+56, chartBot=chartTop+aH;
+      const pts30=pcts30.map((p,i)=>({
+        x: pad+aPadX+(i/(pcts30.length-1))*(aW-2*aPadX),
+        y: chartTop+aPadY+(1-p/maxP30)*(aH-2*aPadY)
+      }));
+      // Area fill
+      ctx.beginPath();ctx.moveTo(pts30[0].x,pts30[0].y);
+      for(let i=1;i<pts30.length;i++){
+        const cp=(pts30[i].x-pts30[i-1].x)/2.5;
+        ctx.bezierCurveTo(pts30[i-1].x+cp,pts30[i-1].y,pts30[i].x-cp,pts30[i].y,pts30[i].x,pts30[i].y);
+      }
+      ctx.lineTo(pts30[pts30.length-1].x,chartBot);ctx.lineTo(pts30[0].x,chartBot);ctx.closePath();
+      const aFill=ctx.createLinearGradient(0,chartTop,0,chartBot);
+      aFill.addColorStop(0,green+'40');aFill.addColorStop(1,green+'05');
+      ctx.fillStyle=aFill;ctx.fill();
+      // Line
+      ctx.beginPath();ctx.moveTo(pts30[0].x,pts30[0].y);
+      for(let i=1;i<pts30.length;i++){
+        const cp=(pts30[i].x-pts30[i-1].x)/2.5;
+        ctx.bezierCurveTo(pts30[i-1].x+cp,pts30[i-1].y,pts30[i].x-cp,pts30[i].y,pts30[i].x,pts30[i].y);
+      }
+      const lineG30=ctx.createLinearGradient(pts30[0].x,0,pts30[pts30.length-1].x,0);
+      lineG30.addColorStop(0,accent2);lineG30.addColorStop(1,green);
+      ctx.strokeStyle=lineG30;ctx.lineWidth=3;ctx.stroke();
+      // End dot
+      const lastP=pts30[pts30.length-1];
+      const lastPct30=pcts30[pcts30.length-1];
+      const dotClr30=lastPct30>=80?green:lastPct30>=40?accent2:accent;
+      ctx.beginPath();ctx.arc(lastP.x,lastP.y,5,0,Math.PI*2);ctx.fillStyle=dotClr30;ctx.fill();
+      ctx.beginPath();ctx.arc(lastP.x,lastP.y,5,0,Math.PI*2);ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+      ctx.font=`800 16px ${FM}`;ctx.fillStyle=dotClr30;
+      ctx.textAlign=lastP.x>pad+aW-60?'end':'start';
+      ctx.fillText(lastPct30+'%',lastP.x+(lastP.x>pad+aW-60?-8:8),lastP.y-12);
+      // Date labels
+      ctx.textAlign='center';ctx.font=`600 14px ${FS}`;ctx.fillStyle=P.sub;
+      [0,9,19,29].filter(i=>i<monthlyDays.length).forEach(i=>{
+        const x=pts30[i].x;
+        ctx.fillText(new Date(monthlyDays[i].date).getDate()+'', x, chartBot+22);
+      });
+      Y+=aH+80;
+    }
+
+    // ── 8. HEATMAP (GitHub style) ──
+    if (d.days_30 && d.days_30.length) {
+      const hmH = 190;
+      neuCard(pad-10, Y-10, cW+20, hmH+40, 18);
+      ctx.textAlign='left'; ctx.font=`700 16px ${FS}`; ctx.fillStyle=P.sub;
+      ctx.fillText(S('stats','heatmap_title').toUpperCase(), pad+14, Y+18);
+
+      const monthlyMap={};
+      (monthlyDays||[]).forEach(m=>{monthlyMap[m.date]=m.total?Math.round(m.count/m.total*100):0;});
+      const hmDayLbls=S('stats','hm_week_days')||['Du','Se','Ch','Pa','Ju','Sh','Ya'];
+      const days30=d.days_30;
+      const firstDJS=new Date(days30[0]).getDay();
+      const firstRow=firstDJS===0?6:firstDJS-1;
+
+      const cellSz=22, cellGap=3;
+      const gridX=pad+44, gridY=Y+36;
+      // Day labels
+      ctx.font=`600 13px ${FS}`; ctx.fillStyle=P.sub; ctx.textAlign='right';
+      for(let r=0;r<7;r++) ctx.fillText(hmDayLbls[r], gridX-6, gridY+r*(cellSz+cellGap)+cellSz/2+3);
+      // Cells
+      const allCells=[...Array(firstRow).fill(null),...days30];
+      allCells.forEach((dd,idx)=>{
+        const row=idx%7, col=Math.floor(idx/7);
+        const cx=gridX+col*(cellSz+cellGap), cy=gridY+row*(cellSz+cellGap);
+        if(!dd){return;}
+        const pctVal=monthlyMap[dd]||(d.heatmap&&d.heatmap[dd]?70:0);
+        const lvClr=pctVal===0?(isDark?P.raised:P.bg2):pctVal<40?green+'55':pctVal<80?green+'99':green;
+        rrect(cx,cy,cellSz,cellSz,4);ctx.fillStyle=lvClr;ctx.fill();
+        if(dd===d.today){ctx.strokeStyle=accent2;ctx.lineWidth=1.5;rrect(cx,cy,cellSz,cellSz,4);ctx.stroke();}
+      });
+      // Legend (grid o'ng tomonida, vertical)
+      const maxCol = Math.ceil(allCells.length / 7);
+      const legX = gridX + maxCol*(cellSz+cellGap) + 30;
+      ctx.textAlign='left';
+      const legColors=[isDark?P.raised:P.bg2, green+'55', green+'99', green];
+      const legLabels=[S('stats','hm_not_done'),S('stats','hm_partial'),'',S('stats','hm_full')];
+      let legItemY = gridY + 10;
+      legColors.forEach((lc,li)=>{
+        if(!legLabels[li]) return;
+        rrect(legX, legItemY, 10, 10, 2); ctx.fillStyle=lc; ctx.fill();
+        ctx.font=`500 11px ${FS}`; ctx.fillStyle=P.sub;
+        ctx.fillText(legLabels[li], legX+16, legItemY+9);
+        legItemY += 22;
+      });
+      Y+=hmH+40;
+    }
+
+    // ── DIVIDER ──
+    Y+=14;
     const divGrad2=ctx.createLinearGradient(240,0,W-240,0);
     divGrad2.addColorStop(0,P.sub+'00');divGrad2.addColorStop(0.5,P.sub+'40');divGrad2.addColorStop(1,P.sub+'00');
     ctx.strokeStyle=divGrad2;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(240,Y);ctx.lineTo(W-240,Y);ctx.stroke();
 
-    // ── Footer ──
+    // ── FOOTER ──
+    const footerY = Y+40;
     ctx.textAlign='center';
-    ctx.font=`400 22px ${FS}`;ctx.fillStyle=P.sub2;
-    ctx.fillText(S('stats','share_footer'), W/2, H-100);
-    ctx.font=`700 28px ${FS}`;
+    ctx.font=`400 20px ${FS}`;ctx.fillStyle=P.sub2;
+    ctx.fillText(S('stats','share_footer'), W/2, footerY);
+    ctx.font=`700 24px ${FS}`;
     const fGrad=ctx.createLinearGradient(W/2-140,0,W/2+140,0);
     fGrad.addColorStop(0,accent2);fGrad.addColorStop(1,purple);
     ctx.fillStyle=fGrad;
-    ctx.fillText('@Super_habits_bot', W/2, H-58);
+    ctx.fillText('@Super_habits_bot', W/2, footerY+34);
 
+    // ── Canvas balandligini kerakli joyga trim qilish ──
+    const finalH = footerY + 80;
+    if (finalH < H) {
+      const trimmed = document.createElement('canvas');
+      trimmed.width = W; trimmed.height = finalH;
+      const tCtx = trimmed.getContext('2d');
+      tCtx.drawImage(canvas, 0, 0);
+      canvas.width = W; canvas.height = finalH;
+      ctx.drawImage(trimmed, 0, 0);
+    }
 
     // ── Telegram chatga yuborish ──
     await new Promise((resolve) => {
