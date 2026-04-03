@@ -548,16 +548,17 @@ async function generateShareCard() {
     // ── Donut helper (Canvas) ──
     function drawDonut(cx,cy,r,pct,clr1,clr2,textClr) {
       ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
-      ctx.strokeStyle=isDark?P.raised:P.bg2;ctx.lineWidth=6;ctx.stroke();
+      ctx.strokeStyle=isDark?P.raised:P.bg2;ctx.lineWidth=5;ctx.stroke();
       if(pct>0){
         const startA=-Math.PI/2, endA=startA+(Math.PI*2*pct/100);
         ctx.beginPath();ctx.arc(cx,cy,r,startA,endA);
         const dg=ctx.createLinearGradient(cx-r,cy-r,cx+r,cy+r);
         dg.addColorStop(0,clr1);dg.addColorStop(1,clr2);
-        ctx.strokeStyle=dg;ctx.lineWidth=6;ctx.lineCap='round';ctx.stroke();ctx.lineCap='butt';
+        ctx.strokeStyle=dg;ctx.lineWidth=5;ctx.lineCap='round';ctx.stroke();ctx.lineCap='butt';
       }
-      ctx.font=`800 18px ${FM}`;ctx.fillStyle=textClr;ctx.textAlign='center';
-      ctx.fillText(pct+'%',cx,cy+6);
+      const dFontSz = Math.max(12, Math.round(r * 0.7));
+      ctx.font=`800 ${dFontSz}px ${FM}`;ctx.fillStyle=textClr;ctx.textAlign='center';
+      ctx.fillText(pct+'%',cx,cy+Math.round(dFontSz/3.5));
     }
 
     // ── Decorative accent circles ──
@@ -588,14 +589,14 @@ async function generateShareCard() {
     const todayPct   = todayTotal ? Math.round(todayDone / todayTotal * 100) : 0;
     const todayH = 90;
     neuCard(pad,Y,cW,todayH,16);
-    drawIcon('target',pad+34,Y+todayH/2,20,green);
-    ctx.textAlign='left'; ctx.font=`700 16px ${FS}`; ctx.fillStyle=P.sub;
-    ctx.fillText(S('stats','today_momentum').toUpperCase(), pad+58, Y+28);
+    drawIcon('target',pad+34,Y+todayH/2+2,20,green);
+    ctx.textAlign='left'; ctx.font=`700 15px ${FS}`; ctx.fillStyle=P.sub;
+    ctx.fillText(S('stats','today_momentum').toUpperCase(), pad+58, Y+30);
     const todayValTxt = todayDone + '/' + todayTotal;
-    ctx.font=`900 38px ${FM}`; ctx.fillStyle=green;
+    ctx.font=`900 36px ${FM}`; ctx.fillStyle=green;
     ctx.fillText(todayValTxt, pad+58, Y+66);
     const tvW=ctx.measureText(todayValTxt).width;
-    ctx.font=`600 18px ${FS}`; ctx.fillStyle=P.sub;
+    ctx.font=`600 17px ${FS}`; ctx.fillStyle=P.sub;
     ctx.fillText(todayPct+'%', pad+58+tvW+12, Y+66);
     // Mini bars
     const mbX=pad+cW-180, mbY=Y+22, mbW=140, mbH=46;
@@ -640,7 +641,7 @@ async function generateShareCard() {
     drawIcon('warn', pad+30, Y+28, 18, worstColor);
     ctx.textAlign='left'; ctx.font=`600 13px ${FS}`; ctx.fillStyle=P.sub;
     ctx.fillText(S('stats','worst_habit').toUpperCase(), pad+50, Y+34);
-    drawDonut(pad+habitInfoW-48, Y+habitInfoH/2+6, 24, worstPct, worstColor, '#E07040', worstColor);
+    drawDonut(pad+habitInfoW-44, Y+habitInfoH/2+10, 20, worstPct, worstColor, '#E07040', worstColor);
     ctx.textAlign='left';
     if(worstIcon){ctx.font='26px serif';ctx.fillText(worstIcon,pad+20,Y+68);}
     ctx.font=`700 15px ${FS}`; ctx.fillStyle=P.text;
@@ -660,7 +661,7 @@ async function generateShareCard() {
     drawIcon('trophy', topX+30, Y+28, 18, green);
     ctx.textAlign='left'; ctx.font=`600 13px ${FS}`; ctx.fillStyle=P.sub;
     ctx.fillText(S('stats','top_habit').toUpperCase(), topX+50, Y+34);
-    drawDonut(topX+habitInfoW-48, Y+habitInfoH/2+6, 24, topPct, '#6EDAA0', '#4CAF7D', green);
+    drawDonut(topX+habitInfoW-44, Y+habitInfoH/2+10, 20, topPct, '#6EDAA0', '#4CAF7D', green);
     ctx.textAlign='left';
     if(topIcon){ctx.font='26px serif';ctx.fillText(topIcon,topX+20,Y+68);}
     ctx.font=`700 15px ${FS}`; ctx.fillStyle=P.text;
