@@ -418,11 +418,11 @@ function renderStats(d) {
           <span style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px">${S('stats','per_habit')}</span>
         </div>
         <svg id="habit-stats-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
-          style="transition:transform .3s;flex-shrink:0;transform:rotate(180deg)">
+          style="transition:transform .3s;flex-shrink:0;transform:rotate(0deg)">
           <path d="M6 9l6 6 6-6" stroke="var(--sub)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
-      <div id="habit-stats-body" style="margin-top:8px">
+      <div id="habit-stats-body" style="display:none;margin-top:8px">
         ${habitCardsHtml || '<div class="empty-state"><div class="icon">\u{1F4CB}</div>' + S('msg','no_habits_yet') + '</div>'}
       </div>
     </div>`;
