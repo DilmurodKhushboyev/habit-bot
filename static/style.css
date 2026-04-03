@@ -646,7 +646,7 @@ body {
   background: var(--bg); box-shadow: var(--sh-card);
   border-radius: 20px; padding: 14px;
   display: flex; flex-direction: column;
-  position: relative; overflow: hidden; min-height: 130px;
+  position: relative; overflow: hidden; min-height: 140px;
 }
 .sc-card::before {
   content: ''; position: absolute; top: -20px; right: -20px;
@@ -660,7 +660,7 @@ body {
 }
 .sc-val-sub { font-size: 15px; color: var(--sub); font-weight: 700; }
 .sc-lbl {
-  font-size: 9px; color: var(--sub); text-transform: uppercase;
+  font-size: 10px; color: var(--sub); text-transform: uppercase;
   letter-spacing: 1px; font-weight: 700; margin-top: 2px;
 }
 .sc-badge {
@@ -676,7 +676,7 @@ body {
 }
 .sc-chart { flex: 1; display: flex; align-items: flex-end; margin-top: 4px; }
 .sc-foot {
-  font-size: 9px; color: var(--sub); font-weight: 600; margin-top: 4px;
+  font-size: 10px; color: var(--sub); font-weight: 600; margin-top: 4px;
   max-width: 100%; display: flex; align-items: center; gap: 3px;
 }
 .sc-foot-trunc {
@@ -739,28 +739,87 @@ body {
 .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
 .bar-fill {
   width: 100%; border-radius: 8px 8px 4px 4px;
-  box-shadow: 2px 2px 6px #B8BBCA, -2px -2px 6px #FFFFFF;
+  box-shadow: var(--sh-sm);
   min-height: 4px; transition: height .5s ease;
 }
 .bar-lbl { font-size: 10px; color: var(--sub); font-weight: 500; }
 .bar-num { font-size: 9px; color: var(--sub); font-family: 'DM Mono', monospace; }
 
-/* Heatmap */
+/* Heatmap — GitHub style */
 .heatmap-wrap {
   background: var(--bg); box-shadow: var(--sh-card);
   border-radius: 20px; padding: 18px; margin-bottom: 12px;
 }
 .heatmap-title { font-size: 12px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
-.heatmap-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
+.heatmap-outer { display: flex; gap: 6px; }
+.heatmap-day-labels {
+  display: flex; flex-direction: column; gap: 3px; padding-top: 0;
+  flex-shrink: 0; width: 20px;
+}
+.heatmap-day-labels span {
+  height: 14px; font-size: 8px; color: var(--sub); font-weight: 600;
+  display: flex; align-items: center; line-height: 1;
+}
+.heatmap-grid {
+  display: grid;
+  grid-template-rows: repeat(7, 14px);
+  grid-auto-flow: column;
+  grid-auto-columns: 14px;
+  gap: 3px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.heatmap-grid::-webkit-scrollbar { display: none; }
 .hm-cell {
-  aspect-ratio: 1; border-radius: 6px;
+  width: 14px; height: 14px; border-radius: 3px;
   background: var(--bg); box-shadow: var(--sh-in);
   transition: all .2s;
 }
-.hm-cell.done { background: var(--green); box-shadow: 2px 2px 5px #3DA86840, -2px -2px 5px #FFFFFF; }
+.hm-cell.hm-lv1 { background: #4CAF7D44; box-shadow: none; }
+.hm-cell.hm-lv2 { background: #4CAF7D88; box-shadow: none; }
+.hm-cell.hm-lv3 { background: var(--green); box-shadow: 0 1px 3px #4CAF7D40; }
 .hm-cell.today-cell { box-shadow: var(--sh-in), 0 0 0 2px var(--accent2); }
+.hm-cell.today-cell.hm-lv1 { box-shadow: 0 0 0 2px var(--accent2); }
+.hm-cell.today-cell.hm-lv2 { box-shadow: 0 0 0 2px var(--accent2); }
+.hm-cell.today-cell.hm-lv3 { box-shadow: 0 1px 3px #4CAF7D40, 0 0 0 2px var(--accent2); }
 .heatmap-legend { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 10px; color: var(--sub); }
-.hm-leg { width: 12px; height: 12px; border-radius: 3px; }
+.hm-leg { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.hm-leg.hm-lv1 { background: #4CAF7D44; }
+.hm-leg.hm-lv2 { background: #4CAF7D88; }
+.hm-leg.hm-lv3 { background: var(--green); }
+
+/* Trend card */
+.trend-card {
+  background: var(--bg); box-shadow: var(--sh-card);
+  border-radius: 20px; padding: 18px; margin-bottom: 12px;
+}
+.trend-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.trend-title {
+  font-size: 12px; font-weight: 700; color: var(--sub);
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.trend-diff-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 10px; font-size: 12px; font-weight: 800;
+  font-family: 'DM Mono', monospace;
+}
+.trend-compare {
+  display: flex; gap: 12px; margin-bottom: 14px;
+}
+.trend-compare-item { flex: 1; }
+.trend-compare-label { font-size: 10px; color: var(--sub); margin-bottom: 5px; font-weight: 600; }
+.trend-compare-bar {
+  height: 10px; border-radius: 5px; background: var(--bg);
+  box-shadow: var(--sh-in); overflow: hidden;
+}
+.trend-compare-bar-fill {
+  height: 100%; border-radius: 5px; transition: width .6s ease;
+}
+.trend-compare-val { font-size: 14px; font-weight: 800; margin-top: 5px; font-family: 'DM Mono', monospace; }
+.trend-msg { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
 
 /* Habit stat cards */
 .hstat-card {

@@ -41,7 +41,7 @@ function renderStats(d) {
   // Streak sparkline: haftalik bajarilish % dan (weekly array)
   const streakSpark = (() => {
     if (!weekly || weekly.length < 2) return {line:'', area:'', last:null};
-    const W = 120, H = 32, pad = 2;
+    const W = 120, H = 30, pad = 2;
     const vals = weekly.map(w => w.total ? Math.round(w.count / w.total * 100) : 0);
     const maxV = Math.max(...vals, 1);
     const pts = vals.map((v, i) => ({
@@ -66,14 +66,14 @@ function renderStats(d) {
 
   // Donut helper — ikki odat kartasi uchun bir xil chart
   const donutSVG = (pct, gradId, c1, c2, textColor) => {
-    const r = 22, circ = 2 * Math.PI * r;
-    return '<svg width="56" height="56" viewBox="0 0 56 56">'
-      + '<circle cx="28" cy="28" r="' + r + '" fill="none" stroke="var(--bg)" stroke-width="5" class="sc-ring-bg"/>'
-      + '<circle cx="28" cy="28" r="' + r + '" fill="none" stroke="url(#' + gradId + ')" stroke-width="5"'
+    const r = 28, circ = 2 * Math.PI * r;
+    return '<svg width="72" height="72" viewBox="0 0 72 72">'
+      + '<circle cx="36" cy="36" r="' + r + '" fill="none" stroke="var(--bg)" stroke-width="5" class="sc-ring-bg"/>'
+      + '<circle cx="36" cy="36" r="' + r + '" fill="none" stroke="url(#' + gradId + ')" stroke-width="5"'
       + ' stroke-dasharray="' + (circ * pct / 100).toFixed(1) + ' ' + circ.toFixed(1) + '"'
       + ' stroke-dashoffset="' + (circ * 0.25).toFixed(1) + '" stroke-linecap="round" class="sc-ring-fill"/>'
       + '<defs><linearGradient id="' + gradId + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="' + c1 + '"/><stop offset="100%" stop-color="' + c2 + '"/></linearGradient></defs>'
-      + '<text x="28" y="32" text-anchor="middle" font-size="13" font-weight="800" fill="' + textColor + '" font-family="DM Mono,monospace">' + pct + '%</text>'
+      + '<text x="36" y="41" text-anchor="middle" font-size="15" font-weight="800" fill="' + textColor + '" font-family="DM Mono,monospace">' + pct + '%</text>'
       + '</svg>';
   };
 
@@ -90,9 +90,10 @@ function renderStats(d) {
           <div class="sc-badge-icon">${svgTarget}</div>
         </div>
         <div class="sc-chart">
-          <div class="sc-mini-bars">
-            ${todayBars.map((done, i) => '<div class="sc-mini-bar ' + (done ? 'sc-done' : '') + '" style="animation-delay:' + (i * 60) + 'ms"></div>').join('')}
-          </div>
+          ${todayTotal <= 12
+            ? '<div class="sc-mini-bars">' + todayBars.map((done, i) => '<div class="sc-mini-bar ' + (done ? 'sc-done' : '') + '" style="animation-delay:' + (i * 60) + 'ms"></div>').join('') + '</div>'
+            : '<div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:4px"><div style="height:10px;border-radius:5px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden"><div style="height:100%;border-radius:5px;background:linear-gradient(90deg,#6EDAA0,#4CAF7D);width:' + todayPct + '%;transition:width .6s ease"></div></div></div>'
+          }
         </div>
         <div class="sc-foot">${todayPct}% &middot; ${todayLeft > 0 ? todayLeft + ' ' + S('stats','left_today') : S('stats','all_done')}</div>
       </div>
@@ -107,7 +108,7 @@ function renderStats(d) {
           <div class="sc-badge-icon">${svgFire}</div>
         </div>
         <div class="sc-chart">
-          <svg width="100%" viewBox="0 0 120 32" preserveAspectRatio="none" style="display:block;overflow:visible">
+          <svg width="100%" viewBox="0 0 120 42" preserveAspectRatio="none" style="display:block;overflow:visible">
             <defs>
               <linearGradient id="scSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E07040" stop-opacity="0.25"/><stop offset="100%" stop-color="#E07040" stop-opacity="0"/></linearGradient>
               <linearGradient id="scSparkLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient>
@@ -115,9 +116,10 @@ function renderStats(d) {
             ${streakSpark.area ? '<path d="' + streakSpark.area + '" fill="url(#scSparkFill)"/>' : ''}
             ${streakSpark.line ? '<path d="' + streakSpark.line + '" fill="none" stroke="url(#scSparkLine)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' : ''}
             ${streakSpark.last ? '<circle cx="' + streakSpark.last.x.toFixed(1) + '" cy="' + streakSpark.last.y.toFixed(1) + '" r="3" fill="#E07040" stroke="#fff" stroke-width="1.5"/>' : ''}
+            ${(() => { const dAbbr = S('stats','day_abbr') || ['Ya','Du','Se','Ch','Pa','Ju','Sh']; const wLen = weekly ? weekly.length : 0; if (wLen < 2) return ''; return weekly.map((w, wi) => { const xp = 2 + (wi / (wLen - 1)) * 116; return '<text x="'+xp.toFixed(1)+'" y="40" text-anchor="middle" font-size="7" fill="var(--sub)" font-weight="600">'+dAbbr[new Date(w.date).getDay()]+'</text>'; }).join(''); })()}
           </svg>
         </div>
-        <div class="sc-foot">${svgStar} record: ${bestStreak}</div>
+        <div class="sc-foot">${svgStar} ${S('stats','record_label')}: ${bestStreak}</div>
       </div>
 
       <!-- 3. ENG ZAIF ODAT — donut -->
@@ -156,13 +158,13 @@ function renderStats(d) {
   const dayLabels = S('stats','day_abbr') || ['Ya','Du','Se','Ch','Pa','Ju','Sh'];
   const barsHtml = weekly.map((w, i) => {
     const pct   = w.total ? Math.round(w.count / w.total * 100) : 0;
-    const hPx   = Math.max(4, Math.round(pct * 0.7));
+    const hPx   = pct > 0 ? Math.max(8, Math.round(pct * 0.7)) : 4;
     const color = pct >= 80 ? '#4CAF7D' : pct >= 40 ? '#5B8DEF' : pct > 0 ? '#E07040' : '#C8CBD8';
     const isToday = w.date === today;
     return `
       <div class="bar-col">
-        <div class="bar-num" style="color:${pct > 0 ? color : 'var(--sub)'}">${pct > 0 ? pct + '%' : ''}</div>
-        <div class="bar-fill" style="height:${hPx}px;background:${color};${isToday ? 'box-shadow:0 0 0 2px '+color+'44,2px 2px 6px #B8BBCA,-2px -2px 6px #FFFFFF' : ''}"></div>
+        <div class="bar-num" style="color:${pct > 0 ? color : 'var(--sub)'}">${pct > 0 ? pct + '%' : '·'}</div>
+        <div class="bar-fill" style="height:${hPx}px;background:${color};${isToday ? 'box-shadow:0 0 0 2px '+color+'44,var(--sh-sm)' : ''}"></div>
         <div class="bar-lbl" style="${isToday ? 'color:var(--text);font-weight:700' : ''}">${dayLabels[new Date(w.date).getDay()]}</div>
       </div>`;
   }).join('');
@@ -215,7 +217,7 @@ function renderStats(d) {
       + '<path d="'+areaD+'" fill="url(#areaFill30)"/>'
       + '<path d="'+pathD+'" fill="none" stroke="url(#lineG30)" stroke-width="2.5" stroke-linecap="round"/>'
       + '<circle cx="'+last.x.toFixed(1)+'" cy="'+last.y.toFixed(1)+'" r="4" fill="'+dotColor+'" stroke="#fff" stroke-width="2"/>'
-      + '<text x="'+(last.x-2).toFixed(1)+'" y="'+(last.y-8).toFixed(1)+'" font-size="9" font-weight="800" fill="'+dotColor+'" text-anchor="end" font-family="DM Mono,monospace">'+lastPct+'%</text>'
+      + '<text x="'+(last.x > W-40 ? last.x-6 : last.x+6).toFixed(1)+'" y="'+(last.y-8).toFixed(1)+'" font-size="9" font-weight="800" fill="'+dotColor+'" text-anchor="'+(last.x > W-40 ? 'end' : 'start')+'" font-family="DM Mono,monospace">'+lastPct+'%</text>'
       + dateLabels + '</svg></div>';
   })();
 
@@ -232,74 +234,75 @@ function renderStats(d) {
     const barThis = Math.max(2, trend.this_week);
     const barPrev = Math.max(2, trend.prev_week);
     const barMax  = Math.max(barThis, barPrev, 1);
+
     trendHtml = `
-      <div style="background:var(--bg);box-shadow:var(--sh-sm);border-radius:16px;padding:14px 16px;margin-bottom:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px">${S('stats','weekly_trend')}</div>
-          <div style="display:flex;align-items:center;gap:5px">
-            <span style="font-size:22px;font-weight:800;color:${aColor};line-height:1">${arrow}</span>
-            <span style="font-size:13px;font-weight:700;color:${aColor}">${diff > 0 ? diff + '%' : ''}</span>
+      <div class="trend-card">
+        <div class="trend-header">
+          <div class="trend-title">${S('stats','weekly_trend')}</div>
+          <div class="trend-diff-pill" style="background:${aColor}15;color:${aColor}">
+            <span style="font-size:16px;line-height:1">${arrow}</span>
+            ${diff > 0 ? diff + '%' : ''}
           </div>
         </div>
-        <div style="display:flex;align-items:flex-end;gap:16px">
-          <div style="flex:1">
-            <div style="font-size:10px;color:var(--sub);margin-bottom:4px">${S('msg','prev_week')}</div>
-            <div style="height:8px;border-radius:4px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">
-              <div style="height:100%;border-radius:4px;background:#C8CBD8;width:${Math.round(barPrev/barMax*100)}%;transition:width .5s"></div>
-            </div>
-            <div style="font-size:12px;font-weight:700;color:var(--sub);margin-top:4px">${trend.prev_week}%</div>
+        <div class="trend-compare">
+          <div class="trend-compare-item">
+            <div class="trend-compare-label">${S('msg','prev_week')}</div>
+            <div class="trend-compare-bar"><div class="trend-compare-bar-fill" style="background:#C8CBD8;width:${Math.round(barPrev/barMax*100)}%"></div></div>
+            <div class="trend-compare-val" style="color:var(--sub)">${trend.prev_week}%</div>
           </div>
-          <div style="flex:1">
-            <div style="font-size:10px;color:var(--sub);margin-bottom:4px">${S('stats','this_week')}</div>
-            <div style="height:8px;border-radius:4px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">
-              <div style="height:100%;border-radius:4px;background:${aColor};width:${Math.round(barThis/barMax*100)}%;transition:width .5s"></div>
-            </div>
-            <div style="font-size:12px;font-weight:700;color:${aColor};margin-top:4px">${trend.this_week}%</div>
+          <div class="trend-compare-item">
+            <div class="trend-compare-label">${S('stats','this_week')}</div>
+            <div class="trend-compare-bar"><div class="trend-compare-bar-fill" style="background:${aColor};width:${Math.round(barThis/barMax*100)}%"></div></div>
+            <div class="trend-compare-val" style="color:${aColor}">${trend.this_week}%</div>
           </div>
         </div>
-        <div style="font-size:11px;color:${aColor};margin-top:10px;font-weight:600">${msg}</div>
-        <div style="margin-top:12px">
-          <div style="font-size:10px;color:var(--sub);margin-bottom:5px;font-weight:600;letter-spacing:.5px">${S('stats','trend_30_title').toUpperCase()}</div>
-          <svg viewBox="0 0 300 50" width="100%" height="50" preserveAspectRatio="none" style="display:block;overflow:visible">
-            <defs>
-              <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="${aColor}" stop-opacity="0.3"/>
-                <stop offset="100%" stop-color="${aColor}" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-            ${(() => {
-              if (!days_30 || days_30.length < 2) return '';
-              const span = days_30.length - 1;
-              const pts = days_30.map((day, i) => {
-                const match = (d.monthly || []).find(m => m.date === day);
-                const pct = match && match.total ? Math.round(match.count / match.total * 100) : (heatmap[day] ? 70 : 0);
-                const x = Math.round(i / span * 300);
-                const y = Math.round((1 - pct / 100) * 44) + 3;
-                return { x, y, pct };
-              });
-              const pathD = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p.x + ',' + p.y).join(' ');
-              const areaD = 'M' + pts[0].x + ',50 ' + pts.map(p => 'L' + p.x + ',' + p.y).join(' ') + ' L' + pts[pts.length-1].x + ',50 Z';
-              return '<path d="' + areaD + '" fill="url(#sparkGrad)"/><path d="' + pathD + '" fill="none" stroke="' + aColor + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
-            })()}
-          </svg>
-        </div>
-      </div>`;
+        <div class="trend-msg" style="color:${aColor}">${msg}</div>
+      </div>`; 
   }
 
-  // ── Heatmap (30 kun) ──
+  // ── Heatmap (30 kun — GitHub style) ──
+  // monthly arraydan har kunning % ni hisoblash
+  const monthlyMap = {};
+  (monthlyDays || []).forEach(m => { monthlyMap[m.date] = m.total ? Math.round(m.count / m.total * 100) : 0; });
+
+  // Kunlarni hafta kunlari bo'yicha joylashtirish (Du=0, Ya=6)
+  const hmDayLabels = S('stats','hm_week_days') || ['Du','Se','Ch','Pa','Ju','Sh','Ya'];
+
+  // 30 kunlik celllar — har biri hm-lv0/lv1/lv2/lv3
   const hmCells = days_30.map(d => {
-    const done    = heatmap[d];
+    const pctVal = monthlyMap[d] || (heatmap[d] ? 70 : 0);
+    const lvl = pctVal === 0 ? '' : pctVal < 40 ? 'hm-lv1' : pctVal < 80 ? 'hm-lv2' : 'hm-lv3';
     const isToday = d === today;
-    return `<div class="hm-cell ${done ? 'done' : ''} ${isToday ? 'today-cell' : ''}" title="${d}"></div>`;
-  }).join('');
+    return `<div class="hm-cell ${lvl} ${isToday ? 'today-cell' : ''}" title="${d}: ${pctVal}%"></div>`;
+  });
+
+  // Birinchi kunning hafta kuni (0=Du, 6=Ya for our layout; JS getDay: 0=Su)
+  const firstDate = new Date(days_30[0]);
+  const firstDayJS = firstDate.getDay(); // 0=Su, 1=Mo, ... 6=Sa
+  // Bizning grid: Du=0 row, Se=1, ... Ya=6
+  const firstDayRow = firstDayJS === 0 ? 6 : firstDayJS - 1;
+
+  // Bo'sh celllar qo'shish (birinchi kun to'g'ri qatorga tushishi uchun)
+  const padCells = Array(firstDayRow).fill('<div class="hm-cell" style="visibility:hidden"></div>');
+  const allHmCells = [...padCells, ...hmCells].join('');
+
+  // Hafta kun nomlari (7 ta)
+  const dayLabelsHtml = hmDayLabels.map(l => `<span>${l}</span>`).join('');
 
   const heatmapHtml = `
     <div class="heatmap-wrap">
       <div class="heatmap-title">${S('stats','heatmap_title')}</div>
-      <div class="heatmap-grid">${hmCells}</div>
-      <div class="heatmap-legend">
-        <div class="hm-leg" style="background:var(--bg);box-shadow:var(--sh-in)"></div> ${S('stats','not_done')}
-        <div class="hm-leg" style="background:var(--green);margin-left:10px"></div> ${S('stats','done')}
+      <div class="heatmap-outer">
+        <div class="heatmap-day-labels">${dayLabelsHtml}</div>
+        <div class="heatmap-grid">${allHmCells}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        <div class="heatmap-legend">
+          <div class="hm-leg" style="background:var(--bg);box-shadow:var(--sh-in)"></div> ${S('stats','hm_not_done')}
+          <div class="hm-leg hm-lv1" style="margin-left:8px"></div> ${S('stats','hm_partial')}
+          <div class="hm-leg hm-lv3" style="margin-left:8px"></div> ${S('stats','hm_full')}
+        </div>
+        <div style="font-size:9px;color:var(--sub);font-weight:600">${todayDone}/${todayTotal} ${S('stats','today_momentum').toLowerCase()}</div>
       </div>
     </div>`;
 
@@ -340,7 +343,7 @@ function renderStats(d) {
           <div class="hstat-icon">${h.icon}</div>
           <div class="hstat-info">
             <div class="hstat-name">${h.name}</div>
-            <div class="hstat-sub"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire${hIdx}" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire${hIdx})"/></svg> ${h.streak} ${S('today','days_streak')} streak</div>
+            <div class="hstat-sub"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire${hIdx}" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire${hIdx})"/></svg> ${h.streak} ${S('stats','streak_suffix')}</div>
           </div>
         </div>
         <div class="hstat-nums">
@@ -393,8 +396,8 @@ function renderStats(d) {
     <div class="section-title">${S('stats','general')}</div>
     ${sumHtml}
     ${barChartHtml}
-    ${areaChartHtml}
     ${trendHtml}
+    ${areaChartHtml}
     ${heatmapHtml}
     <button type="button" onclick="generateShareCard()" id="share-card-btn"
       style="width:100%;padding:14px 16px;border:none;border-radius:16px;cursor:pointer;
@@ -415,7 +418,7 @@ function renderStats(d) {
           <span style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px">${S('stats','per_habit')}</span>
         </div>
         <svg id="habit-stats-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
-          style="transition:transform .3s;flex-shrink:0">
+          style="transition:transform .3s;flex-shrink:0;transform:rotate(0deg)">
           <path d="M6 9l6 6 6-6" stroke="var(--sub)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
@@ -428,9 +431,9 @@ function renderStats(d) {
 function toggleHabitStats() {
   const body    = document.getElementById('habit-stats-body');
   const chevron = document.getElementById('habit-stats-chevron');
-  const open    = body.style.display === 'none';
-  body.style.display      = open ? 'block' : 'none';
-  chevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+  const isOpen  = body.style.display !== 'none';
+  body.style.display      = isOpen ? 'none' : 'block';
+  chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
 async function generateShareCard() {
