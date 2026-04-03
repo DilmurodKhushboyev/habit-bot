@@ -298,9 +298,9 @@ function renderStats(d) {
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
         <div class="heatmap-legend">
-          <div class="hm-leg" style="width:12px;height:12px;border-radius:3px;background:var(--bg);box-shadow:var(--sh-in)"></div> ${S('stats','hm_not_done')}
-          <div class="hm-leg hm-lv1" style="width:12px;height:12px;border-radius:3px;margin-left:8px"></div> ${S('stats','hm_partial')}
-          <div class="hm-leg hm-lv3" style="width:12px;height:12px;border-radius:3px;margin-left:8px"></div> ${S('stats','hm_full')}
+          <div class="hm-leg" style="background:var(--bg);box-shadow:var(--sh-in)"></div> ${S('stats','hm_not_done')}
+          <div class="hm-leg hm-lv1" style="margin-left:8px"></div> ${S('stats','hm_partial')}
+          <div class="hm-leg hm-lv3" style="margin-left:8px"></div> ${S('stats','hm_full')}
         </div>
         <div style="font-size:9px;color:var(--sub);font-weight:600">${todayDone}/${todayTotal} ${S('stats','today_momentum').toLowerCase()}</div>
       </div>
