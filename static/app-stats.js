@@ -750,9 +750,11 @@ async function generateShareCard() {
       ctx.textAlign='left'; ctx.font=`700 16px ${FS}`; ctx.fillStyle=P.sub;
       ctx.fillText(S('stats','month_chart').toUpperCase(), pad+14, Y+14);
       ctx.font=`900 28px ${FM}`; ctx.fillStyle=P.text;
-      ctx.fillText(avg30+'%', pad+14, Y+44);
+      const avg30Txt = avg30+'%';
+      ctx.fillText(avg30Txt, pad+14, Y+44);
+      const avg30W = ctx.measureText(avg30Txt).width;
       ctx.font=`400 14px ${FS}`; ctx.fillStyle=P.sub;
-      ctx.fillText(S('stats','avg_30'), pad+14+ctx.measureText(avg30+'%').width+10, Y+44);
+      ctx.fillText(S('stats','avg_30'), pad+18+avg30W, Y+44);
 
       const chartTop=Y+56, chartBot=chartTop+aH;
       const pts30=pcts30.map((p,i)=>({
@@ -828,14 +830,14 @@ async function generateShareCard() {
       });
       // Legend
       const legY=gridY+7*(cellSz+cellGap)+6;
-      ctx.textAlign='left';ctx.font=`500 13px ${FS}`;ctx.fillStyle=P.sub;
+      ctx.textAlign='left';ctx.font=`500 10px ${FS}`;ctx.fillStyle=P.sub;
       const legColors=[isDark?P.raised:P.bg2, green+'55', green+'99', green];
       const legLabels=[S('stats','hm_not_done'),S('stats','hm_partial'),'',S('stats','hm_full')];
-      let legX=gridX;
+      let legX=pad+14;
       legColors.forEach((lc,li)=>{
-        rrect(legX,legY,12,12,3);ctx.fillStyle=lc;ctx.fill();
-        if(legLabels[li]){ctx.fillStyle=P.sub;ctx.fillText(legLabels[li],legX+16,legY+10);legX+=ctx.measureText(legLabels[li]).width+30;}
-        else{legX+=18;}
+        rrect(legX,legY,10,10,2);ctx.fillStyle=lc;ctx.fill();
+        if(legLabels[li]){ctx.font=`500 10px ${FS}`;ctx.fillStyle=P.sub;ctx.fillText(legLabels[li],legX+14,legY+9);legX+=ctx.measureText(legLabels[li]).width+22;}
+        else{legX+=16;}
       });
       Y+=hmH+40;
     }
