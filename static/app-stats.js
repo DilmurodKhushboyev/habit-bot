@@ -482,6 +482,7 @@ async function generateShareCard() {
 
   } catch(e) {
     console.warn('Share card error:', e);
+    alert('Share xato: ' + e.message);
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = _btnOrigHTML; }
   }
@@ -945,6 +946,7 @@ async function shareStory() {
     setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
   } catch(e) {
     console.warn('Story share error:', e);
+    alert('Story xato: ' + e.message);
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = _btnOrig; }
   }
