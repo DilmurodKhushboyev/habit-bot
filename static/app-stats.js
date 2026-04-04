@@ -1,4 +1,5 @@
 // ── STATISTIKA ──
+alert('app-stats v425 yuklandi!');
 
 // Reyting sahifasi uchun (page-stats) — faqat rating + guruh/do'st
 async function loadStats() {
