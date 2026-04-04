@@ -174,7 +174,7 @@ index.html (WebApp entry point)
 |------|----------|----------|
 | `config.py` | 39 | `BOT_TOKEN`, `ADMIN_ID`, `MONGO_URI`, MongoDB ulanish va indekslar |
 | `database.py` | 111 | `load_user`, `save_user`, `load_group`, `save_group`, `load_all_users` (60s cache), `count_users`, `user_exists` (3x retry) |
-| `texts.py` | ~368 | `LANGS` dict — uz/en/ru (3 til). `btn_ack` — xabarni o'chirish tugmasi. Repeat odat kalitlari: `habit_type_choose`, `ask_repeat_count`, `ask_repeat_first_time`, `ask_repeat_next_time`, `repeat_progress`, `btn_type_simple`, `btn_type_repeat`, `btn_no_time` |
+| `texts.py` | ~368 | `LANGS` dict — uz/en/ru (3 til). `btn_ack` — xabarni o'chirish tugmasi. Repeat odat kalitlari: `habit_type_choose`, `ask_repeat_count`, `ask_repeat_first_time`, `ask_repeat_next_time`, `repeat_progress`, `btn_type_simple`, `btn_type_repeat`, `btn_no_time`. `weekly_share_caption` — share card caption (HTML `<b>` bold format, 3 tilda) |
 | `motivation.py` | 111 | `MOTIVATSIYA` dict — uz/en/ru motivatsion gaplar |
 | `helpers.py` | 51 | `T(uid, key)` — tarjima, `get_lang()`, `today_uz5()`, `get_rank()`, `lang_keyboard()` |
 
@@ -223,7 +223,7 @@ index.html (WebApp entry point)
 | `flask_helpers.py` | 132 | CORS, rate limiter, `verify_init_data()`, `require_auth()` dekorator |
 | `flask_routes_core.py` | ~581 | `/api/rating`, `/api/profile` (GET + PUT), `/api/habits` CRUD (repeat\_times qo'llab-quvvatlaydi: GET da `times` qaytaradi, POST/PUT da `repeat_times`/`times` qabul qiladi — ~~POST da 15 ta odat limiti~~ **VAQTINCHA OʻCHIRILGAN**), `/api/groups` CRUD. **Import tuzatish:** `mongo_db`, `mongo_col` (config dan), `ACHIEVEMENTS` qo'shildi |
 | `flask_routes_data.py` | 496 | `/api/today` (har bir odatda `days_66_done` va `times` qaytaradi), `/api/checkin` (bajarish logikasi), `/api/stats` |
-| `flask_routes_extra.py` | ~822 | `/api/achievements`, `/api/shop` (buy da `owned` qaytaradi), `/api/friends`, `/api/challenges`, `/api/reminder` (repeat\_times, reminder\_enabled, repeat qo'llab-quvvatlaydi), `/health`, `/favicon.ico` (204), webhook. **Import tuzatish:** `telebot`, `InlineKeyboardMarkup/Button`, `ACHIEVEMENTS as _ACHIEVEMENTS`, `CAT_LABELS` qo'shildi |
+| `flask_routes_extra.py` | ~822 | `/api/achievements`, `/api/shop` (buy da `owned` qaytaradi), `/api/friends`, `/api/challenges`, `/api/reminder` (repeat\_times, reminder\_enabled, repeat qo'llab-quvvatlaydi), `/api/share-card` (`parse_mode="HTML"` — caption da `<b>` qalin matn qo'llab-quvvatlaydi), `/health`, `/favicon.ico` (204), webhook. **Import tuzatish:** `telebot`, `InlineKeyboardMarkup/Button`, `ACHIEVEMENTS as _ACHIEVEMENTS`, `CAT_LABELS` qo'shildi |
 
 ### Frontend (Telegram WebApp)
 

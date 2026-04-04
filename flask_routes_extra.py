@@ -751,7 +751,7 @@ def register_extra_routes(app):
             kb.row(
                 InlineKeyboardButton(T(uid, "share_del_btn"), callback_data="share_del")
             )
-            sent = bot.send_photo(uid, photo_bytes, caption=caption_text, reply_markup=kb)
+            sent = bot.send_photo(uid, photo_bytes, caption=caption_text, parse_mode="HTML", reply_markup=kb)
             return jsonify({"ok": True})
         except Exception as e:
             print(f"[share-card] xato: {e}")
