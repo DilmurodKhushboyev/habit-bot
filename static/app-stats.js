@@ -399,14 +399,24 @@ function renderStats(d) {
     ${trendHtml}
     ${areaChartHtml}
     ${heatmapHtml}
-    <button type="button" onclick="generateShareCard()" id="share-card-btn"
-      style="width:100%;padding:14px 16px;border:none;border-radius:16px;cursor:pointer;
-        background:linear-gradient(135deg,#5B8DEF,#A78BFA);color:#fff;
-        font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;
-        margin-bottom:8px;box-shadow:0 4px 12px #5B8DEF33">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v13" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      ${S('stats','share_btn')}
-    </button>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button type="button" onclick="shareStory()" id="share-story-btn"
+        style="flex:1;padding:14px 10px;border:none;border-radius:16px;cursor:pointer;
+          background:linear-gradient(135deg,#E07040,#F6C93E);color:#fff;
+          font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;
+          box-shadow:0 4px 12px #E0704033">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#fff" opacity=".3"/><circle cx="12" cy="12" r="4" fill="#fff"/></svg>
+        ${S('stats','share_story')}
+      </button>
+      <button type="button" onclick="generateShareCard()" id="share-card-btn"
+        style="flex:1;padding:14px 10px;border:none;border-radius:16px;cursor:pointer;
+          background:linear-gradient(135deg,#5B8DEF,#A78BFA);color:#fff;
+          font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;
+          box-shadow:0 4px 12px #5B8DEF33">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v13" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        ${S('stats','share_btn')}
+      </button>
+    </div>
     <canvas id="share-canvas" style="display:none"></canvas>
     <div style="margin-top:16px">
       <button type="button" onclick="toggleHabitStats()" id="habit-stats-btn"
@@ -445,6 +455,39 @@ async function generateShareCard() {
     btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="animation:spin 1s linear infinite"><circle cx="12" cy="12" r="10" stroke="#fff3" stroke-width="3"/><path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg> ' + ({"uz":"Yuklanmoqda...","ru":"Загрузка...","en":"Loading..."}[currentLang] || "Yuklanmoqda...");
   }
   try {
+    await _renderShareCanvas();
+    const canvas = document.getElementById('share-canvas');
+    if (!canvas) return;
+
+    // ── Rasmni ulashish (download) ──
+    await new Promise((resolve) => {
+      canvas.toBlob(async function(blob) {
+        if (!blob) { resolve(); return; }
+        try {
+          const blobUrl = URL.createObjectURL(blob);
+          if (window.Telegram?.WebApp?.downloadFile) {
+            window.Telegram.WebApp.downloadFile({url: blobUrl, file_name: 'super_habits.png'});
+          } else {
+            const a = document.createElement('a');
+            a.href = blobUrl; a.download = 'super_habits.png';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          }
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+        } catch(se) {
+          console.warn('Share error:', se);
+        }
+        resolve();
+      }, 'image/png');
+    });
+
+  } catch(e) {
+    console.warn('Share card error:', e);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = _btnOrigHTML; }
+  }
+}
+
+async function _renderShareCanvas() {
     const d = data.stats;
     if (!d) return;
     const s = d.summary;
@@ -872,34 +915,38 @@ async function generateShareCard() {
       canvas.width = W; canvas.height = finalH;
       ctx.drawImage(trimmed, 0, 0);
     }
+}
 
-    // ── Telegram chatga yuborish ──
-    await new Promise((resolve) => {
-      canvas.toBlob(async function(blob) {
-        if (!blob) { resolve(); return; }
-        try {
-          const formData = new FormData();
-          formData.append('photo', blob, 'weekly.png');
-          const res = await fetch(`${API}/share-card/${userId}`, {
-            method: 'POST',
-            headers: { 'X-Init-Data': initData, 'X-User-Id': String(userId) },
-            body: formData
-          });
-          const r = await res.json();
-          if (r.ok) {
-            if (window.Telegram?.WebApp?.close) window.Telegram.WebApp.close();
-          }
-        } catch(se) {
-          console.warn('Share error:', se);
-        }
-        resolve();
-      }, 'image/png');
-    });
+async function shareStory() {
+  const btn = document.getElementById('share-story-btn');
+  let _btnOrig = '';
+  if (btn) {
+    _btnOrig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="animation:spin 1s linear infinite"><circle cx="12" cy="12" r="10" stroke="#fff3" stroke-width="3"/><path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>';
+  }
+  try {
+    await _renderShareCanvas();
+    const canvas = document.getElementById('share-canvas');
+    if (!canvas) return;
 
+    const blob = await new Promise(r => canvas.toBlob(b => r(b), 'image/png'));
+    if (!blob) return;
+    const blobUrl = URL.createObjectURL(blob);
+
+    if (window.Telegram?.WebApp?.shareToStory) {
+      window.Telegram.WebApp.shareToStory(blobUrl, {
+        text: '@Super_habits_bot',
+        widget_link: { url: 'https://t.me/Super_habits_bot', name: 'Super Habits' }
+      });
+    } else {
+      showToast(S('msg','story_not_supported'));
+    }
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
   } catch(e) {
-    console.warn('Share card error:', e);
+    console.warn('Story share error:', e);
   } finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = _btnOrigHTML; }
+    if (btn) { btn.disabled = false; btn.innerHTML = _btnOrig; }
   }
 }
 
