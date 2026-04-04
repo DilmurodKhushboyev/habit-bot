@@ -459,26 +459,11 @@ async function generateShareCard() {
     const canvas = document.getElementById('share-canvas');
     if (!canvas) return;
 
-    // ── Rasmni ulashish (download) ──
-    await new Promise((resolve) => {
-      canvas.toBlob(async function(blob) {
-        if (!blob) { resolve(); return; }
-        try {
-          const blobUrl = URL.createObjectURL(blob);
-          if (window.Telegram?.WebApp?.downloadFile) {
-            window.Telegram.WebApp.downloadFile({url: blobUrl, file_name: 'super_habits.png'});
-          } else {
-            const a = document.createElement('a');
-            a.href = blobUrl; a.download = 'super_habits.png';
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-          }
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-        } catch(se) {
-          console.warn('Share error:', se);
-        }
-        resolve();
-      }, 'image/png');
-    });
+    // ── Rasmni download qilish ──
+    const dataUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataUrl; a.download = 'super_habits.png';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
 
   } catch(e) {
     console.warn('Share card error:', e);
@@ -931,19 +916,16 @@ async function shareStory() {
     const canvas = document.getElementById('share-canvas');
     if (!canvas) return;
 
-    const blob = await new Promise(r => canvas.toBlob(b => r(b), 'image/png'));
-    if (!blob) return;
-    const blobUrl = URL.createObjectURL(blob);
+    const dataUrl = canvas.toDataURL('image/png');
 
     if (window.Telegram?.WebApp?.shareToStory) {
-      window.Telegram.WebApp.shareToStory(blobUrl, {
+      window.Telegram.WebApp.shareToStory(dataUrl, {
         text: '@Super_habits_bot',
         widget_link: { url: 'https://t.me/Super_habits_bot', name: 'Super Habits' }
       });
     } else {
       showToast(S('msg','story_not_supported'));
     }
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
   } catch(e) {
     console.warn('Story share error:', e);
     alert('Story xato: ' + e.message);
