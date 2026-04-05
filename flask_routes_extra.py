@@ -117,24 +117,6 @@ def register_extra_routes(app):
             "gift_box":       {"uz":(T(uid,"stars_item_gift_box"),   T(uid,"stars_desc_gift_box")),
                                "ru":(T(uid,"stars_item_gift_box"),   T(uid,"stars_desc_gift_box")),
                                "en":(T(uid,"stars_item_gift_box"),   T(uid,"stars_desc_gift_box"))},
-            "stars_100pts":   {"uz":(T(uid,"stars_item_100pts"),     T(uid,"stars_desc_100pts")),
-                               "ru":(T(uid,"stars_item_100pts"),     T(uid,"stars_desc_100pts")),
-                               "en":(T(uid,"stars_item_100pts"),     T(uid,"stars_desc_100pts"))},
-            "stars_500pts":   {"uz":(T(uid,"stars_item_500pts"),     T(uid,"stars_desc_500pts")),
-                               "ru":(T(uid,"stars_item_500pts"),     T(uid,"stars_desc_500pts")),
-                               "en":(T(uid,"stars_item_500pts"),     T(uid,"stars_desc_500pts"))},
-            "badge_diamond":  {"uz":(T(uid,"stars_item_badge_dia"),  T(uid,"stars_desc_badge_dia")),
-                               "ru":(T(uid,"stars_item_badge_dia"),  T(uid,"stars_desc_badge_dia")),
-                               "en":(T(uid,"stars_item_badge_dia"),  T(uid,"stars_desc_badge_dia"))},
-            "pet_dragon":     {"uz":(T(uid,"stars_item_pet_drag"),   T(uid,"stars_desc_pet_drag")),
-                               "ru":(T(uid,"stars_item_pet_drag"),   T(uid,"stars_desc_pet_drag")),
-                               "en":(T(uid,"stars_item_pet_drag"),   T(uid,"stars_desc_pet_drag"))},
-            "premium_week":   {"uz":(T(uid,"stars_item_prem_week"),  T(uid,"stars_desc_prem_week")),
-                               "ru":(T(uid,"stars_item_prem_week"),  T(uid,"stars_desc_prem_week")),
-                               "en":(T(uid,"stars_item_prem_week"),  T(uid,"stars_desc_prem_week"))},
-            "premium_month":  {"uz":(T(uid,"stars_item_prem_month"), T(uid,"stars_desc_prem_month")),
-                               "ru":(T(uid,"stars_item_prem_month"), T(uid,"stars_desc_prem_month")),
-                               "en":(T(uid,"stars_item_prem_month"), T(uid,"stars_desc_prem_month"))},
         }
         shop_items = [
             {"id": "shield_1",    "cat": "protection", "emoji": "\U0001f6e1",  "price_ball": SHOP_PRICES.get("shield_1", 0),    "price_stars": 0},
@@ -152,12 +134,6 @@ def register_extra_routes(app):
             {"id": "jon_restore", "cat": "bonus",      "emoji": "\u2764\ufe0f", "price_ball": SHOP_PRICES.get("jon_restore", 0), "price_stars": 0},
             # ── Stars mahsulotlar ──
             {"id": "gift_box",       "cat": "gift",     "emoji": "\U0001f381",           "price_ball": 0, "price_stars": SHOP_STARS_PRICES.get("gift_box", 5)},
-            {"id": "stars_100pts",   "cat": "stars",    "emoji": "\u2b50",                "price_ball": 0, "price_stars": SHOP_STARS_PRICES.get("stars_100pts", 10)},
-            {"id": "stars_500pts",   "cat": "stars",    "emoji": "\U0001f31f",            "price_ball": 0, "price_stars": SHOP_STARS_PRICES.get("stars_500pts", 40)},
-            {"id": "badge_diamond",  "cat": "badge",    "emoji": "\U0001f48e",            "price_ball": 0, "price_stars": SHOP_STARS_PRICES.get("badge_diamond", 25)},
-            {"id": "pet_dragon",     "cat": "pet",      "emoji": "\U0001f409",            "price_ball": 0, "price_stars": SHOP_STARS_PRICES.get("pet_dragon", 30)},
-            {"id": "premium_week",   "cat": "premium",  "emoji": "\U0001f451",            "price_ball": 0, "price_stars": SHOP_STARS_PRICES.get("premium_week", 50)},
-            {"id": "premium_month",  "cat": "premium",  "emoji": "\U0001f3c6",            "price_ball": 0, "price_stars": SHOP_STARS_PRICES.get("premium_month", 150)},
         ]
         for item in shop_items:
             tr = _shop_i18n.get(item["id"], {}).get(lang, _shop_i18n.get(item["id"], {}).get("uz", ("",""))  )
@@ -317,21 +293,9 @@ def register_extra_routes(app):
         # T() dan nom va tavsifni olish (texts.py — markazlashtirilgan)
         _names = {
             "gift_box":       T(uid, "stars_item_gift_box"),
-            "stars_100pts":   T(uid, "stars_item_100pts"),
-            "stars_500pts":   T(uid, "stars_item_500pts"),
-            "badge_diamond":  T(uid, "stars_item_badge_dia"),
-            "pet_dragon":     T(uid, "stars_item_pet_drag"),
-            "premium_week":   T(uid, "stars_item_prem_week"),
-            "premium_month":  T(uid, "stars_item_prem_month"),
         }
         _descs = {
             "gift_box":       T(uid, "stars_desc_gift_box"),
-            "stars_100pts":   T(uid, "stars_desc_100pts"),
-            "stars_500pts":   T(uid, "stars_desc_500pts"),
-            "badge_diamond":  T(uid, "stars_desc_badge_dia"),
-            "pet_dragon":     T(uid, "stars_desc_pet_drag"),
-            "premium_week":   T(uid, "stars_desc_prem_week"),
-            "premium_month":  T(uid, "stars_desc_prem_month"),
         }
         item_title = _names.get(item_id, item_id)
         item_desc  = _descs.get(item_id, "")

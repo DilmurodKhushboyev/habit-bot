@@ -139,6 +139,8 @@ LANGS = {
         "bozor_reset_no":    "❌ Yo'q",
         "bozor_sub_ask":     "➖ *Ballarni olib tashlash*\n\n⭐ Joriy balingiz: *{points} ball*\n\nQancha ball olib tashlansin?",
         "bozor_btn_back":    "⬅️ Orqaga",
+        "stars_item_gift_box": "🎁 Sovga qutisi",
+        "stars_desc_gift_box": "Tasodifiy mukofot: 100/200/500 ball, streak himoyasi yoki XP Booster",
     },
     "en": {
         "choose_lang":       "🌐 Choose language:",
@@ -275,6 +277,8 @@ LANGS = {
         "bozor_reset_no":    "❌ No",
         "bozor_sub_ask":     "➖ *Deduct Points*\n\n⭐ Current points: *{points} pts*\n\nHow many points to deduct?",
         "bozor_btn_back":    "⬅️ Back",
+        "stars_item_gift_box": "🎁 Gift Box",
+        "stars_desc_gift_box": "Random reward: 100/200/500 points, streak shield or XP Booster",
     },
     "ru": {
         "choose_lang":       "🌐 Выберите язык:",
@@ -411,6 +415,8 @@ LANGS = {
         "bozor_reset_no":    "❌ Нет",
         "bozor_sub_ask":     "➖ *Списание баллов*\n\n⭐ Текущие баллы: *{points} б.*\n\nСколько баллов списать?",
         "bozor_btn_back":    "⬅️ Назад",
+        "stars_item_gift_box": "🎁 Подарочная коробка",
+        "stars_desc_gift_box": "Случайная награда: 100/200/500 очков, защита стрика или XP Бустер",
     },
 }
 
