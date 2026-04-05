@@ -476,6 +476,8 @@ async function addFriend(fid, fname, btn) {
 let _shopData = null;
 let _shopContentId = 'bozor-content';
 let _shopCat  = 'all';
+// ── Double-tap guard: sotib olish/sotish/aktivlashtirish jarayonida qulf ──
+const _shopActionLock = new Set();
 
 async function loadShop() {
   try {
@@ -541,13 +543,15 @@ function renderShop(d) {
   // ── Kategoriya filtrlari ──
   const visItems = items.filter(i => _shopCat === 'all' || i.cat === _shopCat);
   const cats = [
-    ['all',S('bozor','all')],
+    ['all',       S('bozor','all')],
+    ['premium',   '👑 '+S('shop','cat_premium')],
+    ['stars',     '⭐ '+S('shop','cat_stars')],
     ['protection',svgShield+S('bozor','protection')],
-    ['bonus',svgBolt+S('bozor','bonus')],
-    ['badge','🏅 '+S('shop','cat_badge')],
-    ['pet','🐾 '+S('shop','cat_pet')],
-    ['car','🚗 '+S('shop','cat_car')],
-    ['gift',S('shop','gift')]
+    ['bonus',     svgBolt+S('bozor','bonus')],
+    ['badge',     '🏅 '+S('shop','cat_badge')],
+    ['pet',       '🐾 '+S('shop','cat_pet')],
+    ['car',       '🚗 '+S('shop','cat_car')],
+    ['gift',      S('shop','gift')]
   ];
   const catBtns = cats.map(([k,l]) =>
     `<button onclick="setShopCat('${k}')" class="shop-cat-btn${_shopCat===k?' active':''}" type="button">${l}</button>`
@@ -561,7 +565,7 @@ function renderShop(d) {
     const noMoney  = hasBall && points < item.price_ball;
     const pct      = hasBall ? Math.min(100, Math.round(points / item.price_ball * 100)) : 0;
 
-    return `<div class="shop-item${cantBuy?' sold-out':''}">
+    return `<div class="shop-item${cantBuy?' sold-out':''}" data-cat="${item.cat}">
       <div class="shop-item-top">
         <div class="shop-item-emoji">${item.emoji}</div>
         <div class="shop-item-info">
@@ -613,6 +617,11 @@ function setShopCat(cat) {
 }
 
 async function buyItem(itemId, method) {
+  // ── Double-tap guard ──
+  const lockKey = `buy_${itemId}_${method}`;
+  if (_shopActionLock.has(lockKey)) return;
+  _shopActionLock.add(lockKey);
+  try {
   if (method === 'stars') {
     try {
       const res = await fetch(`${API}/shop/${userId}/stars_invoice`, {
@@ -659,11 +668,18 @@ async function buyItem(itemId, method) {
     const toast = document.getElementById('toast-shop');
     if (toast) { toast.textContent = S('shop','buy_success'); toast.className = 'toast show'; setTimeout(()=>toast.className='toast',2500); }
   } catch(e) { showToast('❌ ' + S('msg','network_error'), true); }
+  } finally {
+    _shopActionLock.delete(lockKey);
+  }
 }
 
 async function sellItem(itemId, itemName, refund) {
+  // ── Double-tap guard ──
+  const lockKey = `sell_${itemId}`;
+  if (_shopActionLock.has(lockKey)) return;
   // confirm() Telegram WebApp da ishlamaydi — showPopup ishlatamiz
   const _doSell = async () => {
+  _shopActionLock.add(lockKey);
   try {
     // apiFetch !res.ok da throw qiladi, shuning uchun to'g'ridan fetch ishlatamiz
     const res = await fetch(`${API}/shop/${userId}/sell`, {
@@ -710,6 +726,8 @@ async function sellItem(itemId, itemName, refund) {
   } catch(e) {
     const _t = document.getElementById('toast-shop');
     if (_t) { _t.textContent = '❌ ' + S('msg','error_label') + ': ' + e.message; _t.className = 'toast show err'; setTimeout(()=>_t.className='toast',3000); }
+  } finally {
+    _shopActionLock.delete(lockKey);
   }
   };
   if (window.Telegram?.WebApp?.showPopup) {
@@ -724,6 +742,10 @@ async function sellItem(itemId, itemName, refund) {
 }
 
 async function activateItem(itemId, deactivate = false) {
+  // ── Double-tap guard ──
+  const lockKey = `activate_${itemId}`;
+  if (_shopActionLock.has(lockKey)) return;
+  _shopActionLock.add(lockKey);
   try {
     const res = await fetch(`${API}/shop/${userId}/activate`, {
       method: 'POST',
@@ -746,6 +768,9 @@ async function activateItem(itemId, deactivate = false) {
     const msg = deactivate ? S('shop','deactivate_success') : S('shop','activate_success');
     if (toast) { toast.textContent = msg; toast.className = 'toast show'; setTimeout(()=>toast.className='toast',2000); }
   } catch(e) { showToast('❌ ' + S('msg','network_error'), true); }
+  finally {
+    _shopActionLock.delete(lockKey);
+  }
 }
 
 // ── CHALLENGE ──
