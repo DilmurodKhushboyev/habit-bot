@@ -47,6 +47,38 @@ def register_data_routes(app):
         boosted = round(base_points * (1 + total_percent / 100))
         return max(boosted, base_points + 1)
 
+    def _apply_pet_dog_bonus(u, today, is_undo=False):
+        """
+        pet_dog faol bo'lsa — kunlik BIRINCHI checkin'ga +N ball qo'shimcha.
+        N qiymati: SHOP_BONUS_EFFECTS["pet_dog"]["value"] (config dan).
+        is_undo=False: DONE holati — agar bugun bonus berilmagan bo'lsa, beriladi.
+        is_undo=True:  UNDO holati — agar bugun bonus berilgan bo'lsa, qaytariladi.
+        Returns: qo'llanilgan bonus miqdori (0 agar qo'llanmasa).
+        """
+        if u.get("active_pet", "") != "pet_dog":
+            return 0
+        effect = SHOP_BONUS_EFFECTS.get("pet_dog")
+        if not effect or effect.get("type") != "daily_bonus":
+            return 0
+        bonus_value = effect.get("value", 0)
+        if bonus_value <= 0:
+            return 0
+        last_bonus_date = u.get("pet_dog_last_bonus_date", "")
+        if is_undo:
+            # UNDO: agar bugun bonus berilgan bo'lsa, qaytarish
+            if last_bonus_date == today:
+                u["points"] = max(0, u.get("points", 0) - bonus_value)
+                u["pet_dog_last_bonus_date"] = ""
+                return bonus_value
+            return 0
+        else:
+            # DONE: agar bugun birinchi marta bo'lsa, bonus berish
+            if last_bonus_date != today:
+                u["points"] = u.get("points", 0) + bonus_value
+                u["pet_dog_last_bonus_date"] = today
+                return bonus_value
+            return 0
+
     @app.route("/api/today/<int:uid>")
     @require_auth
     def api_today(uid):
@@ -126,8 +158,11 @@ def register_data_routes(app):
                             _undo_base = round(_undo_base * 1.1)
                         _undo_base = _apply_item_bonuses(u, _undo_base)
                         u["points"] = max(0, u.get("points", 0) - _undo_base)
+                        # pet_dog kunlik bonusini qaytarish (agar bugun berilgan bo'lsa)
                         # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
+                        if not _still_done:
+                            _apply_pet_dog_bonus(u, today, is_undo=True)
                         if not _still_done and u.get("streak_last_date") == today:
                             u["streak"] = max(0, u.get("streak", 0) - 1)
                             u["streak_last_date"] = ""
@@ -152,6 +187,8 @@ def register_data_routes(app):
                                 _base = round(_base * 1.1)
                             _base = _apply_item_bonuses(u, _base)
                             u["points"] = u.get("points", 0) + _base
+                            # pet_dog kunlik birinchi checkin bonusi (faqat bir marta)
+                            _apply_pet_dog_bonus(u, today, is_undo=False)
                     h["done_today_count"] = done
                     h["done_date"] = today
                     is_done = done >= rep_count
@@ -171,6 +208,9 @@ def register_data_routes(app):
                         u["points"] = max(0, u.get("points", 0) - _undo_base)
                         # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
+                        # pet_dog kunlik bonusini qaytarish (agar bugun boshqa odat qolmagan bo'lsa)
+                        if not _still_done:
+                            _apply_pet_dog_bonus(u, today, is_undo=True)
                         if not _still_done and u.get("streak_last_date") == today:
                             u["streak"] = max(0, u.get("streak", 0) - 1)
                             u["streak_last_date"] = ""
@@ -190,6 +230,8 @@ def register_data_routes(app):
                             _base = round(_base * 1.1)
                         _base = _apply_item_bonuses(u, _base)
                         u["points"] = u.get("points", 0) + _base
+                        # pet_dog kunlik birinchi checkin bonusi (faqat bir marta)
+                        _apply_pet_dog_bonus(u, today, is_undo=False)
                         # Global streak: kuniga bir marta oshsin
                         if u.get("streak_last_date") != today:
                             u["streak"] = u.get("streak", 0) + 1
