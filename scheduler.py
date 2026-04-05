@@ -11,7 +11,7 @@ import threading
 from datetime import datetime, date, timedelta, timezone
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from config import ADMIN_ID, BOT_TOKEN, mongo_col, groups_col, mongo_db
+from config import ADMIN_ID, BOT_TOKEN, mongo_col, groups_col, mongo_db, SHOP_BONUS_EFFECTS
 from database import (load_user, save_user, load_all_users, load_group,
                       save_group, load_settings)
 from helpers import T, get_lang, today_uz5
@@ -136,6 +136,57 @@ def _check_streak_milestone(uid, new_streak):
         bot.send_message(uid, text, parse_mode="Markdown", reply_markup=ok_kb(uid))
     except Exception as e:
         print(f"[milestone] xato {uid}: {e}")
+
+def _try_pet_cat_save(udata, habit, today_str):
+    """
+    pet_cat faol va cooldown (7 kun) tugagan bo'lsa, streak'ni avtomatik saqlaydi.
+    Returns: True agar pet_cat ishlatilgan (streak saqlangan), False aks holda.
+
+    Mantiq:
+    1. active_pet == "pet_cat" emasmi — False
+    2. Cooldown: pet_cat_last_used_date bor va 7 kundan kam o'tgan — False
+    3. Aks holda: pet_cat_last_used_date = today, foydalanuvchiga xushxabar, True qaytariladi
+
+    Eslatma: Bu funksiya streak ni o'zgartirmaydi (chaqiruvchi oldindan saqlaydi).
+    """
+    if udata.get("active_pet", "") != "pet_cat":
+        return False
+    effect = SHOP_BONUS_EFFECTS.get("pet_cat")
+    if not effect or effect.get("type") != "streak_save":
+        return False
+    cooldown_days = effect.get("value", 7)
+    last_used = udata.get("pet_cat_last_used_date", "")
+    if last_used:
+        try:
+            from datetime import datetime as _dt
+            last_dt = _dt.strptime(last_used, "%Y-%m-%d")
+            today_dt = _dt.strptime(today_str, "%Y-%m-%d")
+            days_passed = (today_dt - last_dt).days
+            if days_passed < cooldown_days:
+                return False  # Cooldown tugamagan
+        except Exception:
+            pass  # Sana noto'g'ri bo'lsa, pet_cat ishlatilsin
+    # Pet_cat ishlatiladi
+    udata["pet_cat_last_used_date"] = today_str
+    return True
+
+def _apply_pet_rabbit_soften(udata, change):
+    """
+    pet_rabbit faol bo'lsa va jon kamayishi (change<0) bo'lsa, jazoni 50% yumshatadi.
+    Musbat change (jon o'sishi) yoki 0 ga tegmaydi.
+    Returns: yangi change qiymati.
+    """
+    if udata.get("active_pet", "") != "pet_rabbit":
+        return change
+    effect = SHOP_BONUS_EFFECTS.get("pet_rabbit")
+    if not effect or effect.get("type") != "jon_soften":
+        return change
+    if change >= 0:
+        return change  # Jon o'syapti — soften kerak emas
+    soften_percent = effect.get("value", 50)
+    # change manfiy: masalan -6.67. soften 50% → -3.33
+    softened = change * (1 - soften_percent / 100)
+    return softened
 
 def _uz5_to_utc(time_str):
     """UTC+5 vaqtni UTC ga o'giradi. Noto'g'ri bo'lsa None qaytaradi."""
@@ -295,7 +346,22 @@ def daily_reset():
                             except Exception:
                                 pass
                         else:
-                            habit["streak"] = 0
+                            # pet_cat orqali streak saqlashga urinish
+                            if _try_pet_cat_save(udata, habit, today_str):
+                                # Streak saqlandi — nollashga tegmaslik, xushxabar yuborish
+                                try:
+                                    bot.send_message(
+                                        int(uid),
+                                        f"🐱 *Mushugingiz streakingizni qutqardi!*\n\n"
+                                        f"*📌 Odat:* {habit['name']}\n"
+                                        f"*🔥 Streak:* {habit.get('streak', 0)} kun saqlandi\n\n"
+                                        f"_Keyingi qutqaruv — 7 kundan keyin._",
+                                        parse_mode="Markdown"
+                                    )
+                                except Exception:
+                                    pass
+                            else:
+                                habit["streak"] = 0
                 # done_today_count tozalash — lekin last_done ni faqat bajarilmagan bo'lsa nollash
                 habit["done_today_count"] = 0
                 if not fully_done:
@@ -344,8 +410,22 @@ def daily_reset():
                         except Exception:
                             pass
                     else:
-                        # Himoya yo'q — streak nollanadi
-                        habit["streak"] = 0
+                        # Himoya yo'q — pet_cat orqali streak saqlashga urinish
+                        if _try_pet_cat_save(udata, habit, today_str):
+                            # Streak saqlandi — nollashga tegmaslik, xushxabar yuborish
+                            try:
+                                bot.send_message(
+                                    int(uid),
+                                    f"🐱 *Mushugingiz streakingizni qutqardi!*\n\n"
+                                    f"*📌 Odat:* {habit['name']}\n"
+                                    f"*🔥 Streak:* {habit.get('streak', 0)} kun saqlandi\n\n"
+                                    f"_Keyingi qutqaruv — 7 kundan keyin._",
+                                    parse_mode="Markdown"
+                                )
+                            except Exception:
+                                pass
+                        else:
+                            habit["streak"] = 0
         # Jon hisoblash
         habits_list = udata.get("habits", [])
         n = len(habits_list)
@@ -361,6 +441,8 @@ def daily_reset():
             jon_before   = udata.get("jon", 100.0)
             step_per_one = 10.0 / n       # har 1 odat uchun ulush
             change       = (d - (n - d)) * step_per_one  # bajarilgan - bajarilmagan
+            # pet_rabbit: jon kamayishini 50% yumshatish (faqat change<0 bo'lsa)
+            change       = _apply_pet_rabbit_soften(udata, change)
             jon          = round(min(100.0, max(0.0, jon_before + change)), 1)
             udata["jon"] = jon
             changed = True
@@ -389,6 +471,7 @@ def daily_reset():
                     "jon":            udata.get("jon", 100),
                     "pending_shield": udata.get("pending_shield", {}),
                     "streak_shields": udata.get("streak_shields", 0),
+                    "pet_cat_last_used_date": udata.get("pet_cat_last_used_date", ""),
                 }
                 mongo_col.update_one({"_id": uid}, {"$set": update_data})
             except Exception:

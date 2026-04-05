@@ -102,7 +102,7 @@ SHOP_BONUS_EFFECTS = {
     # ── PETS: har biri o'ziga xos super-kuch ──
     "pet_cat":     {"type": "streak_save", "value": 7},      # 7 kunda 1 marta streak avtomatik saqlash
     "pet_dog":     {"type": "daily_bonus", "value": 2},      # Kunlik birinchi checkin'ga +2 ball
-    "pet_rabbit":  {"type": "jon_delay",   "value": 30},     # Jon kamaytirilishi +30 daqiqa kechikadi
+    "pet_rabbit":  {"type": "jon_soften",  "value": 50},     # Jon kamayishi 50% yumshoqroq (har kun ishlaydi)
 
     # ── CAR: ball bonus + vizual status ──
     "car_sport":   {"type": "points_percent", "value": 8},   # +8% har bir checkin ball'iga + reytingda gold ramka
