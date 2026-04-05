@@ -7,6 +7,7 @@ import random
 from datetime import datetime, date, timedelta, timezone
 from flask import jsonify, request
 
+from config import SHOP_BONUS_EFFECTS
 from database import load_user, save_user, load_all_users, load_group, save_group
 from helpers import T, get_lang, get_rank, today_uz5
 from texts import LANGS
@@ -25,6 +26,26 @@ def register_data_routes(app):
         60:  {"emoji": "🏆", "title": "60 kunlik streak!",  "bonus": 100},
         100: {"emoji": "👑", "title": "100 kunlik streak!", "bonus": 200},
     }
+
+    def _apply_item_bonuses(u, base_points):
+        """
+        Faol badge va car mahsulotlari asosida ball bonusini qoʻllaydi.
+        Stack qilinadi: badge + car foizlari qoʻshiladi (masalan, 12% + 8% = 20%).
+        Faqat `points_percent` turidagi mahsulotlar ishlatiladi.
+        Agar round natijasida bonus yoʻqolsa, majburiy +1 ball qoʻshiladi
+        (foydalanuvchi har doim badge foydasini koʻrsin).
+        """
+        total_percent = 0
+        for field in ("active_badge", "active_car"):
+            item_id = u.get(field, "")
+            effect = SHOP_BONUS_EFFECTS.get(item_id)
+            if effect and effect.get("type") == "points_percent":
+                total_percent += effect.get("value", 0)
+        if total_percent <= 0:
+            return base_points
+        # B variant: majburiy minimum +1 kafolat
+        boosted = round(base_points * (1 + total_percent / 100))
+        return max(boosted, base_points + 1)
 
     @app.route("/api/today/<int:uid>")
     @require_auth
@@ -103,6 +124,7 @@ def register_data_routes(app):
                             _undo_base = 10
                         if u.get("xp_booster_days", 0) > 0:
                             _undo_base = round(_undo_base * 1.1)
+                        _undo_base = _apply_item_bonuses(u, _undo_base)
                         u["points"] = max(0, u.get("points", 0) - _undo_base)
                         # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
@@ -128,6 +150,7 @@ def register_data_routes(app):
                                 _base = 10
                             if u.get("xp_booster_days", 0) > 0:
                                 _base = round(_base * 1.1)
+                            _base = _apply_item_bonuses(u, _base)
                             u["points"] = u.get("points", 0) + _base
                     h["done_today_count"] = done
                     h["done_date"] = today
@@ -144,6 +167,7 @@ def register_data_routes(app):
                             _undo_base = 10
                         if u.get("xp_booster_days", 0) > 0:
                             _undo_base = round(_undo_base * 1.1)
+                        _undo_base = _apply_item_bonuses(u, _undo_base)
                         u["points"] = max(0, u.get("points", 0) - _undo_base)
                         # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
@@ -164,6 +188,7 @@ def register_data_routes(app):
                             _base = 10
                         if u.get("xp_booster_days", 0) > 0:
                             _base = round(_base * 1.1)
+                        _base = _apply_item_bonuses(u, _base)
                         u["points"] = u.get("points", 0) + _base
                         # Global streak: kuniga bir marta oshsin
                         if u.get("streak_last_date") != today:
