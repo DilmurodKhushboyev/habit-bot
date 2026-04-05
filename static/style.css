@@ -1484,3 +1484,208 @@ body.dark @keyframes splIconPulse {
   0%, 80%, 100% { transform: scale(.6); opacity: .3; }
   40%           { transform: scale(1.1); opacity: 1; }
 }
+
+/* ══════════════════════════════════════════════
+   BOZOR / SHOP
+   ══════════════════════════════════════════════ */
+
+/* -- Ball banner (sahifa yuqorisi) -- */
+.shop-balance {
+  background: var(--bg);
+  box-shadow: var(--sh-card);
+  border-radius: 20px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.shop-balance-icon {
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #059669, #10B981);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, .25);
+}
+.shop-balance-info { flex: 1; }
+.shop-balance-label {
+  font-size: 11px; color: var(--sub);
+  text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+}
+.shop-balance-value {
+  font-size: 24px; font-weight: 800; color: var(--text);
+  margin-top: 2px;
+  transition: transform .3s, color .3s;
+}
+.shop-balance-value.updated {
+  transform: scale(1.15);
+  color: var(--green);
+}
+
+/* -- Kategoriya filtrlari (gorizontal scroll) -- */
+.shop-cats {
+  display: flex; gap: 6px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; padding: 2px 0 10px;
+  margin-bottom: 4px;
+}
+.shop-cats::-webkit-scrollbar { display: none; }
+.shop-cat-btn {
+  flex-shrink: 0;
+  border: none; background: none; border-radius: 10px;
+  padding: 7px 12px; font-size: 11px; font-weight: 600;
+  color: var(--sub); cursor: pointer; font-family: inherit;
+  transition: all .2s; white-space: nowrap;
+}
+.shop-cat-btn.active {
+  background: var(--bg); box-shadow: var(--sh-sm); color: var(--text);
+}
+
+/* -- Mahsulot kartochkasi -- */
+.shop-item {
+  background: var(--bg);
+  box-shadow: var(--sh-sm);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 10px;
+  transition: box-shadow .2s, transform .15s;
+  position: relative;
+}
+.shop-item:active { transform: scale(.985); }
+.shop-item.sold-out { opacity: .55; }
+.shop-item-top {
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.shop-item-emoji {
+  font-size: 36px; line-height: 1;
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: var(--sh-in);
+  flex-shrink: 0;
+}
+.shop-item-info { flex: 1; min-width: 0; }
+.shop-item-name {
+  font-size: 14px; font-weight: 700; color: var(--text);
+}
+.shop-item-desc {
+  font-size: 11px; color: var(--sub); margin-top: 3px; line-height: 1.4;
+}
+.shop-item-owned {
+  font-size: 10px; color: var(--green); margin-top: 4px;
+  display: flex; align-items: center; gap: 3px;
+}
+.shop-item-cat-label {
+  font-size: 10px; color: var(--sub);
+  display: flex; align-items: center; gap: 3px;
+}
+
+/* -- Narx progress bar -- */
+.shop-progress {
+  width: 100%; height: 6px; border-radius: 8px;
+  background: var(--bg); box-shadow: var(--sh-in);
+  overflow: hidden; margin: 10px 0 6px;
+}
+.shop-progress-fill {
+  height: 100%; border-radius: 8px;
+  background: linear-gradient(90deg, #059669, #10B981);
+  transition: width .4s ease;
+}
+
+/* -- Sotib olish tugmasi -- */
+.shop-buy-btn {
+  width: 100%; padding: 9px 6px;
+  border: none; border-radius: 10px;
+  font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: all .2s;
+}
+.shop-buy-btn.primary {
+  background: linear-gradient(135deg, #059669, #10B981);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(16, 185, 129, .2);
+}
+.shop-buy-btn.primary:active { transform: scale(.97); }
+.shop-buy-btn.disabled {
+  background: var(--bg); color: var(--sub);
+  box-shadow: var(--sh-in); cursor: not-allowed;
+}
+
+/* -- Stars tugmasi -- */
+.shop-stars-btn {
+  width: 100%; padding: 9px 6px;
+  border: none; border-radius: 10px;
+  font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  margin-top: 6px;
+  background: linear-gradient(135deg, #f59e0b, #eab308);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(245, 158, 11, .2);
+}
+.shop-stars-btn.disabled {
+  background: var(--bg); color: var(--sub);
+  box-shadow: var(--sh-in); cursor: not-allowed;
+}
+
+/* -- Sotish tugmasi -- */
+.shop-sell-btn {
+  padding: 5px 10px; border: none; border-radius: 10px;
+  font-size: 10px; font-weight: 700; cursor: pointer;
+  font-family: inherit; white-space: nowrap; flex-shrink: 0;
+  background: rgba(239, 68, 68, .08); color: #EF4444;
+  transition: all .2s;
+}
+.shop-sell-btn:active { transform: scale(.95); }
+
+/* -- Inventory bo'limi -- */
+.shop-inv-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg); border-radius: 14px;
+  box-shadow: var(--sh-sm); margin-bottom: 6px;
+  transition: box-shadow .2s;
+}
+.shop-inv-item.active-item {
+  box-shadow: 0 0 0 2px #10B981;
+}
+.shop-inv-item-emoji { font-size: 28px; line-height: 1; }
+.shop-inv-item-info { flex: 1; min-width: 0; }
+.shop-inv-item-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.shop-inv-item-meta { font-size: 10px; color: var(--sub); margin-top: 1px; }
+.shop-inv-item-meta .sell-hint { color: #059669; }
+
+/* -- Activate / Deactivate tugmalar -- */
+.shop-act-btn {
+  padding: 6px 12px; border: none; border-radius: 10px;
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  font-family: inherit; transition: all .2s;
+}
+.shop-act-btn.is-active {
+  background: rgba(16, 185, 129, .13); color: #10B981;
+}
+.shop-act-btn.not-active {
+  background: var(--bg); box-shadow: var(--sh-sm); color: var(--text);
+}
+
+/* -- Sotib olish animatsiyasi -- */
+@keyframes shopBuyPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(16, 185, 129, .35); }
+  70%  { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+.shop-item.just-bought { animation: shopBuyPulse .6s ease-out; }
+
+/* -- Empty state yaxshilangan -- */
+.shop-empty {
+  text-align: center; padding: 40px 20px; color: var(--sub);
+}
+.shop-empty-icon {
+  width: 56px; height: 56px; margin: 0 auto 12px;
+  border-radius: 16px; background: var(--bg); box-shadow: var(--sh-in);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+}
+.shop-empty-text { font-size: 13px; line-height: 1.5; }
+

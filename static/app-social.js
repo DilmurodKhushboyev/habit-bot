@@ -493,7 +493,17 @@ function renderShop(d) {
   const points   = d.points || 0;
   const inventory = d.inventory || {};
 
-  // Inventory bo'limi — faqat sotib olinganlar
+  // ── SVG ikonalar (bir marta define, qayta ishlatish) ──
+  const svgCheck = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgChkI" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#047857"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgChkI)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgChkI)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const svgShield = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgShSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#059669"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShSm)" opacity="0.85"/></svg>';
+  const svgBolt = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgBtSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBtSm)"/></svg>';
+  const svgGift = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgGift" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs><rect x="3" y="10" width="18" height="12" rx="2" stroke="url(#svgGift)" stroke-width="2"/><path d="M3 10h18v3H3zM12 10V22M12 10c0 0-2-5 0-7 1-1 3-1 3 1s-2 3-3 6M12 10c0 0 2-5 0-7-1-1-3-1-3 1s2 3 3 6" stroke="url(#svgGift)" stroke-width="1.5" stroke-linecap="round"/></svg>';
+  const svgActiveChk = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M7 12l4 4 6-7" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  // Kategoriya labeli
+  const _catIcon = (cat) => cat==='protection' ? svgShield+S('shop','protection') : cat==='bonus' ? svgBolt+S('shop','bonus') : svgGift+S('shop','gift');
+
+  // ── Inventory bo'limi ──
   const owned_items = items.filter(i => (i.owned || 0) > 0 || (inventory[i.id] || 0) > 0);
   const activePet   = d.active_pet   || '';
   const activeBadge = d.active_badge || '';
@@ -507,34 +517,20 @@ function renderShop(d) {
       const isActive = (item.cat==='pet' && activePet===item.id)
                     || (item.cat==='badge' && activeBadge===item.id)
                     || (item.cat==='car' && activeCar===item.id);
-      const _sellPrices = {badge_fire:100,badge_star:125,badge_secret:300,pet_cat:150,pet_dog:175,pet_rabbit:150,car_sport:250,shield_1:50,shield_3:125,bonus_2x:75,bonus_3x:150,xp_booster:200};
-      const sellRefund = _sellPrices[item.id] || 0;
-      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
-        background:var(--bg);border-radius:14px;box-shadow:${isActive?'0 0 0 2px #10B981':'var(--sh-sm)'};margin-bottom:6px">
-        <div style="font-size:28px;line-height:1">${item.emoji}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:700;color:var(--text)">${item.name}</div>
-          <div style="font-size:10px;color:var(--sub);margin-top:1px">${qty} ${S('shop','items_unit')}${sellRefund ? ' · <span style="color:#059669">' + S('msg','sell_price').replace('{n}', sellRefund) + '</span>' : ''}</div>
+      const sellRefund = item.sell_price || 0;
+      return `<div class="shop-inv-item${isActive?' active-item':''}">
+        <div class="shop-inv-item-emoji">${item.emoji}</div>
+        <div class="shop-inv-item-info">
+          <div class="shop-inv-item-name">${item.name}</div>
+          <div class="shop-inv-item-meta">${qty} ${S('shop','items_unit')}${sellRefund ? ' · <span class="sell-hint">' + S('msg','sell_price').replace('{n}', sellRefund) + '</span>' : ''}</div>
         </div>
         ${isActive
-          ? `<button onclick="activateItem('${item.id}', true)" type="button"
-              style="padding:6px 12px;border:none;border-radius:10px;font-size:11px;font-weight:700;
-                cursor:pointer;background:#10B98122;color:#10B981">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M7 12l4 4 6-7" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>${S('shop','active_label')}
-            </button>`
+          ? `<button onclick="activateItem('${item.id}', true)" type="button" class="shop-act-btn is-active">${svgActiveChk}${S('shop','active_label')}</button>`
           : canAct
-            ? `<button onclick="activateItem('${item.id}')" type="button"
-                style="padding:6px 12px;border:none;border-radius:10px;font-size:11px;font-weight:700;
-                  cursor:pointer;background:var(--bg);box-shadow:var(--sh-sm);color:var(--text)">
-                ${S('shop','activate_btn')}
-              </button>`
-            : `<div style="font-size:10px;color:var(--sub)">${item.cat==='protection'?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgShSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#059669"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShSm)" opacity="0.85"/></svg>${S('shop','protection')}`:item.cat==='bonus'?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgBtSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBtSm)"/></svg>${S('shop','bonus')}`:(`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgGift" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs><rect x="3" y="10" width="18" height="12" rx="2" stroke="url(#svgGift)" stroke-width="2"/><path d="M3 10h18v3H3zM12 10V22M12 10c0 0-2-5 0-7 1-1 3-1 3 1s-2 3-3 6M12 10c0 0 2-5 0-7-1-1-3-1-3 1s2 3 3 6" stroke="url(#svgGift)" stroke-width="1.5" stroke-linecap="round"/></svg>${S('shop','gift')}`)}</div>`
+            ? `<button onclick="activateItem('${item.id}')" type="button" class="shop-act-btn not-active">${S('shop','activate_btn')}</button>`
+            : `<div class="shop-item-cat-label">${_catIcon(item.cat)}</div>`
         }
-        ${sellRefund ? `<button onclick="sellItem('${item.id}', '${item.name}', ${sellRefund})" type="button"
-          style="padding:5px 10px;border:none;border-radius:10px;font-size:10px;font-weight:700;
-            cursor:pointer;background:#EF444418;color:#EF4444;white-space:nowrap;flex-shrink:0">
-          💰 ${S('msg','sell_title')}
-        </button>` : ''}
+        ${sellRefund ? `<button onclick="sellItem('${item.id}', '${item.name}', ${sellRefund})" type="button" class="shop-sell-btn">💰 ${S('msg','sell_title')}</button>` : ''}
       </div>`;
     }).join('');
     invHtml = `
@@ -542,64 +538,72 @@ function renderShop(d) {
       ${invCards}`;
   }
 
+  // ── Kategoriya filtrlari ──
   const visItems = items.filter(i => _shopCat === 'all' || i.cat === _shopCat);
   const cats = [
-    ['all',S('bozor','all')],['protection','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgShSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#059669"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShSm)" opacity="0.85"/></svg>'+S('bozor','protection')],['bonus','<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgBtSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBtSm)"/></svg>'+S('bozor','bonus')],
-    ['badge','🏅 '+S('shop','cat_badge')],['pet','🐾 '+S('shop','cat_pet')],['car','🚗 '+S('shop','cat_car')],['gift',[S('shop','gift')]]
+    ['all',S('bozor','all')],
+    ['protection',svgShield+S('bozor','protection')],
+    ['bonus',svgBolt+S('bozor','bonus')],
+    ['badge','🏅 '+S('shop','cat_badge')],
+    ['pet','🐾 '+S('shop','cat_pet')],
+    ['car','🚗 '+S('shop','cat_car')],
+    ['gift',S('shop','gift')]
   ];
   const catBtns = cats.map(([k,l]) =>
-    `<button onclick="setShopCat('${k}')" class="period-btn${_shopCat===k?' active':''}"
-      style="font-size:11px;padding:6px 10px" type="button">${l}</button>`
+    `<button onclick="setShopCat('${k}')" class="shop-cat-btn${_shopCat===k?' active':''}" type="button">${l}</button>`
   ).join('');
 
+  // ── Mahsulot kartochkalari ──
   let html = visItems.map(item => {
     const hasBall  = item.price_ball  > 0;
     const hasStars = item.price_stars > 0;
     const cantBuy  = !item.can_buy;
     const noMoney  = hasBall && points < item.price_ball;
+    const pct      = hasBall ? Math.min(100, Math.round(points / item.price_ball * 100)) : 0;
 
-    return `<div class="rem-card" style="position:relative${cantBuy?';opacity:.6':''}">
-      <div style="display:flex;align-items:flex-start;gap:12px">
-        <div style="font-size:36px;line-height:1">${item.emoji}</div>
-        <div style="flex:1">
-          <div style="font-size:14px;font-weight:700;color:var(--text)">${item.name}</div>
-          <div style="font-size:11px;color:var(--sub);margin-top:3px;line-height:1.4">${item.desc}</div>
-          ${item.owned > 0 ? `<div style="font-size:10px;color:var(--green);margin-top:4px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgChkI" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#047857"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgChkI)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgChkI)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>${S('shop','you_have')} ${item.owned} ${S('shop','items_unit')}</div>` : ''}
+    return `<div class="shop-item${cantBuy?' sold-out':''}">
+      <div class="shop-item-top">
+        <div class="shop-item-emoji">${item.emoji}</div>
+        <div class="shop-item-info">
+          <div class="shop-item-name">${item.name}</div>
+          <div class="shop-item-desc">${item.desc}</div>
+          ${item.owned > 0 ? `<div class="shop-item-owned">${svgCheck}${S('shop','you_have')} ${item.owned} ${S('shop','items_unit')}</div>` : ''}
         </div>
       </div>
       <div style="margin-top:10px">
         ${hasBall ? `
-          ${!cantBuy ? `<div style="width:100%;background:var(--bg);border-radius:8px;overflow:hidden;margin-bottom:6px;box-shadow:var(--sh-in)">
-            <div style="height:6px;border-radius:8px;background:linear-gradient(90deg,#059669,#10B981);width:${Math.min(100,Math.round(points/item.price_ball*100))}%;transition:width .4s"></div>
-          </div>` : ''}
+          ${!cantBuy ? `<div class="shop-progress"><div class="shop-progress-fill" style="width:${pct}%"></div></div>` : ''}
           <button onclick="buyItem('${item.id}','ball')" ${cantBuy||noMoney?'disabled':''} type="button"
-          style="width:100%;padding:9px 6px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:${cantBuy||noMoney?'not-allowed':'pointer'};
-          background:${cantBuy?'var(--bg)':noMoney?'var(--bg)':'linear-gradient(135deg,#059669,#10B981)'};
-          color:${cantBuy||noMoney?'var(--sub)':'#fff'};box-shadow:${cantBuy||noMoney?'var(--sh-in)':'none'}">
-          ${cantBuy?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgChkI" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#047857"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgChkI)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgChkI)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'+S('shop','already_bought'):'⭐ '+item.price_ball+' '+S('shop','points_unit')}
-        </button>` : ''}
+            class="shop-buy-btn ${cantBuy||noMoney?'disabled':'primary'}">
+            ${cantBuy ? svgCheck+S('shop','already_bought') : '⭐ '+item.price_ball+' '+S('shop','points_unit')}
+          </button>` : ''}
         ${hasStars ? `<button onclick="buyItem('${item.id}','stars')" ${cantBuy?'disabled':''} type="button"
-          style="flex:1;padding:9px 6px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:${cantBuy?'not-allowed':'pointer'};
-          background:${cantBuy?'var(--bg)':'linear-gradient(135deg,#34D399,#059669)'};
-          color:${cantBuy?'var(--sub)':'#fff'};box-shadow:${cantBuy?'var(--sh-in)':'none'}">
-          ${cantBuy?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgChkI" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#047857"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgChkI)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgChkI)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'+S('shop','already_bought'):'⭐ '+item.price_stars+' Stars'}
-        </button>` : ''}
+            class="${cantBuy?'shop-buy-btn disabled':'shop-stars-btn'}">
+            ${cantBuy ? svgCheck+S('shop','already_bought') : '⭐ '+item.price_stars+' Stars'}
+          </button>` : ''}
       </div>
     </div>`;
   }).join('');
 
-  document.getElementById(_shopContentId || 'shop-content').innerHTML = `
-    <div style="background:linear-gradient(135deg,#05966922,#10B98122);border-radius:16px;padding:14px 16px;margin-bottom:4px;display:flex;align-items:center;gap:10px">
-      <div style="font-size:28px">⭐</div>
-      <div>
-        <div style="font-size:11px;color:var(--sub)">${S('shop','your_points')}</div>
-        <div style="font-size:22px;font-weight:700;color:var(--text)">${points.toLocaleString()} ${S('shop','points_unit')}</div>
+  // ── Empty state ──
+  const emptyHtml = `<div class="shop-empty">
+    <div class="shop-empty-icon">🛒</div>
+    <div class="shop-empty-text">${S('shop','empty_cat')}</div>
+  </div>`;
+
+  // ── Final render ──
+  document.getElementById(_shopContentId || 'bozor-content').innerHTML = `
+    <div class="shop-balance">
+      <div class="shop-balance-icon">⭐</div>
+      <div class="shop-balance-info">
+        <div class="shop-balance-label">${S('shop','your_points')}</div>
+        <div class="shop-balance-value" id="shop-pts-val">${points.toLocaleString()} ${S('shop','points_unit')}</div>
       </div>
     </div>
     ${invHtml}
     <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgCart2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#047857"/></linearGradient></defs><path d="M2 3h2.5L7 15H19L21 7H5.5" stroke="url(#svgCart2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="19" r="2" fill="url(#svgCart2)"/><circle cx="17" cy="19" r="2" fill="url(#svgCart2)"/></svg> ${S('shop','shop_title')}</div>
-    <div style="display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none">${catBtns}</div>
-    ${html || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgCartEm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#047857"/></linearGradient></defs><path d="M2 3h2.5L7 15H19L21 7H5.5" stroke="url(#svgCartEm)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="19" r="2" fill="url(#svgCartEm)"/><circle cx="17" cy="19" r="2" fill="url(#svgCartEm)"/></svg></div>'+S('shop','empty_cat')+'</div>'}
+    <div class="shop-cats">${catBtns}</div>
+    ${html || emptyHtml}
     <div class="toast" id="toast-shop"></div>`;
 }
 
@@ -640,9 +644,12 @@ async function buyItem(itemId, method) {
     if (_shopData) {
       _shopData.points = r.points;
       const item = _shopData.items.find(i => i.id === itemId);
-      if (item) { item.owned = r.owned; item.can_buy = item.owned < item.max_own; }
+      if (item) { item.owned = (item.owned || 0) + 1; item.can_buy = !['badge_fire','badge_star','badge_secret','pet_cat','pet_dog','pet_rabbit','car_sport'].includes(itemId) || (item.owned || 0) === 0; }
       renderShop(_shopData);
     }
+    // Ball counter animatsiyasi
+    const ptsEl = document.getElementById('shop-pts-val');
+    if (ptsEl) { ptsEl.classList.add('updated'); setTimeout(() => ptsEl.classList.remove('updated'), 400); }
     // Global profil balini ham yangilash (boshqa sahifalarda koʻrinishi uchun)
     if (data.profile && typeof r.points === 'number') {
       data.profile.points = r.points;
