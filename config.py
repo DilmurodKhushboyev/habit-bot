@@ -86,3 +86,24 @@ SHOP_ONE_TIME = [
     "badge_fire", "badge_star", "badge_secret",
     "pet_cat", "pet_dog", "pet_rabbit", "car_sport",
 ]
+
+# ============================================================
+#  BOZOR MAHSULOTLARI VAZIFALARI (markazlashtirilgan)
+#  Har bir badge/pet/car ning HAQIQIY ta'siri shu yerda belgilanadi.
+#  type — qaysi logika ishlatiladi (backend shu asosda tekshiradi)
+#  value — raqamli qiymat (foiz yoki miqdor)
+# ============================================================
+SHOP_BONUS_EFFECTS = {
+    # ── BADGES: checkin ball'iga foizli bonus (passive, active_badge faol bo'lganda) ──
+    "badge_fire":  {"type": "points_percent", "value": 3},   # +3% har bir checkin ball'iga
+    "badge_star":  {"type": "points_percent", "value": 5},   # +5% har bir checkin ball'iga
+    "badge_secret":{"type": "points_percent", "value": 12},  # +12% har bir checkin ball'iga
+
+    # ── PETS: har biri o'ziga xos super-kuch ──
+    "pet_cat":     {"type": "streak_save", "value": 7},      # 7 kunda 1 marta streak avtomatik saqlash
+    "pet_dog":     {"type": "daily_bonus", "value": 2},      # Kunlik birinchi checkin'ga +2 ball
+    "pet_rabbit":  {"type": "jon_delay",   "value": 30},     # Jon kamaytirilishi +30 daqiqa kechikadi
+
+    # ── CAR: ball bonus + vizual status ──
+    "car_sport":   {"type": "points_percent", "value": 8},   # +8% har bir checkin ball'iga + reytingda gold ramka
+}
