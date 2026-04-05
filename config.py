@@ -41,3 +41,48 @@ try:
     groups_col.create_index([("members", ASCENDING)], name="idx_members", background=True)
 except Exception as _e:
     print(f"[warn] MongoDB indeks yaratishda xato: {_e}")
+
+# ============================================================
+#  BOZOR NARXLARI (markazlashtirilgan)
+# ============================================================
+SHOP_PRICES = {
+    "shield_1":    100,
+    "shield_3":    250,
+    "bonus_2x":    150,
+    "bonus_3x":    300,
+    "xp_booster":  400,
+    "badge_fire":  200,
+    "badge_star":  250,
+    "badge_secret":600,
+    "pet_cat":     300,
+    "pet_dog":     350,
+    "pet_rabbit":  300,
+    "car_sport":   500,
+    "jon_restore":  25,
+    "gift_box":      0,   # faqat Stars bilan sotib olinadi
+}
+
+SHOP_SELL_PRICES = {
+    "shield_1":     50,
+    "shield_3":    125,
+    "bonus_2x":     75,
+    "bonus_3x":    150,
+    "xp_booster":  200,
+    "badge_fire":  100,
+    "badge_star":  125,
+    "badge_secret":300,
+    "pet_cat":     150,
+    "pet_dog":     175,
+    "pet_rabbit":  150,
+    "car_sport":   250,
+}
+
+SHOP_STARS_PRICES = {
+    "gift_box": 5,
+}
+
+# Bir martalik narsalar (qayta sotib olinmaydi)
+SHOP_ONE_TIME = [
+    "badge_fire", "badge_star", "badge_secret",
+    "pet_cat", "pet_dog", "pet_rabbit", "car_sport",
+]
