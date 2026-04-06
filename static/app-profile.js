@@ -75,25 +75,33 @@ function renderProfile(d) {
       </div>
 
       ${(d.active_car || d.streak_shields > 0 || d.bonus_2x_active || d.bonus_3x_active || d.xp_booster_days > 0) ? `
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
-        ${d.active_car ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px">${d.active_car} <span style="color:var(--sub)">Avto</span></div>` : ''}
-        ${d.streak_shields > 0 ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgShield" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShield)" opacity="0.85"/></svg><span style="color:var(--sub)">${d.streak_shields}x ${S('profile','shield_badge')}</span></div>` : ''}
-        ${d.bonus_2x_active ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgBolt" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBolt)"/></svg><span style="color:#5B8DEF;font-weight:700">2× bonus</span></div>` : ''}
-        ${d.bonus_3x_active ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgFireB" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireB)"/></svg><span style="color:#E07040;font-weight:700">3× bonus</span></div>` : ''}
-        ${d.xp_booster_days > 0 ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgDiamond" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M6 3h12l4 6-10 12L2 9z" fill="url(#svgDiamond)" opacity="0.85"/></svg><span style="color:#5B8DEF;font-weight:700">💎 ${d.xp_booster_days} ${S('profile','kun')}</span></div>` : ''}
+      <div class="profile-chips">
+        ${d.active_car ? `<div class="profile-chip">${d.active_car} <span class="profile-chip-label">${S('profile','avto')}</span></div>` : ''}
+        ${d.streak_shields > 0 ? `<div class="profile-chip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgShield" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShield)" opacity="0.85"/></svg><span class="profile-chip-label">${d.streak_shields}x ${S('profile','shield_badge')}</span></div>` : ''}
+        ${d.bonus_2x_active ? `<div class="profile-chip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgBolt" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBolt)"/></svg><span class="profile-chip-accent" style="color:#5B8DEF">2× bonus</span></div>` : ''}
+        ${d.bonus_3x_active ? `<div class="profile-chip"><svg width="15" height="15" viewBox="0 0 20 20" fill="none"><defs><linearGradient id="svgFireB" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireB)"/></svg><span class="profile-chip-accent" style="color:#E07040">3× bonus</span></div>` : ''}
+        ${d.xp_booster_days > 0 ? `<div class="profile-chip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDiamond" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M6 3h12l4 6-10 12L2 9z" fill="url(#svgDiamond)" opacity="0.85"/></svg><span class="profile-chip-accent" style="color:#5B8DEF">💎 ${d.xp_booster_days} ${S('profile','kun')}</span></div>` : ''}
       </div>` : ''}
 
-      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-top:14px">
+      <div class="stats-grid" style="margin-top:14px">
         <div class="stat-box"><div class="stat-val">${d.points || 0}</div><div class="stat-lbl">${S('profile','ball')}</div></div>
-        <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div class="stat-lbl">${S('profile','streak')}</div><div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">${S('profile','rekord')}: ${d.best_streak || 0}${d.best_streak_date ? '<span style="font-weight:400;color:var(--sub)"> (' + d.best_streak_date + ')</span>' : ''}</div></div>
-        <div class="stat-box"><div class="stat-val">${d.total_done_all || 0}</div><div class="stat-lbl" style="font-size:8px">${S('profile','done')}</div></div>
+        <div class="stat-box"><div class="stat-val">${d.streak || 0}</div><div class="stat-lbl">${S('profile','streak')}</div><div class="profile-streak-rec">${S('profile','rekord')}: ${d.best_streak || 0}${d.best_streak_date ? '<span class="profile-streak-date"> (' + d.best_streak_date + ')</span>' : ''}</div></div>
+        <div class="stat-box"><div class="stat-val">${d.total_done_all || 0}</div><div class="stat-lbl">${S('profile','done')}</div></div>
       </div>
 
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:700;color:var(--sub)"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgHeart" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 17C10 17 2 12 2 6.5A4.5 4.5 0 0110 4a4.5 4.5 0 018 2.5C18 12 10 17 10 17z" fill="url(#svgHeart)"/></svg> JON</span>
-        <span style="font-size:12px;font-weight:700;color:${jonColor}">${jon}%</span>
+      <div class="profile-bar-row">
+        <span class="profile-bar-label"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgHeart" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 17C10 17 2 12 2 6.5A4.5 4.5 0 0110 4a4.5 4.5 0 018 2.5C18 12 10 17 10 17z" fill="url(#svgHeart)"/></svg> ${S('profile','jon_label')}</span>
+        <span class="profile-bar-value" style="color:${jonColor}">${jon}%</span>
       </div>
       <div class="jon-bar-bg"><div class="jon-bar-fill" style="width:${jon}%;background:${jonColor}"></div></div>
+
+      ${d.total_ach ? `
+      <div class="profile-bar-row">
+        <span class="profile-bar-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgAchT" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 2l1.8 5.5H20l-4.9 3.6 1.8 5.5L12 13l-4.9 3.6 1.8-5.5L4 7.5h6.2z" fill="url(#svgAchT)"/></svg> ${S('profile','achievements')}</span>
+        <span class="profile-bar-value" style="color:${achColor}">${d.earned_ach}/${d.total_ach} (${achPct}%)</span>
+      </div>
+      <div class="jon-bar-bg"><div class="jon-bar-fill" style="width:${achPct}%;background:${achColor}"></div></div>
+      ` : ''}
     </div>
 
     <!-- Do'st taklif qilish -->
@@ -517,3 +525,26 @@ async function saveLang() {
   }
 }
 
+// ── Referral link nusxalash ──
+function copyRefLink(link) {
+  if (!link) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(() => {
+      const t = document.getElementById('toast-profile');
+      if (t) { t.textContent = S('msg','copy_link'); t.className = 'toast show'; setTimeout(() => t.className = 'toast', 2500); }
+    }).catch(() => {
+      _fallbackCopyRef(link);
+    });
+  } else {
+    _fallbackCopyRef(link);
+  }
+}
+function _fallbackCopyRef(link) {
+  const ta = document.createElement('textarea');
+  ta.value = link; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  const t = document.getElementById('toast-profile');
+  if (t) { t.textContent = S('msg','copy_link'); t.className = 'toast show'; setTimeout(() => t.className = 'toast', 2500); }
+}
