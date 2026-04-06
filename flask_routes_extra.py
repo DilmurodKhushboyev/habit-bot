@@ -6,12 +6,13 @@ Flask API extra routes: achievements, shop, friends, challenges, webhook
 import os
 import io
 import json
+import threading
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime, date, timedelta, timezone
 from flask import jsonify, request
 
-from config import BOT_TOKEN, ADMIN_ID, mongo_db
+from config import BOT_TOKEN, ADMIN_ID, mongo_db, SHOP_PRICES, SHOP_SELL_PRICES, SHOP_STARS_PRICES, SHOP_ONE_TIME
 from database import (load_user, save_user, load_all_users, count_users,
                       load_group, save_group, user_exists)
 from helpers import T, get_lang, get_rank, today_uz5
@@ -20,6 +21,20 @@ from bot_setup import bot, get_bot_username, _share_file_ids
 from achievements import _ACHIEVEMENTS as ACHIEVEMENTS, check_achievements_toplevel
 from flask_helpers import (require_auth, rate_limit_check, _tz_today,
                            _is_done_today, _calc_best_streak)
+
+# ── Shop race condition himoyasi: per-user lock ──
+# Bitta foydalanuvchi uchun bir vaqtda faqat 1 ta buy/sell/activate amal bajariladi
+_shop_user_locks = {}
+_shop_locks_master = threading.Lock()
+
+def _get_shop_lock(uid):
+    """Foydalanuvchi uchun lazy yaratiladigan lock (thread-safe)."""
+    with _shop_locks_master:
+        lock = _shop_user_locks.get(uid)
+        if lock is None:
+            lock = threading.Lock()
+            _shop_user_locks[uid] = lock
+        return lock
 
 # Achievements kategoriya nomlari (3 tilda)
 CAT_LABELS = {
@@ -98,28 +113,34 @@ def register_extra_routes(app):
             "pet_rabbit": {"uz":("Quyon","Tez-tez sakrashi"), "ru":("Кролик","Часто прыгает"), "en":("Rabbit","Hops around")},
             "car_sport":  {"uz":("Sport mashina","Tez mashina"), "ru":("Спорткар","Быстрая машина"), "en":("Sports car","Fast car")},
             "jon_restore":{"uz":("Jon tiklash","Jonni 100% ga tiklash (faqat 20% va kam holda)"), "ru":("Восстановить жизнь","Восстановить до 100% (только при 20% и ниже)"), "en":("Restore life","Restore to 100% (only at 20% or below)")},
-            "gift_box":   {"uz":("Sovga qutisi","Tasodifiy mukofot"), "ru":("Подарочная коробка","Случайная награда"), "en":("Gift box","Random reward")},
+            # ── Stars mahsulotlar (T() dan olinadi — texts.py da markazlashtirilgan) ──
+            "gift_box":       {"uz":(T(uid,"stars_item_gift_box"),   T(uid,"stars_desc_gift_box")),
+                               "ru":(T(uid,"stars_item_gift_box"),   T(uid,"stars_desc_gift_box")),
+                               "en":(T(uid,"stars_item_gift_box"),   T(uid,"stars_desc_gift_box"))},
         }
         shop_items = [
-            {"id": "shield_1",    "cat": "protection", "emoji": "\U0001f6e1",  "price_ball": 100,  "price_stars": 0},
-            {"id": "shield_3",    "cat": "protection", "emoji": "\U0001f9ca",  "price_ball": 250,  "price_stars": 0},
-            {"id": "bonus_2x",    "cat": "bonus",      "emoji": "\u26a1",  "price_ball": 150,  "price_stars": 0},
-            {"id": "bonus_3x",    "cat": "bonus",      "emoji": "\U0001f680",  "price_ball": 300,  "price_stars": 0},
-            {"id": "xp_booster",  "cat": "bonus",      "emoji": "\U0001f48e",  "price_ball": 400,  "price_stars": 0},
-            {"id": "badge_fire",  "cat": "badge",      "emoji": "\U0001f525",  "price_ball": 200,  "price_stars": 0},
-            {"id": "badge_star",  "cat": "badge",      "emoji": "\u2b50",  "price_ball": 250,  "price_stars": 0},
-            {"id": "badge_secret","cat": "badge",      "emoji": "\U0001f451",  "price_ball": 600,  "price_stars": 0},
-            {"id": "pet_cat",     "cat": "pet",        "emoji": "\U0001f431",  "price_ball": 300,  "price_stars": 0},
-            {"id": "pet_dog",     "cat": "pet",        "emoji": "\U0001f436",  "price_ball": 350,  "price_stars": 0},
-            {"id": "pet_rabbit",  "cat": "pet",        "emoji": "\U0001f430",  "price_ball": 300,  "price_stars": 0},
-            {"id": "car_sport",   "cat": "car",        "emoji": "\U0001f3ce\ufe0f", "price_ball": 500,  "price_stars": 0},
-            {"id": "jon_restore", "cat": "bonus",      "emoji": "\u2764\ufe0f", "price_ball": 25,   "price_stars": 0},
-            {"id": "gift_box",    "cat": "gift",       "emoji": "\U0001f381",  "price_ball": 0,    "price_stars": 5},
+            {"id": "shield_1",    "cat": "protection", "emoji": "\U0001f6e1",  "price_ball": SHOP_PRICES.get("shield_1", 0),    "price_stars": 0},
+            {"id": "shield_3",    "cat": "protection", "emoji": "\U0001f9ca",  "price_ball": SHOP_PRICES.get("shield_3", 0),    "price_stars": 0},
+            {"id": "bonus_2x",    "cat": "bonus",      "emoji": "\u26a1",      "price_ball": SHOP_PRICES.get("bonus_2x", 0),    "price_stars": 0},
+            {"id": "bonus_3x",    "cat": "bonus",      "emoji": "\U0001f680",  "price_ball": SHOP_PRICES.get("bonus_3x", 0),    "price_stars": 0},
+            {"id": "xp_booster",  "cat": "bonus",      "emoji": "\U0001f48e",  "price_ball": SHOP_PRICES.get("xp_booster", 0),  "price_stars": 0},
+            {"id": "badge_fire",  "cat": "badge",      "emoji": "\U0001f525",  "price_ball": SHOP_PRICES.get("badge_fire", 0),  "price_stars": 0},
+            {"id": "badge_star",  "cat": "badge",      "emoji": "\u2b50",      "price_ball": SHOP_PRICES.get("badge_star", 0),  "price_stars": 0},
+            {"id": "badge_secret","cat": "badge",      "emoji": "\U0001f451",  "price_ball": SHOP_PRICES.get("badge_secret", 0),"price_stars": 0},
+            {"id": "pet_cat",     "cat": "pet",        "emoji": "\U0001f431",  "price_ball": SHOP_PRICES.get("pet_cat", 0),     "price_stars": 0},
+            {"id": "pet_dog",     "cat": "pet",        "emoji": "\U0001f436",  "price_ball": SHOP_PRICES.get("pet_dog", 0),     "price_stars": 0},
+            {"id": "pet_rabbit",  "cat": "pet",        "emoji": "\U0001f430",  "price_ball": SHOP_PRICES.get("pet_rabbit", 0),  "price_stars": 0},
+            {"id": "car_sport",   "cat": "car",        "emoji": "\U0001f3ce\ufe0f", "price_ball": SHOP_PRICES.get("car_sport", 0), "price_stars": 0},
+            {"id": "jon_restore", "cat": "bonus",      "emoji": "\u2764\ufe0f", "price_ball": SHOP_PRICES.get("jon_restore", 0), "price_stars": 0},
+            # ── Stars mahsulotlar ──
+            {"id": "gift_box",       "cat": "gift",     "emoji": "\U0001f381",           "price_ball": 0, "price_stars": SHOP_STARS_PRICES.get("gift_box", 5)},
         ]
         for item in shop_items:
             tr = _shop_i18n.get(item["id"], {}).get(lang, _shop_i18n.get(item["id"], {}).get("uz", ("",""))  )
             item["name"] = tr[0]
             item["desc"] = tr[1]
+            # Sotish narxini API dan qaytarish (frontend hardcode qilmasligi uchun)
+            item["sell_price"] = SHOP_SELL_PRICES.get(item["id"], 0)
         raw_inventory = u.get("inventory", [])
         # inventory: list -> dict formatiga
         if isinstance(raw_inventory, list):
@@ -130,7 +151,6 @@ def register_extra_routes(app):
         active_badge = u.get("active_badge", "")
         active_car   = u.get("active_car", "")
         # can_buy va owned fieldlarini har bir item ga qo'shish
-        one_time = ["badge_fire","badge_star","badge_secret","pet_cat","pet_dog","pet_rabbit","car_sport"]
         # Counter fieldlardan owned miqdorini to'ldirish
         _counter_owned = {
             "shield_1":  u.get("streak_shields", 0),
@@ -146,7 +166,7 @@ def register_extra_routes(app):
                 owned_qty = inventory.get(item["id"], 0)
             item["owned"] = owned_qty
             # Bir martalik narsalar: allaqachon olingan bo'lsa can_buy=False
-            if item["id"] in one_time:
+            if item["id"] in SHOP_ONE_TIME:
                 item["can_buy"] = owned_qty == 0
             else:
                 item["can_buy"] = True
@@ -165,109 +185,130 @@ def register_extra_routes(app):
         data = request.get_json() or {}
         item_id   = data.get("item_id", "")
         pay_type  = data.get("type", "ball")  # "ball" yoki "stars"
-        prices = {
-            "shield_1": 100, "shield_3": 250,
-            "bonus_2x": 150, "bonus_3x": 300, "xp_booster": 400,
-            "badge_fire": 200, "badge_star": 250, "badge_secret": 600,
-            "pet_cat": 300, "pet_dog": 350, "pet_rabbit": 300, "car_sport": 500,
-            "jon_restore": 25,
-        }
-        price = prices.get(item_id, 0)
+        price = SHOP_PRICES.get(item_id, 0)
         if not price and item_id != "gift_box":
             return jsonify({"ok": False, "error": "Noma'lum mahsulot"})
-        u = load_user(uid)
-        raw_inv = u.get("inventory", [])
-        if isinstance(raw_inv, list):
-            inventory = {i: 1 for i in raw_inv}
-        else:
-            inventory = raw_inv
-        # Faqat badge/pet/car bir marta sotib olinadi
-        one_time = ["badge_fire","badge_star","badge_secret","pet_cat","pet_dog","pet_rabbit","car_sport"]
-        if item_id in one_time and inventory.get(item_id, 0) > 0:
-            return jsonify({"ok": False, "error": "Allaqachon sotib olingan"})
-        if item_id == "jon_restore":
-            jon_val = round(u.get("jon", 100.0))
-            if jon_val > 20:
-                return jsonify({"ok": False, "error": f"Jon faqat 20% va undan kam bo'lganda tiklanadi. Hozir: {jon_val}%"})
-            if u.get("points", 0) < 25:
-                return jsonify({"ok": False, "error": "Ball yetarli emas"})
-            u["points"] = u.get("points", 0) - 25
-            u["jon"] = 100.0
+        # ── Race condition himoyasi: per-user lock ──
+        _lock = _get_shop_lock(uid)
+        if not _lock.acquire(timeout=3):
+            return jsonify({"ok": False, "error": "Server band — qaytadan urinib ko'ring"}), 429
+        try:
+            u = load_user(uid)
+            raw_inv = u.get("inventory", [])
+            if isinstance(raw_inv, list):
+                inventory = {i: 1 for i in raw_inv}
+            else:
+                inventory = raw_inv
+            # Faqat badge/pet/car bir marta sotib olinadi
+            if item_id in SHOP_ONE_TIME and inventory.get(item_id, 0) > 0:
+                return jsonify({"ok": False, "error": "Allaqachon sotib olingan"})
+            if item_id == "jon_restore":
+                jon_price = SHOP_PRICES["jon_restore"]
+                jon_val = round(u.get("jon", 100.0))
+                if jon_val > 20:
+                    return jsonify({"ok": False, "error": f"Jon faqat 20% va undan kam bo'lganda tiklanadi. Hozir: {jon_val}%"})
+                if u.get("points", 0) < jon_price:
+                    return jsonify({"ok": False, "error": "Ball yetarli emas"})
+                u["points"] = u.get("points", 0) - jon_price
+                u["jon"] = 100.0
+                save_user(uid, u)
+                return jsonify({"ok": True, "points": u["points"]})
+            if item_id == "shield_1":
+                _p = SHOP_PRICES["shield_1"]
+                if u.get("points", 0) < _p:
+                    return jsonify({"ok": False, "error": "Ball yetarli emas"})
+                u["points"] = u.get("points", 0) - _p
+                u["streak_shields"] = u.get("streak_shields", 0) + 1
+                save_user(uid, u)
+                return jsonify({"ok": True, "points": u["points"], "streak_shields": u["streak_shields"]})
+            if item_id == "shield_3":
+                _p = SHOP_PRICES["shield_3"]
+                if u.get("points", 0) < _p:
+                    return jsonify({"ok": False, "error": "Ball yetarli emas"})
+                u["points"] = u.get("points", 0) - _p
+                u["streak_shields"] = u.get("streak_shields", 0) + 3
+                save_user(uid, u)
+                return jsonify({"ok": True, "points": u["points"], "streak_shields": u["streak_shields"]})
+            if item_id == "bonus_2x":
+                _p = SHOP_PRICES["bonus_2x"]
+                if u.get("points", 0) < _p:
+                    return jsonify({"ok": False, "error": "Ball yetarli emas"})
+                if u.get("bonus_2x_active") and u.get("bonus_2x_date") == today_uz5():
+                    return jsonify({"ok": False, "error": "Bugun 2x bonus allaqachon aktiv"})
+                u["points"] = u.get("points", 0) - _p
+                u["bonus_2x_active"] = True
+                u["bonus_2x_date"] = today_uz5()
+                save_user(uid, u)
+                return jsonify({"ok": True, "points": u["points"]})
+            if item_id == "bonus_3x":
+                _p = SHOP_PRICES["bonus_3x"]
+                if u.get("points", 0) < _p:
+                    return jsonify({"ok": False, "error": "Ball yetarli emas"})
+                if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today_uz5():
+                    return jsonify({"ok": False, "error": "Bugun 3x bonus allaqachon aktiv"})
+                u["points"] = u.get("points", 0) - _p
+                u["bonus_3x_active"] = True
+                u["bonus_3x_date"] = today_uz5()
+                save_user(uid, u)
+                return jsonify({"ok": True, "points": u["points"]})
+            if item_id == "xp_booster":
+                _p = SHOP_PRICES["xp_booster"]
+                if u.get("points", 0) < _p:
+                    return jsonify({"ok": False, "error": "Ball yetarli emas"})
+                u["points"] = u.get("points", 0) - _p
+                u["xp_booster_days"] = u.get("xp_booster_days", 0) + 7
+                save_user(uid, u)
+                return jsonify({"ok": True, "points": u["points"], "xp_booster_days": u["xp_booster_days"]})
+            if item_id == "gift_box":
+                return jsonify({"ok": False, "error": "gift_box faqat Telegram Stars bilan sotib olinadi"})
+            if pay_type == "ball":
+                if u.get("points", 0) < price:
+                    return jsonify({"ok": False, "error": "Ball yetarli emas"})
+                u["points"] = u.get("points", 0) - price
+            inventory[item_id] = inventory.get(item_id, 0) + 1
+            u["inventory"] = inventory
             save_user(uid, u)
-            return jsonify({"ok": True, "points": u["points"]})
-        if item_id == "shield_1":
-            if u.get("points", 0) < 100:
-                return jsonify({"ok": False, "error": "Ball yetarli emas"})
-            u["points"] = u.get("points", 0) - 100
-            u["streak_shields"] = u.get("streak_shields", 0) + 1
-            save_user(uid, u)
-            return jsonify({"ok": True, "points": u["points"], "streak_shields": u["streak_shields"]})
-        if item_id == "shield_3":
-            if u.get("points", 0) < 250:
-                return jsonify({"ok": False, "error": "Ball yetarli emas"})
-            u["points"] = u.get("points", 0) - 250
-            u["streak_shields"] = u.get("streak_shields", 0) + 3
-            save_user(uid, u)
-            return jsonify({"ok": True, "points": u["points"], "streak_shields": u["streak_shields"]})
-        if item_id == "bonus_2x":
-            if u.get("points", 0) < 150:
-                return jsonify({"ok": False, "error": "Ball yetarli emas"})
-            if u.get("bonus_2x_active") and u.get("bonus_2x_date") == today_uz5():
-                return jsonify({"ok": False, "error": "Bugun 2x bonus allaqachon aktiv"})
-            u["points"] = u.get("points", 0) - 150
-            u["bonus_2x_active"] = True
-            u["bonus_2x_date"] = today_uz5()
-            save_user(uid, u)
-            return jsonify({"ok": True, "points": u["points"]})
-        if item_id == "bonus_3x":
-            if u.get("points", 0) < 300:
-                return jsonify({"ok": False, "error": "Ball yetarli emas"})
-            if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today_uz5():
-                return jsonify({"ok": False, "error": "Bugun 3x bonus allaqachon aktiv"})
-            u["points"] = u.get("points", 0) - 300
-            u["bonus_3x_active"] = True
-            u["bonus_3x_date"] = today_uz5()
-            save_user(uid, u)
-            return jsonify({"ok": True, "points": u["points"]})
-        if item_id == "xp_booster":
-            if u.get("points", 0) < 400:
-                return jsonify({"ok": False, "error": "Ball yetarli emas"})
-            u["points"] = u.get("points", 0) - 400
-            u["xp_booster_days"] = u.get("xp_booster_days", 0) + 7
-            save_user(uid, u)
-            return jsonify({"ok": True, "points": u["points"], "xp_booster_days": u["xp_booster_days"]})
-        if item_id == "gift_box":
-            return jsonify({"ok": False, "error": "gift_box faqat Telegram Stars bilan sotib olinadi"})
-        if pay_type == "ball":
-            if u.get("points", 0) < price:
-                return jsonify({"ok": False, "error": "Ball yetarli emas"})
-            u["points"] = u.get("points", 0) - price
-        inventory[item_id] = inventory.get(item_id, 0) + 1
-        u["inventory"] = inventory
-        save_user(uid, u)
-        return jsonify({"ok": True, "points": u.get("points", 0), "owned": inventory.get(item_id, 0)})
+            return jsonify({"ok": True, "points": u.get("points", 0), "owned": inventory.get(item_id, 0)})
+        finally:
+            _lock.release()
 
     @app.route("/api/shop/<int:uid>/stars_invoice", methods=["POST"])
     @require_auth
     def api_shop_stars_invoice(uid):
         data    = request.get_json(force=True, silent=True) or {}
         item_id = data.get("item_id", "")
-        stars_prices = {"gift_box": 5}
+        stars_prices = SHOP_STARS_PRICES
         price = stars_prices.get(item_id)
         if not price:
             return jsonify({"ok": False, "error": "Stars bilan sotib bo'lmaydigan mahsulot"})
-        item_names = {"gift_box": "Sovga qutisi"}
-        item_descs = {"gift_box": "Tasodifiy mukofot: ball, streak himoya yoki XP booster"}
+        # One-time narsalar uchun qayta sotib olishdan himoya
+        u_chk = load_user(uid)
+        raw_inv_chk = u_chk.get("inventory", [])
+        if isinstance(raw_inv_chk, list):
+            inv_chk = {i: 1 for i in raw_inv_chk}
+        else:
+            inv_chk = raw_inv_chk
+        if item_id in SHOP_ONE_TIME and inv_chk.get(item_id, 0) > 0:
+            return jsonify({"ok": False, "error": "Allaqachon sotib olingan"})
+        # T() dan nom va tavsifni olish (texts.py — markazlashtirilgan)
+        _names = {
+            "gift_box":       T(uid, "stars_item_gift_box"),
+        }
+        _descs = {
+            "gift_box":       T(uid, "stars_desc_gift_box"),
+        }
+        item_title = _names.get(item_id, item_id)
+        item_desc  = _descs.get(item_id, "")
         try:
             from telebot.types import LabeledPrice as _LP
             bot.send_invoice(
                 chat_id=uid,
-                title=item_names.get(item_id, item_id),
-                description=item_descs.get(item_id, ""),
+                title=item_title,
+                description=item_desc,
                 invoice_payload=f"stars_{item_id}",
                 provider_token="",
                 currency="XTR",
-                prices=[_LP(item_names.get(item_id, item_id), price)],
+                prices=[_LP(item_title, price)],
             )
             return jsonify({"ok": True})
         except Exception as e:
@@ -279,15 +320,22 @@ def register_extra_routes(app):
         data = request.get_json() or {}
         item_id  = data.get("item_id", "")
         deactive = data.get("deactivate", False)
-        u = load_user(uid)
-        if item_id.startswith("pet_"):
-            u["active_pet"]   = "" if deactive else item_id
-        elif item_id.startswith("badge_"):
-            u["active_badge"] = "" if deactive else item_id
-        elif item_id.startswith("car_"):
-            u["active_car"]   = "" if deactive else item_id
-        save_user(uid, u)
-        return jsonify({"ok": True})
+        # ── Race condition himoyasi: per-user lock ──
+        _lock = _get_shop_lock(uid)
+        if not _lock.acquire(timeout=3):
+            return jsonify({"ok": False, "error": "Server band — qaytadan urinib ko'ring"}), 429
+        try:
+            u = load_user(uid)
+            if item_id.startswith("pet_"):
+                u["active_pet"]   = "" if deactive else item_id
+            elif item_id.startswith("badge_"):
+                u["active_badge"] = "" if deactive else item_id
+            elif item_id.startswith("car_"):
+                u["active_car"]   = "" if deactive else item_id
+            save_user(uid, u)
+            return jsonify({"ok": True})
+        finally:
+            _lock.release()
 
     @app.route("/api/shop/<int:uid>/sell", methods=["POST"])
     @require_auth
@@ -295,87 +343,86 @@ def register_extra_routes(app):
         """Inventardagi narsani 50% narxiga sotish."""
         data    = request.get_json() or {}
         item_id = data.get("item_id", "")
-        # Sotish narxlari (asl narxning 50%)
-        sell_prices = {
-            "badge_fire":   100, "badge_star":  125, "badge_secret": 300,
-            "pet_cat":      150, "pet_dog":     175, "pet_rabbit":   150,
-            "car_sport":    250,
-            "shield_1":      50, "shield_3":    125,
-            "bonus_2x":      75, "bonus_3x":    150,
-            "xp_booster":   200,
-        }
-        refund = sell_prices.get(item_id)
+        # Sotish narxlari (config dan markazlashtirilgan)
+        refund = SHOP_SELL_PRICES.get(item_id)
         if refund is None:
             return jsonify({"ok": False, "error": "Bu narsa sotilmaydi"})
-        u = load_user(uid)
-        today = today_uz5()
-        # Counter fieldlar uchun alohida tekshirish
-        if item_id in ("shield_1", "shield_3"):
-            raw_inv_s = u.get("inventory", [])
-            inv_s = {i: 1 for i in raw_inv_s} if isinstance(raw_inv_s, list) else dict(raw_inv_s)
-            shields = u.get("streak_shields", 0)
-            in_inv  = inv_s.get(item_id, 0) >= 1
-            if shields < 1 and not in_inv:
-                return jsonify({"ok": False, "error": "Inventarda topilmadi"})
-            if shields >= 1:
-                sell_qty = 3 if item_id == "shield_3" else 1
-                if item_id == "shield_3" and shields < 3:
-                    return jsonify({"ok": False, "error": "shield_3 sotish uchun kamida 3 ta shield kerak"})
-                actual_refund = refund
-                u["streak_shields"] = max(0, shields - sell_qty)
+        # ── Race condition himoyasi: per-user lock ──
+        _lock = _get_shop_lock(uid)
+        if not _lock.acquire(timeout=3):
+            return jsonify({"ok": False, "error": "Server band — qaytadan urinib ko'ring"}), 429
+        try:
+            u = load_user(uid)
+            today = today_uz5()
+            # Counter fieldlar uchun alohida tekshirish
+            if item_id in ("shield_1", "shield_3"):
+                raw_inv_s = u.get("inventory", [])
+                inv_s = {i: 1 for i in raw_inv_s} if isinstance(raw_inv_s, list) else dict(raw_inv_s)
+                shields = u.get("streak_shields", 0)
+                in_inv  = inv_s.get(item_id, 0) >= 1
+                if shields < 1 and not in_inv:
+                    return jsonify({"ok": False, "error": "Inventarda topilmadi"})
+                if shields >= 1:
+                    sell_qty = 3 if item_id == "shield_3" else 1
+                    if item_id == "shield_3" and shields < 3:
+                        return jsonify({"ok": False, "error": "shield_3 sotish uchun kamida 3 ta shield kerak"})
+                    actual_refund = refund
+                    u["streak_shields"] = max(0, shields - sell_qty)
+                else:
+                    actual_refund = refund
+                    inv_s[item_id] = inv_s.get(item_id, 0) - 1
+                    if inv_s[item_id] <= 0:
+                        del inv_s[item_id]
+                    u["inventory"] = inv_s
+                u["points"] = u.get("points", 0) + actual_refund
+                save_user(uid, u)
+                return jsonify({"ok": True, "points": u["points"], "refund": actual_refund})
+            if item_id == "bonus_2x":
+                if not (u.get("bonus_2x_active") and u.get("bonus_2x_date") == today):
+                    return jsonify({"ok": False, "error": "Aktiv bonus topilmadi"})
+                u["bonus_2x_active"] = False
+                u["points"] = u.get("points", 0) + refund
+                save_user(uid, u)
+                return jsonify({"ok": True, "points": u["points"], "refund": refund})
+            if item_id == "bonus_3x":
+                if not (u.get("bonus_3x_active") and u.get("bonus_3x_date") == today):
+                    return jsonify({"ok": False, "error": "Aktiv bonus topilmadi"})
+                u["bonus_3x_active"] = False
+                u["points"] = u.get("points", 0) + refund
+                save_user(uid, u)
+                return jsonify({"ok": True, "points": u["points"], "refund": refund})
+            if item_id == "xp_booster":
+                if u.get("xp_booster_days", 0) < 1:
+                    return jsonify({"ok": False, "error": "Inventarda topilmadi"})
+                days_left = u["xp_booster_days"]
+                actual_refund = round(refund * days_left / 7)
+                u["xp_booster_days"] = 0
+                u["points"] = u.get("points", 0) + actual_refund
+                save_user(uid, u)
+                return jsonify({"ok": True, "points": u["points"], "refund": actual_refund})
+            # Inventory narsalar (badge/pet/car)
+            raw_inv = u.get("inventory", [])
+            if isinstance(raw_inv, list):
+                inventory = {i: 1 for i in raw_inv}
             else:
-                actual_refund = refund
-                inv_s[item_id] = inv_s.get(item_id, 0) - 1
-                if inv_s[item_id] <= 0:
-                    del inv_s[item_id]
-                u["inventory"] = inv_s
-            u["points"] = u.get("points", 0) + actual_refund
-            save_user(uid, u)
-            return jsonify({"ok": True, "points": u["points"], "refund": actual_refund})
-        if item_id == "bonus_2x":
-            if not (u.get("bonus_2x_active") and u.get("bonus_2x_date") == today):
-                return jsonify({"ok": False, "error": "Aktiv bonus topilmadi"})
-            u["bonus_2x_active"] = False
-            u["points"] = u.get("points", 0) + refund
-            save_user(uid, u)
-            return jsonify({"ok": True, "points": u["points"], "refund": refund})
-        if item_id == "bonus_3x":
-            if not (u.get("bonus_3x_active") and u.get("bonus_3x_date") == today):
-                return jsonify({"ok": False, "error": "Aktiv bonus topilmadi"})
-            u["bonus_3x_active"] = False
-            u["points"] = u.get("points", 0) + refund
-            save_user(uid, u)
-            return jsonify({"ok": True, "points": u["points"], "refund": refund})
-        if item_id == "xp_booster":
-            if u.get("xp_booster_days", 0) < 1:
+                inventory = dict(raw_inv)
+            if inventory.get(item_id, 0) < 1:
                 return jsonify({"ok": False, "error": "Inventarda topilmadi"})
-            days_left = u["xp_booster_days"]
-            actual_refund = round(refund * days_left / 7)
-            u["xp_booster_days"] = 0
-            u["points"] = u.get("points", 0) + actual_refund
+            inventory[item_id] = inventory.get(item_id, 0) - 1
+            if inventory[item_id] <= 0:
+                del inventory[item_id]
+            u["inventory"] = inventory
+            if item_id.startswith("pet_")   and u.get("active_pet")   == item_id:
+                u["active_pet"]   = ""
+            if item_id.startswith("badge_") and u.get("active_badge") == item_id:
+                u["active_badge"] = ""
+            if item_id.startswith("car_")   and u.get("active_car")   == item_id:
+                u["active_car"]   = ""
+            u["points"] = u.get("points", 0) + refund
             save_user(uid, u)
-            return jsonify({"ok": True, "points": u["points"], "refund": actual_refund})
-        # Inventory narsalar (badge/pet/car)
-        raw_inv = u.get("inventory", [])
-        if isinstance(raw_inv, list):
-            inventory = {i: 1 for i in raw_inv}
-        else:
-            inventory = dict(raw_inv)
-        if inventory.get(item_id, 0) < 1:
-            return jsonify({"ok": False, "error": "Inventarda topilmadi"})
-        inventory[item_id] = inventory.get(item_id, 0) - 1
-        if inventory[item_id] <= 0:
-            del inventory[item_id]
-        u["inventory"] = inventory
-        if item_id.startswith("pet_")   and u.get("active_pet")   == item_id:
-            u["active_pet"]   = ""
-        if item_id.startswith("badge_") and u.get("active_badge") == item_id:
-            u["active_badge"] = ""
-        if item_id.startswith("car_")   and u.get("active_car")   == item_id:
-            u["active_car"]   = ""
-        u["points"] = u.get("points", 0) + refund
-        save_user(uid, u)
-        return jsonify({"ok": True, "points": u["points"], "refund": refund})
+            return jsonify({"ok": True, "points": u["points"], "refund": refund})
+        finally:
+            _lock.release()
 
     @app.route("/api/friends/<int:uid>")
     @require_auth

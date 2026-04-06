@@ -7,12 +7,22 @@ import time
 import threading
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from config import ADMIN_ID
+from config import ADMIN_ID, SHOP_PRICES
 from database import load_user, save_user
 from helpers import T, get_lang
 from bot_setup import (bot, send_main_menu, send_message_colored,
                        main_menu_dict, cBtn, ok_kb, kb_to_dict,
                        edit_message_colored, get_bot_username)
+
+
+def _bozor_back_row(uid):
+    """Orqaga + Asosiy menyu tugmalar qatori (qayta ishlatiladigan)."""
+    kb = InlineKeyboardMarkup()
+    kb.row(
+        cBtn(T(uid, "bozor_btn_back"), "menu_bozor", "primary"),
+        cBtn(T(uid, "btn_home"), "menu_main", "primary")
+    )
+    return kb
 
 
 def handle_shop_callbacks(call, uid, cdata, u):
@@ -23,36 +33,31 @@ def handle_shop_callbacks(call, uid, cdata, u):
         try: bot.delete_message(uid, call.message.message_id)
         except Exception: pass
         balls = u.get("points", 0)
-        ref_count  = len(u.get("referrals", []))
+        ref_count = len(u.get("referrals", []))
         jon_val = round(u.get("jon", 100.0))
-        bozor_text = (
-            f"🛒 *Bozor —* bu sizning ballaringiz bilan qilinadigan barcha ammalar joyi.\n\n"
-            f"*⭐ Sizning balingiz:* {balls} ball\n"
-            f"*👥 Taklif qilganlar:* {ref_count} ta do'st\n"
-            f"*❤️ Jon:* {jon_val}%\n\n"
-            "*❤️ Jon sotib olish —* 50 ball evaziga jonni 100% ga tiklash\n"
-            "*👥 Do'st taklif qilish —* +50 ball (siz), +25 ball (do'st)\n"
-            "*💸 Ballarni ayirboshlash —* yaqin insoniga ball yuborish\n"
-            "*🔴 Ballarimni 0 ga tushirish —* barcha ballarni nollash\n"
-            "*➖ Ballarimdan olib tashlash —* ma'lum miqdorni ayirish"
+        jon_price = SHOP_PRICES["jon_restore"]
+        bozor_text = T(uid, "bozor_title").format(
+            points=balls, ref_count=ref_count,
+            jon=jon_val, jon_price=jon_price
         )
+        btn_jon = T(uid, "bozor_btn_buy_jon").format(price=jon_price)
         bozor_kb = {"inline_keyboard": [
-            [{"text": "❤️ Jon sotib olish (50 ball)",  "callback_data": "bozor_buy_jon",       "style": "primary"}],
-            [{"text": "👥 Do'st taklif qilish",        "callback_data": "bozor_referral",      "style": "primary"}],
-            [{"text": "💸 Ballarni ayirboshlash",       "callback_data": "bozor_transfer"}],
-            [{"text": "🔴 Ballarimni 0 ga tushirish",   "callback_data": "bozor_reset_confirm", "style": "danger"}],
-            [{"text": "➖ Ballarimdan olib tashlash",    "callback_data": "bozor_subtract"}],
-            [{"text": T(uid, "btn_home"),                "callback_data": "menu_main",           "style": "primary"}],
+            [{"text": btn_jon,                          "callback_data": "bozor_buy_jon",       "style": "primary"}],
+            [{"text": T(uid, "bozor_btn_referral"),     "callback_data": "bozor_referral",      "style": "primary"}],
+            [{"text": T(uid, "bozor_btn_transfer"),     "callback_data": "bozor_transfer"}],
+            [{"text": T(uid, "bozor_btn_reset"),        "callback_data": "bozor_reset_confirm", "style": "danger"}],
+            [{"text": T(uid, "bozor_btn_subtract"),     "callback_data": "bozor_subtract"}],
+            [{"text": T(uid, "btn_home"),               "callback_data": "menu_main",           "style": "primary"}],
         ]}
         sent = send_message_colored(uid, bozor_text, bozor_kb)
         if sent is None:
             kb_b = InlineKeyboardMarkup()
-            kb_b.add(InlineKeyboardButton("❤️ Jon sotib olish (50 ball)", callback_data="bozor_buy_jon"))
-            kb_b.add(InlineKeyboardButton("👥 Do'st taklif qilish",      callback_data="bozor_referral"))
-            kb_b.add(InlineKeyboardButton("💸 Ballarni ayirboshlash",     callback_data="bozor_transfer"))
-            kb_b.add(InlineKeyboardButton("🔴 Ballarimni 0 ga tushirish", callback_data="bozor_reset_confirm"))
-            kb_b.add(InlineKeyboardButton("➖ Ballarimdan olib tashlash",  callback_data="bozor_subtract"))
-            kb_b.add(cBtn(T(uid, "btn_home"),             "menu_main", "primary"))
+            kb_b.add(InlineKeyboardButton(btn_jon, callback_data="bozor_buy_jon"))
+            kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_referral"), callback_data="bozor_referral"))
+            kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_transfer"), callback_data="bozor_transfer"))
+            kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_reset"),    callback_data="bozor_reset_confirm"))
+            kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_subtract"), callback_data="bozor_subtract"))
+            kb_b.add(cBtn(T(uid, "btn_home"), "menu_main", "primary"))
             sent = bot.send_message(uid, bozor_text, parse_mode="Markdown", reply_markup=kb_b)
         u["main_msg_id"] = sent.message_id
         save_user(uid, u)
@@ -62,33 +67,25 @@ def handle_shop_callbacks(call, uid, cdata, u):
         bot.answer_callback_query(call.id)
         balls = u.get("points", 0)
         jon_val = round(u.get("jon", 100.0))
+        jon_price = SHOP_PRICES["jon_restore"]
         if jon_val > 20:
             bot.send_message(uid,
-                f"❤️ *Jon sotib olish mumkin emas!*\n\n"
-                f"Jon faqat *20% va undan kam* bo'lganda sotib olinadi.\n"
-                f"Hozirgi joningiz: *{jon_val}%*",
-                parse_mode="Markdown",
-                reply_markup=ok_kb(uid)
+                T(uid, "bozor_jon_high").format(jon=jon_val),
+                parse_mode="Markdown", reply_markup=ok_kb(uid)
             )
             return True
-        if balls < 50:
+        if balls < jon_price:
             bot.send_message(uid,
-                f"⭐ *Balingiz yetarli emas!*\n\nJon sotib olish uchun *50 ball* kerak.\n"
-                f"Sizda hozir: *{balls} ball*\n\n"
-                "Har kuni odatlarni bajaring — ball to'playsiz! 💪",
-                parse_mode="Markdown",
-                reply_markup=ok_kb(uid)
+                T(uid, "bozor_jon_no_pts").format(price=jon_price, points=balls),
+                parse_mode="Markdown", reply_markup=ok_kb(uid)
             )
             return True
-        u["points"] = balls - 50
+        u["points"] = balls - jon_price
         u["jon"]    = 100.0
         save_user(uid, u)
         bot.send_message(uid,
-            "❤️ *Jon tiklandi!*\n\n"
-            "50 ball sarflandi — joningiz *100%* ga qaytdi!\n"
-            "Endi odatlarni davom ettiring! 💪",
-            parse_mode="Markdown",
-            reply_markup=ok_kb(uid)
+            T(uid, "bozor_jon_ok").format(price=jon_price),
+            parse_mode="Markdown", reply_markup=ok_kb(uid)
         )
         return True
 
@@ -101,58 +98,41 @@ def handle_shop_callbacks(call, uid, cdata, u):
         ref_link     = f"https://t.me/{bot_username}?start=ref_{uid}"
         ref_count    = len(u.get("referrals", []))
         balls_from_refs = ref_count * 50
-        # Chegara sovg'alar ro'yxati
+        # Chegara sovg'alar ro'yxati (til-neytral, emoji + raqam)
         milestones = [
-            (5,  "🛡 Streak himoyasi",
-                 "Bir kun odat bajarmay qolsangiz\nstreakingiz saqlanib qoladi!"),
-            (10, "⭐ +100 ball bonus",  ""),
-            (20, "💎 VIP nishon",
-                 "Reytingda maxsus belgi +\nkelajakda imtiyozlar!"),
+            (5,  "🛡 Streak shield",   ""),
+            (10, "⭐ +100 bonus",       ""),
+            (20, "💎 VIP badge",        ""),
         ]
-        # Sarlavha
-        text  = "👥 *Do'st taklif qilish*\n\n"
-        text += f"*🔗 Sizning linkingiz:*\n`{ref_link}`\n\n"
-        text += f"*👥 Taklif qilganlar:* {ref_count} ta do'st\n"
-        text += f"*⭐ Yig'ilgan ball:* +{balls_from_refs}\n"
+        # Matn yig'ish
+        text  = T(uid, "bozor_ref_title") + "\n\n"
+        text += T(uid, "bozor_ref_link").format(link=ref_link) + "\n\n"
+        text += T(uid, "bozor_ref_stats").format(count=ref_count, balls=balls_from_refs) + "\n"
         text += "\n" + "━" * 16 + "\n"
-        # Har bir do'st uchun mukofot
-        text += "*🎁 Har bir do'st uchun:*\n"
-        text += "• Siz: *+50 ball*\n"
-        text += "• Do'stingiz: *+25 ball*\n"
+        text += T(uid, "bozor_ref_reward") + "\n"
         text += "\n" + "━" * 16 + "\n"
-        # Chegara sovg'alari
-        text += "*🏆 Chegara sovg'alari:*\n"
-        next_found = False
+        text += T(uid, "bozor_ref_goals") + "\n"
         for m_count, m_title, m_desc in milestones:
             if ref_count >= m_count:
-                # Allaqachon olindi
-                text += f"✅ *{m_count} ta* → {m_title}\n"
+                text += f"✅ *{m_count}* → {m_title}\n"
             else:
-                if not next_found:
-                    # Keyingi maqsad
-                    need = m_count - ref_count
-                    text += f"⬜ *{m_count} ta* → {m_title}\n"
-                    if m_desc:
-                        for line in m_desc.split("\n"):
-                            text += f"          _{line}_\n"
-                    next_found = True
-                else:
-                    text += f"⬜ *{m_count} ta* → {m_title}\n"
-                    if m_desc:
-                        for line in m_desc.split("\n"):
-                            text += f"          _{line}_\n"
+                text += f"⬜ *{m_count}* → {m_title}\n"
+                if m_desc:
+                    for line in m_desc.split("\n"):
+                        text += f"          _{line}_\n"
         text += "\n"
-        # Keyingi chegaragacha qolgan
         next_ms = next((m for m in milestones if ref_count < m[0]), None)
         if next_ms:
             need = next_ms[0] - ref_count
-            text += f"*⏳ Keyingi sovg'agacha:* {need} ta do'st qoldi"
+            text += T(uid, "bozor_ref_next").format(need=need)
         else:
-            text += "🏆 *Barcha chegara sovg'alarini oldingiz!*"
+            text += T(uid, "bozor_ref_all_done")
         kb_ref = InlineKeyboardMarkup()
-        kb_ref.add(InlineKeyboardButton("📋 Havolani nusxalash", switch_inline_query=ref_link))
+        kb_ref.add(InlineKeyboardButton(
+            T(uid, "bozor_ref_copy"), switch_inline_query=ref_link
+        ))
         kb_ref.row(
-            cBtn("⬅️ Orqaga", "menu_bozor", "primary"),
+            cBtn(T(uid, "bozor_btn_back"), "menu_bozor", "primary"),
             cBtn(T(uid, "btn_home"), "menu_main", "primary")
         )
         sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb_ref)
@@ -165,17 +145,9 @@ def handle_shop_callbacks(call, uid, cdata, u):
         try: bot.delete_message(uid, call.message.message_id)
         except Exception: pass
         u["state"] = "bozor_waiting_transfer_id"
-        cancel_kb = InlineKeyboardMarkup()
-        cancel_kb.row(
-            cBtn("⬅️ Orqaga", "menu_bozor", "primary"),
-            cBtn(T(uid, "btn_home"), "menu_main", "primary")
-        )
         sent = bot.send_message(
-            uid,
-            "💸 *Ballarni ayirboshlash*\n\n"
-            "Ballarni yubormoqchi bo'lgan foydalanuvchining *Telegram ID* sini kiriting:\n\n"
-            "_ID raqamni foydalanuvchidan so'rang yoki reyitingda ko'ring_",
-            parse_mode="Markdown", reply_markup=cancel_kb
+            uid, T(uid, "bozor_transfer_ask"),
+            parse_mode="Markdown", reply_markup=_bozor_back_row(uid)
         )
         u["temp_msg_id"] = sent.message_id
         save_user(uid, u)
@@ -187,15 +159,18 @@ def handle_shop_callbacks(call, uid, cdata, u):
         except Exception: pass
         balls = u.get("points", 0)
         kb_edit = InlineKeyboardMarkup()
-        kb_edit.add(InlineKeyboardButton("🔴 Ballarimni 0 ga tushirish", callback_data="bozor_reset_confirm"))
-        kb_edit.add(InlineKeyboardButton("➖ Ballarimdan qanchasini olib tashlash", callback_data="bozor_subtract"))
+        kb_edit.add(InlineKeyboardButton(
+            T(uid, "bozor_btn_reset"), callback_data="bozor_reset_confirm"
+        ))
+        kb_edit.add(InlineKeyboardButton(
+            T(uid, "bozor_edit_sub_btn"), callback_data="bozor_subtract"
+        ))
         kb_edit.row(
-            cBtn("⬅️ Orqaga", "menu_bozor", "primary"),
+            cBtn(T(uid, "bozor_btn_back"), "menu_bozor", "primary"),
             cBtn(T(uid, "btn_home"), "menu_main", "primary")
         )
         sent = bot.send_message(
-            uid,
-            f"✏️ *Ballarni tahrirlash*\n\n⭐ Joriy balingiz: *{balls} ball*",
+            uid, T(uid, "bozor_edit_title").format(points=balls),
             parse_mode="Markdown", reply_markup=kb_edit
         )
         u["main_msg_id"] = sent.message_id
@@ -208,12 +183,11 @@ def handle_shop_callbacks(call, uid, cdata, u):
         except Exception: pass
         kb_conf = InlineKeyboardMarkup()
         kb_conf.row(
-            cBtn("✅ Ha, 0 ga tushirish", "bozor_reset_do", "success"),
-            InlineKeyboardButton("❌ Yo'q",               callback_data="menu_bozor")
+            cBtn(T(uid, "bozor_reset_yes"), "bozor_reset_do", "success"),
+            InlineKeyboardButton(T(uid, "bozor_reset_no"), callback_data="menu_bozor")
         )
         sent = bot.send_message(
-            uid,
-            "⚠️ Haqiqatan ham barcha ballaringizni *0 ga* tushirmoqchimisiz?",
+            uid, T(uid, "bozor_reset_warn"),
             parse_mode="Markdown", reply_markup=kb_conf
         )
         u["main_msg_id"] = sent.message_id
@@ -232,20 +206,24 @@ def handle_shop_callbacks(call, uid, cdata, u):
             try: bot.delete_message(chat_id, mid)
             except: pass
         threading.Thread(target=del_reset_ok, args=(uid, sent_ok.message_id), daemon=True).start()
-        # Bozor menyusiga qaytish
-        balls = 0
-        kb_b  = InlineKeyboardMarkup()
-        kb_b.add(InlineKeyboardButton("💸 Ballarni ayirboshlash",    callback_data="bozor_transfer"))
-        kb_b.add(InlineKeyboardButton("🔴 Ballarimni 0 ga tushirish", callback_data="bozor_reset_confirm"))
-        kb_b.add(InlineKeyboardButton("➖ Ballarimdan olib tashlash",  callback_data="bozor_subtract"))
-        kb_b.add(cBtn(T(uid, "btn_home"),             "menu_main", "primary"))
+        # Bozor menyusiga qaytish — yangilangan matn bilan
+        jon_val = round(u.get("jon", 100.0))
+        jon_price = SHOP_PRICES["jon_restore"]
+        ref_count = len(u.get("referrals", []))
+        bozor_text = T(uid, "bozor_title").format(
+            points=0, ref_count=ref_count,
+            jon=jon_val, jon_price=jon_price
+        )
+        btn_jon = T(uid, "bozor_btn_buy_jon").format(price=jon_price)
+        kb_b = InlineKeyboardMarkup()
+        kb_b.add(InlineKeyboardButton(btn_jon, callback_data="bozor_buy_jon"))
+        kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_referral"), callback_data="bozor_referral"))
+        kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_transfer"), callback_data="bozor_transfer"))
+        kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_reset"),    callback_data="bozor_reset_confirm"))
+        kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_subtract"), callback_data="bozor_subtract"))
+        kb_b.add(cBtn(T(uid, "btn_home"), "menu_main", "primary"))
         sent2 = bot.send_message(
-            uid,
-            f"🛒 *Bozor —* bu sizning ballaringiz bilan qilinadigan barcha ammalar joyi.\n\n*⭐ Sizning balingiz:* {balls} ball\n\n"
-            "*💸 Ballarni ayirboshlash —* yaqin insoniga ball yuborish\n"
-            "*🔴 Ballarimni 0 ga tushirish —* barcha ballarni nollash\n"
-            "*➖ Ballarimdan olib tashlash —* ma'lum miqdorni ayirish",
-            parse_mode="Markdown", reply_markup=kb_b
+            uid, bozor_text, parse_mode="Markdown", reply_markup=kb_b
         )
         u2 = load_user(uid)
         u2["main_msg_id"] = sent2.message_id
@@ -257,15 +235,10 @@ def handle_shop_callbacks(call, uid, cdata, u):
         try: bot.delete_message(uid, call.message.message_id)
         except Exception: pass
         u["state"] = "bozor_waiting_subtract"
-        cancel_kb = InlineKeyboardMarkup()
-        cancel_kb.row(
-            cBtn("⬅️ Orqaga", "menu_bozor", "primary"),
-            cBtn(T(uid, "btn_home"), "menu_main", "primary")
-        )
         sent = bot.send_message(
             uid,
-            f"➖ *Ballarni olib tashlash*\n\n⭐ Joriy balingiz: *{u.get('points', 0)} ball*\n\nQancha ball olib tashlansin?",
-            parse_mode="Markdown", reply_markup=cancel_kb
+            T(uid, "bozor_sub_ask").format(points=u.get("points", 0)),
+            parse_mode="Markdown", reply_markup=_bozor_back_row(uid)
         )
         u["temp_msg_id"] = sent.message_id
         save_user(uid, u)

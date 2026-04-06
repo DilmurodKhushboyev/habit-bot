@@ -956,8 +956,9 @@ def handle_successful_payment(msg):
             else:
                 msg_text = "🎁 Sovga qutisi ochildi!"
         else:
-            inventory[item_id] = inventory.get(item_id, 0) + 1
-            msg_text = f"✅ *{item_id}* muvaffaqiyatli olindi!"
+            # Noma'lum Stars mahsulot — xato holati (bo'lmasligi kerak)
+            print(f"[stars] Noma'lum item_id: {item_id}, uid={uid}")
+            return
         u["inventory"] = inventory
         save_user(uid, u)
         bot.send_message(uid, msg_text, parse_mode="Markdown")
