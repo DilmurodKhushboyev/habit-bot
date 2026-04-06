@@ -76,7 +76,7 @@ function renderProfile(d) {
 
       ${(d.active_car || d.streak_shields > 0 || d.bonus_2x_active || d.bonus_3x_active || d.xp_booster_days > 0) ? `
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
-        ${d.active_car ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px">${d.active_car} <span style="color:var(--sub)">Avto</span></div>` : ''}
+        ${d.active_car ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px">${d.active_car} <span style="color:var(--sub)">${S('profile','avto')}</span></div>` : ''}
         ${d.streak_shields > 0 ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgShield" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShield)" opacity="0.85"/></svg><span style="color:var(--sub)">${d.streak_shields}x ${S('profile','shield_badge')}</span></div>` : ''}
         ${d.bonus_2x_active ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgBolt" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBolt)"/></svg><span style="color:#5B8DEF;font-weight:700">2× bonus</span></div>` : ''}
         ${d.bonus_3x_active ? `<div style="display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:20px;padding:4px 10px;box-shadow:var(--sh-sm);font-size:12px"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgFireB" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireB)"/></svg><span style="color:#E07040;font-weight:700">3× bonus</span></div>` : ''}
@@ -90,11 +90,26 @@ function renderProfile(d) {
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:700;color:var(--sub)"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgHeart" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 17C10 17 2 12 2 6.5A4.5 4.5 0 0110 4a4.5 4.5 0 018 2.5C18 12 10 17 10 17z" fill="url(#svgHeart)"/></svg> JON</span>
+        <span style="font-size:12px;font-weight:700;color:var(--sub)"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgHeart" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 17C10 17 2 12 2 6.5A4.5 4.5 0 0110 4a4.5 4.5 0 018 2.5C18 12 10 17 10 17z" fill="url(#svgHeart)"/></svg> ${S('profile','jon_label')}</span>
         <span style="font-size:12px;font-weight:700;color:${jonColor}">${jon}%</span>
       </div>
       <div class="jon-bar-bg"><div class="jon-bar-fill" style="width:${jon}%;background:${jonColor}"></div></div>
+
+      ${d.total_ach ? `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:700;color:var(--sub)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgAchT" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 2l1.8 5.5H20l-4.9 3.6 1.8 5.5L12 13l-4.9 3.6 1.8-5.5L4 7.5h6.2z" fill="url(#svgAchT)"/></svg> ${S('profile','achievements')}</span>
+        <span style="font-size:12px;font-weight:700;color:${achColor}">${d.earned_ach}/${d.total_ach} (${achPct}%)</span>
+      </div>
+      <div class="jon-bar-bg"><div class="jon-bar-fill" style="width:${achPct}%;background:${achColor}"></div></div>
+      ` : ''}
     </div>
+
+    ${d.habits && d.habits.length ? `
+    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgHabP" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M9 11l3 3L22 4" stroke="url(#svgHabP)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="url(#svgHabP)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> ${S('nav','today')} (${d.habits.length})</div>
+    <div class="habits-list" style="margin-bottom:12px">
+      ${d.habits.map(h => `<div class="habit-item"><span style="font-size:20px">${h.icon || '✅'}</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.name}</div></div><div style="text-align:right;font-size:11px"><div style="font-weight:700;color:var(--green)">${h.streak || 0} 🔥</div></div></div>`).join('')}
+    </div>
+    ` : ''}
 
     <!-- Do'st taklif qilish -->
     <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgRefH" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="url(#svgRefH)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="9" cy="7" r="4" stroke="url(#svgRefH)" stroke-width="2" fill="none"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="url(#svgRefH)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> ${S('msg','ref_title')}</div>
@@ -517,3 +532,26 @@ async function saveLang() {
   }
 }
 
+// ── Referral link nusxalash ──
+function copyRefLink(link) {
+  if (!link) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(() => {
+      const t = document.getElementById('toast-profile');
+      if (t) { t.textContent = S('msg','copy_link'); t.className = 'toast show'; setTimeout(() => t.className = 'toast', 2500); }
+    }).catch(() => {
+      _fallbackCopyRef(link);
+    });
+  } else {
+    _fallbackCopyRef(link);
+  }
+}
+function _fallbackCopyRef(link) {
+  const ta = document.createElement('textarea');
+  ta.value = link; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  const t = document.getElementById('toast-profile');
+  if (t) { t.textContent = S('msg','copy_link'); t.className = 'toast show'; setTimeout(() => t.className = 'toast', 2500); }
+}
