@@ -1689,3 +1689,66 @@ body.dark @keyframes splIconPulse {
 }
 .shop-empty-text { font-size: 13px; line-height: 1.5; }
 
+/* ── Shop: Info tugma (yuqori oʻng burchak) ── */
+.shop-item { position: relative; }
+.shop-item-info-btn {
+  position: absolute; top: 10px; right: 10px; z-index: 2;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--bg); box-shadow: var(--sh-out);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: var(--accent);
+  transition: transform .15s, box-shadow .15s;
+}
+.shop-item-info-btn:active { transform: scale(.9); box-shadow: var(--sh-in); }
+
+/* ── Shop: Confirm/Info modal overlay ── */
+.shop-modal-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .2s;
+  pointer-events: none;
+}
+.shop-modal-overlay.show { opacity: 1; pointer-events: auto; }
+.shop-modal-box {
+  width: 88%; max-width: 320px;
+  background: var(--card); border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.25);
+  padding: 24px 20px; text-align: center;
+  transform: scale(.9); transition: transform .2s;
+}
+.shop-modal-overlay.show .shop-modal-box { transform: scale(1); }
+.shop-modal-emoji { font-size: 42px; margin-bottom: 8px; }
+.shop-modal-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.shop-modal-desc { font-size: 13px; color: var(--sub); line-height: 1.5; margin-bottom: 16px; }
+.shop-modal-effect {
+  background: var(--bg); border-radius: 12px;
+  box-shadow: var(--sh-in); padding: 12px 14px;
+  text-align: left; margin-bottom: 16px; font-size: 13px;
+  color: var(--text); line-height: 1.6;
+}
+.shop-modal-effect-label { font-weight: 700; color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.shop-modal-meta { font-size: 12px; color: var(--sub); margin-bottom: 16px; }
+.shop-modal-btns { display: flex; gap: 10px; }
+.shop-modal-btns button {
+  flex: 1; padding: 11px 0; border: none; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: transform .1s, box-shadow .1s;
+}
+.shop-modal-btns button:active { transform: scale(.96); }
+.shop-modal-btn-yes {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: #fff; box-shadow: 0 4px 12px rgba(16,185,129,.3);
+}
+.shop-modal-btn-no {
+  background: var(--bg); box-shadow: var(--sh-out);
+  color: var(--sub);
+}
+.shop-modal-btn-close {
+  width: 100%; padding: 11px 0; border: none; border-radius: 12px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  background: var(--bg); box-shadow: var(--sh-out); color: var(--sub);
+}
+.shop-modal-btn-close:active { transform: scale(.96); box-shadow: var(--sh-in); }
+

@@ -544,8 +544,6 @@ function renderShop(d) {
   const visItems = items.filter(i => _shopCat === 'all' || i.cat === _shopCat);
   const cats = [
     ['all',       S('bozor','all')],
-    ['premium',   '👑 '+S('shop','cat_premium')],
-    ['stars',     '⭐ '+S('shop','cat_stars')],
     ['protection',svgShield+S('bozor','protection')],
     ['bonus',     svgBolt+S('bozor','bonus')],
     ['badge',     '🏅 '+S('shop','cat_badge')],
@@ -566,6 +564,7 @@ function renderShop(d) {
     const pct      = hasBall ? Math.min(100, Math.round(points / item.price_ball * 100)) : 0;
 
     return `<div class="shop-item${cantBuy?' sold-out':''}" data-cat="${item.cat}">
+      <button onclick="openShopInfo('${item.id}')" type="button" class="shop-item-info-btn">ℹ</button>
       <div class="shop-item-top">
         <div class="shop-item-emoji">${item.emoji}</div>
         <div class="shop-item-info">
@@ -616,7 +615,95 @@ function setShopCat(cat) {
   if (_shopData) renderShop(_shopData);
 }
 
+/* ── Shop: Info modal ── */
+function openShopInfo(itemId) {
+  if (!_shopData) return;
+  const item = _shopData.items.find(i => i.id === itemId);
+  if (!item) return;
+  const effectText = S('bozor', 'info_' + itemId) || item.desc || '';
+  const priceText = item.price_ball > 0
+    ? `${item.price_ball} ${S('shop','points_unit')}`
+    : `${item.price_stars} Stars`;
+  const sellText = item.sell_price > 0
+    ? `${item.sell_price} ${S('shop','points_unit')}`
+    : '—';
+  // Overlay yaratish
+  let ov = document.getElementById('shop-modal-ov');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'shop-modal-ov';
+    ov.className = 'shop-modal-overlay';
+    ov.onclick = (e) => { if (e.target === ov) closeShopModal(); };
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = `<div class="shop-modal-box">
+    <div class="shop-modal-emoji">${item.emoji}</div>
+    <div class="shop-modal-title">${item.name}</div>
+    <div class="shop-modal-desc">${item.desc}</div>
+    <div class="shop-modal-effect">
+      <div class="shop-modal-effect-label">${S('shop','info_effect')}</div>
+      ${effectText}
+    </div>
+    <div class="shop-modal-meta">
+      <b>${S('shop','info_price')}:</b> ${priceText}
+      ${item.sell_price > 0 ? ` · <b>${S('shop','info_sell')}:</b> ${sellText}` : ''}
+    </div>
+    <button onclick="closeShopModal()" type="button" class="shop-modal-btn-close">${S('shop','info_close')}</button>
+  </div>`;
+  requestAnimationFrame(() => ov.classList.add('show'));
+  try { tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
+}
+
+/* ── Shop: Confirm buy modal ── */
+function confirmBuyItem(itemId, method) {
+  if (!_shopData) return;
+  const item = _shopData.items.find(i => i.id === itemId);
+  if (!item) return;
+  const priceText = method === 'stars'
+    ? `${item.price_stars} Stars`
+    : `${item.price_ball} ${S('shop','points_unit')}`;
+  const msg = S('shop','confirm_msg').replace('{name}', item.name).replace('{price}', priceText);
+  let ov = document.getElementById('shop-modal-ov');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'shop-modal-ov';
+    ov.className = 'shop-modal-overlay';
+    ov.onclick = (e) => { if (e.target === ov) closeShopModal(); };
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = `<div class="shop-modal-box">
+    <div class="shop-modal-emoji">${item.emoji}</div>
+    <div class="shop-modal-title">${S('shop','confirm_title')}</div>
+    <div class="shop-modal-desc">${msg}</div>
+    <div class="shop-modal-btns">
+      <button onclick="closeShopModal()" type="button" class="shop-modal-btn-no">${S('shop','confirm_no')}</button>
+      <button onclick="_doConfirmedBuy('${itemId}','${method}')" type="button" class="shop-modal-btn-yes">${S('shop','confirm_yes')}</button>
+    </div>
+  </div>`;
+  requestAnimationFrame(() => ov.classList.add('show'));
+  try { tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
+}
+
+function closeShopModal() {
+  const ov = document.getElementById('shop-modal-ov');
+  if (ov) {
+    ov.classList.remove('show');
+    setTimeout(() => { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 250);
+  }
+}
+
+/* _doConfirmedBuy — tasdiqlangan sotib olish (asl buyItem logikasi) */
+function _doConfirmedBuy(itemId, method) {
+  closeShopModal();
+  _executeBuy(itemId, method);
+}
+
 async function buyItem(itemId, method) {
+  // Sotib olishdan oldin tasdiqlash modali koʻrsatish
+  confirmBuyItem(itemId, method);
+}
+
+async function _executeBuy(itemId, method) {
   // ── Double-tap guard ──
   const lockKey = `buy_${itemId}_${method}`;
   if (_shopActionLock.has(lockKey)) return;
