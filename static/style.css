@@ -1,9 +1,9 @@
 :root {
-  --bg:        #E0E3EA;
-  --bg2:       #D6D9E0;
-  --surface:   #E8EBF2;
-  --raised:    #ECEEF5;
-  --text:      #3A3D4A;
+  --bg:        #E8ECF2;
+  --bg2:       #DFE3EA;
+  --surface:   #E8ECF2;
+  --raised:    #EDF0F6;
+  --text:      #2D3142;
   --sub:       #8A8D9A;
   --accent:    #E07040;
   --accent2:   #5B8DEF;
@@ -11,12 +11,12 @@
   --red:       #E05050;
   --gold:      #D4963A;
 
-  /* Neumorphism shadows */
-  --sh-out:    6px 6px 14px #B8BBCA, -6px -6px 14px #FFFFFF;
-  --sh-in:     inset 4px 4px 10px #B8BBCA, inset -4px -4px 10px #FFFFFF;
-  --sh-sm:     3px 3px 8px #B8BBCA, -3px -3px 8px #FFFFFF;
-  --sh-press:  inset 2px 2px 6px #B8BBCA, inset -2px -2px 6px #FFFFFF;
-  --sh-card:   8px 8px 20px #B0B3C2, -8px -8px 20px #FFFFFF;
+  /* Neumorphism 2.0 — softer, wider, cleaner */
+  --sh-out:    10px 10px 24px #C8CCD6, -10px -10px 24px #FFFFFF;
+  --sh-in:     inset 6px 6px 14px #C8CCD6, inset -6px -6px 14px #FFFFFF;
+  --sh-sm:     5px 5px 12px #C8CCD6, -5px -5px 12px #FFFFFF;
+  --sh-press:  inset 3px 3px 8px #C8CCD6, inset -3px -3px 8px #FFFFFF;
+  --sh-card:   14px 14px 30px #C0C4CE, -14px -14px 30px #FFFFFF;
 }
 
 /* ── DARK MODE ── */
