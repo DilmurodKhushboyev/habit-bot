@@ -172,6 +172,7 @@ def register_core_routes(app):
             "evening_notify":   u.get("evening_notify", True),
             "lang":             u.get("lang", "uz"),
             "phone":            u.get("phone", ""),
+            "bio":              u.get("bio", ""),
             "ref_count":        len(u.get("referrals", [])),
             "ref_link":         f"https://t.me/{get_bot_username()}?start=ref_{uid}",
         })
@@ -214,6 +215,12 @@ def register_core_routes(app):
         if "evening_notify" in data:
             u["evening_notify"] = bool(data["evening_notify"])
             updated.append("evening_notify")
+        # bio
+        if "bio" in data:
+            val = (data["bio"] or "").strip()
+            if len(val) <= 200:
+                u["bio"] = val
+                updated.append("bio")
         if not updated:
             return jsonify({"ok": True, "updated": []})
         save_user(uid, u)
