@@ -100,18 +100,6 @@ function renderProfile(d) {
       ` : ''}
     </div>
 
-    <!-- Do'st taklif qilish — tugma (sozlamalar patternida) -->
-    <div class="rem-card" style="margin-bottom:8px;cursor:pointer" onclick="openReferralModal()">
-      <div class="rem-top" style="margin-bottom:0">
-        <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgRefLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="9" cy="9" r="3.8" fill="url(#svgRefLg)" opacity="0.85"/><circle cx="18" cy="9.5" r="3" fill="url(#svgRefLg)" opacity="0.6"/><path d="M2 22c0-3.8 3.2-7 7-7s7 3.2 7 7" stroke="url(#svgRefLg)" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M18 16c2.8.5 5.5 2.8 5.5 5.5" stroke="url(#svgRefLg)" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.6"/></svg></div>
-        <div>
-          <div class="rem-name">${S('msg','ref_title')}</div>
-          <div style="font-size:10px;color:var(--sub)">${S('msg','ref_count').replace('{n}', d.ref_count || 0)} · +${(d.ref_count || 0) * 50} ${S('msg','ref_total_pts')}</div>
-        </div>
-        <div style="color:var(--sub);font-size:18px;margin-left:auto">›</div>
-      </div>
-    </div>
-
     <!-- Do'st taklif qilish — MODAL (shop-modal pattern ishlatilgan) -->
     <div class="shop-modal-overlay" id="ref-modal" onclick="if(event.target===this)closeReferralModal()">
       <div class="shop-modal-box" style="max-width:340px;text-align:left">
@@ -185,6 +173,17 @@ function renderProfile(d) {
         <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgGlobLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><circle cx="13" cy="13" r="10" stroke="url(#svgGlobLg)" stroke-width="2"/><ellipse cx="13" cy="13" rx="4.5" ry="10" stroke="url(#svgGlobLg)" stroke-width="1.5"/><path d="M3 13h20M3 9h20M3 17h20" stroke="url(#svgGlobLg)" stroke-width="1.2" opacity="0.5"/></svg></div>
         <div class="rem-name">${S('profile','bot_lang')}</div>
         <div style="color:var(--sub);font-size:18px">›</div>
+      </div>
+    </div>
+    <!-- Do'st taklif qilish — tugma (sozlamalar patternida, Bot tilidan keyin) -->
+    <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="openReferralModal()">
+      <div class="rem-top" style="margin-bottom:0">
+        <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgRefLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="9" cy="9" r="3.8" fill="url(#svgRefLg)" opacity="0.85"/><circle cx="18" cy="9.5" r="3" fill="url(#svgRefLg)" opacity="0.6"/><path d="M2 22c0-3.8 3.2-7 7-7s7 3.2 7 7" stroke="url(#svgRefLg)" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M18 16c2.8.5 5.5 2.8 5.5 5.5" stroke="url(#svgRefLg)" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.6"/></svg></div>
+        <div>
+          <div class="rem-name">${S('msg','ref_title')}</div>
+          <div style="font-size:10px;color:var(--sub)">${S('msg','ref_count').replace('{n}', d.ref_count || 0)} · +${(d.ref_count || 0) * 50} ${S('msg','ref_total_pts')}</div>
+        </div>
+        <div style="color:var(--sub);font-size:18px;margin-left:auto">›</div>
       </div>
     </div>
     <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('reminders',null)">
