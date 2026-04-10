@@ -1167,6 +1167,8 @@ function openUserInventory(userName, itemsList) {
       </div>
     </div>`;
   document.body.appendChild(modal);
+  // .show klassini qoʻshish — animatsiya + pointer-events: auto uchun
+  requestAnimationFrame(() => { modal.classList.add('show'); });
 
   // Haptic feedback
   try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
@@ -1174,6 +1176,10 @@ function openUserInventory(userName, itemsList) {
 
 function closeUserInventory() {
   const modal = document.getElementById('user-inv-modal');
-  if (modal) modal.remove();
+  if (modal) {
+    modal.classList.remove('show');
+    // Animatsiya tugagandan keyin olib tashlash
+    setTimeout(() => { if (modal.parentNode) modal.remove(); }, 250);
+  }
 }
 
