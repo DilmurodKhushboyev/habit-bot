@@ -978,9 +978,9 @@ function renderRating(d) {
           display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:6px;gap:3px">
           <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;justify-content:center">
             ${u.habits_count ? `<div style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><rect x="8" y="2" width="8" height="4" rx="1" stroke="${col}" stroke-width="2"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="${col}" stroke-width="2"/><path d="M8 11h8M8 15h5" stroke="${col}" stroke-width="2" stroke-linecap="round"/></svg> ${u.habits_count}</div>` : ''}
-            ${u.active_items ? `<div style="font-size:9px;white-space:nowrap">${u.active_items}</div>` : ''}
             ${(j=>{const e=j>=80?'❤️':j>=50?'🧡':j>=20?'💛':'🖤';return `<div style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap">${e} ${j}%</div>`;})(u.jon??100)}
           </div>
+          ${u.active_items ? `<div class="rat-podium-inv" style="font-size:9px;width:100%;padding:0 2px;margin-top:2px"><div>${u.active_items}</div></div>` : ''}
           <div style="font-size:16px;font-weight:800;color:${col}">${idx+1}</div>
         </div>
       </div>`;
