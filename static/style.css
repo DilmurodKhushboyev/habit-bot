@@ -220,49 +220,15 @@ body {
 .profile-name { font-size: 18px; font-weight: 700; color: var(--text); }
 .profile-rank { font-size: 12px; color: var(--sub); margin-top: 3px; }
 
-.profile-chips {
-  display: flex; gap: 8px; flex-wrap: nowrap;
-  margin-top: 10px;
-  overflow-x: auto; overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 6px 8px 8px 8px;
-  margin-left: -8px;
-  margin-right: -8px;
-}
-.profile-chips::-webkit-scrollbar { display: none; }
+.profile-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
 .profile-chip {
   display: flex; align-items: center; gap: 4px;
   background: var(--bg); border-radius: 20px;
   padding: 4px 10px; box-shadow: var(--sh-sm); font-size: 12px;
-  flex-shrink: 0; white-space: nowrap;
 }
 .profile-chip-label { color: var(--sub); }
 .profile-chip-accent { font-weight: 700; }
 
-/* Reyting 4-10 qator va "mening oʻrnim" uchun inventory scroll */
-.rat-inv-scroll {
-  display: flex; gap: 4px;
-  overflow-x: auto; overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  max-width: 100%;
-  min-width: 0;
-}
-.rat-inv-scroll::-webkit-scrollbar { display: none; }
-.rat-inv-scroll > div { flex-shrink: 0; white-space: nowrap; }
-
-/* Reyting podium (top-3) uchun inventory scroll */
-.rat-podium-inv {
-  display: flex; gap: 3px;
-  overflow-x: auto; overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  max-width: 100%;
-  justify-content: flex-start;
-}
-.rat-podium-inv::-webkit-scrollbar { display: none; }
-.rat-podium-inv > div { flex-shrink: 0; white-space: nowrap; }
 .profile-bio {
   font-size: 13px; color: var(--sub); line-height: 1.5;
   margin-top: 12px; padding: 0 2px;
