@@ -74,13 +74,21 @@ function renderProfile(d) {
         ${d.active_pet ? `<div style="font-size:36px;line-height:1" title="Pet">${d.active_pet}</div>` : ''}
       </div>
 
-      ${d.items_count > 0 ? `
+      ${(() => {
+        if (!(d.items_count > 0)) return '';
+        window._invCache = window._invCache || {};
+        window._invCache['profile_me'] = {
+          name: d.display_name || d.name || '',
+          list: d.items_list || []
+        };
+        return `
       <div class="profile-chips">
-        <div class="profile-chip" style="cursor:pointer" onclick="openUserInventory(${JSON.stringify(d.display_name || d.name || '').replace(/"/g,'&quot;')}, ${JSON.stringify(d.items_list || []).replace(/"/g,'&quot;')})">
+        <div class="profile-chip" style="cursor:pointer" onclick="openUserInventoryByKey('profile_me')">
           <span style="font-size:14px">🎒</span>
           <span class="profile-chip-accent" style="color:#A78BFA">${d.items_count} ${S('inventory','badge_label')}</span>
         </div>
-      </div>` : ''}
+      </div>`;
+      })()}
 
       ${d.bio
         ? `<div class="profile-bio">${d.bio.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
