@@ -349,6 +349,8 @@ async function saveEditProfile() {
   if (bio !== undefined && bio !== null) body.bio = bio;
   if (_epPhotoDataUrl) body.photo_url   = _epPhotoDataUrl;
   if (!Object.keys(body).length) { closeEditProfile(); return; }
+  const btn = document.getElementById('edit-save-txt')?.parentElement;
+  if (btn) { btn.disabled = true; document.getElementById('edit-save-txt').textContent = S('profile','saving'); }
   try {
     const res = await fetch(`${API}/profile/${userId}`, {
       method: 'PUT',
@@ -358,14 +360,18 @@ async function saveEditProfile() {
     const rj = await res.json().catch(() => ({}));
     const t = document.getElementById('toast-profile');
     if (!res.ok || rj.ok === false) {
+      if (btn) { btn.disabled = false; document.getElementById('edit-save-txt').textContent = S('profile','save_btn'); }
       if (t) { t.textContent = '❌ ' + (rj.error || S('msg','error_label')); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
       return;
     }
     closeEditProfile();
+    if (btn) { btn.disabled = false; document.getElementById('edit-save-txt').textContent = S('profile','save_btn'); }
     loaded.profile = false;
     await loadProfile();
     if (t) { t.textContent = S('profile','saved'); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
   } catch(e) {
+    const btn2 = document.getElementById('edit-save-txt')?.parentElement;
+    if (btn2) { btn2.disabled = false; document.getElementById('edit-save-txt').textContent = S('profile','save_btn'); }
     const t = document.getElementById('toast-profile');
     if (t) { t.textContent = '❌ ' + S('msg','error_label'); t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
   }
