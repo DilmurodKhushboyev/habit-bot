@@ -83,7 +83,16 @@ function renderProfile(d) {
         ${d.xp_booster_days > 0 ? `<div class="profile-chip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDiamond" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M6 3h12l4 6-10 12L2 9z" fill="url(#svgDiamond)" opacity="0.85"/></svg><span class="profile-chip-accent" style="color:#5B8DEF">💎 ${d.xp_booster_days} ${S('profile','kun')}</span></div>` : ''}
       </div>` : ''}
 
-      ${d.bio ? `<div class="profile-bio">${d.bio.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+      ${d.bio
+        ? `<div class="profile-bio">${d.bio.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
+        : `<div class="profile-bio-empty" onclick="openEditProfile()">
+             <div class="profile-bio-empty-icon">✨</div>
+             <div class="profile-bio-empty-text">
+               <div class="profile-bio-empty-title">${S('profile','bio_empty_title')}</div>
+               <div class="profile-bio-empty-hint">${S('profile','bio_empty_hint')}</div>
+             </div>
+             <div class="profile-bio-empty-arrow">›</div>
+           </div>`}
 
       <div class="profile-bar-row">
         <span class="profile-bar-label"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgHeart" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 17C10 17 2 12 2 6.5A4.5 4.5 0 0110 4a4.5 4.5 0 018 2.5C18 12 10 17 10 17z" fill="url(#svgHeart)"/></svg> ${S('profile','jon_label')}</span>
