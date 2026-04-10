@@ -936,9 +936,20 @@ function userAvatarHTML(u, size = 32) {
 
 function renderRating(d) {
   const { today, days, day_labels: lbls, users, caller_entry, total_users, sort_by, period } = d;
+  // Inventory cache — har render da tozalanadi, click handler'lar index orqali oladi
+  window._invCache = {};
   const maxScore  = users.length ? Math.max(...users.map(u => u.score), 1) : 1;
   const maxPoints = users.length ? Math.max(...users.map(u => u.points), 1) : 1;
   const maxStreak = users.length ? Math.max(...users.map(u => u.streak), 1) : 1;
+  // Inventory cache key yaratish (u.uid yoki auto key) va global state'ga saqlash
+  function _invKey(u) {
+    const key = 'u' + (u.uid || Math.random().toString(36).slice(2));
+    window._invCache[key] = {
+      name: u.name || '',
+      list: u.items_list || []
+    };
+    return key;
+  }
   function calcPct(u) {
     if (sort_by === 'points') return Math.round((u.points / maxPoints) * 100);
     if (sort_by === 'streak') return Math.round((u.streak / maxStreak) * 100);
@@ -978,7 +989,7 @@ function renderRating(d) {
           display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:6px;gap:3px">
           <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;justify-content:center">
             ${u.habits_count ? `<div style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><rect x="8" y="2" width="8" height="4" rx="1" stroke="${col}" stroke-width="2"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="${col}" stroke-width="2"/><path d="M8 11h8M8 15h5" stroke="${col}" stroke-width="2" stroke-linecap="round"/></svg> ${u.habits_count}</div>` : ''}
-            ${u.active_items ? `<div style="font-size:9px;white-space:nowrap">${u.active_items}</div>` : ''}
+            ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap;cursor:pointer">🎒 ${u.items_count}</div>` : ''}
             ${(j=>{const e=j>=80?'❤️':j>=50?'🧡':j>=20?'💛':'🖤';return `<div style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap">${e} ${j}%</div>`;})(u.jon??100)}
           </div>
           <div style="font-size:16px;font-weight:800;color:${col}">${idx+1}</div>
@@ -1004,7 +1015,7 @@ function renderRating(d) {
           <div style="display:flex;align-items:center;gap:5px">
             <div style="font-size:13px;font-weight:700;color:${isMe?'#5B8DEF':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${u.name}${u.badge?' '+u.badge:''}</div>
             ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#4CAF7D\"/><stop offset=\"100%\" stop-color=\"#5B8DEF\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
-            ${u.active_items ? `<div style="flex-shrink:0;font-size:11px;white-space:nowrap;background:#A78BFA18;border-radius:6px;padding:2px 5px">${u.active_items}</div>` : ''}
+            ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:9px;font-weight:700;color:#A78BFA;background:#A78BFA18;border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer">🎒 ${u.items_count}</div>` : ''}
             ${(j=>{const e=j>=80?"❤️":j>=50?"🧡":j>=20?"💛":"🖤";return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap">${e} ${j}%</div>`;})(u.jon??100)}
           </div>
           <div style="height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-top:5px;overflow:hidden">
@@ -1032,7 +1043,7 @@ function renderRating(d) {
             <div style="display:flex;align-items:center;gap:5px">
               <div style="font-size:13px;font-weight:700;color:#5B8DEF;flex:1">${u.name}</div>
               ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#4CAF7D\"/><stop offset=\"100%\" stop-color=\"#5B8DEF\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
-              ${u.active_items ? `<div style="flex-shrink:0;font-size:11px;white-space:nowrap;background:#A78BFA18;border-radius:6px;padding:2px 5px">${u.active_items}</div>` : ''}
+              ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:9px;font-weight:700;color:#A78BFA;background:#A78BFA18;border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer">🎒 ${u.items_count}</div>` : ''}
               ${(j=>{const e=j>=80?"❤️":j>=50?"🧡":j>=20?"💛":"🖤";return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap">${e} ${j}%</div>`;})(u.jon??100)}
             </div>
             <div style="height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-top:5px;overflow:hidden">
@@ -1075,5 +1086,100 @@ function renderRating(d) {
     ${users.length >= 3 ? podiumHtml : ''}
     ${rowsHtml}
     ${myRowHtml}`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// Inventory Modal — reyting va profil ikkalasi ham ishlatadi
+// ══════════════════════════════════════════════════════════════
+
+// Cache orqali chaqirish (reyting sahifasida ishlatiladi — HTML attribute escape muammolarini oldini oladi)
+function openUserInventoryByKey(key) {
+  const cache = window._invCache || {};
+  const data = cache[key];
+  if (!data) {
+    console.warn('Inventory cache key not found:', key);
+    return;
+  }
+  openUserInventory(data.name, data.list);
+}
+
+function _invEscapeHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function openUserInventory(userName, itemsList) {
+  // Mavjud modal boʻlsa olib tashlash
+  closeUserInventory();
+
+  // Har bir item uchun emoji (backend bilan sinxron)
+  const INV_EMOJI = {
+    pet_cat: '🐱', pet_dog: '🐶', pet_rabbit: '🐰',
+    badge_fire: '🔥', badge_star: '⭐', badge_secret: '👑',
+    car_sport: '🏎️',
+    shield: '🛡️', bonus_2x: '⚡', bonus_3x: '🚀', xp_booster: '💎',
+  };
+
+  const safeName = _invEscapeHtml(userName || '');
+  const title = S('inventory','modal_title').replace('{name}', safeName);
+  const closeLbl = _invEscapeHtml(S('inventory','modal_close'));
+
+  let itemsHtml = '';
+  if (!itemsList || itemsList.length === 0) {
+    itemsHtml = `<div style="text-align:center;color:var(--sub);padding:20px 0;font-size:14px">${_invEscapeHtml(S('inventory','modal_empty'))}</div>`;
+  } else {
+    itemsHtml = '<div style="display:flex;flex-direction:column;gap:8px">';
+    itemsList.forEach(it => {
+      const emoji = INV_EMOJI[it.id] || '📦';
+      const name = _invEscapeHtml(S('inventory','item_' + it.id) || it.id);
+      let qtyText = '';
+      if (it.qty > 1) {
+        if (it.id === 'xp_booster') {
+          qtyText = ` <span style="color:var(--sub);font-weight:500">· ${it.qty} ${_invEscapeHtml(S('inventory','modal_days'))}</span>`;
+        } else {
+          qtyText = ` <span style="color:var(--sub);font-weight:500">× ${it.qty}</span>`;
+        }
+      }
+      itemsHtml += `
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg);border-radius:12px;box-shadow:var(--sh-sm)">
+          <div style="font-size:24px;width:32px;text-align:center">${emoji}</div>
+          <div style="flex:1;font-size:14px;font-weight:600;color:var(--text)">${name}${qtyText}</div>
+        </div>`;
+    });
+    itemsHtml += '</div>';
+  }
+
+  const modal = document.createElement('div');
+  modal.id = 'user-inv-modal';
+  modal.className = 'shop-modal-overlay';
+  modal.onclick = function(e) { if (e.target === modal) closeUserInventory(); };
+  modal.innerHTML = `
+    <div class="shop-modal-box" onclick="event.stopPropagation()">
+      <div class="shop-modal-title" style="text-align:center;margin-bottom:14px">${title}</div>
+      ${itemsHtml}
+      <div class="shop-modal-btns" style="margin-top:16px">
+        <button type="button" class="shop-modal-btn-close" onclick="closeUserInventory()">${closeLbl}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  // .show klassini qoʻshish — animatsiya + pointer-events: auto uchun
+  requestAnimationFrame(() => { modal.classList.add('show'); });
+
+  // Haptic feedback
+  try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
+}
+
+function closeUserInventory() {
+  const modal = document.getElementById('user-inv-modal');
+  if (modal) {
+    modal.classList.remove('show');
+    // Animatsiya tugagandan keyin olib tashlash
+    setTimeout(() => { if (modal.parentNode) modal.remove(); }, 250);
+  }
 }
 

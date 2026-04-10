@@ -225,13 +225,65 @@ body {
   display: flex; align-items: center; gap: 4px;
   background: var(--bg); border-radius: 20px;
   padding: 4px 10px; box-shadow: var(--sh-sm); font-size: 12px;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.profile-chip[onclick]:active {
+  transform: scale(0.92);
+  box-shadow: var(--sh-in);
 }
 .profile-chip-label { color: var(--sub); }
 .profile-chip-accent { font-weight: 700; }
+
+/* Reyting inventory bandasi (🎒 N) bosilgandagi press effekti */
+.inv-badge-clickable {
+  transition: transform .12s ease, filter .12s ease;
+}
+.inv-badge-clickable:active {
+  transform: scale(0.88);
+  filter: brightness(0.92);
+}
+
 .profile-bio {
   font-size: 13px; color: var(--sub); line-height: 1.5;
   margin-top: 12px; padding: 0 2px;
   word-wrap: break-word; white-space: pre-line;
+}
+.profile-bio-empty {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 14px; padding: 12px 14px;
+  background: var(--bg);
+  border: 1.5px dashed rgba(120, 140, 170, 0.35);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.profile-bio-empty:hover {
+  border-color: rgba(91, 141, 239, 0.55);
+  box-shadow: var(--sh-out);
+}
+.profile-bio-empty:active {
+  transform: scale(0.98);
+  box-shadow: var(--sh-in);
+}
+.profile-bio-empty-icon {
+  font-size: 20px; flex-shrink: 0;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(91,141,239,0.12), rgba(167,139,250,0.12));
+}
+.profile-bio-empty-text { flex: 1; min-width: 0; }
+.profile-bio-empty-title {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  margin-bottom: 2px;
+}
+.profile-bio-empty-hint {
+  font-size: 11px; color: var(--sub); line-height: 1.35;
+}
+.profile-bio-empty-arrow {
+  font-size: 22px; color: var(--sub); font-weight: 300;
+  flex-shrink: 0; opacity: 0.6;
 }
 .profile-bar-row {
   display: flex; justify-content: space-between; align-items: center;

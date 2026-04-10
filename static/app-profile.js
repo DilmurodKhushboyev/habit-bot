@@ -74,16 +74,32 @@ function renderProfile(d) {
         ${d.active_pet ? `<div style="font-size:36px;line-height:1" title="Pet">${d.active_pet}</div>` : ''}
       </div>
 
-      ${(d.active_car || d.streak_shields > 0 || d.bonus_2x_active || d.bonus_3x_active || d.xp_booster_days > 0) ? `
+      ${(() => {
+        if (!(d.items_count > 0)) return '';
+        window._invCache = window._invCache || {};
+        window._invCache['profile_me'] = {
+          name: d.display_name || d.name || '',
+          list: d.items_list || []
+        };
+        return `
       <div class="profile-chips">
-        ${d.active_car ? `<div class="profile-chip">${d.active_car} <span class="profile-chip-label">${S('profile','avto')}</span></div>` : ''}
-        ${d.streak_shields > 0 ? `<div class="profile-chip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgShield" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShield)" opacity="0.85"/></svg><span class="profile-chip-label">${d.streak_shields}x ${S('profile','shield_badge')}</span></div>` : ''}
-        ${d.bonus_2x_active ? `<div class="profile-chip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgBolt" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBolt)"/></svg><span class="profile-chip-accent" style="color:#5B8DEF">2× bonus</span></div>` : ''}
-        ${d.bonus_3x_active ? `<div class="profile-chip"><svg width="15" height="15" viewBox="0 0 20 20" fill="none"><defs><linearGradient id="svgFireB" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireB)"/></svg><span class="profile-chip-accent" style="color:#E07040">3× bonus</span></div>` : ''}
-        ${d.xp_booster_days > 0 ? `<div class="profile-chip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDiamond" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M6 3h12l4 6-10 12L2 9z" fill="url(#svgDiamond)" opacity="0.85"/></svg><span class="profile-chip-accent" style="color:#5B8DEF">💎 ${d.xp_booster_days} ${S('profile','kun')}</span></div>` : ''}
-      </div>` : ''}
+        <div class="profile-chip" style="cursor:pointer" onclick="openUserInventoryByKey('profile_me')">
+          <span style="font-size:14px">🎒</span>
+          <span class="profile-chip-accent" style="color:#A78BFA">${d.items_count} ${S('inventory','badge_label')}</span>
+        </div>
+      </div>`;
+      })()}
 
-      ${d.bio ? `<div class="profile-bio">${d.bio.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+      ${d.bio
+        ? `<div class="profile-bio">${d.bio.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
+        : `<div class="profile-bio-empty" onclick="openEditProfile()">
+             <div class="profile-bio-empty-icon">✨</div>
+             <div class="profile-bio-empty-text">
+               <div class="profile-bio-empty-title">${S('profile','bio_empty_title')}</div>
+               <div class="profile-bio-empty-hint">${S('profile','bio_empty_hint')}</div>
+             </div>
+             <div class="profile-bio-empty-arrow">›</div>
+           </div>`}
 
       <div class="profile-bar-row">
         <span class="profile-bar-label"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgHeart" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 17C10 17 2 12 2 6.5A4.5 4.5 0 0110 4a4.5 4.5 0 018 2.5C18 12 10 17 10 17z" fill="url(#svgHeart)"/></svg> ${S('profile','jon_label')}</span>
@@ -100,50 +116,62 @@ function renderProfile(d) {
       ` : ''}
     </div>
 
-    <!-- Do'st taklif qilish -->
-    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgRefH" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="url(#svgRefH)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="9" cy="7" r="4" stroke="url(#svgRefH)" stroke-width="2" fill="none"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="url(#svgRefH)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> ${S('msg','ref_title')}</div>
-    <div class="rem-card" style="margin-bottom:8px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div>
-          <div style="font-size:13px;font-weight:700;color:var(--text)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="svgRefPpl" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="9" cy="7" r="3.5" fill="url(#svgRefPpl)" opacity="0.85"/><circle cx="16.5" cy="7.5" r="2.8" fill="url(#svgRefPpl)" opacity="0.6"/><path d="M1.5 20c0-3.5 3-6.5 7.5-6.5s7.5 3 7.5 6.5" stroke="url(#svgRefPpl)" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M17 14c2.5.5 5 2.5 5 5" stroke="url(#svgRefPpl)" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.6"/></svg>${S('msg','ref_count').replace('{n}', d.ref_count || 0)}</div>
-          <div style="font-size:11px;color:var(--sub);margin-top:2px">${S('msg','ref_reward')}</div>
+    <!-- Do'st taklif qilish — MODAL (shop-modal pattern ishlatilgan) -->
+    <div class="shop-modal-overlay" id="ref-modal" onclick="if(event.target===this)closeReferralModal()">
+      <div class="shop-modal-box" style="max-width:340px;text-align:left">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgRefMd" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="9" cy="7" r="3.5" fill="url(#svgRefMd)" opacity="0.85"/><circle cx="16.5" cy="7.5" r="2.8" fill="url(#svgRefMd)" opacity="0.6"/><path d="M1.5 20c0-3.5 3-6.5 7.5-6.5s7.5 3 7.5 6.5" stroke="url(#svgRefMd)" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M17 14c2.5.5 5 2.5 5 5" stroke="url(#svgRefMd)" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.6"/></svg>
+            <div style="font-size:16px;font-weight:700;color:var(--text)">${S('msg','ref_title')}</div>
+          </div>
+          <button onclick="closeReferralModal()" type="button" style="background:none;border:none;color:var(--sub);cursor:pointer;padding:4px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:18px;font-weight:700;color:var(--green);font-family:'DM Mono',monospace">+${(d.ref_count || 0) * 50}</div>
-          <div style="font-size:9px;color:var(--sub)">${S('msg','ref_total_pts')}</div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text)">${S('msg','ref_count').replace('{n}', d.ref_count || 0)}</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px">${S('msg','ref_reward')}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:20px;font-weight:700;color:var(--green);font-family:'DM Mono',monospace">+${(d.ref_count || 0) * 50}</div>
+            <div style="font-size:9px;color:var(--sub)">${S('msg','ref_total_pts')}</div>
+          </div>
         </div>
+
+        ${(function() {
+          var svgShield = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgMsS2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgMsS2)" opacity="0.9"/></svg>';
+          var svgStar   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgMsT2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="url(#svgMsT2)"/></svg>';
+          var svgVip    = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgMsV2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M6 3h12l4 6-10 12L2 9z" fill="url(#svgMsV2)" opacity="0.9"/></svg>';
+          var svgDone   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgMsD2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgMsD2)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgMsD2)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+          var svgEmpty  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><circle cx="12" cy="12" r="9" stroke="#C8CBD8" stroke-width="2"/></svg>';
+          var milestones = [
+            { n: 5,  icon: svgShield, title: S('msg','ref_milestone_shield') },
+            { n: 10, icon: svgStar,   title: S('msg','ref_milestone_bonus') },
+            { n: 20, icon: svgVip,    title: 'VIP' },
+          ];
+          var rc = d.ref_count || 0;
+          var next = milestones.find(function(m){ return rc < m.n; });
+          var rows = milestones.map(function(m) {
+            var done = rc >= m.n;
+            return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+              + (done ? svgDone : svgEmpty)
+              + '<span style="font-size:11px;color:' + (done ? 'var(--green)' : 'var(--sub)') + '">' + m.n + ' ' + S('msg','milestone_unit') + ' ' + m.icon + ' ' + m.title + '</span>'
+              + '</div>';
+          }).join('');
+          var nextTxt = next
+            ? '<div style="font-size:11px;color:var(--accent);margin-top:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgHglass2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M6 2h12M6 22h12M7 2v4c0 2.5 2 4.5 5 6-3 1.5-5 3.5-5 6v4M17 2v4c0 2.5-2 4.5-5 6 3 1.5 5 3.5 5 6v4" stroke="url(#svgHglass2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 16.5c0-1.5 1.2-2.5 2.5-3.2 1.3.7 2.5 1.7 2.5 3.2v3.5h-5v-3.5z" fill="url(#svgHglass2)" opacity="0.4"/></svg>' + S('msg','ref_next').replace('{n}', (next.n - rc)) + '</div>'
+            : '<div style="font-size:11px;color:var(--green);margin-top:6px">' + S('msg','ref_all_done') + '</div>';
+          return '<div style="background:var(--bg);border-radius:10px;padding:10px 12px;box-shadow:var(--sh-in);margin-bottom:12px">' + rows + nextTxt + '</div>';
+        })()}
+
+        <div style="background:var(--bg);border-radius:10px;padding:10px 12px;box-shadow:var(--sh-in);font-size:11px;color:var(--sub);word-break:break-all;margin-bottom:10px;font-family:'DM Mono',monospace">${d.ref_link || ''}</div>
+
+        <button id="copy-ref-btn" data-link="${(d.ref_link || '').replace(/"/g, '&quot;')}" type="button"
+          style="width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,#4CAF7D,#5B8DEF);color:#fff;font-size:13px;font-weight:700;cursor:pointer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><rect x="9" y="9" width="13" height="13" rx="2" stroke="#fff" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          ${S('msg','copy_ref')}
+        </button>
       </div>
-      ${(function() {
-        var svgShield = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgMsS" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgMsS)" opacity="0.9"/></svg>';
-        var svgStar   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgMsT" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="url(#svgMsT)"/></svg>';
-        var svgVip    = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgMsV" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M6 3h12l4 6-10 12L2 9z" fill="url(#svgMsV)" opacity="0.9"/></svg>';
-        var svgDone   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgMsD" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgMsD)" opacity="0.15"/><path d="M7 12l4 4 6-7" stroke="url(#svgMsD)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-        var svgEmpty  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><circle cx="12" cy="12" r="9" stroke="#C8CBD8" stroke-width="2"/></svg>';
-        var milestones = [
-          { n: 5,  icon: svgShield, title: S('msg','ref_milestone_shield') },
-          { n: 10, icon: svgStar,   title: S('msg','ref_milestone_bonus') },
-          { n: 20, icon: svgVip,    title: 'VIP' },
-        ];
-        var rc = d.ref_count || 0;
-        var next = milestones.find(function(m){ return rc < m.n; });
-        var rows = milestones.map(function(m) {
-          var done = rc >= m.n;
-          return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
-            + (done ? svgDone : svgEmpty)
-            + '<span style="font-size:11px;color:' + (done ? 'var(--green)' : 'var(--sub)') + '">' + m.n + ' ' + S('msg','milestone_unit') + ' ' + m.icon + ' ' + m.title + '</span>'
-            + '</div>';
-        }).join('');
-        var nextTxt = next
-          ? '<div style="font-size:11px;color:var(--accent);margin-top:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgHglass" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M6 2h12M6 22h12M7 2v4c0 2.5 2 4.5 5 6-3 1.5-5 3.5-5 6v4M17 2v4c0 2.5-2 4.5-5 6 3 1.5 5 3.5 5 6v4" stroke="url(#svgHglass)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 16.5c0-1.5 1.2-2.5 2.5-3.2 1.3.7 2.5 1.7 2.5 3.2v3.5h-5v-3.5z" fill="url(#svgHglass)" opacity="0.4"/></svg>' + S('msg','ref_next').replace('{n}', (next.n - rc)) + '</div>'
-          : '<div style="font-size:11px;color:var(--green);margin-top:6px">' + S('msg','ref_all_done') + '</div>';
-        return '<div style="background:var(--bg);border-radius:10px;padding:8px 10px;box-shadow:var(--sh-in);margin-bottom:10px">' + rows + nextTxt + '</div>';
-      })()}
-      <div style="background:var(--bg);border-radius:10px;padding:8px 12px;box-shadow:var(--sh-in);font-size:11px;color:var(--sub);word-break:break-all;margin-bottom:8px;font-family:'DM Mono',monospace">${d.ref_link || ''}</div>
-      <button id="copy-ref-btn" data-link="${(d.ref_link || '').replace(/"/g, '&quot;')}" type="button"
-        style="width:100%;padding:11px;border:none;border-radius:12px;background:linear-gradient(135deg,#4CAF7D,#5B8DEF);color:#fff;font-size:13px;font-weight:700;cursor:pointer">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><rect x="9" y="9" width="13" height="13" rx="2" stroke="#fff" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
-        ${S('msg','copy_ref')}
-      </button>
     </div>
 
     <!-- Sozlamalar -->
@@ -161,6 +189,17 @@ function renderProfile(d) {
         <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgGlobLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><circle cx="13" cy="13" r="10" stroke="url(#svgGlobLg)" stroke-width="2"/><ellipse cx="13" cy="13" rx="4.5" ry="10" stroke="url(#svgGlobLg)" stroke-width="1.5"/><path d="M3 13h20M3 9h20M3 17h20" stroke="url(#svgGlobLg)" stroke-width="1.2" opacity="0.5"/></svg></div>
         <div class="rem-name">${S('profile','bot_lang')}</div>
         <div style="color:var(--sub);font-size:18px">›</div>
+      </div>
+    </div>
+    <!-- Do'st taklif qilish — tugma (sozlamalar patternida, Bot tilidan keyin) -->
+    <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="openReferralModal()">
+      <div class="rem-top" style="margin-bottom:0">
+        <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgRefLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="9" cy="9" r="3.8" fill="url(#svgRefLg)" opacity="0.85"/><circle cx="18" cy="9.5" r="3" fill="url(#svgRefLg)" opacity="0.6"/><path d="M2 22c0-3.8 3.2-7 7-7s7 3.2 7 7" stroke="url(#svgRefLg)" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M18 16c2.8.5 5.5 2.8 5.5 5.5" stroke="url(#svgRefLg)" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.6"/></svg></div>
+        <div>
+          <div class="rem-name">${S('msg','ref_title')}</div>
+          <div style="font-size:10px;color:var(--sub)">${S('msg','ref_count').replace('{n}', d.ref_count || 0)} · +${(d.ref_count || 0) * 50} ${S('msg','ref_total_pts')}</div>
+        </div>
+        <div style="color:var(--sub);font-size:18px;margin-left:auto">›</div>
       </div>
     </div>
     <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('reminders',null)">
@@ -281,6 +320,19 @@ function renderProfile(d) {
       });
     }
   }, 30);
+}
+
+// ── DO'ST TAKLIF QILISH MODAL ──
+function openReferralModal() {
+  var m = document.getElementById('ref-modal');
+  if (m) {
+    m.classList.add('show');
+    try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
+  }
+}
+function closeReferralModal() {
+  var m = document.getElementById('ref-modal');
+  if (m) m.classList.remove('show');
 }
 
 // ── PROFIL TAHRIRLASH ──
