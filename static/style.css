@@ -228,6 +228,11 @@ body {
 }
 .profile-chip-label { color: var(--sub); }
 .profile-chip-accent { font-weight: 700; }
+.profile-bio {
+  font-size: 13px; color: var(--sub); line-height: 1.5;
+  margin-top: 12px; padding: 0 2px;
+  word-wrap: break-word; white-space: pre-line;
+}
 .profile-bar-row {
   display: flex; justify-content: space-between; align-items: center;
   margin-top: 14px; margin-bottom: 6px;
