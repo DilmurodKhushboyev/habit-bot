@@ -226,7 +226,7 @@ body {
   overflow-x: auto; overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding-bottom: 2px;
+  padding: 4px 2px 6px 2px;
 }
 .profile-chips::-webkit-scrollbar { display: none; }
 .profile-chip {
