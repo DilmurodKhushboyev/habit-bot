@@ -50,17 +50,34 @@ def register_core_routes(app):
                 "badge_fire": "🔥", "badge_star": "⭐", "badge_secret": "👑",
                 "car_sport": "🏎️",
             }
+            # Mahsulot nomlari (modal uchun, emoji + nom)
+            _ITEM_NAMES = {
+                "pet_cat":      "🐱 Pet Cat",
+                "pet_dog":      "🐶 Pet Dog",
+                "pet_rabbit":   "🐰 Pet Rabbit",
+                "badge_fire":   "🔥 Fire Badge",
+                "badge_star":   "⭐ Star Badge",
+                "badge_secret": "👑 Secret Badge",
+                "car_sport":    "🏎️ Sport Car",
+            }
             _items = []
+            _items_list = []  # Modal uchun to'liq ro'yxat
             _shown_ids = set()
             if udata.get("active_pet"):
-                _items.append(_ITEM_EMOJI.get(udata["active_pet"], udata["active_pet"]))
-                _shown_ids.add(udata["active_pet"])
+                pid = udata["active_pet"]
+                _items.append(_ITEM_EMOJI.get(pid, pid))
+                _items_list.append(_ITEM_NAMES.get(pid, pid))
+                _shown_ids.add(pid)
             if udata.get("active_badge"):
-                _items.append(_ITEM_EMOJI.get(udata["active_badge"], udata["active_badge"]))
-                _shown_ids.add(udata["active_badge"])
+                bid = udata["active_badge"]
+                _items.append(_ITEM_EMOJI.get(bid, bid))
+                _items_list.append(_ITEM_NAMES.get(bid, bid))
+                _shown_ids.add(bid)
             if udata.get("active_car"):
-                _items.append(_ITEM_EMOJI.get(udata["active_car"], udata["active_car"]))
-                _shown_ids.add(udata["active_car"])
+                cid = udata["active_car"]
+                _items.append(_ITEM_EMOJI.get(cid, cid))
+                _items_list.append(_ITEM_NAMES.get(cid, cid))
+                _shown_ids.add(cid)
             raw_inv = udata.get("inventory", {})
             if isinstance(raw_inv, list):
                 inv_dict = {i: 1 for i in raw_inv}
@@ -69,11 +86,20 @@ def register_core_routes(app):
             for iid, qty in inv_dict.items():
                 if qty > 0 and iid not in _shown_ids and iid in _ITEM_EMOJI:
                     _items.append(_ITEM_EMOJI[iid])
+                    _items_list.append(_ITEM_NAMES.get(iid, iid))
                     _shown_ids.add(iid)
-            if udata.get("streak_shields", 0) > 0: _items.append("🛡")
-            if udata.get("bonus_2x_active") and udata.get("bonus_2x_date") == today_str: _items.append("⚡")
-            if udata.get("bonus_3x_active") and udata.get("bonus_3x_date") == today_str: _items.append("🚀")
-            if udata.get("xp_booster_days", 0) > 0: _items.append("💎")
+            if udata.get("streak_shields", 0) > 0:
+                _items.append("🛡")
+                _items_list.append(f"🛡 Shield × {udata.get('streak_shields', 0)}")
+            if udata.get("bonus_2x_active") and udata.get("bonus_2x_date") == today_str:
+                _items.append("⚡")
+                _items_list.append("⚡ 2× Bonus")
+            if udata.get("bonus_3x_active") and udata.get("bonus_3x_date") == today_str:
+                _items.append("🚀")
+                _items_list.append("🚀 3× Bonus")
+            if udata.get("xp_booster_days", 0) > 0:
+                _items.append("💎")
+                _items_list.append(f"💎 XP Booster ({udata.get('xp_booster_days', 0)} kun)")
             entries.append({
                 "uid":          uid,
                 "name":         udata.get("display_name") or udata.get("name", "?"),
@@ -86,6 +112,8 @@ def register_core_routes(app):
                 "habits_count": len(udata.get("habits", [])),
                 "jon":          round(udata.get("jon", 100)),
                 "active_items": " ".join(_items),
+                "items_count":  len(_items_list),
+                "items_list":   _items_list,
             })
 
         # Saralash
