@@ -83,6 +83,8 @@ function renderProfile(d) {
         ${d.xp_booster_days > 0 ? `<div class="profile-chip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDiamond" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M6 3h12l4 6-10 12L2 9z" fill="url(#svgDiamond)" opacity="0.85"/></svg><span class="profile-chip-accent" style="color:#5B8DEF">💎 ${d.xp_booster_days} ${S('profile','kun')}</span></div>` : ''}
       </div>` : ''}
 
+      ${d.bio ? `<div class="profile-bio">${d.bio.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+
       <div class="profile-bar-row">
         <span class="profile-bar-label"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgHeart" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 17C10 17 2 12 2 6.5A4.5 4.5 0 0110 4a4.5 4.5 0 018 2.5C18 12 10 17 10 17z" fill="url(#svgHeart)"/></svg> ${S('profile','jon_label')}</span>
         <span class="profile-bar-value" style="color:${jonColor}">${jon}%</span>
@@ -250,6 +252,11 @@ function renderProfile(d) {
           <input id="ep-name" type="text" placeholder="${S('msg','name_placeholder')}" maxlength="60">
         </div>
         <div class="field">
+          <label>${S('profile','bio_label')}</label>
+          <textarea id="ep-bio" placeholder="${S('profile','bio_placeholder')}" maxlength="200" rows="3" style="width:100%;resize:vertical;font-family:inherit;font-size:13px;padding:10px 12px;border:none;border-radius:12px;background:var(--bg);box-shadow:var(--sh-in);color:var(--text);outline:none"></textarea>
+          <div style="font-size:10px;color:var(--sub);text-align:right;margin-top:2px"><span id="ep-bio-count">0</span>/200</div>
+        </div>
+        <div class="field">
           <label>${S('profile','phone_label')}</label>
           <input id="ep-phone" type="tel" placeholder="+998 90 123 45 67" maxlength="20">
         </div>
@@ -294,6 +301,13 @@ function openEditProfile() {
   const epPhone = document.getElementById('ep-phone');
   if (epName)  epName.value  = d.display_name || d.name || '';
   if (epPhone) epPhone.value = d.phone || '';
+  const epBio = document.getElementById('ep-bio');
+  if (epBio) {
+    epBio.value = d.bio || '';
+    const cnt = document.getElementById('ep-bio-count');
+    if (cnt) cnt.textContent = epBio.value.length;
+    epBio.oninput = function() { if (cnt) cnt.textContent = this.value.length; };
+  }
   _epPhotoDataUrl = null;
   document.getElementById('edit-profile-modal')?.classList.add('open');
 }
@@ -328,9 +342,11 @@ function previewEpPhoto(input) {
 async function saveEditProfile() {
   const name  = document.getElementById('ep-name')?.value.trim();
   const phone = document.getElementById('ep-phone')?.value.trim();
+  const bio   = document.getElementById('ep-bio')?.value.trim();
   const body  = {};
   if (name)           body.display_name = name;
   if (phone)          body.phone        = phone;
+  if (bio !== undefined && bio !== null) body.bio = bio;
   if (_epPhotoDataUrl) body.photo_url   = _epPhotoDataUrl;
   if (!Object.keys(body).length) { closeEditProfile(); return; }
   try {
