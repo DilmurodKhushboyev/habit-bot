@@ -392,15 +392,18 @@ body {
   padding: 6px;
   min-width: 160px;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   transform: translateY(-6px) scale(0.95);
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
   z-index: 50;
 }
 .habit-dropdown.open {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
   transform: translateY(0) scale(1);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0s;
 }
 
 .habit-dropdown-item {
