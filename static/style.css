@@ -354,6 +354,78 @@ body {
 .habit-card-name { font-size: 14px; font-weight: 600; color: var(--text); }
 .habit-card-meta { font-size: 11px; color: var(--sub); margin-top: 2px; }
 .habit-card-actions { display: flex; gap: 8px; }
+
+/* === Habit dropdown menu (3 nuqta tugma) === */
+.habit-card-front { position: relative; }
+
+.habit-dots-btn {
+  position: absolute;
+  top: 50%;
+  right: 64px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--sub);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.15s, transform 0.1s;
+  z-index: 2;
+}
+.habit-dots-btn:active {
+  transform: translateY(-50%) scale(0.9);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.habit-dropdown {
+  position: absolute;
+  top: 50%;
+  right: 64px;
+  margin-top: 18px;
+  background: var(--bg);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), var(--sh-sm);
+  border-radius: 14px;
+  padding: 6px;
+  min-width: 160px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px) scale(0.95);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 50;
+}
+.habit-dropdown.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.habit-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.08s;
+}
+.habit-dropdown-item:active {
+  background: rgba(0, 0, 0, 0.06);
+  transform: scale(0.97);
+}
+.habit-dropdown-item.danger {
+  color: var(--red);
+}
 .hbtn {
   width: 34px; height: 34px; border-radius: 10px;
   border: none; cursor: pointer; font-size: 15px;
