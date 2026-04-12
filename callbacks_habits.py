@@ -23,6 +23,24 @@ from bot_setup import (bot, send_main_menu, send_message_colored,
                        edit_message_colored, done_keyboard)
 
 
+# ─── STREAK MILESTONE ───────────────────────────────────────────
+# Foydalanuvchi streak bosqichiga yetganda tabrik yuborish uchun.
+# Bu funksiya `threading.Thread` orqali fon rejimida chaqiriladi
+# (shu fayl ichida 4 joyda: ~379, ~513, ~623, ~682-qatorlar).
+STREAK_MILESTONES = (3, 7, 14, 30, 60, 100, 180, 365)
+
+
+def _check_streak_milestone(uid: int, streak: int) -> None:
+    """Streak milestone ga yetilganda foydalanuvchiga tabrik yuboradi."""
+    try:
+        if streak not in STREAK_MILESTONES:
+            return
+        text = T(uid, "streak_milestone").format(days=streak)
+        bot.send_message(uid, text, parse_mode="Markdown")
+    except Exception as e:
+        print(f"[streak_milestone] xato uid={uid} streak={streak}: {e}")
+
+
 def handle_habits_callbacks(call, uid, cdata, u):
     """Odat callback larini qayta ishlaydi. True = handled."""
 
