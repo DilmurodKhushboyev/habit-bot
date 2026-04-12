@@ -669,6 +669,11 @@ def handle_text(msg):
         target_u = load_user(target_id)
         target_u["points"] = max(0, target_u.get("points", 0) + amount)
         save_user(target_id, target_u)
+        # Agar admin o'ziga ball bergan bo'lsa, u va target_u bir user —
+        # u ni sinxronlashtiramiz, aks holda keyingi save_user(uid, u) eski
+        # points qiymatini qaytarib yozib, yangi ball yo'qolib ketadi.
+        if str(uid) == str(target_id):
+            u = target_u
         u["state"] = None
         save_user(uid, u)
         sign = "+" if amount >= 0 else ""
