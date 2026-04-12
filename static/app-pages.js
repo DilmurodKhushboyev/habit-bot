@@ -107,7 +107,7 @@ function renderToday(d) {
                 + '</div></div>';
             })()}
           </div>
-          <button class="checkin-dots-btn" onclick="event.stopPropagation();toggleCheckinDrop('${h.id}')">
+          <button class="checkin-dots-btn" id="cdots-${h.id}" onclick="event.stopPropagation();toggleCheckinDrop('${h.id}')">
             <svg width="4" height="16" viewBox="0 0 4 16" fill="currentColor"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="8" r="2"/><circle cx="2" cy="14" r="2"/></svg>
           </button>
           <button class="checkin-btn" id="cbtn-${h.id}" onclick="event.stopPropagation();checkin('${h.id}', document.getElementById('ccard-${h.id}'))" style="${isRepeat && !h.done && tc>0 ? 'font-size:11px;font-weight:700' : ''}">${btnContent}</button>
@@ -625,6 +625,10 @@ function checkinFromFront(hid, frontEl) {
   // Agar swipe ochiq bo'lsa — yopamiz, checkin qilmaymiz
   if (frontEl.classList.contains('swiped')) {
     frontEl.classList.remove('swiped');
+    // 3-nuqta vizual reset (✕ → ⋮)
+    const dotsBtn = document.getElementById('cdots-' + hid);
+    if (dotsBtn) dotsBtn.classList.remove('is-x');
+    _checkinSwiped = false;
     return;
   }
   if (_checkinSwiped) { _checkinSwiped = false; return; }
@@ -666,11 +670,15 @@ function _initCheckinSwipe() {
       if (!swiping) return;
       swiping = false;
       front.style.transition = '';
+      const hid = front.getAttribute('data-hid');
+      const dotsBtn = hid ? document.getElementById('cdots-' + hid) : null;
       if (curX < -50) {
         front.classList.add('swiped');
+        if (dotsBtn) dotsBtn.classList.add('is-x'); // ⋮ → ✕
         _checkinSwiped = true; // checkin qilmaslik
       } else {
         front.classList.remove('swiped');
+        if (dotsBtn) dotsBtn.classList.remove('is-x'); // ✕ → ⋮
       }
       front.style.transform = '';
     });
@@ -679,7 +687,15 @@ function _initCheckinSwipe() {
 
 function closeAllCheckinSwipes(except) {
   document.querySelectorAll('.checkin-front.swiped').forEach(f => {
-    if (f !== except) f.classList.remove('swiped');
+    if (f !== except) {
+      f.classList.remove('swiped');
+      // 3-nuqta tugmasini ham vizual reset qilamiz (✕ → ⋮)
+      const card = f.closest('.checkin-card');
+      if (card) {
+        const btn = card.querySelector('.checkin-dots-btn.is-x');
+        if (btn) btn.classList.remove('is-x');
+      }
+    }
   });
 }
 
@@ -689,12 +705,21 @@ function toggleCheckinDrop(hid) {
   if (!card) return;
   const front = card.querySelector('.checkin-front');
   if (!front) return;
+  const dotsBtn = document.getElementById('cdots-' + hid);
   const wasOpen = front.classList.contains('swiped');
+  // Avval hammasini yopamiz (boshqa kartalar va dropdownlar)
   closeAllCheckinSwipes();
   closeAllCheckinDrops();
+  // Barcha 3-nuqta tugmalardan is-x ni olib tashlaymiz (boshqa karta vizual reset)
+  document.querySelectorAll('.checkin-dots-btn.is-x').forEach(b => b.classList.remove('is-x'));
   if (!wasOpen) {
+    // Yopiq edi → ochamiz va 3-nuqta ni ✕ ga aylantiramiz
     front.classList.add('swiped');
+    if (dotsBtn) dotsBtn.classList.add('is-x');
     _checkinSwiped = true;
+  } else {
+    // Ochiq edi → yopildi (closeAllCheckinSwipes orqali), flag tozalanadi
+    _checkinSwiped = false;
   }
 }
 
