@@ -660,7 +660,14 @@ body {
 .checkin-dots-btn .x-icon { display: none; }
 .checkin-dots-btn.is-x .dots-icon { display: none; }
 .checkin-dots-btn.is-x .x-icon { display: block; }
-.checkin-dots-btn.is-x { color: #E74C3C; }
+.checkin-dots-btn.is-x {
+  color: #E74C3C;
+  width: 40px;
+  position: relative;
+  z-index: 5;
+  background: var(--bg);
+  border-radius: 8px;
+}
 /* Dropdown */
 .checkin-dropdown {
   display: none; position: absolute;

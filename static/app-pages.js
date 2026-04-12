@@ -668,6 +668,11 @@ function _initCheckinSwipe() {
       if (!swiping) return;
       swiping = false;
       front.style.transition = '';
+      // Agar harakat (swipe) bo'lmagan bo'lsa — tap, swiped holatga tegmaslik
+      if (!locked) {
+        front.style.transform = '';
+        return;
+      }
       const hid = front.getAttribute('data-hid');
       const dotsBtn = hid ? document.getElementById('cdots-' + hid) : null;
       if (curX < -50) {
