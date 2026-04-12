@@ -141,6 +141,7 @@ LANGS = {
         "bozor_btn_back":    "⬅️ Orqaga",
         "stars_item_gift_box": "🎁 Sovga qutisi",
         "stars_desc_gift_box": "Tasodifiy mukofot: 100/200/500 ball, streak himoyasi yoki XP Booster",
+        "streak_milestone":  "🔥 *Tabriklaymiz!*\n\n*{days} kunlik streak!*\n\nSiz ajoyib yoʻldasiz — davom eting! 💪",
     },
     "en": {
         "choose_lang":       "🌐 Choose language:",
@@ -279,6 +280,7 @@ LANGS = {
         "bozor_btn_back":    "⬅️ Back",
         "stars_item_gift_box": "🎁 Gift Box",
         "stars_desc_gift_box": "Random reward: 100/200/500 points, streak shield or XP Booster",
+        "streak_milestone":  "🔥 *Congrats!*\n\n*{days}-day streak!*\n\nYou're on a great path — keep going! 💪",
     },
     "ru": {
         "choose_lang":       "🌐 Выберите язык:",
@@ -417,6 +419,7 @@ LANGS = {
         "bozor_btn_back":    "⬅️ Назад",
         "stars_item_gift_box": "🎁 Подарочная коробка",
         "stars_desc_gift_box": "Случайная награда: 100/200/500 очков, защита стрика или XP Бустер",
+        "streak_milestone":  "🔥 *Поздравляем!*\n\n*Streak {days} дней!*\n\nВы на отличном пути — продолжайте! 💪",
     },
 }
 
