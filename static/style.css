@@ -655,12 +655,12 @@ body {
   order: 2; /* 3 nuqta tugmasi eng o'ngga (yashil ✓ tugmadan keyin) */
 }
 .checkin-dots-btn:active { background: var(--bg2); }
-/* Swipe ochiq vaqt: 3-nuqta (⋮) → 90° aylanib ✕ ga oʻxshash koʻrinadi + qizil rang */
-.checkin-dots-btn { transition: transform 0.25s ease, color 0.2s ease; }
-.checkin-dots-btn.is-x {
-  transform: rotate(90deg);
-  color: #E74C3C;
-}
+/* Swipe ochiq vaqt: 3-nuqta SVG yashirinadi, ✕ SVG koʻrinadi + qizil rang */
+.checkin-dots-btn { transition: color 0.2s ease; }
+.checkin-dots-btn .x-icon { display: none; }
+.checkin-dots-btn.is-x .dots-icon { display: none; }
+.checkin-dots-btn.is-x .x-icon { display: block; }
+.checkin-dots-btn.is-x { color: #E74C3C; }
 /* Dropdown */
 .checkin-dropdown {
   display: none; position: absolute;
