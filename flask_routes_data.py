@@ -171,6 +171,8 @@ def register_data_routes(app):
                         if done >= rep_count:
                             h["last_done"] = today
                             h["streak"] = h.get("streak", 0) + 1
+                            if h["streak"] > h.get("best_streak", 0):
+                                h["best_streak"] = h["streak"]
                             # Global streak: kuniga bir marta oshsin
                             if u.get("streak_last_date") != today:
                                 u["streak"] = u.get("streak", 0) + 1
@@ -220,6 +222,8 @@ def register_data_routes(app):
                         _tz = timezone(_td(hours=5))
                         _yesterday = (datetime.now(_tz) - _td(days=1)).strftime("%Y-%m-%d")
                         h["streak"] = h.get("streak", 0) + 1 if h.get("last_done") == _yesterday else 1
+                        if h["streak"] > h.get("best_streak", 0):
+                            h["best_streak"] = h["streak"]
                         h["last_done"] = today
                         _base = 5
                         if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
@@ -505,7 +509,7 @@ def register_data_routes(app):
                 "points":        u.get("points", 0),
                 "active_days_30": active_days_30,
                 "total_habits":  total,
-                "best_streak":   max((h.get("streak", 0) for h in habits), default=0),
+                "best_streak":   max((max(h.get("best_streak", 0), h.get("streak", 0)) for h in habits), default=0),
                 "today_done":    done_today,
                 "today_total":   total,
                 "top_habit_name": top_habit_name,
