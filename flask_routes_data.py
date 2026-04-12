@@ -501,11 +501,11 @@ def register_data_routes(app):
         return jsonify({
             "today":   today,
             "summary": {
-                "streak":        u.get("streak", 0),
+                "streak":        sum(h.get("streak", 0) for h in habits),
                 "points":        u.get("points", 0),
                 "active_days_30": active_days_30,
                 "total_habits":  total,
-                "best_streak":   _calc_best_streak(u),
+                "best_streak":   max((h.get("streak", 0) for h in habits), default=0),
                 "today_done":    done_today,
                 "today_total":   total,
                 "top_habit_name": top_habit_name,
