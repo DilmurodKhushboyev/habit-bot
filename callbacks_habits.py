@@ -356,6 +356,8 @@ def handle_habits_callbacks(call, uid, cdata, u):
                             # To'liq bajarildi — faqat shu yerda ball beriladi
                             # BUG FIX: last_done yangilashdan OLDIN yesterday bilan solishtirish kerak
                             h["streak"]     = h.get("streak", 0) + 1 if h.get("last_done") == yesterday else 1
+                            if h["streak"] > h.get("best_streak", 0):
+                                h["best_streak"] = h["streak"]
                             h["last_done"]  = today
                             h["total_done"] = h.get("total_done", 0) + 1
                             # Bonus multiplier (api_checkin bilan bir xil)

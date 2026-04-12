@@ -817,6 +817,10 @@ body {
   opacity: 0.05; background: var(--sc-color);
 }
 .sc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.sc-top-label {
+  font-size: 10px; color: var(--sub); text-transform: lowercase;
+  font-weight: 600; margin-bottom: 2px; opacity: 0.75;
+}
 .sc-val {
   font-size: 26px; font-weight: 900; font-family: 'DM Mono', monospace;
   line-height: 1; color: var(--sc-color);
