@@ -354,6 +354,81 @@ body {
 .habit-card-name { font-size: 14px; font-weight: 600; color: var(--text); }
 .habit-card-meta { font-size: 11px; color: var(--sub); margin-top: 2px; }
 .habit-card-actions { display: flex; gap: 8px; }
+
+/* === Habit dropdown menu (3 nuqta tugma) === */
+.habit-card-front { position: relative; }
+
+.habit-dots-btn {
+  position: absolute;
+  top: 50%;
+  right: 64px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--sub);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.15s, transform 0.1s;
+  z-index: 2;
+}
+.habit-dots-btn:active {
+  transform: translateY(-50%) scale(0.9);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.habit-dropdown {
+  position: absolute;
+  top: 50%;
+  right: 64px;
+  margin-top: 18px;
+  background: var(--bg);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), var(--sh-sm);
+  border-radius: 14px;
+  padding: 6px;
+  min-width: 160px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px) scale(0.95);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+  z-index: 50;
+}
+.habit-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0s;
+}
+
+.habit-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.08s;
+}
+.habit-dropdown-item:active {
+  background: rgba(0, 0, 0, 0.06);
+  transform: scale(0.97);
+}
+.habit-dropdown-item.danger {
+  color: var(--red);
+}
 .hbtn {
   width: 34px; height: 34px; border-radius: 10px;
   border: none; cursor: pointer; font-size: 15px;
@@ -568,7 +643,7 @@ body {
   transition: transform .28s cubic-bezier(.25,.46,.45,.94);
   will-change: transform;
 }
-.checkin-front.swiped { transform: translateX(-168px); }
+.checkin-front.swiped { transform: translateX(-128px); }
 .checkin-card.done .checkin-front { background: var(--bg); }
 /* 3-nuqta tugma */
 .checkin-dots-btn {
@@ -577,8 +652,22 @@ body {
   display: flex; align-items: center; justify-content: center;
   border-radius: 8px; flex-shrink: 0;
   transition: background .15s;
+  order: 2; /* 3 nuqta tugmasi eng o'ngga (yashil ✓ tugmadan keyin) */
 }
 .checkin-dots-btn:active { background: var(--bg2); }
+/* Swipe ochiq vaqt: 3-nuqta SVG yashirinadi, ✕ SVG koʻrinadi + qizil rang */
+.checkin-dots-btn { transition: color 0.2s ease; }
+.checkin-dots-btn .x-icon { display: none; }
+.checkin-dots-btn.is-x .dots-icon { display: none; }
+.checkin-dots-btn.is-x .x-icon { display: block; }
+.checkin-dots-btn.is-x {
+  color: #E74C3C;
+  width: 40px;
+  position: relative;
+  z-index: 5;
+  background: var(--bg);
+  border-radius: 8px;
+}
 /* Dropdown */
 .checkin-dropdown {
   display: none; position: absolute;
