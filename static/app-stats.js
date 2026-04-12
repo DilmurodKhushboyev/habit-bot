@@ -102,6 +102,7 @@ function renderStats(d) {
       <div class="sc-card sc-card-anim" style="--sc-color:#E07040">
         <div class="sc-header">
           <div>
+            <div class="sc-top-label">${S('stats','streak_total_label')}</div>
             <div class="sc-val">${summary.streak}</div>
             <div class="sc-lbl">${S('stats','streak_label')}</div>
           </div>
