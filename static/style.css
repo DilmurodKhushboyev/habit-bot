@@ -652,6 +652,7 @@ body {
   display: flex; align-items: center; justify-content: center;
   border-radius: 8px; flex-shrink: 0;
   transition: background .15s;
+  order: 2; /* 3 nuqta tugmasi eng o'ngga (yashil ✓ tugmadan keyin) */
 }
 .checkin-dots-btn:active { background: var(--bg2); }
 /* Dropdown */
