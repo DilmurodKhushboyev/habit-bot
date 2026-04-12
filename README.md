@@ -1,5 +1,8 @@
 # 🧭 Super Habits Bot — Modular Tuzilma
 
+> ## ⚠️ CLAUDE UCHUN MUHIM ESLATMA
+> **Frontend fayllar (`*.css`, `app-*.js`, `strings.js`) o'zgartirilganda — `index.html` dagi `?v=NNN` versiyasini AVTOMATIK +1 ga oshirish SHART.** Foydalanuvchidan so'ramaslik kerak. Frontend o'zgartirish so'ralganda — `index.html` ni ham so'rang va versiyani o'zingiz oshiring. Batafsil: pastdagi "Muhim eslatmalar" 6-band.
+
 > Backend: 9 382 qatorlik monolitik `habit_bot.py` → 28 ta mustaqil modul
 > Frontend: 5 739 qatorlik monolitik `index.html` → 9 ta mustaqil fayl
 > **Bozor sahifasi: 100/100 professional baho** — race condition fix, mahsulot vazifalari (badge/pet/car bonus tizimi), info modal + sotib olish tasdig'i, 3 tilga to'liq tarjima, 6 ta bugli Stars mahsulot olib tashlangan
@@ -302,7 +305,7 @@ index.html (WebApp entry point)
 3. **Callback dispatcher**: `handlers_callbacks.py` barcha callback'larni oladi va sub-modullarga yo'naltiradi — sub-modul `True` qaytarsa, boshqasiga o'tmaydi
 4. **Flask routes**: `register_*_routes(app)` funksiyalari orqali ro'yxatdan o'tadi — `flask_api.py` dan chaqiriladi
 5. **Frontend script tartibi muhim**: `strings.js` → `app-core.js` (head da), keyin `app-pages.js` → `app-stats.js` → `app-profile.js` → `app-habits.js` → `app-social.js` (body oxirida). Tartibni buzish global o'zgaruvchilarning topilmasligiga olib keladi
-6. **Frontend cache-busting**: barcha `<script src>` va `<link href>` larda `?v=424` query string bor — yangilanganda versiyani oshiring
+6. **🚨 Frontend cache-busting (MAJBURIY AVTOMATIK)**: Barcha `<script src>` va `<link href>` larda `?v=NNN` query string bor (hozirgi: `?v=425`). **Har qanday frontend fayl** (`*.css`, `app-*.js`, `strings.js`, `index.html` ichidagi inline kod) **o'zgartirilganda — `index.html` dagi BARCHA `?v=` larni +1 ga oshirish SHART**. Bu Claude ning vazifasi — foydalanuvchi alohida so'ramaydi. Har frontend o'zgartirish so'ralganda Claude `index.html` ni ham so'raydi va versiyani avtomatik oshiradi (masalan `?v=424` → `?v=425`). Sabab: Telegram WebApp va brauzerlar eski faylni cache dan oladi — versiya oshmasa foydalanuvchi yangi kodni ko'rmaydi va o'zgarish ishlamayotgandek tuyuladi (aslida ishlaydi, lekin eski kod ishlayapti). Versiya bir vaqtda barcha fayllarda sinxron oshiriladi (faqat 1-2 fayl emas, hammasi)
 7. **Frontend cross-file calls**: funksiyalar global scope da, lekin ko'pchiligi faqat user action (onclick) da chaqiriladi — shuning uchun yuklash tartibida xato bo'lmaydi
 8. **Frontend `window.onload`**: `app-social.js` da — splash subtitle tilga moslash, 5s `hideSplash()` timer, keyin `loadToday()` chaqiriladi
 9. **Bozor narxlari va vazifalari markazlashtirilgan**: Narxlar `config.py` da (`SHOP_PRICES`, `SHOP_SELL_PRICES`, `SHOP_STARS_PRICES`), mahsulot vazifalari `SHOP_BONUS_EFFECTS` da. Hech qachon hardcoded raqam ishlatmang — har doim config dan oling. Narx yoki vazifa o'zgartirish kerak bo'lsa — faqat 1 joyni o'zgartiring
