@@ -73,9 +73,6 @@ function renderToday(d) {
     cardsHtml += `
       <div class="checkin-card ${h.done ? 'done' : ''}" id="ccard-${h.id}">
         <div class="checkin-actions-bg">
-          <button class="cswipe-btn cswipe-close" onclick="event.stopPropagation();closeAllCheckinSwipes()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
-          </button>
           <button class="cswipe-btn cswipe-edit" onclick="event.stopPropagation();openEdit('${h.id}','${_esc(h.name)}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}')">
             <svg width="18" height="18" viewBox="0 0 26 26" fill="none"><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="#fff" opacity="0.9"/></svg>
             <span>${S('habits','edit_btn')}</span>
@@ -662,7 +659,7 @@ function _initCheckinSwipe() {
       }
       curX = dx;
       if (curX > 0) curX = 0;
-      if (curX < -170) curX = -170;
+      if (curX < -130) curX = -130;
       front.style.transform = 'translateX(' + curX + 'px)';
     }, {passive: true});
 
