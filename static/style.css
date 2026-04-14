@@ -620,28 +620,29 @@ body {
 .checkin-card:not(.done)::before {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: 18px;
-  padding: 2px;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    transparent 200deg,
-    rgba(76, 175, 125, 0.5) 260deg,
-    rgba(76, 175, 125, 1) 320deg,
-    rgba(76, 175, 125, 0.5) 360deg
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
+  inset: -1px;
+  border-radius: 19px;
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--bg), var(--bg)) padding-box,
+    conic-gradient(
+      from var(--angle, 0deg),
+      rgba(76, 175, 125, 0) 0deg,
+      rgba(76, 175, 125, 0) 180deg,
+      rgba(76, 175, 125, 0.9) 300deg,
+      rgba(76, 175, 125, 0) 360deg
+    ) border-box;
   animation: habitPendingSpin 2.8s linear infinite;
   pointer-events: none;
   z-index: 3;
 }
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
 @keyframes habitPendingSpin {
-  to { transform: rotate(360deg); }
+  to { --angle: 360deg; }
 }
 /* Swipe orqasi — tahrirlash / o'chirish */
 .checkin-actions-bg {
