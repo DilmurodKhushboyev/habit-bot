@@ -352,7 +352,7 @@ function ringHTML(percent, size = 80) {
   const circ = 2 * Math.PI * r;
   const dash = circ * Math.min(percent, 100) / 100;
   const gap  = circ - dash;
-  const color = percent >= 100 ? '#4CAF7D' : percent >= 50 ? '#5B8DEF' : '#E07040';
+  const color = percent >= 100 ? '#2D8A5E' : percent >= 50 ? '#4CAF7D' : '#A5D6B5';
   const offset = circ * 0.25;
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
     <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#C8CBD8" stroke-width="7"/>
@@ -370,7 +370,7 @@ function jonRingHTML(jon, size = 80) {
   const circ = 2 * Math.PI * r;
   const dash = circ * Math.min(jon, 100) / 100;
   const gap  = circ - dash;
-  const color = jon >= 60 ? '#4CAF7D' : jon >= 30 ? '#E0A040' : '#E05050';
+  const color = jon >= 60 ? '#4CAF7D' : jon >= 30 ? '#A5D6B5' : '#E05050';
   const offset = circ * 0.25;
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
     <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#C8CBD8" stroke-width="7"/>
