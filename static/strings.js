@@ -34,7 +34,7 @@ const STRINGS = {
       shield_badge:'himoya',
     },
     rating: {
-      sort_points:'⭐ Ball', sort_streak:'Streak', sort_active:'Faollik',
+      sort_points:'Ball', sort_streak:'Streak', sort_active:'Faollik',
       period_week:'Hafta', period_month:'Oy', period_all:'Barchasi',
       my_rank:"Sizning o'rningiz:",
       total_users:'Jami {n} ta foydalanuvchi',
@@ -391,7 +391,7 @@ const STRINGS = {
       shield_badge:'защита',
     },
     rating: {
-      sort_points:'⭐ Очки', sort_streak:'Стрик', sort_active:'Активность',
+      sort_points:'Очки', sort_streak:'Стрик', sort_active:'Активность',
       period_week:'Неделя', period_month:'Месяц', period_all:'Все',
       my_rank:'Ваше место:',
       total_users:'Всего {n} пользователей',
@@ -747,7 +747,7 @@ const STRINGS = {
       shield_badge:'shield',
     },
     rating: {
-      sort_points:'⭐ Points', sort_streak:'Streak', sort_active:'Activity',
+      sort_points:'Points', sort_streak:'Streak', sort_active:'Activity',
       period_week:'Week', period_month:'Month', period_all:'All',
       my_rank:'Your rank:',
       total_users:'Total {n} users',

@@ -15,7 +15,7 @@ async function loadStatsPage() {
     renderStats(d);
   } catch(e) {
     document.getElementById('stats-detail-content').innerHTML =
-      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>${S('msg','data_error')}.<br><small>${e}</small></div>`;
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>${S('msg','data_error')}.<br><small>${e}</small></div>`;
   }
 }
 
@@ -36,7 +36,7 @@ function renderStats(d) {
 
   const worstName = summary.worst_habit_name || '';
   const worstPct  = summary.worst_habit_pct  || 0;
-  const worstColor = worstPct <= 20 ? '#E05252' : worstPct <= 40 ? '#E07040' : '#D4963A';
+  const worstColor = worstPct <= 20 ? '#E05050' : worstPct <= 40 ? '#B07060' : 'var(--sub)';
 
   // Streak sparkline: haftalik bajarilish % dan (weekly array)
   const streakSpark = (() => {
@@ -59,10 +59,10 @@ function renderStats(d) {
 
   // SVG icon helpers (professional gradient icons)
   const svgTarget = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siTgt" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#6EDAA0"/></linearGradient></defs><circle cx="12" cy="12" r="10" stroke="url(#siTgt)" stroke-width="2"/><circle cx="12" cy="12" r="6" stroke="url(#siTgt)" stroke-width="2"/><circle cx="12" cy="12" r="2.5" fill="url(#siTgt)"/></svg>';
-  const svgFire = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siFlm" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#E07040"/><stop offset="100%" stop-color="#F6C93E"/></linearGradient></defs><path d="M12 23c-4.97 0-8-3.58-8-7.5 0-3.07 2.17-5.77 4.5-7.5.5-.37 1.2.1 1.05.7-.42 1.64.22 3.16 1.45 3.8.36.19.8-.04.84-.44.52-4.78 3.66-7.56 4.66-8.06.47-.23 1.02.17.9.68-.58 2.44.52 4.82 2.6 5.82.36.17.57.54.57.93 0 2.87-.5 5.07-2.07 7.07C16.5 21 14.5 23 12 23z" fill="url(#siFlm)"/></svg>';
-  const svgWarn = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siWrn" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#E05252"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#siWrn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="url(#siWrn)" fill-opacity=".12"/><path d="M12 10v5" stroke="url(#siWrn)" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="17.5" r="1.2" fill="url(#siWrn)"/></svg>';
-  const svgTrophy = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siTrp" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#D4963A"/><stop offset="100%" stop-color="#FFE566"/></linearGradient></defs><path d="M6 4h12v2c0 4-2.5 7-5 8v2h2a2 2 0 012 2H7a2 2 0 012-2h2v-2c-2.5-1-5-4-5-8V4z" fill="url(#siTrp)" fill-opacity=".15" stroke="url(#siTrp)" stroke-width="1.8"/><path d="M6 6H4a1 1 0 00-1 1v1c0 2 1.5 3.5 3 4" stroke="url(#siTrp)" stroke-width="1.8" stroke-linecap="round"/><path d="M18 6h2a1 1 0 011 1v1c0 2-1.5 3.5-3 4" stroke="url(#siTrp)" stroke-width="1.8" stroke-linecap="round"/></svg>';
-  const svgStar = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z" fill="#E07040"/></svg>';
+  const svgFire = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siFlm" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M12 23c-4.97 0-8-3.58-8-7.5 0-3.07 2.17-5.77 4.5-7.5.5-.37 1.2.1 1.05.7-.42 1.64.22 3.16 1.45 3.8.36.19.8-.04.84-.44.52-4.78 3.66-7.56 4.66-8.06.47-.23 1.02.17.9.68-.58 2.44.52 4.82 2.6 5.82.36.17.57.54.57.93 0 2.87-.5 5.07-2.07 7.07C16.5 21 14.5 23 12 23z" fill="url(#siFlm)"/></svg>';
+  const svgWarn = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siWrn" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#E05050"/><stop offset="100%" stop-color="#B03838"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#siWrn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="url(#siWrn)" fill-opacity=".12"/><path d="M12 10v5" stroke="url(#siWrn)" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="17.5" r="1.2" fill="url(#siWrn)"/></svg>';
+  const svgTrophy = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siTrp" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M6 4h12v2c0 4-2.5 7-5 8v2h2a2 2 0 012 2H7a2 2 0 012-2h2v-2c-2.5-1-5-4-5-8V4z" fill="url(#siTrp)" fill-opacity=".15" stroke="url(#siTrp)" stroke-width="1.8"/><path d="M6 6H4a1 1 0 00-1 1v1c0 2 1.5 3.5 3 4" stroke="url(#siTrp)" stroke-width="1.8" stroke-linecap="round"/><path d="M18 6h2a1 1 0 011 1v1c0 2-1.5 3.5-3 4" stroke="url(#siTrp)" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  const svgStar = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z" fill="#4CAF7D"/></svg>';
 
   // Donut helper — ikki odat kartasi uchun bir xil chart
   const donutSVG = (pct, gradId, c1, c2, textColor) => {
@@ -99,7 +99,7 @@ function renderStats(d) {
       </div>
 
       <!-- 2. STREAK — sparkline (haftalik bajarilish %) -->
-      <div class="sc-card sc-card-anim" style="--sc-color:#E07040">
+      <div class="sc-card sc-card-anim" style="--sc-color:#4CAF7D">
         <div class="sc-header">
           <div>
             <div class="sc-top-label">${S('stats','streak_total_label')}</div>
@@ -111,12 +111,12 @@ function renderStats(d) {
         <div class="sc-chart">
           <svg width="100%" viewBox="0 0 120 42" preserveAspectRatio="none" style="display:block;overflow:visible">
             <defs>
-              <linearGradient id="scSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E07040" stop-opacity="0.25"/><stop offset="100%" stop-color="#E07040" stop-opacity="0"/></linearGradient>
-              <linearGradient id="scSparkLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient>
+              <linearGradient id="scSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4CAF7D" stop-opacity="0.25"/><stop offset="100%" stop-color="#4CAF7D" stop-opacity="0"/></linearGradient>
+              <linearGradient id="scSparkLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient>
             </defs>
             ${streakSpark.area ? '<path d="' + streakSpark.area + '" fill="url(#scSparkFill)"/>' : ''}
             ${streakSpark.line ? '<path d="' + streakSpark.line + '" fill="none" stroke="url(#scSparkLine)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' : ''}
-            ${streakSpark.last ? '<circle cx="' + streakSpark.last.x.toFixed(1) + '" cy="' + streakSpark.last.y.toFixed(1) + '" r="3" fill="#E07040" stroke="#fff" stroke-width="1.5"/>' : ''}
+            ${streakSpark.last ? '<circle cx="' + streakSpark.last.x.toFixed(1) + '" cy="' + streakSpark.last.y.toFixed(1) + '" r="3" fill="#4CAF7D" stroke="#fff" stroke-width="1.5"/>' : ''}
             ${(() => { const dAbbr = S('stats','day_abbr') || ['Ya','Du','Se','Ch','Pa','Ju','Sh']; const wLen = weekly ? weekly.length : 0; if (wLen < 2) return ''; return weekly.map((w, wi) => { const xp = 2 + (wi / (wLen - 1)) * 116; return '<text x="'+xp.toFixed(1)+'" y="40" text-anchor="middle" font-size="7" fill="var(--sub)" font-weight="600">'+dAbbr[new Date(w.date).getDay()]+'</text>'; }).join(''); })()}
           </svg>
         </div>
@@ -133,7 +133,7 @@ function renderStats(d) {
           <div class="sc-badge-icon">${svgWarn}</div>
         </div>
         <div class="sc-chart" style="align-items:center;justify-content:center">
-          ${donutSVG(worstPct, 'scDonutW', worstColor, '#E07040', worstColor)}
+          ${donutSVG(worstPct, 'scDonutW', worstColor, '#B03838', worstColor)}
         </div>
         <div class="sc-foot sc-foot-trunc">${worstName || S('stats','no_habits')}</div>
       </div>
@@ -160,7 +160,7 @@ function renderStats(d) {
   const barsHtml = weekly.map((w, i) => {
     const pct   = w.total ? Math.round(w.count / w.total * 100) : 0;
     const hPx   = pct > 0 ? Math.max(8, Math.round(pct * 0.7)) : 4;
-    const color = pct >= 80 ? '#4CAF7D' : pct >= 40 ? '#5B8DEF' : pct > 0 ? '#E07040' : '#C8CBD8';
+    const color = pct >= 80 ? '#2D8A5E' : pct >= 40 ? '#4CAF7D' : pct > 0 ? '#7DC29A' : 'var(--sub)';
     const isToday = w.date === today;
     return `
       <div class="bar-col">
@@ -205,7 +205,7 @@ function renderStats(d) {
     }).join('');
     const last = pts[pts.length-1];
     const lastPct = pcts[pcts.length-1];
-    const dotColor = lastPct >= 80 ? '#4CAF7D' : lastPct >= 40 ? '#5B8DEF' : '#E07040';
+    const dotColor = lastPct >= 80 ? '#2D8A5E' : lastPct >= 40 ? '#4CAF7D' : '#7DC29A';
     return '<div class="bar-chart" style="padding-bottom:18px">'
       + '<div class="bar-chart-title">' + S('stats','month_chart') + '</div>'
       + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">'
@@ -213,7 +213,7 @@ function renderStats(d) {
       + '<div style="font-size:10px;color:var(--sub);line-height:1.4">' + S('stats','avg_30') + '</div></div>'
       + '<svg width="100%" viewBox="0 0 '+W+' '+(H+10)+'" preserveAspectRatio="none">'
       + '<defs><linearGradient id="areaFill30" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4CAF7D" stop-opacity="0.3"/><stop offset="100%" stop-color="#4CAF7D" stop-opacity="0.02"/></linearGradient>'
-      + '<linearGradient id="lineG30" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs>'
+      + '<linearGradient id="lineG30" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs>'
       + gridLines
       + '<path d="'+areaD+'" fill="url(#areaFill30)"/>'
       + '<path d="'+pathD+'" fill="none" stroke="url(#lineG30)" stroke-width="2.5" stroke-linecap="round"/>'
@@ -228,7 +228,7 @@ function renderStats(d) {
     const dir   = trend.direction;
     const diff  = Math.abs(trend.diff);
     const arrow = dir === 'up'   ? '↑' : dir === 'down' ? '↓' : '→';
-    const aColor= dir === 'up'   ? '#4CAF7D' : dir === 'down' ? '#E07040' : '#8A8FA8';
+    const aColor= dir === 'up'   ? '#4CAF7D' : dir === 'down' ? '#E05050' : 'var(--sub)';
     const msg   = dir === "up"   ? S('msg','week_better') :
                   dir === "down" ? S('msg','week_worse') :
                                    S('msg','week_same');
@@ -248,7 +248,7 @@ function renderStats(d) {
         <div class="trend-compare">
           <div class="trend-compare-item">
             <div class="trend-compare-label">${S('msg','prev_week')}</div>
-            <div class="trend-compare-bar"><div class="trend-compare-bar-fill" style="background:#C8CBD8;width:${Math.round(barPrev/barMax*100)}%"></div></div>
+            <div class="trend-compare-bar"><div class="trend-compare-bar-fill" style="background:var(--sub);opacity:.35;width:${Math.round(barPrev/barMax*100)}%"></div></div>
             <div class="trend-compare-val" style="color:var(--sub)">${trend.prev_week}%</div>
           </div>
           <div class="trend-compare-item">
@@ -310,14 +310,14 @@ function renderStats(d) {
   // ── Har bir odat ──
   let habitCardsHtml = '';
   (habit_stats || []).forEach((h, hIdx) => {
-    const pctColor = h.percent >= 80 ? '#4CAF7D' : h.percent >= 50 ? '#5B8DEF' : '#E07040';
+    const pctColor = h.percent >= 80 ? '#2D8A5E' : h.percent >= 50 ? '#4CAF7D' : '#7DC29A';
 
     // ── Donut chart (percent) ──
     const r = 22; const circ = 2 * Math.PI * r;
     const dash = circ * h.percent / 100;
     const donutId = `dnt-${hIdx}`;
     const donutSvg = `<svg width="56" height="56" viewBox="0 0 56 56">
-      <circle cx="28" cy="28" r="${r}" fill="none" stroke="#C8CBD8" stroke-width="5"/>
+      <circle cx="28" cy="28" r="${r}" fill="none" stroke="var(--bg2)" stroke-width="5"/>
       <circle cx="28" cy="28" r="${r}" fill="none" stroke="${pctColor}" stroke-width="5"
         stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"
         stroke-dashoffset="${(circ/4).toFixed(1)}" stroke-linecap="round"/>
@@ -329,7 +329,7 @@ function renderStats(d) {
     const dayLbls = S('stats','day_abbr') || ['Ya','Du','Se','Ch','Pa','Ju','Sh'];
     const miniBars = (h.week_dots || []).map((v, i) => {
       const barH = v ? 28 : 6;
-      const barC = v ? pctColor : '#C8CBD8';
+      const barC = v ? pctColor : 'var(--bg2)';
       const today_d = new Date(); today_d.setDate(today_d.getDate() - (6 - i));
       const lbl = dayLbls[today_d.getDay()];
       return `<div class="hstat-minibar-col">
@@ -344,7 +344,7 @@ function renderStats(d) {
           <div class="hstat-icon">${h.icon}</div>
           <div class="hstat-info">
             <div class="hstat-name">${h.name}</div>
-            <div class="hstat-sub"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire${hIdx}" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire${hIdx})"/></svg> ${h.streak} ${S('stats','streak_suffix')}</div>
+            <div class="hstat-sub"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFire${hIdx}" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire${hIdx})"/></svg> ${h.streak} ${S('stats','streak_suffix')}</div>
           </div>
         </div>
         <div class="hstat-nums">
@@ -375,7 +375,7 @@ function renderStats(d) {
           const d66 = h.days_66_done || 0;
           const total66 = 66;
           const pct66 = Math.round(d66 / total66 * 100);
-          const c66 = d66 >= 66 ? '#4CAF7D' : d66 >= 33 ? '#5B8DEF' : '#E07040';
+          const c66 = d66 >= 66 ? '#2D8A5E' : d66 >= 33 ? '#4CAF7D' : '#7DC29A';
           const left66 = Math.max(0, 66 - d66);
           const label66 = d66 >= 66
             ? S('msg','habit_formed')
@@ -402,9 +402,9 @@ function renderStats(d) {
     ${heatmapHtml}
     <button type="button" onclick="generateShareCard()" id="share-card-btn"
       style="width:100%;padding:14px 16px;border:none;border-radius:16px;cursor:pointer;
-        background:linear-gradient(135deg,#5B8DEF,#A78BFA);color:#fff;
+        background:linear-gradient(135deg,#2D8A5E,#4CAF7D);color:#fff;
         font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;
-        margin-bottom:8px;box-shadow:0 4px 12px #5B8DEF33">
+        margin-bottom:8px;box-shadow:0 4px 12px #4CAF7D33">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v13" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       ${S('stats','share_btn')}
     </button>
@@ -415,7 +415,7 @@ function renderStats(d) {
           padding:13px 16px;border:none;cursor:pointer;border-radius:16px;
           background:var(--bg);box-shadow:var(--sh-sm);text-align:left">
         <div style="display:flex;align-items:center;gap:8px">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgHStat" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgHStat)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgHStat)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgHStat)" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgHStat" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgHStat)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgHStat)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgHStat)" stroke-width="1.5" stroke-linecap="round"/></svg>
           <span style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:1px">${S('stats','per_habit')}</span>
         </div>
         <svg id="habit-stats-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -472,7 +472,7 @@ async function generateShareCard() {
       text:'#3A3D4A', sub:'#8A8D9A', sub2:'#B0B3BE',
       shDark:'#B8BBCA', shLight:'#FFFFFF',
     };
-    const accent='#E07040', accent2='#5B8DEF', green='#4CAF7D', gold='#D4963A', purple='#A78BFA';
+    const accent='#2D8A5E', accent2='#4CAF7D', green='#4CAF7D', gold='#7DC29A', purple='#A8D9BE';
 
     // ── Solid background ──
     ctx.fillStyle = P.bg1;
@@ -631,7 +631,7 @@ async function generateShareCard() {
     const worstName = s.worst_habit_name || '';
     const worstPct  = s.worst_habit_pct  || 0;
     const worstIcon = s.worst_habit_icon || '';
-    const worstColor = worstPct <= 20 ? '#E05252' : worstPct <= 40 ? '#E07040' : '#D4963A';
+    const worstColor = worstPct <= 20 ? '#E05050' : worstPct <= 40 ? '#B07060' : 'var(--sub)';
     const topName = s.top_habit_name || '';
     const topPct  = s.top_habit_pct  || 0;
     const topIcon = s.top_habit_icon || '';
@@ -642,7 +642,7 @@ async function generateShareCard() {
     drawIcon('warn', pad+30, Y+28, 18, worstColor);
     ctx.textAlign='left'; ctx.font=`600 13px ${FS}`; ctx.fillStyle=P.sub;
     ctx.fillText(S('stats','worst_habit').toUpperCase(), pad+50, Y+34);
-    drawDonut(pad+habitInfoW-44, Y+habitInfoH/2+10, 20, worstPct, worstColor, '#E07040', worstColor);
+    drawDonut(pad+habitInfoW-44, Y+habitInfoH/2+10, 20, worstPct, worstColor, '#B03838', worstColor);
     ctx.textAlign='left';
     if(worstIcon){ctx.font='26px serif';ctx.fillText(worstIcon,pad+20,Y+68);}
     ctx.font=`700 15px ${FS}`; ctx.fillStyle=P.text;
@@ -916,7 +916,7 @@ async function loadRating() {
     renderRating(d);
   } catch(e) {
     document.getElementById('rating-content').innerHTML =
-      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>${S('msg','data_error')}.</div>`;
+      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E05050"/><stop offset="100%" stop-color="#B03838"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>${S('msg','data_error')}.</div>`;
   }
 }
 
@@ -958,11 +958,11 @@ function renderRating(d) {
   }
 
   const medals = [
-    `<svg width="28" height="32" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mgRib1a" x1="0" y1="0" x2="28" y2="8" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C94E"/><stop offset="100%" stop-color="#E8A020"/></linearGradient><linearGradient id="mgGold" x1="0" y1="14" x2="28" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="100%" stop-color="#C8820A"/></linearGradient><linearGradient id="mgGoldS" x1="4" y1="16" x2="24" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFF0A0"/><stop offset="100%" stop-color="#E8A020"/></linearGradient></defs><rect x="9" y="0" width="5" height="14" rx="2" fill="url(#mgRib1a)" transform="rotate(-15 9 0)"/><rect x="14" y="0" width="5" height="14" rx="2" fill="#E8A020" transform="rotate(15 18 0)"/><circle cx="14" cy="22" r="9" fill="url(#mgGold)"/><circle cx="14" cy="22" r="7" fill="url(#mgGoldS)"/><text x="14" y="27" text-anchor="middle" font-size="9" font-weight="800" fill="#7A4A00" font-family="sans-serif">1</text></svg>`,
-    `<svg width="28" height="32" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mgRib2a" x1="0" y1="0" x2="28" y2="8" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#C8D0E0"/><stop offset="100%" stop-color="#8898B0"/></linearGradient><linearGradient id="mgSilv" x1="0" y1="14" x2="28" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E8EEF8"/><stop offset="100%" stop-color="#8898B0"/></linearGradient><linearGradient id="mgSilvS" x1="4" y1="16" x2="24" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F4F8FF"/><stop offset="100%" stop-color="#A0B0C8"/></linearGradient></defs><rect x="9" y="0" width="5" height="14" rx="2" fill="url(#mgRib2a)" transform="rotate(-15 9 0)"/><rect x="14" y="0" width="5" height="14" rx="2" fill="#8898B0" transform="rotate(15 18 0)"/><circle cx="14" cy="22" r="9" fill="url(#mgSilv)"/><circle cx="14" cy="22" r="7" fill="url(#mgSilvS)"/><text x="14" y="27" text-anchor="middle" font-size="9" font-weight="800" fill="#445566" font-family="sans-serif">2</text></svg>`,
-    `<svg width="28" height="32" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mgRib3a" x1="0" y1="0" x2="28" y2="8" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#D4956A"/><stop offset="100%" stop-color="#8B4513"/></linearGradient><linearGradient id="mgBronz" x1="0" y1="14" x2="28" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E8A87C"/><stop offset="100%" stop-color="#7A3A10"/></linearGradient><linearGradient id="mgBronzS" x1="4" y1="16" x2="24" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F4C8A0"/><stop offset="100%" stop-color="#A0522D"/></linearGradient></defs><rect x="9" y="0" width="5" height="14" rx="2" fill="url(#mgRib3a)" transform="rotate(-15 9 0)"/><rect x="14" y="0" width="5" height="14" rx="2" fill="#8B4513" transform="rotate(15 18 0)"/><circle cx="14" cy="22" r="9" fill="url(#mgBronz)"/><circle cx="14" cy="22" r="7" fill="url(#mgBronzS)"/><text x="14" y="27" text-anchor="middle" font-size="9" font-weight="800" fill="#4A1A00" font-family="sans-serif">3</text></svg>`
+    `<svg width="28" height="32" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mgR1" x1="4" y1="6" x2="24" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="14" cy="18" r="11" fill="url(#mgR1)"/><circle cx="14" cy="18" r="8.5" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.35"/><text x="14" y="22" text-anchor="middle" font-size="11" font-weight="800" fill="#FFFFFF" font-family="sans-serif">1</text></svg>`,
+    `<svg width="28" height="32" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mgR2" x1="4" y1="6" x2="24" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#7DC29A"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><circle cx="14" cy="18" r="11" fill="url(#mgR2)"/><circle cx="14" cy="18" r="8.5" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.35"/><text x="14" y="22" text-anchor="middle" font-size="11" font-weight="800" fill="#FFFFFF" font-family="sans-serif">2</text></svg>`,
+    `<svg width="28" height="32" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="mgR3" x1="4" y1="6" x2="24" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A8D9BE"/><stop offset="100%" stop-color="#7DC29A"/></linearGradient></defs><circle cx="14" cy="18" r="11" fill="url(#mgR3)"/><circle cx="14" cy="18" r="8.5" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.35"/><text x="14" y="22" text-anchor="middle" font-size="11" font-weight="800" fill="#FFFFFF" font-family="sans-serif">3</text></svg>`
   ];
-  const podiumColors = ['#D4963A','#9AA0B0','#C08A40'];
+  const podiumColors = ['#2D8A5E','#4CAF7D','#7DC29A'];
 
   // ── Podium (top 3) ──
   const top3 = users.slice(0, 3);
@@ -980,10 +980,10 @@ function renderRating(d) {
           ${userAvatarHTML(u, idx===0?48:38)}
           <span style="position:absolute;bottom:-8px;right:calc(50% - ${idx===0?40:32}px)">${u.pet || medals[idx]}</span>
         </div>
-        <div style="font-size:${idx===0?'13px':'11px'};font-weight:700;color:${isMe?'#5B8DEF':'var(--text)'};margin-bottom:2px">${u.name.split(' ')[0]}</div>
+        <div style="font-size:${idx===0?'13px':'11px'};font-weight:700;color:${isMe?'var(--accent)':'var(--text)'};margin-bottom:2px">${u.name.split(' ')[0]}</div>
         ${u.badge ? `<div style="font-size:10px">${u.badge}</div>` : ''}
         <div style="font-size:10px;color:${col};font-weight:700;margin-bottom:6px">
-          ${sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg>`:u.score+' '+S('profile','kun')}
+          ${sort_by==='points'?u.points+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgStarX" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z" fill="url(#svgStarX)"/></svg>`:sort_by==='streak'?u.streak+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg>`:u.score+' '+S('profile','kun')}
         </div>
         <div style="height:${h}px;background:linear-gradient(180deg,${col}44,${col}22);
           border-radius:10px 10px 0 0;border:2px solid ${col}44;
@@ -991,7 +991,7 @@ function renderRating(d) {
           <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;justify-content:center">
             ${u.habits_count ? `<div style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><rect x="8" y="2" width="8" height="4" rx="1" stroke="${col}" stroke-width="2"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="${col}" stroke-width="2"/><path d="M8 11h8M8 15h5" stroke="${col}" stroke-width="2" stroke-linecap="round"/></svg> ${u.habits_count}</div>` : ''}
             ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap;cursor:pointer">🎒 ${u.items_count}</div>` : ''}
-            ${(j=>{const e=j>=80?'❤️':j>=50?'🧡':j>=20?'💛':'🖤';return `<div style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap">${e} ${j}%</div>`;})(u.jon??100)}
+            ${(j=>{const hc=j>=60?'#4CAF7D':j>=30?'#7DC29A':'#E05050';const hb=j>=30?'rgba(76,175,125,0.13)':'rgba(224,80,80,0.13)';return `<div style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap;display:inline-flex;align-items:center;gap:2px"><svg width="9" height="9" viewBox="0 0 24 24" fill="${hc}" style="display:inline;vertical-align:middle"><path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z"/></svg>${j}%</div>`;})(u.jon??100)}
           </div>
           <div style="font-size:16px;font-weight:800;color:${col}">${idx+1}</div>
         </div>
@@ -1005,22 +1005,22 @@ function renderRating(d) {
     const rank   = i + 4;
     const pct    = calcPct(u);
     const isMe   = u.is_me;
-    const subLbl = sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg>`:u.score+' '+S('profile','kun');
+    const subLbl = sort_by==='points'?u.points+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgStarX" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z" fill="url(#svgStarX)"/></svg>`:sort_by==='streak'?u.streak+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg>`:u.score+' '+S('profile','kun');
     rowsHtml += `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
         border-radius:14px;margin-bottom:4px;background:var(--bg);
-        box-shadow:${isMe?'0 0 0 2px #5B8DEF':'var(--sh-sm)'}">
-        <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#8BA7D6,#A0B4D8);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:2px 2px 5px #B8BBCA,-2px -2px 5px #fff"><span style="font-size:10px;font-weight:800;color:#fff">${rank}</span></div>
+        box-shadow:${isMe?'0 0 0 2px var(--accent)':'var(--sh-sm)'}">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:var(--sh-sm)"><span style="font-size:10px;font-weight:800;color:var(--sub)">${rank}</span></div>
         ${userAvatarHTML(u, 34)}
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:5px">
-            <div style="font-size:13px;font-weight:700;color:${isMe?'#5B8DEF':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${u.name}${u.badge?' '+u.badge:''}</div>
-            ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#4CAF7D\"/><stop offset=\"100%\" stop-color=\"#5B8DEF\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
-            ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:9px;font-weight:700;color:#A78BFA;background:#A78BFA18;border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer">🎒 ${u.items_count}</div>` : ''}
-            ${(j=>{const e=j>=80?"❤️":j>=50?"🧡":j>=20?"💛":"🖤";return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap">${e} ${j}%</div>`;})(u.jon??100)}
+            <div style="font-size:13px;font-weight:700;color:${isMe?'var(--accent)':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${u.name}${u.badge?' '+u.badge:''}</div>
+            ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#2D8A5E\"/><stop offset=\"100%\" stop-color=\"#4CAF7D\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
+            ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--accent);background:rgba(76,175,125,0.13);border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer">🎒 ${u.items_count}</div>` : ''}
+            ${(j=>{const hc=j>=60?'#4CAF7D':j>=30?'#7DC29A':'#E05050';return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="${hc}" style="display:inline;vertical-align:middle"><path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z"/></svg>${j}%</div>`;})(u.jon??100)}
           </div>
           <div style="height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-top:5px;overflow:hidden">
-            <div style="height:100%;border-radius:2px;background:#5B8DEF;width:${pct}%;transition:width .4s"></div>
+            <div style="height:100%;border-radius:2px;background:var(--accent);width:${pct}%;transition:width .4s"></div>
           </div>
         </div>
         <div style="font-size:12px;font-weight:700;color:var(--sub);text-align:right">${subLbl}</div>
@@ -1032,32 +1032,32 @@ function renderRating(d) {
   if (caller_entry) {
     const u   = caller_entry;
     const pct = calcPct(u);
-    const sub = sort_by==='points'?u.points+' ⭐':sort_by==='streak'?u.streak+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg>`:u.score+' '+S('profile','kun');
+    const sub = sort_by==='points'?u.points+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgStarX" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z" fill="url(#svgStarX)"/></svg>`:sort_by==='streak'?u.streak+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg>`:u.score+' '+S('profile','kun');
     myRowHtml = `
       <div style="margin-top:4px;border-top:1px solid var(--bg);padding-top:8px">
         <div style="font-size:10px;color:var(--sub);margin-bottom:4px;padding-left:4px">${S('rating','my_rank')}</div>
         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
-          border-radius:14px;background:var(--bg);box-shadow:0 0 0 2px #5B8DEF">
-          <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#5B8DEF,#4CAF7D);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 0 2px #5B8DEF44"><span style="font-size:10px;font-weight:800;color:#fff">${u.rank}</span></div>
+          border-radius:14px;background:var(--bg);box-shadow:0 0 0 2px var(--accent)">
+          <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#2D8A5E,#4CAF7D);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 0 2px #4CAF7D44"><span style="font-size:10px;font-weight:800;color:#fff">${u.rank}</span></div>
           ${userAvatarHTML(u, 34)}
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:5px">
-              <div style="font-size:13px;font-weight:700;color:#5B8DEF;flex:1">${u.name}</div>
-              ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#4CAF7D\"/><stop offset=\"100%\" stop-color=\"#5B8DEF\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
-              ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:9px;font-weight:700;color:#A78BFA;background:#A78BFA18;border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer">🎒 ${u.items_count}</div>` : ''}
-              ${(j=>{const e=j>=80?"❤️":j>=50?"🧡":j>=20?"💛":"🖤";return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap">${e} ${j}%</div>`;})(u.jon??100)}
+              <div style="font-size:13px;font-weight:700;color:var(--accent);flex:1">${u.name}</div>
+              ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#2D8A5E\"/><stop offset=\"100%\" stop-color=\"#4CAF7D\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
+              ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--accent);background:rgba(76,175,125,0.13);border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer">🎒 ${u.items_count}</div>` : ''}
+              ${(j=>{const hc=j>=60?'#4CAF7D':j>=30?'#7DC29A':'#E05050';return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="${hc}" style="display:inline;vertical-align:middle"><path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z"/></svg>${j}%</div>`;})(u.jon??100)}
             </div>
             <div style="height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-top:5px;overflow:hidden">
-              <div style="height:100%;border-radius:2px;background:#5B8DEF;width:${pct}%"></div>
+              <div style="height:100%;border-radius:2px;background:var(--accent);width:${pct}%"></div>
             </div>
           </div>
-          <div style="font-size:12px;font-weight:700;color:#5B8DEF">${sub}</div>
+          <div style="font-size:12px;font-weight:700;color:var(--accent)">${sub}</div>
         </div>
       </div>`;
   }
 
   // ── Sort va Period switch ──
-  const sorts   = [['points',S('rating','sort_points')],['streak','<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="gPFire" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#gPFire)"/></svg>'+S('rating','sort_streak')],['active','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="gPCal" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><rect x="3" y="5" width="18" height="16" rx="3" stroke="url(#gPCal)" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="url(#gPCal)" stroke-width="2" stroke-linecap="round"/></svg>'+S('rating','sort_active')]];
+  const sorts   = [['points','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="gPStar" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z" fill="url(#gPStar)"/></svg>'+S('rating','sort_points')],['streak','<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="gPFire" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#gPFire)"/></svg>'+S('rating','sort_streak')],['active','<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px"><defs><linearGradient id="gPCal" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><rect x="3" y="5" width="18" height="16" rx="3" stroke="url(#gPCal)" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="url(#gPCal)" stroke-width="2" stroke-linecap="round"/></svg>'+S('rating','sort_active')]];
   const periods = [['week',S('rating','period_week')],['month',S('rating','period_month')],['all',S('rating','period_all')]];
   const sortBtns = sorts.map(([k,l]) =>
     `<button onclick="setRatSort('${k}')" type="button"
