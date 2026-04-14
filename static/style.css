@@ -608,7 +608,7 @@ body {
   background: var(--bg);
   box-shadow: var(--sh-sm);
   border-radius: 18px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   position: relative; overflow: hidden;
   cursor: pointer;
   transition: box-shadow .2s;
@@ -746,11 +746,16 @@ body {
 }
 .checkin-info { flex: 1; min-width: 0; }
 .checkin-name {
-  font-size: 14px; font-weight: 600; color: var(--text);
+  font-size: 15px; font-weight: 650; color: var(--text);
+  letter-spacing: -0.1px;
   transition: color .2s;
 }
 .checkin-card.done .checkin-name { color: var(--green); }
-.checkin-meta { font-size: 11px; color: var(--sub); margin-top: 2px; }
+.checkin-meta {
+  font-size: 11px; color: var(--sub);
+  margin-top: 4px;
+  opacity: 0.85;
+}
 
 .checkin-btn {
   width: 42px; height: 42px; border-radius: 50%;
