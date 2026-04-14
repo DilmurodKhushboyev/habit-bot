@@ -180,13 +180,14 @@ async function checkin(hid, cardEl) {
     const wasFullyDone = cardEl.classList.contains('done');
 
     cardEl.classList.toggle('done', isDone);
-    if (btn) { btn.innerHTML = isDone ? '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><path d="M4 10l5 5 7-8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''; }
 
     // Meta va tugmani yangilash
     const rc  = result.repeat_count || 1;
     const tc  = result.today_count  || 0;
     if (btn) {
-      btn.innerHTML = isDone ? '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><path d="M4 10l5 5 7-8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : (rc > 1 && tc > 0 ? tc+'/'+rc : '');
+      const glowSvg = !isDone ? '<svg class="habit-glow-ring" viewBox="0 0 50 50" preserveAspectRatio="xMidYMid meet"><circle class="habit-glow-circle" cx="25" cy="25" r="23" fill="none" stroke="#4CAF7D" stroke-width="2"/></svg>' : '';
+      const mainContent = isDone ? '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><path d="M4 10l5 5 7-8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : (rc > 1 && tc > 0 ? tc+'/'+rc : '');
+      btn.innerHTML = glowSvg + '<span class="checkin-btn-content">' + mainContent + '</span>';
       btn.style.fontSize = (rc > 1 && !isDone && tc > 0) ? '11px' : '';
     }
     // Progress dots yangilash
