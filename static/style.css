@@ -1373,12 +1373,12 @@ body {
   position: absolute;
   width: 62px; height: 62px;
   border-radius: 50%;
-  background: linear-gradient(145deg, #34D399, #059669);
+  background: linear-gradient(145deg, #5DBE8E, #2D8A5E);
   box-shadow:
-    0 8px 24px rgba(5,150,105,0.45),
-    0 2px 8px rgba(52,211,153,0.3),
-    inset 0 3px 6px rgba(255,255,255,0.4),
-    inset 0 -3px 8px rgba(0,80,40,0.2);
+    0 6px 16px rgba(76,175,125,0.30),
+    0 2px 6px rgba(76,175,125,0.20),
+    inset 0 3px 6px rgba(255,255,255,0.35),
+    inset 0 -3px 8px rgba(0,80,40,0.15);
   top: -30px;
   left: 0;
   z-index: 3;
