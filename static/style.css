@@ -616,6 +616,35 @@ body {
 .checkin-card.done {
   box-shadow: var(--sh-in);
 }
+/* Bugun bajarilishi kerak — yashil nur checkin tugmasi atrofida aylanib yuradi */
+.checkin-btn { position: relative; }
+.checkin-btn-content {
+  position: relative;
+  z-index: 2;
+}
+.habit-glow-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 48px;
+  height: 48px;
+  transform: translate(-50%, -50%) translateZ(0);
+  pointer-events: none;
+  overflow: visible;
+  display: block;
+  z-index: 1;
+  will-change: transform;
+}
+.habit-glow-circle {
+  stroke-dasharray: 36 108;
+  stroke-dashoffset: 0;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 2.5px rgba(76, 175, 125, 0.9));
+  animation: habitGlowRun 3s linear infinite;
+  will-change: stroke-dashoffset;
+}
+@keyframes habitGlowRun {
+  to { stroke-dashoffset: -144; }
+}
 /* Swipe orqasi — tahrirlash / o'chirish */
 .checkin-actions-bg {
   position: absolute;
