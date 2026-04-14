@@ -149,9 +149,8 @@ function renderToday(d) {
       <div class="today-sub" id="prog-sub">${done_count} / ${total} ${S('today','progress_sub')}</div>
     </div>
 
-    <div style="display:flex;gap:8px;justify-content:center;margin:12px 0 4px">
-      <button onclick="openAddFromToday()" type="button" style="font-size:13px;font-weight:600;color:#4CAF7D;background:none;border:none;cursor:pointer;padding:4px 8px">${S('today','add_habit')}</button>
-
+    <div style="display:flex;gap:8px;justify-content:center;margin:14px 0 6px">
+      <button onclick="openAddFromToday()" type="button" class="today-add-btn">${S('today','add_habit')}</button>
     </div>
 
     <div class="section-title">${S('today','section_title')}</div>
