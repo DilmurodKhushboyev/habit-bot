@@ -36,7 +36,7 @@ function renderStats(d) {
 
   const worstName = summary.worst_habit_name || '';
   const worstPct  = summary.worst_habit_pct  || 0;
-  const worstColor = worstPct <= 20 ? '#E05252' : worstPct <= 40 ? '#E07040' : '#D4963A';
+  const worstColor = worstPct <= 20 ? '#E05050' : worstPct <= 40 ? '#B07060' : 'var(--sub)';
 
   // Streak sparkline: haftalik bajarilish % dan (weekly array)
   const streakSpark = (() => {
@@ -59,10 +59,10 @@ function renderStats(d) {
 
   // SVG icon helpers (professional gradient icons)
   const svgTarget = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siTgt" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#6EDAA0"/></linearGradient></defs><circle cx="12" cy="12" r="10" stroke="url(#siTgt)" stroke-width="2"/><circle cx="12" cy="12" r="6" stroke="url(#siTgt)" stroke-width="2"/><circle cx="12" cy="12" r="2.5" fill="url(#siTgt)"/></svg>';
-  const svgFire = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siFlm" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#E07040"/><stop offset="100%" stop-color="#F6C93E"/></linearGradient></defs><path d="M12 23c-4.97 0-8-3.58-8-7.5 0-3.07 2.17-5.77 4.5-7.5.5-.37 1.2.1 1.05.7-.42 1.64.22 3.16 1.45 3.8.36.19.8-.04.84-.44.52-4.78 3.66-7.56 4.66-8.06.47-.23 1.02.17.9.68-.58 2.44.52 4.82 2.6 5.82.36.17.57.54.57.93 0 2.87-.5 5.07-2.07 7.07C16.5 21 14.5 23 12 23z" fill="url(#siFlm)"/></svg>';
-  const svgWarn = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siWrn" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#E05252"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#siWrn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="url(#siWrn)" fill-opacity=".12"/><path d="M12 10v5" stroke="url(#siWrn)" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="17.5" r="1.2" fill="url(#siWrn)"/></svg>';
-  const svgTrophy = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siTrp" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#D4963A"/><stop offset="100%" stop-color="#FFE566"/></linearGradient></defs><path d="M6 4h12v2c0 4-2.5 7-5 8v2h2a2 2 0 012 2H7a2 2 0 012-2h2v-2c-2.5-1-5-4-5-8V4z" fill="url(#siTrp)" fill-opacity=".15" stroke="url(#siTrp)" stroke-width="1.8"/><path d="M6 6H4a1 1 0 00-1 1v1c0 2 1.5 3.5 3 4" stroke="url(#siTrp)" stroke-width="1.8" stroke-linecap="round"/><path d="M18 6h2a1 1 0 011 1v1c0 2-1.5 3.5-3 4" stroke="url(#siTrp)" stroke-width="1.8" stroke-linecap="round"/></svg>';
-  const svgStar = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z" fill="#E07040"/></svg>';
+  const svgFire = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siFlm" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M12 23c-4.97 0-8-3.58-8-7.5 0-3.07 2.17-5.77 4.5-7.5.5-.37 1.2.1 1.05.7-.42 1.64.22 3.16 1.45 3.8.36.19.8-.04.84-.44.52-4.78 3.66-7.56 4.66-8.06.47-.23 1.02.17.9.68-.58 2.44.52 4.82 2.6 5.82.36.17.57.54.57.93 0 2.87-.5 5.07-2.07 7.07C16.5 21 14.5 23 12 23z" fill="url(#siFlm)"/></svg>';
+  const svgWarn = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siWrn" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#E05050"/><stop offset="100%" stop-color="#B03838"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#siWrn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="url(#siWrn)" fill-opacity=".12"/><path d="M12 10v5" stroke="url(#siWrn)" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="17.5" r="1.2" fill="url(#siWrn)"/></svg>';
+  const svgTrophy = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="siTrp" x1="0" y1="24" x2="24" y2="0"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M6 4h12v2c0 4-2.5 7-5 8v2h2a2 2 0 012 2H7a2 2 0 012-2h2v-2c-2.5-1-5-4-5-8V4z" fill="url(#siTrp)" fill-opacity=".15" stroke="url(#siTrp)" stroke-width="1.8"/><path d="M6 6H4a1 1 0 00-1 1v1c0 2 1.5 3.5 3 4" stroke="url(#siTrp)" stroke-width="1.8" stroke-linecap="round"/><path d="M18 6h2a1 1 0 011 1v1c0 2-1.5 3.5-3 4" stroke="url(#siTrp)" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  const svgStar = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z" fill="#4CAF7D"/></svg>';
 
   // Donut helper — ikki odat kartasi uchun bir xil chart
   const donutSVG = (pct, gradId, c1, c2, textColor) => {
@@ -99,7 +99,7 @@ function renderStats(d) {
       </div>
 
       <!-- 2. STREAK — sparkline (haftalik bajarilish %) -->
-      <div class="sc-card sc-card-anim" style="--sc-color:#E07040">
+      <div class="sc-card sc-card-anim" style="--sc-color:#4CAF7D">
         <div class="sc-header">
           <div>
             <div class="sc-top-label">${S('stats','streak_total_label')}</div>
@@ -111,12 +111,12 @@ function renderStats(d) {
         <div class="sc-chart">
           <svg width="100%" viewBox="0 0 120 42" preserveAspectRatio="none" style="display:block;overflow:visible">
             <defs>
-              <linearGradient id="scSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E07040" stop-opacity="0.25"/><stop offset="100%" stop-color="#E07040" stop-opacity="0"/></linearGradient>
+              <linearGradient id="scSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4CAF7D" stop-opacity="0.25"/><stop offset="100%" stop-color="#4CAF7D" stop-opacity="0"/></linearGradient>
               <linearGradient id="scSparkLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient>
             </defs>
             ${streakSpark.area ? '<path d="' + streakSpark.area + '" fill="url(#scSparkFill)"/>' : ''}
             ${streakSpark.line ? '<path d="' + streakSpark.line + '" fill="none" stroke="url(#scSparkLine)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' : ''}
-            ${streakSpark.last ? '<circle cx="' + streakSpark.last.x.toFixed(1) + '" cy="' + streakSpark.last.y.toFixed(1) + '" r="3" fill="#E07040" stroke="#fff" stroke-width="1.5"/>' : ''}
+            ${streakSpark.last ? '<circle cx="' + streakSpark.last.x.toFixed(1) + '" cy="' + streakSpark.last.y.toFixed(1) + '" r="3" fill="#4CAF7D" stroke="#fff" stroke-width="1.5"/>' : ''}
             ${(() => { const dAbbr = S('stats','day_abbr') || ['Ya','Du','Se','Ch','Pa','Ju','Sh']; const wLen = weekly ? weekly.length : 0; if (wLen < 2) return ''; return weekly.map((w, wi) => { const xp = 2 + (wi / (wLen - 1)) * 116; return '<text x="'+xp.toFixed(1)+'" y="40" text-anchor="middle" font-size="7" fill="var(--sub)" font-weight="600">'+dAbbr[new Date(w.date).getDay()]+'</text>'; }).join(''); })()}
           </svg>
         </div>
@@ -133,7 +133,7 @@ function renderStats(d) {
           <div class="sc-badge-icon">${svgWarn}</div>
         </div>
         <div class="sc-chart" style="align-items:center;justify-content:center">
-          ${donutSVG(worstPct, 'scDonutW', worstColor, '#E07040', worstColor)}
+          ${donutSVG(worstPct, 'scDonutW', worstColor, '#B03838', worstColor)}
         </div>
         <div class="sc-foot sc-foot-trunc">${worstName || S('stats','no_habits')}</div>
       </div>
@@ -160,7 +160,7 @@ function renderStats(d) {
   const barsHtml = weekly.map((w, i) => {
     const pct   = w.total ? Math.round(w.count / w.total * 100) : 0;
     const hPx   = pct > 0 ? Math.max(8, Math.round(pct * 0.7)) : 4;
-    const color = pct >= 80 ? '#4CAF7D' : pct >= 40 ? '#5B8DEF' : pct > 0 ? '#E07040' : '#C8CBD8';
+    const color = pct >= 80 ? '#2D8A5E' : pct >= 40 ? '#4CAF7D' : pct > 0 ? '#7DC29A' : 'var(--sub)';
     const isToday = w.date === today;
     return `
       <div class="bar-col">
@@ -205,7 +205,7 @@ function renderStats(d) {
     }).join('');
     const last = pts[pts.length-1];
     const lastPct = pcts[pcts.length-1];
-    const dotColor = lastPct >= 80 ? '#4CAF7D' : lastPct >= 40 ? '#5B8DEF' : '#E07040';
+    const dotColor = lastPct >= 80 ? '#2D8A5E' : lastPct >= 40 ? '#4CAF7D' : '#7DC29A';
     return '<div class="bar-chart" style="padding-bottom:18px">'
       + '<div class="bar-chart-title">' + S('stats','month_chart') + '</div>'
       + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">'
@@ -228,7 +228,7 @@ function renderStats(d) {
     const dir   = trend.direction;
     const diff  = Math.abs(trend.diff);
     const arrow = dir === 'up'   ? '↑' : dir === 'down' ? '↓' : '→';
-    const aColor= dir === 'up'   ? '#4CAF7D' : dir === 'down' ? '#E07040' : '#8A8FA8';
+    const aColor= dir === 'up'   ? '#4CAF7D' : dir === 'down' ? '#E05050' : 'var(--sub)';
     const msg   = dir === "up"   ? S('msg','week_better') :
                   dir === "down" ? S('msg','week_worse') :
                                    S('msg','week_same');
@@ -248,7 +248,7 @@ function renderStats(d) {
         <div class="trend-compare">
           <div class="trend-compare-item">
             <div class="trend-compare-label">${S('msg','prev_week')}</div>
-            <div class="trend-compare-bar"><div class="trend-compare-bar-fill" style="background:#C8CBD8;width:${Math.round(barPrev/barMax*100)}%"></div></div>
+            <div class="trend-compare-bar"><div class="trend-compare-bar-fill" style="background:var(--sub);opacity:.35;width:${Math.round(barPrev/barMax*100)}%"></div></div>
             <div class="trend-compare-val" style="color:var(--sub)">${trend.prev_week}%</div>
           </div>
           <div class="trend-compare-item">
@@ -310,14 +310,14 @@ function renderStats(d) {
   // ── Har bir odat ──
   let habitCardsHtml = '';
   (habit_stats || []).forEach((h, hIdx) => {
-    const pctColor = h.percent >= 80 ? '#4CAF7D' : h.percent >= 50 ? '#5B8DEF' : '#E07040';
+    const pctColor = h.percent >= 80 ? '#2D8A5E' : h.percent >= 50 ? '#4CAF7D' : '#7DC29A';
 
     // ── Donut chart (percent) ──
     const r = 22; const circ = 2 * Math.PI * r;
     const dash = circ * h.percent / 100;
     const donutId = `dnt-${hIdx}`;
     const donutSvg = `<svg width="56" height="56" viewBox="0 0 56 56">
-      <circle cx="28" cy="28" r="${r}" fill="none" stroke="#C8CBD8" stroke-width="5"/>
+      <circle cx="28" cy="28" r="${r}" fill="none" stroke="var(--bg2)" stroke-width="5"/>
       <circle cx="28" cy="28" r="${r}" fill="none" stroke="${pctColor}" stroke-width="5"
         stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"
         stroke-dashoffset="${(circ/4).toFixed(1)}" stroke-linecap="round"/>
@@ -329,7 +329,7 @@ function renderStats(d) {
     const dayLbls = S('stats','day_abbr') || ['Ya','Du','Se','Ch','Pa','Ju','Sh'];
     const miniBars = (h.week_dots || []).map((v, i) => {
       const barH = v ? 28 : 6;
-      const barC = v ? pctColor : '#C8CBD8';
+      const barC = v ? pctColor : 'var(--bg2)';
       const today_d = new Date(); today_d.setDate(today_d.getDate() - (6 - i));
       const lbl = dayLbls[today_d.getDay()];
       return `<div class="hstat-minibar-col">
@@ -375,7 +375,7 @@ function renderStats(d) {
           const d66 = h.days_66_done || 0;
           const total66 = 66;
           const pct66 = Math.round(d66 / total66 * 100);
-          const c66 = d66 >= 66 ? '#4CAF7D' : d66 >= 33 ? '#5B8DEF' : '#E07040';
+          const c66 = d66 >= 66 ? '#2D8A5E' : d66 >= 33 ? '#4CAF7D' : '#7DC29A';
           const left66 = Math.max(0, 66 - d66);
           const label66 = d66 >= 66
             ? S('msg','habit_formed')
@@ -402,9 +402,9 @@ function renderStats(d) {
     ${heatmapHtml}
     <button type="button" onclick="generateShareCard()" id="share-card-btn"
       style="width:100%;padding:14px 16px;border:none;border-radius:16px;cursor:pointer;
-        background:linear-gradient(135deg,#5B8DEF,#A78BFA);color:#fff;
+        background:linear-gradient(135deg,#2D8A5E,#4CAF7D);color:#fff;
         font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;
-        margin-bottom:8px;box-shadow:0 4px 12px #5B8DEF33">
+        margin-bottom:8px;box-shadow:0 4px 12px #4CAF7D33">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v13" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       ${S('stats','share_btn')}
     </button>
@@ -472,7 +472,7 @@ async function generateShareCard() {
       text:'#3A3D4A', sub:'#8A8D9A', sub2:'#B0B3BE',
       shDark:'#B8BBCA', shLight:'#FFFFFF',
     };
-    const accent='#E07040', accent2='#5B8DEF', green='#4CAF7D', gold='#D4963A', purple='#A78BFA';
+    const accent='#2D8A5E', accent2='#4CAF7D', green='#4CAF7D', gold='#7DC29A', purple='#A8D9BE';
 
     // ── Solid background ──
     ctx.fillStyle = P.bg1;
@@ -631,7 +631,7 @@ async function generateShareCard() {
     const worstName = s.worst_habit_name || '';
     const worstPct  = s.worst_habit_pct  || 0;
     const worstIcon = s.worst_habit_icon || '';
-    const worstColor = worstPct <= 20 ? '#E05252' : worstPct <= 40 ? '#E07040' : '#D4963A';
+    const worstColor = worstPct <= 20 ? '#E05050' : worstPct <= 40 ? '#B07060' : 'var(--sub)';
     const topName = s.top_habit_name || '';
     const topPct  = s.top_habit_pct  || 0;
     const topIcon = s.top_habit_icon || '';
@@ -642,7 +642,7 @@ async function generateShareCard() {
     drawIcon('warn', pad+30, Y+28, 18, worstColor);
     ctx.textAlign='left'; ctx.font=`600 13px ${FS}`; ctx.fillStyle=P.sub;
     ctx.fillText(S('stats','worst_habit').toUpperCase(), pad+50, Y+34);
-    drawDonut(pad+habitInfoW-44, Y+habitInfoH/2+10, 20, worstPct, worstColor, '#E07040', worstColor);
+    drawDonut(pad+habitInfoW-44, Y+habitInfoH/2+10, 20, worstPct, worstColor, '#B03838', worstColor);
     ctx.textAlign='left';
     if(worstIcon){ctx.font='26px serif';ctx.fillText(worstIcon,pad+20,Y+68);}
     ctx.font=`700 15px ${FS}`; ctx.fillStyle=P.text;
