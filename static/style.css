@@ -750,7 +750,7 @@ body {
   letter-spacing: -0.1px;
   transition: color .2s;
 }
-.checkin-card.done .checkin-name { color: var(--green); }
+.checkin-card.done .checkin-name { color: var(--text); opacity: .55; }
 .checkin-meta {
   font-size: 11px; color: var(--sub);
   margin-top: 4px;
