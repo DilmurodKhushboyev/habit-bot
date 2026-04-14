@@ -780,7 +780,7 @@ body {
   transition: opacity .2s;
 }
 .checkin-card.done .checkin-btn {
-  box-shadow: 0 4px 10px rgba(76, 175, 125, 0.35), var(--sh-press);
+  box-shadow: 0 3px 8px rgba(76, 175, 125, 0.22), var(--sh-press);
   background: linear-gradient(135deg, #5BC28E 0%, #3D9B6B 100%);
   color: #fff; font-size: 18px;
 }
