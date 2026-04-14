@@ -616,23 +616,32 @@ body {
 .checkin-card.done {
   box-shadow: var(--sh-in);
 }
-/* Bugun bajarilishi kerak — yashil "nafas olayotgan" glow (neumorphic) */
-.checkin-card:not(.done) {
-  animation: habitPendingGlow 2.4s ease-in-out infinite;
+/* Bugun bajarilishi kerak — yashil nur karta chetida aylanib yuradi */
+.checkin-card:not(.done)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  padding: 2px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 200deg,
+    rgba(76, 175, 125, 0.5) 260deg,
+    rgba(76, 175, 125, 1) 320deg,
+    rgba(76, 175, 125, 0.5) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: habitPendingSpin 2.8s linear infinite;
+  pointer-events: none;
+  z-index: 3;
 }
-@keyframes habitPendingGlow {
-  0%, 100% {
-    box-shadow:
-      var(--sh-sm),
-      0 0 0 1.5px rgba(76, 175, 125, 0.55),
-      0 0 10px rgba(76, 175, 125, 0.28);
-  }
-  50% {
-    box-shadow:
-      var(--sh-sm),
-      0 0 0 2px rgba(76, 175, 125, 0.85),
-      0 0 18px rgba(76, 175, 125, 0.55);
-  }
+@keyframes habitPendingSpin {
+  to { transform: rotate(360deg); }
 }
 /* Swipe orqasi — tahrirlash / o'chirish */
 .checkin-actions-bg {
