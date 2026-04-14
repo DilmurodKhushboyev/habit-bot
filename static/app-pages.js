@@ -82,7 +82,6 @@ function renderToday(d) {
             <span>${S('habits','delete_btn')}</span>
           </button>
         </div>
-        ${!h.done ? '<svg class="habit-glow-ring" preserveAspectRatio="none" viewBox="0 0 100 100"><rect class="habit-glow-rect" x="1" y="1" width="98" height="98" rx="17" ry="17" fill="none" stroke="#4CAF7D" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>' : ''}
         <div class="checkin-front" data-hid="${h.id}" onclick="checkinFromFront('${h.id}', this)">
           <div class="checkin-icon">${h.icon || '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDefIcon" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgDefIcon)" opacity="0.2"/><path d="M7 12l4 4 6-7" stroke="url(#svgDefIcon)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</div>
           <div class="checkin-info">
@@ -109,7 +108,7 @@ function renderToday(d) {
             <svg class="dots-icon" width="4" height="16" viewBox="0 0 4 16" fill="currentColor"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="8" r="2"/><circle cx="2" cy="14" r="2"/></svg>
             <svg class="x-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
           </button>
-          <button class="checkin-btn" id="cbtn-${h.id}" onclick="event.stopPropagation();checkin('${h.id}', document.getElementById('ccard-${h.id}'))" style="${isRepeat && !h.done && tc>0 ? 'font-size:11px;font-weight:700' : ''}">${btnContent}</button>
+          <button class="checkin-btn" id="cbtn-${h.id}" onclick="event.stopPropagation();checkin('${h.id}', document.getElementById('ccard-${h.id}'))" style="${isRepeat && !h.done && tc>0 ? 'font-size:11px;font-weight:700' : ''}">${!h.done ? '<svg class="habit-glow-ring" viewBox="0 0 50 50"><circle class="habit-glow-circle" cx="25" cy="25" r="23" fill="none" stroke="#4CAF7D" stroke-width="2"/></svg>' : ''}${btnContent}</button>
           <div class="checkin-dropdown" id="cdrop-${h.id}">
             <button class="checkin-dropdown-close" onclick="event.stopPropagation();closeAllCheckinDrops()">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"/></svg>
