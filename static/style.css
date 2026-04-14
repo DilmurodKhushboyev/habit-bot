@@ -5,11 +5,11 @@
   --raised:    #ECEEF5;
   --text:      #3A3D4A;
   --sub:       #8A8D9A;
-  --accent:    #E07040;
-  --accent2:   #5B8DEF;
+  --accent:    #4CAF7D;
+  --accent2:   #4CAF7D;
   --green:     #4CAF7D;
   --red:       #E05050;
-  --gold:      #D4963A;
+  --gold:      #8A8D9A;
 
   /* Neumorphism shadows */
   --sh-out:    6px 6px 14px #B8BBCA, -6px -6px 14px #FFFFFF;
@@ -27,11 +27,11 @@ body.dark {
   --raised:    #2A2D42;
   --text:      #E8EAF2;
   --sub:       #6B6E80;
-  --accent:    #E07040;
-  --accent2:   #5B8DEF;
+  --accent:    #4CAF7D;
+  --accent2:   #4CAF7D;
   --green:     #4CAF7D;
   --red:       #E05050;
-  --gold:      #D4963A;
+  --gold:      #6B6E80;
 
   --sh-out:    6px 6px 14px #13151F, -6px -6px 14px #272A3D;
   --sh-in:     inset 4px 4px 10px #13151F, inset -4px -4px 10px #272A3D;
