@@ -1919,3 +1919,38 @@ body.dark @keyframes splIconPulse {
 }
 .shop-modal-btn-close:active { transform: scale(.96); box-shadow: var(--sh-in); }
 
+
+/* -- Today sahifa: "+ Odat yaratish" neumorphic tugma -- */
+.today-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: var(--sh-sm);
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: box-shadow .15s ease, transform .15s ease;
+}
+.today-add-btn:active {
+  box-shadow: var(--sh-press);
+  transform: scale(.98);
+}
+.today-add-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
