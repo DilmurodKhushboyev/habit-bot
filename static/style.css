@@ -1941,16 +1941,3 @@ body.dark @keyframes splIconPulse {
   box-shadow: var(--sh-press);
   transform: scale(.98);
 }
-.today-add-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--green);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1;
-}

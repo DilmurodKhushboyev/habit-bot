@@ -150,10 +150,7 @@ function renderToday(d) {
     </div>
 
     <div style="display:flex;gap:8px;justify-content:center;margin:14px 0 6px">
-      <button onclick="openAddFromToday()" type="button" class="today-add-btn">
-        <span class="today-add-icon">+</span>
-        <span>${S('today','add_habit')}</span>
-      </button>
+      <button onclick="openAddFromToday()" type="button" class="today-add-btn">${S('today','add_habit')}</button>
     </div>
 
     <div class="section-title">${S('today','section_title')}</div>
