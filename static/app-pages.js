@@ -82,6 +82,7 @@ function renderToday(d) {
             <span>${S('habits','delete_btn')}</span>
           </button>
         </div>
+        ${!h.done ? '<svg class="habit-glow-ring" preserveAspectRatio="none" viewBox="0 0 100 100"><rect class="habit-glow-rect" x="1" y="1" width="98" height="98" rx="17" ry="17" fill="none" stroke="#4CAF7D" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>' : ''}
         <div class="checkin-front" data-hid="${h.id}" onclick="checkinFromFront('${h.id}', this)">
           <div class="checkin-icon">${h.icon || '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgDefIcon" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#svgDefIcon)" opacity="0.2"/><path d="M7 12l4 4 6-7" stroke="url(#svgDefIcon)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}</div>
           <div class="checkin-info">
