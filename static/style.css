@@ -638,7 +638,6 @@ body {
   stroke-dasharray: 36 108;
   stroke-dashoffset: 0;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 2.5px rgba(76, 175, 125, 0.9));
   animation: habitGlowRun 3s linear infinite;
   will-change: stroke-dashoffset;
 }
@@ -669,8 +668,6 @@ body {
   background: var(--bg);
   display: flex; align-items: center; gap: 14px;
   padding: 16px;
-  min-height: 100%;
-  box-sizing: border-box;
   transition: transform .28s cubic-bezier(.25,.46,.45,.94);
   will-change: transform;
 }
