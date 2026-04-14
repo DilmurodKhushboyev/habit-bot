@@ -669,6 +669,8 @@ body {
   background: var(--bg);
   display: flex; align-items: center; gap: 14px;
   padding: 16px;
+  min-height: 100%;
+  box-sizing: border-box;
   transition: transform .28s cubic-bezier(.25,.46,.45,.94);
   will-change: transform;
 }
