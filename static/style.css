@@ -1,6 +1,5 @@
 :root {
   --bg:        #E0E3EA;
-  --bg-page:   #D4D7DF;
   --bg2:       #D6D9E0;
   --surface:   #E8EBF2;
   --raised:    #ECEEF5;
@@ -23,7 +22,6 @@
 /* ── DARK MODE ── */
 body.dark {
   --bg:        #1E2130;
-  --bg-page:   #16192A;
   --bg2:       #181B28;
   --surface:   #252840;
   --raised:    #2A2D42;
@@ -45,7 +43,7 @@ body.dark {
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
 body {
-  background: var(--bg-page);
+  background: var(--bg);
   font-family: 'DM Sans', sans-serif;
   color: var(--text);
   min-height: 100vh;
