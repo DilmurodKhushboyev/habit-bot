@@ -20,7 +20,16 @@ if (tg) {
   tg.onEvent('safeAreaChanged', applySafeArea);
   tg.onEvent('contentSafeAreaChanged', applySafeArea);
 }
-if (localStorage.getItem('sh_dark') === '1') document.body.classList.add('dark');
+if (localStorage.getItem('sh_dark') === '1') {
+  // Agar body hali parse qilinmagan bo'lsa (app-core.js <head> ichida yuklanadi) — DOMContentLoaded ni kutamiz
+  if (document.body) {
+    document.body.classList.add('dark');
+  } else {
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.classList.add('dark');
+    });
+  }
+}
 
 const user     = tg?.initDataUnsafe?.user || { id: 0, first_name: 'Test' };
 let   initData = tg?.initData || '';
