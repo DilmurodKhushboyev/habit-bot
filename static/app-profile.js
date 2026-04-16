@@ -102,14 +102,14 @@ function renderProfile(d) {
            </div>`}
 
       <div class="profile-bar-row">
-        <span class="profile-bar-label"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgHeart" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 17C10 17 2 12 2 6.5A4.5 4.5 0 0110 4a4.5 4.5 0 018 2.5C18 12 10 17 10 17z" fill="url(#svgHeart)"/></svg> ${S('profile','jon_label')}</span>
+        <span class="profile-bar-label"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgHeart" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 17C10 17 2 12 2 6.5A4.5 4.5 0 0110 4a4.5 4.5 0 018 2.5C18 12 10 17 10 17z" fill="url(#svgHeart)"/></svg> ${S('profile','jon_label')}</span>
         <span class="profile-bar-value" style="color:${jonColor}">${jon}%</span>
       </div>
       <div class="jon-bar-bg"><div class="jon-bar-fill" style="width:${jon}%;background:${jonColor}"></div></div>
 
       ${d.total_ach ? `
       <div class="profile-bar-row">
-        <span class="profile-bar-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgAchT" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 2l1.8 5.5H20l-4.9 3.6 1.8 5.5L12 13l-4.9 3.6 1.8-5.5L4 7.5h6.2z" fill="url(#svgAchT)"/></svg> ${S('profile','achievements')}</span>
+        <span class="profile-bar-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgAchT" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 2l1.8 5.5H20l-4.9 3.6 1.8 5.5L12 13l-4.9 3.6 1.8-5.5L4 7.5h6.2z" fill="url(#svgAchT)"/></svg> ${S('profile','achievements')}</span>
         <span class="profile-bar-value" style="color:${achColor}">${d.earned_ach}/${d.total_ach} (${achPct}%)</span>
       </div>
       <div class="jon-bar-bg"><div class="jon-bar-fill" style="width:${achPct}%;background:${achColor}"></div></div>
@@ -251,8 +251,9 @@ function renderProfile(d) {
         <div style="color:var(--sub);font-size:18px">›</div>
       </div>
     </a>
-    <div style="border-radius:0 0 14px 14px;padding:9px 14px 10px;background:linear-gradient(90deg,#5B8DEF22,#A78BFA22,#5B8DEF22);box-shadow:var(--sh-sm)">
-      <div style="font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;letter-spacing:0.01em;background:linear-gradient(90deg,#5B8DEF,#A78BFA,#4CAF7D,#5B8DEF);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmerSlide 3s linear infinite">
+    <div style="border-radius:0 0 14px 14px;padding:9px 14px 10px;background:var(--bg);box-shadow:var(--sh-sm);display:flex;align-items:center;gap:8px">
+      <span style="width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,#5B8DEF,#A78BFA);flex-shrink:0"></span>
+      <div style="font-size:11px;font-weight:600;color:var(--sub);letter-spacing:0.01em;line-height:1.4">
         ${S('msg','channel_sub')}
       </div>
     </div>

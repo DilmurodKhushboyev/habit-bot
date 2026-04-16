@@ -287,10 +287,10 @@ body {
 }
 .profile-bar-row {
   display: flex; justify-content: space-between; align-items: center;
-  margin-top: 14px; margin-bottom: 6px;
+  margin-top: 10px; margin-bottom: 4px;
 }
-.profile-bar-label { font-size: 12px; font-weight: 700; color: var(--sub); }
-.profile-bar-value { font-size: 12px; font-weight: 700; }
+.profile-bar-label { font-size: 11px; font-weight: 700; color: var(--sub); }
+.profile-bar-value { font-size: 11px; font-weight: 700; }
 .profile-streak-rec { font-size: 9px; color: var(--green); font-weight: 600; margin-top: 1px; }
 .profile-streak-date { font-weight: 400; color: var(--sub); }
 
@@ -309,11 +309,11 @@ body {
 
 .jon-bar-top { display: flex; justify-content: space-between; font-size: 12px; color: var(--sub); margin-bottom: 8px; }
 .jon-bar-bg  {
-  height: 8px; border-radius: 10px;
+  height: 6px; border-radius: 8px;
   box-shadow: var(--sh-in);
   overflow: hidden;
 }
-.jon-bar-fill { height: 100%; border-radius: 10px; transition: width .6s ease; }
+.jon-bar-fill { height: 100%; border-radius: 8px; transition: width .6s ease; }
 
 .habits-list { display: flex; flex-direction: column; gap: 8px; }
 .habit-item {
