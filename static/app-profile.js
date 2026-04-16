@@ -251,8 +251,9 @@ function renderProfile(d) {
         <div style="color:var(--sub);font-size:18px">›</div>
       </div>
     </a>
-    <div style="border-radius:0 0 14px 14px;padding:9px 14px 10px;background:linear-gradient(90deg,#5B8DEF22,#A78BFA22,#5B8DEF22);box-shadow:var(--sh-sm)">
-      <div style="font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;letter-spacing:0.01em;background:linear-gradient(90deg,#5B8DEF,#A78BFA,#4CAF7D,#5B8DEF);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmerSlide 3s linear infinite">
+    <div style="border-radius:0 0 14px 14px;padding:9px 14px 10px;background:var(--bg);box-shadow:var(--sh-sm);display:flex;align-items:center;gap:8px">
+      <span style="width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,#5B8DEF,#A78BFA);flex-shrink:0"></span>
+      <div style="font-size:11px;font-weight:600;color:var(--sub);letter-spacing:0.01em;line-height:1.4">
         ${S('msg','channel_sub')}
       </div>
     </div>
