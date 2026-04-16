@@ -29,7 +29,7 @@ mongo_client = MongoClient(
     maxIdleTimeMS=30000,             # YANGI: 30s ishlatilmagan ulanishni yopadi (Atlas M0 uchun)
     heartbeatFrequencyMS=10000,      # YANGI: 10s da bir ulanish tekshiruvi (cluster uyg'oq turadi)
 )
-mongo_db   = mongo_client["habit_bot"]
+mongo_db   = mongo_client.get_default_database()
 mongo_col  = mongo_db["users"]
 groups_col = mongo_db["groups"]
 
