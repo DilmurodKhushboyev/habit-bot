@@ -7,25 +7,11 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Super Habits</title>
-<!-- ERUDA: vaqtinchalik debug konsoli (diagnostikadan keyin olib tashlanadi) -->
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>
-  try {
-    eruda.init();
-    // Barcha global xatolarni ushlab konsolga yozamiz
-    window.addEventListener('error', function(ev) {
-      console.error('[GLOBAL ERROR]', ev.message, '@', ev.filename + ':' + ev.lineno + ':' + ev.colno, ev.error);
-    });
-    window.addEventListener('unhandledrejection', function(ev) {
-      console.error('[UNHANDLED PROMISE]', ev.reason);
-    });
-  } catch(e) { /* eruda ishga tushmasa, app ishini to'xtatmaymiz */ }
-</script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=456">
-<script src="strings.js?v=456"></script>
-<script src="app-core.js?v=456"></script>
+<link rel="stylesheet" href="style.css?v=457">
+<script src="strings.js?v=457"></script>
+<script src="app-core.js?v=457"></script>
 </head>
 <body>
 
@@ -292,10 +278,10 @@
   </div>
 </div>
 
-<script src="app-pages.js?v=456"></script>
-<script src="app-stats.js?v=456"></script>
-<script src="app-profile.js?v=456"></script>
-<script src="app-habits.js?v=456"></script>
-<script src="app-social.js?v=456"></script>
+<script src="app-pages.js?v=457"></script>
+<script src="app-stats.js?v=457"></script>
+<script src="app-profile.js?v=457"></script>
+<script src="app-habits.js?v=457"></script>
+<script src="app-social.js?v=457"></script>
 </body>
 </html>
