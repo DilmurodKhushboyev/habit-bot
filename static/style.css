@@ -766,7 +766,7 @@ body {
 
 .checkin-btn {
   width: 42px; height: 42px; border-radius: 50%;
-  border: none; cursor: pointer; flex-shrink: 0;
+  border: 2px solid rgba(76, 175, 125, 0.35); cursor: pointer; flex-shrink: 0;
   background: var(--bg);
   box-shadow: var(--sh-sm);
   font-size: 16px; font-weight: 700;
@@ -780,16 +780,17 @@ body {
   content: "";
   display: block;
   width: 14px; height: 14px;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 20 20' fill='none'><path d='M4 10l5 5 7-8' stroke='%23A0A8B8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 20 20' fill='none'><path d='M4 10l5 5 7-8' stroke='%234CAF7D' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
   background-size: contain;
   background-repeat: no-repeat;
-  opacity: 0.45;
+  opacity: 0.85;
   transition: opacity .2s;
 }
 .checkin-card.done .checkin-btn {
   box-shadow: 0 3px 8px rgba(76, 175, 125, 0.22), var(--sh-press);
   background: linear-gradient(135deg, #5BC28E 0%, #3D9B6B 100%);
   color: #fff; font-size: 18px;
+  border-color: transparent;
 }
 .checkin-btn:active { transform: scale(0.88); }
 .checkin-btn:active .checkin-btn-content:empty::before { opacity: 0.7; }
