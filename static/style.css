@@ -498,6 +498,8 @@ body {
 .icon-cat-tabs {
   display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto;
   padding-bottom: 4px; margin-top: 6px; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+          mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
 }
 .icon-cat-tabs::-webkit-scrollbar { display: none; }
 .icon-cat-btn {
@@ -1187,6 +1189,11 @@ body {
   outline: none; cursor: pointer;
 }
 .time-input:disabled { opacity: 0.4; cursor: not-allowed; }
+.time-input::-webkit-datetime-edit { color: var(--sub); opacity: 0.85; }
+.time-input:focus::-webkit-datetime-edit,
+.time-input:valid::-webkit-datetime-edit { color: var(--text); opacity: 1; }
+.time-input::-webkit-datetime-edit-fields-wrapper { font-weight: 600; }
+.time-input::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
 .time-clear {
   width: 34px; height: 34px; border-radius: 10px;
   border: none; cursor: pointer; font-size: 14px;

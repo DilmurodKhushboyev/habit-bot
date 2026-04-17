@@ -951,6 +951,25 @@ function renderRating(d) {
     };
     return key;
   }
+  // Banda ichidagi "trofey ko'rgazmasi" — eng qimmat top-3 emoji + qolgani "+N"
+  // Sabab: 🎒 N quruq band edi, foydalanuvchi maqtana olmasdi. Endi eng qimmat
+  // buyumlar emojisi to'g'ridan-to'g'ri ko'rinadi (passiv maqtanish).
+  const _INV_BADGE_EMOJI = {
+    pet_cat: '🐱', pet_dog: '🐶', pet_rabbit: '🐰',
+    badge_fire: '🔥', badge_star: '⭐', badge_secret: '👑',
+    car_sport: '🏎️',
+    shield: '🛡️', bonus_2x: '⚡', bonus_3x: '🚀', xp_booster: '💎',
+  };
+  function _invBadgeDisplay(u) {
+    const list = u.items_list || [];
+    if (!list.length) return '🎒 ' + (u.items_count || 0);
+    // Eng qimmat buyumlar oldinda (price kamayuvchi)
+    const sorted = list.slice().sort((a, b) => (b.price || 0) - (a.price || 0));
+    const top = sorted.slice(0, 3);
+    const rest = sorted.length - top.length;
+    const emojis = top.map(it => _INV_BADGE_EMOJI[it.id] || '📦').join('');
+    return emojis + (rest > 0 ? ' +' + rest : '');
+  }
   function calcPct(u) {
     if (sort_by === 'points') return Math.round((u.points / maxPoints) * 100);
     if (sort_by === 'streak') return Math.round((u.streak / maxStreak) * 100);
@@ -990,7 +1009,7 @@ function renderRating(d) {
           display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:6px;gap:3px">
           <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;justify-content:center">
             ${u.habits_count ? `<div style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><rect x="8" y="2" width="8" height="4" rx="1" stroke="${col}" stroke-width="2"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="${col}" stroke-width="2"/><path d="M8 11h8M8 15h5" stroke="${col}" stroke-width="2" stroke-linecap="round"/></svg> ${u.habits_count}</div>` : ''}
-            ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap;cursor:pointer">🎒 ${u.items_count}</div>` : ''}
+            ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="font-size:10px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap;cursor:pointer;letter-spacing:-0.5px">${_invBadgeDisplay(u)}</div>` : ''}
             ${(j=>{const hc=j>=60?'#4CAF7D':j>=30?'#7DC29A':'#E05050';const hb=j>=30?'rgba(76,175,125,0.13)':'rgba(224,80,80,0.13)';return `<div style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap;display:inline-flex;align-items:center;gap:2px"><svg width="9" height="9" viewBox="0 0 24 24" fill="${hc}" style="display:inline;vertical-align:middle"><path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z"/></svg>${j}%</div>`;})(u.jon??100)}
           </div>
           <div style="font-size:16px;font-weight:800;color:${col}">${idx+1}</div>
@@ -1016,7 +1035,7 @@ function renderRating(d) {
           <div style="display:flex;align-items:center;gap:5px">
             <div style="font-size:13px;font-weight:700;color:${isMe?'var(--accent)':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${u.name}${u.badge?' '+u.badge:''}</div>
             ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#2D8A5E\"/><stop offset=\"100%\" stop-color=\"#4CAF7D\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
-            ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--accent);background:rgba(76,175,125,0.13);border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer">🎒 ${u.items_count}</div>` : ''}
+            ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--accent);background:rgba(76,175,125,0.13);border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer;letter-spacing:-0.5px">${_invBadgeDisplay(u)}</div>` : ''}
             ${(j=>{const hc=j>=60?'#4CAF7D':j>=30?'#7DC29A':'#E05050';return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="${hc}" style="display:inline;vertical-align:middle"><path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z"/></svg>${j}%</div>`;})(u.jon??100)}
           </div>
           <div style="height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-top:5px;overflow:hidden">
@@ -1044,7 +1063,7 @@ function renderRating(d) {
             <div style="display:flex;align-items:center;gap:5px">
               <div style="font-size:13px;font-weight:700;color:var(--accent);flex:1">${u.name}</div>
               ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#2D8A5E\"/><stop offset=\"100%\" stop-color=\"#4CAF7D\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
-              ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--accent);background:rgba(76,175,125,0.13);border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer">🎒 ${u.items_count}</div>` : ''}
+              ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--accent);background:rgba(76,175,125,0.13);border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer;letter-spacing:-0.5px">${_invBadgeDisplay(u)}</div>` : ''}
               ${(j=>{const hc=j>=60?'#4CAF7D':j>=30?'#7DC29A':'#E05050';return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="${hc}" style="display:inline;vertical-align:middle"><path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z"/></svg>${j}%</div>`;})(u.jon??100)}
             </div>
             <div style="height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-top:5px;overflow:hidden">
