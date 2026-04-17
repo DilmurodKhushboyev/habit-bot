@@ -617,11 +617,14 @@ body {
 }
 .checkin-card.done {
   box-shadow: var(--sh-sm);
-  opacity: 0.45;
-  transition: opacity .25s ease, box-shadow .2s;
+  transition: box-shadow .2s;
 }
-.checkin-card.done .checkin-btn {
-  opacity: 1;
+/* Ichki elementlar xira — tugma toʻliq yorqin qoladi (parent opacity emas) */
+.checkin-card.done .checkin-icon,
+.checkin-card.done .checkin-info,
+.checkin-card.done .checkin-dots-btn {
+  opacity: 0.45;
+  transition: opacity .25s ease;
 }
 /* Bugun bajarilishi kerak — yashil nur checkin tugmasi atrofida aylanib yuradi */
 .checkin-btn { position: relative; }
