@@ -617,7 +617,7 @@ body {
 }
 .checkin-card.done {
   box-shadow: var(--sh-sm);
-  opacity: 0.55;
+  opacity: 0.45;
   transition: opacity .25s ease, box-shadow .2s;
 }
 .checkin-card.done .checkin-btn {
