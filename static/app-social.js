@@ -499,6 +499,10 @@ function renderShop(d) {
   const svgBolt = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgBtSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBtSm)"/></svg>';
   const svgGift = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgGift" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs><rect x="3" y="10" width="18" height="12" rx="2" stroke="url(#svgGift)" stroke-width="2"/><path d="M3 10h18v3H3zM12 10V22M12 10c0 0-2-5 0-7 1-1 3-1 3 1s-2 3-3 6M12 10c0 0 2-5 0-7-1-1-3-1-3 1s2 3 3 6" stroke="url(#svgGift)" stroke-width="1.5" stroke-linecap="round"/></svg>';
   const svgActiveChk = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M7 12l4 4 6-7" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  // Kategoriya ikonalari (v460) — badge/pet/car uchun yashil SVG (🏅🐾🚗 emoji o'rniga)
+  const svgBadge = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgBdg" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><circle cx="12" cy="10" r="6" fill="url(#svgBdg)" opacity="0.85"/><path d="M8 15l-2 6 6-3 6 3-2-6" stroke="url(#svgBdg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="10" r="2.5" fill="#FFFFFF" opacity="0.4"/></svg>';
+  const svgPaw   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgPw" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><ellipse cx="6.5" cy="9" rx="2" ry="2.8" fill="url(#svgPw)"/><ellipse cx="17.5" cy="9" rx="2" ry="2.8" fill="url(#svgPw)"/><ellipse cx="10" cy="5.5" rx="1.7" ry="2.3" fill="url(#svgPw)"/><ellipse cx="14" cy="5.5" rx="1.7" ry="2.3" fill="url(#svgPw)"/><path d="M12 11c3 0 5.5 2.5 5.5 5 0 2-1.5 3.5-3.5 3.5-1 0-1.5-.5-2-.5s-1 .5-2 .5c-2 0-3.5-1.5-3.5-3.5 0-2.5 2.5-5 5.5-5z" fill="url(#svgPw)"/></svg>';
+  const svgCar   = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgCr" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M3 15l2-5c.3-.8 1-1.3 2-1.3h10c1 0 1.7.5 2 1.3l2 5v3h-3v-1H6v1H3v-3z" fill="url(#svgCr)" opacity="0.85"/><circle cx="7" cy="17" r="1.8" fill="#FFFFFF" opacity="0.6"/><circle cx="17" cy="17" r="1.8" fill="#FFFFFF" opacity="0.6"/></svg>';
 
   // Kategoriya labeli
   const _catIcon = (cat) => cat==='protection' ? svgShield+S('shop','protection') : cat==='bonus' ? svgBolt+S('shop','bonus') : svgGift+S('shop','gift');
@@ -519,7 +523,7 @@ function renderShop(d) {
                     || (item.cat==='car' && activeCar===item.id);
       const sellRefund = item.sell_price || 0;
       return `<div class="shop-inv-item${isActive?' active-item':''}">
-        <div class="shop-inv-item-emoji">${item.emoji}</div>
+        <div class="shop-inv-item-emoji">${getInvIcon(item.id, 'lg', isActive)}</div>
         <div class="shop-inv-item-info">
           <div class="shop-inv-item-name">${item.name}</div>
           <div class="shop-inv-item-meta">${qty} ${S('shop','items_unit')}${sellRefund ? ' · <span class="sell-hint">' + S('msg','sell_price').replace('{n}', sellRefund) + '</span>' : ''}</div>
@@ -544,9 +548,9 @@ function renderShop(d) {
     ['all',       S('bozor','all')],
     ['protection',svgShield+S('bozor','protection')],
     ['bonus',     svgBolt+S('bozor','bonus')],
-    ['badge',     '🏅 '+S('shop','cat_badge')],
-    ['pet',       '🐾 '+S('shop','cat_pet')],
-    ['car',       '🚗 '+S('shop','cat_car')],
+    ['badge',     svgBadge+S('shop','cat_badge')],
+    ['pet',       svgPaw+S('shop','cat_pet')],
+    ['car',       svgCar+S('shop','cat_car')],
     ['gift',      S('shop','gift')]
   ];
   const catBtns = cats.map(([k,l]) =>
@@ -564,7 +568,7 @@ function renderShop(d) {
     return `<div class="shop-item${cantBuy?' sold-out':''}" data-cat="${item.cat}">
       <button onclick="openShopInfo('${item.id}')" type="button" class="shop-item-info-btn">ℹ</button>
       <div class="shop-item-top">
-        <div class="shop-item-emoji">${item.emoji}</div>
+        <div class="shop-item-emoji">${getInvIcon(item.id, 'lg')}</div>
         <div class="shop-item-info">
           <div class="shop-item-name">${item.name}</div>
           <div class="shop-item-desc">${item.desc}</div>
@@ -635,7 +639,7 @@ function openShopInfo(itemId) {
     document.body.appendChild(ov);
   }
   ov.innerHTML = `<div class="shop-modal-box">
-    <div class="shop-modal-emoji">${item.emoji}</div>
+    <div class="shop-modal-emoji">${getInvIcon(item.id, 'md')}</div>
     <div class="shop-modal-title">${item.name}</div>
     <div class="shop-modal-desc">${item.desc}</div>
     <div class="shop-modal-effect">
@@ -670,7 +674,7 @@ function confirmBuyItem(itemId, method) {
     document.body.appendChild(ov);
   }
   ov.innerHTML = `<div class="shop-modal-box">
-    <div class="shop-modal-emoji">${item.emoji}</div>
+    <div class="shop-modal-emoji">${getInvIcon(item.id, 'md')}</div>
     <div class="shop-modal-title">${S('shop','confirm_title')}</div>
     <div class="shop-modal-desc">${msg}</div>
     <div class="shop-modal-btns">

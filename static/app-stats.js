@@ -951,24 +951,22 @@ function renderRating(d) {
     };
     return key;
   }
-  // Banda ichidagi "trofey ko'rgazmasi" — eng qimmat top-3 emoji + qolgani "+N"
+  // Banda ichidagi "trofey ko'rgazmasi" — eng qimmat top-3 yashil SVG + qolgani "+N"
   // Sabab: 🎒 N quruq band edi, foydalanuvchi maqtana olmasdi. Endi eng qimmat
-  // buyumlar emojisi to'g'ridan-to'g'ri ko'rinadi (passiv maqtanish).
-  const _INV_BADGE_EMOJI = {
-    pet_cat: '🐱', pet_dog: '🐶', pet_rabbit: '🐰',
-    badge_fire: '🔥', badge_star: '⭐', badge_secret: '👑',
-    car_sport: '🏎️',
-    shield: '🛡️', bonus_2x: '⚡', bonus_3x: '🚀', xp_booster: '💎',
-  };
+  // buyumlar ikonlari to'g'ridan-to'g'ri ko'rinadi (passiv maqtanish).
+  // v460: emoji mapping olib tashlandi — getInvIcon (app-core.js) markaziy helper ishlatiladi
   function _invBadgeDisplay(u) {
     const list = u.items_list || [];
-    if (!list.length) return '🎒 ' + (u.items_count || 0);
+    if (!list.length) {
+      // Bo'sh inventory — oddiy "🎒 N" emoji (getInvIcon fallback emas, eski stil saqlab qolinadi)
+      return '🎒 ' + (u.items_count || 0);
+    }
     // Eng qimmat buyumlar oldinda (price kamayuvchi)
     const sorted = list.slice().sort((a, b) => (b.price || 0) - (a.price || 0));
     const top = sorted.slice(0, 3);
     const rest = sorted.length - top.length;
-    const emojis = top.map(it => _INV_BADGE_EMOJI[it.id] || '📦').join('');
-    return emojis + (rest > 0 ? ' +' + rest : '');
+    const icons = '<span class="inv-icon-row">' + top.map(it => getInvIcon(it.id, 'sm')).join('') + '</span>';
+    return icons + (rest > 0 ? ' +' + rest : '');
   }
   function calcPct(u) {
     if (sort_by === 'points') return Math.round((u.points / maxPoints) * 100);
@@ -1137,13 +1135,7 @@ function openUserInventory(userName, itemsList) {
   // Mavjud modal boʻlsa olib tashlash
   closeUserInventory();
 
-  // Har bir item uchun emoji (backend bilan sinxron)
-  const INV_EMOJI = {
-    pet_cat: '🐱', pet_dog: '🐶', pet_rabbit: '🐰',
-    badge_fire: '🔥', badge_star: '⭐', badge_secret: '👑',
-    car_sport: '🏎️',
-    shield: '🛡️', bonus_2x: '⚡', bonus_3x: '🚀', xp_booster: '💎',
-  };
+  // v460: INV_EMOJI mapping olib tashlandi — getInvIcon (app-core.js) markaziy helper ishlatiladi
 
   const safeName = _invEscapeHtml(userName || '');
   const title = S('inventory','modal_title').replace('{name}', safeName);
@@ -1155,7 +1147,7 @@ function openUserInventory(userName, itemsList) {
   } else {
     itemsHtml = '<div style="display:flex;flex-direction:column;gap:8px">';
     itemsList.forEach(it => {
-      const emoji = INV_EMOJI[it.id] || '📦';
+      const icon = getInvIcon(it.id, 'md');
       const name = _invEscapeHtml(S('inventory','item_' + it.id) || it.id);
       let qtyText = '';
       if (it.qty > 1) {
@@ -1167,7 +1159,7 @@ function openUserInventory(userName, itemsList) {
       }
       itemsHtml += `
         <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg);border-radius:12px;box-shadow:var(--sh-sm)">
-          <div style="font-size:24px;width:32px;text-align:center">${emoji}</div>
+          <div style="flex-shrink:0">${icon}</div>
           <div style="flex:1;font-size:14px;font-weight:600;color:var(--text)">${name}${qtyText}</div>
         </div>`;
     });

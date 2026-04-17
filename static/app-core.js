@@ -408,6 +408,57 @@ function jonRingHTML(jon, size = 80) {
 }
 
 
+// ──────────────────────────────────────────────────────────
+// INVENTORY SVG IKONLAR (v460)
+// Bozor, reyting va profil sahifalarida ishlatiladi
+// Markaziy mapping — 14 ta mahsulot uchun line-art SVG
+// Rang .inv-icon CSS klassidan (currentColor) — yashil --accent
+// Ishlatish: getInvIcon('pet_cat', 'sm' | 'md' | 'lg')
+// ──────────────────────────────────────────────────────────
+var INV_ICON_PATHS = {
+  // Himoya
+  jon_restore:   '<path d="M12 3l8 3v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
+  streak_shield: '<path d="M12 3l8 3v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-3z"/><path d="M12 8v6"/><path d="M9 11h6"/>',
+
+  // Badge (nishon)
+  badge_fire:    '<path d="M12 3s4 4 4 8c0 2.5-1.8 4.5-4 4.5S8 13.5 8 11c0-1.5.8-2.8 1.5-3.5C10 10 11 10 11.5 8.5 12 7 12 5 12 3z"/><path d="M10 17c0 2 .9 3.5 2 3.5s2-1.5 2-3.5"/>',
+  badge_star:    '<path d="M12 3l2.6 5.6 6 .6-4.5 4.2 1.3 6.1L12 16.8 6.6 19.5l1.3-6.1L3.4 9.2l6-.6L12 3z"/>',
+  badge_secret:  '<path d="M6 9l2-4h8l2 4-8 11L6 9z"/><path d="M6 9h12"/><path d="M10 9l2 11 2-11"/>',
+
+  // Pets (uy hayvonlari)
+  pet_cat:       '<path d="M6 11l-2-5 4 2h8l4-2-2 5"/><path d="M4 12c0 5 3.5 8 8 8s8-3 8-8c0-2-.7-3.7-1.8-5"/><circle cx="9" cy="13" r=".8" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r=".8" fill="currentColor" stroke="none"/><path d="M11 16c.3.4.7.6 1 .6s.7-.2 1-.6"/><path d="M12 14.5l-.8 1h1.6z" fill="currentColor" stroke="none"/>',
+  pet_dog:       '<path d="M5 8l-1 5c0 4 3.5 7 8 7s8-3 8-7l-1-5-3 2H8L5 8z"/><path d="M5 8l-1-3 3 1M19 8l1-3-3 1"/><circle cx="9.5" cy="13" r=".8" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13" r=".8" fill="currentColor" stroke="none"/><path d="M10.5 16h3"/><path d="M12 15v1"/>',
+  pet_rabbit:    '<path d="M8 11c-1-2-2-5-2-7 0-1 1-1 1.5 0 1 2 1.5 4 1.5 6"/><path d="M16 11c1-2 2-5 2-7 0-1-1-1-1.5 0-1 2-1.5 4-1.5 6"/><path d="M6 15c0-3 2.5-5 6-5s6 2 6 5c0 3-2.5 5-6 5s-6-2-6-5z"/><circle cx="10" cy="15" r=".7" fill="currentColor" stroke="none"/><circle cx="14" cy="15" r=".7" fill="currentColor" stroke="none"/><path d="M11 17.5h2"/>',
+
+  // Car (mashina)
+  car_sport:     '<path d="M3 14l2-5c.3-.8 1-1 2-1h10c1 0 1.7.2 2 1l2 5"/><path d="M3 14v4h18v-4"/><path d="M3 14h18"/><circle cx="7" cy="17" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="17" r="1.5" fill="currentColor" stroke="none"/><path d="M7 11h10"/>',
+
+  // Gift (sovgʻa)
+  gift_box:      '<rect x="3" y="9" width="18" height="12" rx="1.5"/><path d="M3 13h18"/><path d="M12 9v12"/><path d="M12 9c-1.5-2-3.5-3-4.5-2s-.5 2 1 2.5c1 .3 2 .3 3.5-.5zM12 9c1.5-2 3.5-3 4.5-2s.5 2-1 2.5c-1 .3-2 .3-3.5-.5z"/>',
+
+  // Bonus
+  bonus_2x:      '<path d="M13 3L4 14h7l-1 7 9-11h-7l1-7z"/><text x="17" y="20" font-size="7" font-weight="700" fill="currentColor" stroke="none" font-family="sans-serif">2×</text>',
+  bonus_3x:      '<path d="M13 3L4 14h7l-1 7 9-11h-7l1-7z"/><text x="17" y="20" font-size="7" font-weight="700" fill="currentColor" stroke="none" font-family="sans-serif">3×</text>',
+  xp_booster:    '<circle cx="12" cy="13" r="7"/><path d="M12 9v4l2.5 2"/><path d="M12 3v2M9 3h6"/><path d="M19 6l-1.5 1.5M5 6l1.5 1.5"/>',
+
+  // Fallback — noma'lum item (xalta)
+  _fallback:     '<path d="M6 8h12l1 12c0 1-.5 1.5-1.5 1.5h-11c-1 0-1.5-.5-1.5-1.5L6 8z"/><path d="M9 8V6c0-1.5 1.3-3 3-3s3 1.5 3 3v2"/><path d="M9 12h6"/>',
+};
+
+// getInvIcon(itemId, size) — itemId ning SVG ikoni qaytaradi
+// size: 'sm' (14px banda), 'md' (32px modal), 'lg' (40px bozor)
+// active: true bo'lsa .is-active klassi qo'shiladi (glow effekti)
+function getInvIcon(itemId, size, active) {
+  var sz = (size === 'md' || size === 'lg') ? size : 'sm';
+  var path = INV_ICON_PATHS[itemId] || INV_ICON_PATHS._fallback;
+  var cls = 'inv-icon inv-icon-' + sz + (active ? ' is-active' : '');
+  return '<span class="' + cls + '" data-item="' + itemId + '">'
+    + '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">'
+    + path
+    + '</svg></span>';
+}
+
+
 // ── INIT NAV BALL + NOTCH on load ──
 document.addEventListener('DOMContentLoaded', function() {
   var firstActive = document.querySelector('.nav-item.active');
