@@ -9,10 +9,8 @@ async function loadToday() {
       updateNavLabels();
     }
     renderToday(d);
-    // Header points — today javobidan olinadi
-    if (d.points !== undefined) {
-      document.getElementById('header-pts').textContent = '⭐ ' + d.points;
-    }
+    // Header points — today javobidan olinadi (markaziy helper orqali)
+    updateHeaderPts(d.points);
     // Onboarding: data kelgandan keyin tekshiramiz
     maybeShowOnboard(d);
   } catch(e) {
@@ -252,9 +250,7 @@ async function checkin(hid, cardEl) {
     }
 
     if (result.points !== undefined) {
-      const ptsEl = document.getElementById("header-pts");
-      if (ptsEl) ptsEl.textContent = "⭐ " + result.points;
-      if (data.today) data.today.points = result.points;
+      updateHeaderPts(result.points);
     }
 
     const rc2 = result.repeat_count || 1;

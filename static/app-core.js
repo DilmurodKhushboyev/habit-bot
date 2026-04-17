@@ -40,6 +40,21 @@ const API      = window.location.origin + '/api';
 let loaded = { today: false, profile: false, habits: false, stats: false, achievements: false, reminders: false, bozor: false };
 let data   = {};
 
+// ── HEADER BALL SINXRON YANGILASH ──
+// Markaziy helper — har qayerda (checkin, bozor, guruh, kelajakdagi yangi joylar)
+// ball o'zgarganda shu funksiya chaqiriladi. Header displeyi + global state sinxron.
+// Sabab: avval har joyda inline kod takrorlanardi (3-4 joyda), bozor/sotishda esa
+// umuman yo'q edi — shuning uchun bozordan sotib olingandan keyin header eski
+// qiymatda qolardi. Endi bitta joyda markazlashgan.
+function updateHeaderPts(points) {
+  if (points === undefined || points === null) return;
+  const el = document.getElementById('header-pts');
+  if (el) el.textContent = '⭐ ' + points;
+  // Global state ham sinxron — boshqa sahifalar yangilangan qiymatni ko'radi
+  if (data && data.today)   data.today.points   = points;
+  if (data && data.profile) data.profile.points = points;
+}
+
 // ── TAB SWITCH ──
 let _prevTab = 'today';
 let _curTab  = 'today';

@@ -228,8 +228,7 @@ async function groupCheckin(gid, btn) {
       showGroupToast(S('msg','grp_checkin').replace('{pts}','5').replace('{streak}', r.streak || 1) + (r.all_done ? S('msg','grp_all_done') : ''));
       loaded.today = false;
       if (r.points !== undefined) {
-        const ptsEl = document.getElementById('header-pts');
-        if (ptsEl) ptsEl.textContent = '⭐ ' + r.points;
+        updateHeaderPts(r.points);
       }
     } else {
       if (btn) {
@@ -240,8 +239,7 @@ async function groupCheckin(gid, btn) {
       }
       showGroupToast(S('msg','grp_undone'));
       if (r.points !== undefined) {
-        const ptsEl = document.getElementById('header-pts');
-        if (ptsEl) ptsEl.textContent = '⭐ ' + r.points;
+        updateHeaderPts(r.points);
       }
     }
   } catch(e) {
@@ -746,10 +744,8 @@ async function _executeBuy(itemId, method) {
     // Ball counter animatsiyasi
     const ptsEl = document.getElementById('shop-pts-val');
     if (ptsEl) { ptsEl.classList.add('updated'); setTimeout(() => ptsEl.classList.remove('updated'), 400); }
-    // Global profil balini ham yangilash (boshqa sahifalarda koʻrinishi uchun)
-    if (data.profile && typeof r.points === 'number') {
-      data.profile.points = r.points;
-    }
+    // Header ball va global state sinxron yangilash (markaziy helper)
+    updateHeaderPts(r.points);
     // Profil cache tozalash — keyingi ochilishda yangi ball koʻrinadi
     loaded.profile = false;
     const toast = document.getElementById('toast-shop');
@@ -783,10 +779,8 @@ async function sellItem(itemId, itemName, refund) {
     if (_toast) { _toast.textContent = S('msg','sold_toast').replace('{n}', r.refund); _toast.className = 'toast show'; setTimeout(()=>_toast.className='toast',2500); }
     if (_shopData) {
       _shopData.points = r.points;
-      // Global profil balini ham yangilash
-      if (data.profile && typeof r.points === 'number') {
-        data.profile.points = r.points;
-      }
+      // Header ball va global state sinxron yangilash (markaziy helper)
+      updateHeaderPts(r.points);
       // Profil cache tozalash — keyingi ochilishda yangi ball koʻrinadi
       loaded.profile = false;
       // inventory dict narsalari
