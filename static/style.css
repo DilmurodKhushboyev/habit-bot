@@ -2013,3 +2013,67 @@ body.dark @keyframes splIconPulse {
   box-shadow: var(--sh-press);
   transform: scale(.98);
 }
+
+/* ────────────────────────────────────────────────
+   INVENTORY SVG IKONLAR (v460)
+   Bozor, reyting va profil sahifalarida ishlatiladi
+   Rang: --accent (#4CAF7D) — NASA-style yashil intizom
+   getInvIcon(itemId, size) helper orqali chaqiriladi
+   ────────────────────────────────────────────────*/
+.inv-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+  color: var(--accent);
+  vertical-align: middle;
+}
+.inv-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Kichik (sm) — banda uchun: podium, 4-10 qator, profil chip (14×14) */
+.inv-icon-sm { width: 14px; height: 14px; }
+.inv-icon-sm svg { stroke-width: 2.2; }
+
+/* O'rta (md) — inventory modal roʻyxati (24×24) */
+.inv-icon-md {
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--bg);
+  box-shadow: var(--sh-in);
+}
+.inv-icon-md svg { stroke-width: 2; }
+
+/* Katta (lg) — bozor kartochkasi emoji o'rni (40×40 ichkarida, 48 ga yaxshi oʻrnashadi) */
+.inv-icon-lg {
+  width: 40px;
+  height: 40px;
+}
+.inv-icon-lg svg { stroke-width: 1.8; }
+
+/* Active (faol) — kichik glow effekti, sotib olingan/faollashgan buyumlar uchun */
+.inv-icon.is-active svg {
+  filter: drop-shadow(0 0 4px rgba(76, 175, 125, 0.4));
+}
+
+/* Trofey qatori — banda ichida emojilar oʻrni (shrinkless, gap) */
+.inv-icon-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+/* Banda ichida kichikroq (9-10px banda fonti bilan mos) */
+.inv-icon-row .inv-icon-sm { width: 12px; height: 12px; }
