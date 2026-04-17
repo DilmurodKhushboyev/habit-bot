@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime, date, timedelta, timezone
 from flask import jsonify, request
 
-from config import mongo_db, mongo_col
+from config import mongo_db, mongo_col, SHOP_PRICES
 from database import (load_user, save_user, load_all_users, load_group,
                       save_group, delete_group)
 from helpers import get_lang, get_rank, today_uz5
@@ -56,17 +56,17 @@ def register_core_routes(app):
             if udata.get("active_pet"):
                 pid = udata["active_pet"]
                 _items.append(_ITEM_EMOJI.get(pid, pid))
-                _items_list.append({"id": pid, "qty": 1})
+                _items_list.append({"id": pid, "qty": 1, "price": SHOP_PRICES.get(pid, 0)})
                 _shown_ids.add(pid)
             if udata.get("active_badge"):
                 bid = udata["active_badge"]
                 _items.append(_ITEM_EMOJI.get(bid, bid))
-                _items_list.append({"id": bid, "qty": 1})
+                _items_list.append({"id": bid, "qty": 1, "price": SHOP_PRICES.get(bid, 0)})
                 _shown_ids.add(bid)
             if udata.get("active_car"):
                 cid = udata["active_car"]
                 _items.append(_ITEM_EMOJI.get(cid, cid))
-                _items_list.append({"id": cid, "qty": 1})
+                _items_list.append({"id": cid, "qty": 1, "price": SHOP_PRICES.get(cid, 0)})
                 _shown_ids.add(cid)
             raw_inv = udata.get("inventory", {})
             if isinstance(raw_inv, list):
@@ -76,20 +76,20 @@ def register_core_routes(app):
             for iid, qty in inv_dict.items():
                 if qty > 0 and iid not in _shown_ids and iid in _ITEM_EMOJI:
                     _items.append(_ITEM_EMOJI[iid])
-                    _items_list.append({"id": iid, "qty": qty})
+                    _items_list.append({"id": iid, "qty": qty, "price": SHOP_PRICES.get(iid, 0)})
                     _shown_ids.add(iid)
             if udata.get("streak_shields", 0) > 0:
                 _items.append("🛡")
-                _items_list.append({"id": "shield", "qty": udata.get("streak_shields", 0)})
+                _items_list.append({"id": "shield", "qty": udata.get("streak_shields", 0), "price": SHOP_PRICES.get("shield_1", 0)})
             if udata.get("bonus_2x_active") and udata.get("bonus_2x_date") == today_str:
                 _items.append("⚡")
-                _items_list.append({"id": "bonus_2x", "qty": 1})
+                _items_list.append({"id": "bonus_2x", "qty": 1, "price": SHOP_PRICES.get("bonus_2x", 0)})
             if udata.get("bonus_3x_active") and udata.get("bonus_3x_date") == today_str:
                 _items.append("🚀")
-                _items_list.append({"id": "bonus_3x", "qty": 1})
+                _items_list.append({"id": "bonus_3x", "qty": 1, "price": SHOP_PRICES.get("bonus_3x", 0)})
             if udata.get("xp_booster_days", 0) > 0:
                 _items.append("💎")
-                _items_list.append({"id": "xp_booster", "qty": udata.get("xp_booster_days", 0)})
+                _items_list.append({"id": "xp_booster", "qty": udata.get("xp_booster_days", 0), "price": SHOP_PRICES.get("xp_booster", 0)})
             entries.append({
                 "uid":          uid,
                 "name":         udata.get("display_name") or udata.get("name", "?"),
@@ -167,13 +167,13 @@ def register_core_routes(app):
         _p_items_list = []
         _p_shown_ids = set()
         if u.get("active_pet"):
-            _p_items_list.append({"id": u["active_pet"], "qty": 1})
+            _p_items_list.append({"id": u["active_pet"], "qty": 1, "price": SHOP_PRICES.get(u["active_pet"], 0)})
             _p_shown_ids.add(u["active_pet"])
         if u.get("active_badge"):
-            _p_items_list.append({"id": u["active_badge"], "qty": 1})
+            _p_items_list.append({"id": u["active_badge"], "qty": 1, "price": SHOP_PRICES.get(u["active_badge"], 0)})
             _p_shown_ids.add(u["active_badge"])
         if u.get("active_car"):
-            _p_items_list.append({"id": u["active_car"], "qty": 1})
+            _p_items_list.append({"id": u["active_car"], "qty": 1, "price": SHOP_PRICES.get(u["active_car"], 0)})
             _p_shown_ids.add(u["active_car"])
         _p_raw_inv = u.get("inventory", {})
         if isinstance(_p_raw_inv, list):
@@ -183,16 +183,16 @@ def register_core_routes(app):
         _p_KNOWN_IDS = {"pet_cat", "pet_dog", "pet_rabbit", "badge_fire", "badge_star", "badge_secret", "car_sport"}
         for _p_iid, _p_qty in _p_inv_dict.items():
             if _p_qty > 0 and _p_iid not in _p_shown_ids and _p_iid in _p_KNOWN_IDS:
-                _p_items_list.append({"id": _p_iid, "qty": _p_qty})
+                _p_items_list.append({"id": _p_iid, "qty": _p_qty, "price": SHOP_PRICES.get(_p_iid, 0)})
                 _p_shown_ids.add(_p_iid)
         if u.get("streak_shields", 0) > 0:
-            _p_items_list.append({"id": "shield", "qty": u.get("streak_shields", 0)})
+            _p_items_list.append({"id": "shield", "qty": u.get("streak_shields", 0), "price": SHOP_PRICES.get("shield_1", 0)})
         if u.get("bonus_2x_active") and u.get("bonus_2x_date", "") == today_str:
-            _p_items_list.append({"id": "bonus_2x", "qty": 1})
+            _p_items_list.append({"id": "bonus_2x", "qty": 1, "price": SHOP_PRICES.get("bonus_2x", 0)})
         if u.get("bonus_3x_active") and u.get("bonus_3x_date", "") == today_str:
-            _p_items_list.append({"id": "bonus_3x", "qty": 1})
+            _p_items_list.append({"id": "bonus_3x", "qty": 1, "price": SHOP_PRICES.get("bonus_3x", 0)})
         if u.get("xp_booster_days", 0) > 0:
-            _p_items_list.append({"id": "xp_booster", "qty": u.get("xp_booster_days", 0)})
+            _p_items_list.append({"id": "xp_booster", "qty": u.get("xp_booster_days", 0), "price": SHOP_PRICES.get("xp_booster", 0)})
 
         return jsonify({
             "name":             u.get("name","?"),
