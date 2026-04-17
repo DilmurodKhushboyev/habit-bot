@@ -616,7 +616,12 @@ body {
   transition: box-shadow .2s;
 }
 .checkin-card.done {
-  box-shadow: var(--sh-sm), inset 2px 2px 5px rgba(184, 187, 202, 0.35), inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+  box-shadow: var(--sh-sm);
+  opacity: 0.55;
+  transition: opacity .25s ease, box-shadow .2s;
+}
+.checkin-card.done .checkin-btn {
+  opacity: 1;
 }
 /* Bugun bajarilishi kerak — yashil nur checkin tugmasi atrofida aylanib yuradi */
 .checkin-btn { position: relative; }
@@ -752,7 +757,7 @@ body {
   letter-spacing: -0.1px;
   transition: color .2s;
 }
-.checkin-card.done .checkin-name { color: var(--text); opacity: .55; }
+.checkin-card.done .checkin-name { color: var(--text); }
 .checkin-meta {
   font-size: 11px; color: var(--sub);
   margin-top: 4px;
