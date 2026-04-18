@@ -81,8 +81,8 @@ function renderProfile(d) {
           name: d.display_name || d.name || '',
           list: d.items_list || []
         };
-        // Trofey ko'rgazmasi: eng qimmat top-3 emoji + qolgani "+N"
-        // Sabab: quruq "🎒 N ta" band edi — maqtanib bo'lmasdi. Endi emojilar ko'rinadi.
+        // Trofey ko'rgazmasi: eng qimmat top-1 emoji + qolgani "+N"
+        // Sabab: quruq "🎒 N ta" band edi — maqtanib bo'lmasdi. Endi eng qimmat buyum emojisi ko'rinadi.
         const _badgeEmoji = {
           pet_cat:'🐱', pet_dog:'🐶', pet_rabbit:'🐰',
           badge_fire:'🔥', badge_star:'⭐', badge_secret:'👑',
@@ -90,7 +90,7 @@ function renderProfile(d) {
           shield:'🛡️', bonus_2x:'⚡', bonus_3x:'🚀', xp_booster:'💎',
         };
         const sorted = (d.items_list || []).slice().sort((a,b) => (b.price||0) - (a.price||0));
-        const top = sorted.slice(0,3);
+        const top = sorted.slice(0,1);
         const rest = sorted.length - top.length;
         const emojis = top.map(it => _badgeEmoji[it.id] || '📦').join('');
         const display = emojis + (rest > 0 ? ' +' + rest : '');

@@ -951,9 +951,9 @@ function renderRating(d) {
     };
     return key;
   }
-  // Banda ichidagi "trofey ko'rgazmasi" — eng qimmat top-3 emoji + qolgani "+N"
+  // Banda ichidagi "trofey ko'rgazmasi" — eng qimmat top-1 emoji + qolgani "+N"
   // Sabab: 🎒 N quruq band edi, foydalanuvchi maqtana olmasdi. Endi eng qimmat
-  // buyumlar emojisi to'g'ridan-to'g'ri ko'rinadi (passiv maqtanish).
+  // buyum emojisi to'g'ridan-to'g'ri ko'rinadi (passiv maqtanish).
   const _INV_BADGE_EMOJI = {
     pet_cat: '🐱', pet_dog: '🐶', pet_rabbit: '🐰',
     badge_fire: '🔥', badge_star: '⭐', badge_secret: '👑',
@@ -963,9 +963,9 @@ function renderRating(d) {
   function _invBadgeDisplay(u) {
     const list = u.items_list || [];
     if (!list.length) return '🎒 ' + (u.items_count || 0);
-    // Eng qimmat buyumlar oldinda (price kamayuvchi)
+    // Eng qimmat buyum oldinda (price kamayuvchi) — faqat top-1 ko'rinadi, qolgani +N
     const sorted = list.slice().sort((a, b) => (b.price || 0) - (a.price || 0));
-    const top = sorted.slice(0, 3);
+    const top = sorted.slice(0, 1);
     const rest = sorted.length - top.length;
     const emojis = top.map(it => _INV_BADGE_EMOJI[it.id] || '📦').join('');
     return emojis + (rest > 0 ? ' +' + rest : '');
