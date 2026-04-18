@@ -1328,6 +1328,8 @@ function playProgressSound(step, total) {
 // ── PULL TO REFRESH (barcha sahifalar uchun) ──
 (function() {
   var startY = 0;
+  var startX = 0;
+  var locked = false;
   var pulling = false;
   var threshold = 72;
   // PTR ishlamaydigan ichki sahifalar
@@ -1337,13 +1339,25 @@ function playProgressSound(step, total) {
     if (skipTabs.indexOf(_curTab) !== -1) return;
     if (window.scrollY > 0) return;
     startY = e.touches[0].clientY;
+    startX = e.touches[0].clientX;
+    locked = false;
     pulling = true;
   }, { passive: true });
 
   document.addEventListener('touchmove', function(e) {
     if (!pulling) return;
     if (skipTabs.indexOf(_curTab) !== -1) { pulling = false; return; }
-    var dist = e.touches[0].clientY - startY;
+    var dy = e.touches[0].clientY - startY;
+    var dx = e.touches[0].clientX - startX;
+    // Yo'nalish qulflash: gorizontal g'olib bo'lsa PTR bekor qilinadi
+    if (!locked) {
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
+        pulling = false; return;
+      }
+      if (Math.abs(dy) > 8) locked = true;
+    }
+    if (!locked) return;
+    var dist = dy;
     if (dist <= 0) { pulling = false; return; }
     var ind = document.getElementById('ptr-indicator');
     var txt = document.getElementById('ptr-text');
@@ -1376,6 +1390,8 @@ function playProgressSound(step, total) {
 // ── BOTTOM PULL TO REFRESH (barcha sahifalar uchun) ──
 (function() {
   var startY = 0;
+  var startX = 0;
+  var locked = false;
   var pulling = false;
   var threshold = 72;
   var skipTabs = ['achievements', 'reminders', 'premium'];
@@ -1388,12 +1404,24 @@ function playProgressSound(step, total) {
     if (skipTabs.indexOf(_curTab) !== -1) return;
     if (!isAtBottom()) return;
     startY = e.touches[0].clientY;
+    startX = e.touches[0].clientX;
+    locked = false;
     pulling = true;
   }, { passive: true });
 
   document.addEventListener('touchmove', function(e) {
     if (!pulling) return;
     if (skipTabs.indexOf(_curTab) !== -1) { pulling = false; return; }
+    var dyRaw = e.touches[0].clientY - startY;
+    var dxRaw = e.touches[0].clientX - startX;
+    // Yo'nalish qulflash: gorizontal g'olib bo'lsa PTR bekor qilinadi
+    if (!locked) {
+      if (Math.abs(dxRaw) > Math.abs(dyRaw) && Math.abs(dxRaw) > 8) {
+        pulling = false; return;
+      }
+      if (Math.abs(dyRaw) > 8) locked = true;
+    }
+    if (!locked) return;
     // Pastga tortish = barmaq yuqoriga ketadi = dist manfiy
     var dist = startY - e.touches[0].clientY;
     if (dist <= 0) { pulling = false; return; }
