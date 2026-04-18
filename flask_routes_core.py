@@ -90,6 +90,21 @@ def register_core_routes(app):
             if udata.get("xp_booster_days", 0) > 0:
                 _items.append("💎")
                 _items_list.append({"id": "xp_booster", "qty": udata.get("xp_booster_days", 0), "price": SHOP_PRICES.get("xp_booster", 0)})
+            # v470: today_done — bugun barcha odatlarini 100% bajarganmi?
+            # Frontend avatar ustida yashil zarlar yog'dirish uchun ishlatadi.
+            # v471 FIX: mantiq callbacks_habits.py qator 451-452 dagi all_done hisoblashga sinxronlashtirildi.
+            # Simple habit uchun: last_done == today_str (done_today_count simple'da ishlatilmaydi, u 0 bo'lib qoladi)
+            # Repeat habit uchun: done_today_count >= repeat_count
+            # Habits ro'yxati bo'sh bo'lsa — today_done=False (zar yog'maydi).
+            _user_habits = udata.get("habits", [])
+            today_done = False
+            if _user_habits:
+                today_done = all(
+                    (h.get("last_done") == today_str
+                     if h.get("type", "simple") != "repeat"
+                     else h.get("done_today_count", 0) >= h.get("repeat_count", 1))
+                    for h in _user_habits
+                )
             entries.append({
                 "uid":          uid,
                 "name":         udata.get("display_name") or udata.get("name", "?"),
@@ -104,6 +119,7 @@ def register_core_routes(app):
                 "active_items": " ".join(_items),
                 "items_count":  len(_items_list),
                 "items_list":   _items_list,
+                "today_done":   today_done,
             })
 
         # Saralash
