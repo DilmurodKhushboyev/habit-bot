@@ -665,18 +665,20 @@ function _initCheckinSwipe() {
       if (!swiping) return;
       const dx = e.touches[0].clientX - startX;
       const dy = e.touches[0].clientY - startY;
-      // Vertikal scroll — swipeni bekor qilish
+      // Yo'nalish qulflash: birinchi ustun yo'nalish g'olib
       if (!locked) {
         if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) {
           swiping = false; front.style.transition = ''; front.style.transform = ''; return;
         }
         if (Math.abs(dx) > 8) locked = true;
       }
+      // Gorizontal qulflangach — vertikal scroll'ni to'xtatish (aks holda ikkalasi birga ishlaydi)
+      if (locked && e.cancelable) e.preventDefault();
       curX = dx;
       if (curX > 0) curX = 0;
       if (curX < -130) curX = -130;
       front.style.transform = 'translateX(' + curX + 'px)';
-    }, {passive: true});
+    }, {passive: false});
 
     front.addEventListener('touchend', () => {
       if (!swiping) return;
