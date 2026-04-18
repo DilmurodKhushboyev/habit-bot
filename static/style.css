@@ -501,8 +501,6 @@ body {
 .icon-cat-tabs {
   display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto;
   padding: 6px 8px 4px; margin: 6px -8px 0; scrollbar-width: none;
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
-          mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
 }
 .icon-cat-tabs::-webkit-scrollbar { display: none; }
 .icon-cat-btn {
