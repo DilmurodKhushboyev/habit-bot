@@ -402,8 +402,100 @@ function _triggerConfetti() {
     container.appendChild(piece);
   }
   document.body.appendChild(container);
+  // v471: Konfetti otilishi bilan bayram ovozi (qarsaklar + hushtaklar) chalinadi
+  // Web Audio sintez, mp3 fayl kerak emas. Ovoz asta so'nib konfetti bilan sinxron tugaydi.
+  try { _playCelebrationSound(); } catch (e) { /* Audio xatosi konfetti'ni to'xtatmasin */ }
   // Konfetti tugagach containerni olib tashlaymiz (max duration + delay + zapas)
   setTimeout(() => { if (container.parentNode) container.parentNode.removeChild(container); }, 4500);
+}
+
+// v471: Bayram ovozi — Web Audio sintez (qarsaklar + hushtaklar)
+// Jami ~3.6 soniya: fade-in 0.1s → plato 2.5s → fade-out 1s (asta so'nib to'xtaydi)
+// Master volume 0.25 — o'rta, foydalanuvchini bezovta qilmaydi
+// Qarsak: ~35 ta qisqa noise burst random vaqtlarda (olomon qarsak effekti)
+// Hushtak: 3 ta pitch sweep (party popper) 0/0.8/1.6s da
+function _playCelebrationSound() {
+  // AudioContext yaratish (mobil cheklovi: foydalanuvchi tap'idan keyin bo'lsin — bu yerda checkin paytida shart bajarilgan)
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return; // Eski brauzerlar
+  // Bitta AudioContext'ni qayta ishlatish uchun global saqlaymiz (takror yaratish lag beradi)
+  if (!window._celebAudioCtx) {
+    window._celebAudioCtx = new AC();
+  }
+  const ctx = window._celebAudioCtx;
+  // iOS/Safari suspended holatida bo'lishi mumkin — resume qilamiz
+  if (ctx.state === 'suspended') {
+    try { ctx.resume(); } catch (e) {}
+  }
+  const now = ctx.currentTime;
+  const DURATION = 3.6;          // umumiy davomiyligi (soniya)
+  const MASTER_VOL = 0.25;       // o'rta ovoz balandligi (foydalanuvchi javobi)
+  const FADE_IN = 0.1;
+  const FADE_OUT = 1.0;
+  // Master gain — barcha ovozlarni yig'ib, fade in/out qiladi
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0, now);
+  master.gain.linearRampToValueAtTime(MASTER_VOL, now + FADE_IN);
+  master.gain.setValueAtTime(MASTER_VOL, now + DURATION - FADE_OUT);
+  master.gain.linearRampToValueAtTime(0, now + DURATION);
+  master.connect(ctx.destination);
+
+  // ── QARSAKLAR (~35 ta qisqa noise burst, random 0..3s oralig'ida) ──
+  // Oddiy noise: qisqa buffer to'ldirish + BufferSource
+  const noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.02), ctx.sampleRate);
+  const nd = noiseBuf.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1; // oq shovqin
+  const CLAP_COUNT = 35;
+  const CLAP_WINDOW = 3.0; // 3 soniya ichida tarqalsin, oxirgi 0.6s qarsak yo'q (fade-out)
+  for (let i = 0; i < CLAP_COUNT; i++) {
+    const t = now + FADE_IN + Math.random() * CLAP_WINDOW;
+    const src = ctx.createBufferSource();
+    src.buffer = noiseBuf;
+    // Band-pass filter — qarsak tabiatli bo'lishi uchun (1500-3500 Hz atrofida pik)
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1800 + Math.random() * 1400;
+    bp.Q.value = 1.2;
+    // Har bir qarsakning o'z envelope'i — tez kirish, tezda so'nish (~40ms jami)
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.6 + Math.random() * 0.4, t + 0.002); // tez boshlanish
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.04 + Math.random() * 0.03);
+    src.connect(bp).connect(g).connect(master);
+    src.start(t);
+    src.stop(t + 0.08);
+  }
+
+  // ── HUSHTAKLAR (3 ta party whistle: pitch sweep 800→1800 Hz, 350ms) ──
+  const whistleTimes = [0.0, 0.8, 1.6]; // 3 marta
+  whistleTimes.forEach(offset => {
+    const t = now + FADE_IN + offset;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine'; // toza hushtak ovozi
+    osc.frequency.setValueAtTime(800, t);
+    osc.frequency.exponentialRampToValueAtTime(1800, t + 0.28); // tepaga ko'tarilish
+    osc.frequency.exponentialRampToValueAtTime(1200, t + 0.35); // oxirida bir oz pasayish
+    // Envelope — yumshoq kirish va chiqish
+    const wg = ctx.createGain();
+    wg.gain.setValueAtTime(0, t);
+    wg.gain.linearRampToValueAtTime(0.35, t + 0.04);
+    wg.gain.linearRampToValueAtTime(0.3, t + 0.25);
+    wg.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    // Yengil vibrato — "jonli" hushtak his qilsin (5 Hz tremolo)
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfo.frequency.value = 5;
+    lfoGain.gain.value = 15; // pitch tebranish amplitudasi (Hz)
+    lfo.connect(lfoGain).connect(osc.frequency);
+    osc.connect(wg).connect(master);
+    osc.start(t);
+    lfo.start(t);
+    osc.stop(t + 0.36);
+    lfo.stop(t + 0.36);
+  });
+
+  // Nodes'ni avtomatik tozalash (master gain 0 bo'lgandan keyin)
+  setTimeout(() => { try { master.disconnect(); } catch (e) {} }, (DURATION + 0.2) * 1000);
 }
 
 // ── ESLATMALAR ──
