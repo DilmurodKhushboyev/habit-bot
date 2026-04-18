@@ -127,6 +127,7 @@ function renderToday(d) {
     </div>
 
     <div class="today-hero">
+      <div class="hero-party-badge ${allDone ? 'show' : ''}" id="hero-party-badge">${_partySvg()}</div>
       <div class="today-date">${dateStr}</div>
       <div style="display:flex;justify-content:center;gap:24px;align-items:center;margin:16px 0 4px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
@@ -261,10 +262,16 @@ async function checkin(hid, cardEl) {
         }, 3000);
       }
       _triggerConfetti();
+      // v469: bayram emoji (🎉 SVG) — today-hero yuqori-o'ng burchakda
+      const pb = document.getElementById('hero-party-badge');
+      if (pb) pb.classList.add('show');
     } else if (!result.all_done) {
-      // Undo holati: banner darhol yashirin bo'lsin
+      // Undo holati: banner va bayram emoji darhol yashirin bo'lsin
       const b = document.getElementById('all-done-banner');
       if (b) { b.classList.remove('show'); b.classList.remove('hiding'); }
+      // v469: bayram emoji — 100% dan chiqqanda olib tashlanadi
+      const pb = document.getElementById('hero-party-badge');
+      if (pb) pb.classList.remove('show');
     }
     // Izoh: agar result.all_done && wasAllDone bo'lsa (allaqachon banner chiqqan yoki
     // hali kollaps qilinayotgan bo'lsa) — hech narsa qilmaymiz, konfetti takror otilmaydi
@@ -326,6 +333,39 @@ function showTodayToast(msg, err = false) {
   t.textContent = msg;
   t.className = 'toast show' + (err ? ' err' : '');
   setTimeout(() => { t.className = 'toast'; }, 2500);
+}
+
+// v469: Bayram emoji (🎉) SVG — NASA yashil palitra, today-hero yuqori-o'ng burchakda
+// Faqat barcha odatlar bajarilganda (100%) ko'rinadi, pop + float animatsiyalar bilan
+function _partySvg() {
+  return '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs>'
+    +   '<linearGradient id="pbCone" x1="4" y1="28" x2="18" y2="14" gradientUnits="userSpaceOnUse">'
+    +     '<stop offset="0%" stop-color="#2D8A5E"/>'
+    +     '<stop offset="100%" stop-color="#4CAF7D"/>'
+    +   '</linearGradient>'
+    +   '<linearGradient id="pbLight" x1="4" y1="28" x2="16" y2="16" gradientUnits="userSpaceOnUse">'
+    +     '<stop offset="0%" stop-color="#7DC29A"/>'
+    +     '<stop offset="100%" stop-color="#A8D9BE"/>'
+    +   '</linearGradient>'
+    + '</defs>'
+    // Party popper konus (cone) — chapdan pastga qaragan
+    + '<path d="M4 28L14 6L22 14L4 28Z" fill="url(#pbCone)"/>'
+    // Konus ichidagi och-yashil yorug'lik qismi
+    + '<path d="M4 28L11 12L17 18L4 28Z" fill="url(#pbLight)" opacity="0.65"/>'
+    // Atrofga tarqalayotgan zarrachalar (yashil nuqtalar va yulduzchalar)
+    + '<circle cx="24" cy="6" r="1.8" fill="#4CAF7D"/>'
+    + '<circle cx="28" cy="11" r="1.3" fill="#7DC29A"/>'
+    + '<circle cx="20" cy="4" r="1.1" fill="#2D8A5E"/>'
+    + '<circle cx="26" cy="18" r="1.2" fill="#4CAF7D"/>'
+    + '<circle cx="29" cy="22" r="1" fill="#A8D9BE"/>'
+    // Chiziq-zarrachalar (party popper'dan otilayotgan simlar)
+    + '<path d="M22 10L25 7" stroke="#4CAF7D" stroke-width="1.6" stroke-linecap="round"/>'
+    + '<path d="M25 13L29 14" stroke="#7DC29A" stroke-width="1.4" stroke-linecap="round"/>'
+    + '<path d="M23 17L27 16" stroke="#2D8A5E" stroke-width="1.4" stroke-linecap="round"/>'
+    // Yulduzcha (sparkle) aksent
+    + '<path d="M22 4L22.6 5.4L24 6L22.6 6.6L22 8L21.4 6.6L20 6L21.4 5.4L22 4Z" fill="#A8D9BE"/>'
+    + '</svg>';
 }
 
 // v468: Bayram konfettisi — barcha odatlar bajarilganda otiladi
