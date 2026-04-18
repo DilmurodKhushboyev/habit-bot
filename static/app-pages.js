@@ -120,13 +120,14 @@ function renderToday(d) {
   });
 
   document.getElementById('today-content').innerHTML = `
-    <div class="all-done-banner ${allDone ? 'show' : ''}" id="all-done-banner">
+    <div class="all-done-banner" id="all-done-banner">
       <div class="bd-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="svgParty" x1="0" y1="32" x2="32" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M4 28L14 4l14 14L4 28z" fill="url(#svgParty)" opacity="0.85"/><circle cx="24" cy="6" r="2" fill="#F6C93E"/><circle cx="28" cy="12" r="1.5" fill="#A78BFA"/><circle cx="20" cy="4" r="1" fill="#4CAF7D"/><path d="M22 10l2-3M26 8l3-1M24 14l3 1" stroke="#F6C93E" stroke-width="1.5" stroke-linecap="round"/></svg></div>
       <div class="bd-title">${S('today','all_done')}</div>
       <div class="bd-sub">${S('today','all_done_sub')} <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg></div>
     </div>
 
     <div class="today-hero">
+      <div class="hero-party-badge ${allDone ? 'show' : ''}" id="hero-party-badge">${_partySvg()}</div>
       <div class="today-date">${dateStr}</div>
       <div style="display:flex;justify-content:center;gap:24px;align-items:center;margin:16px 0 4px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
@@ -170,6 +171,8 @@ async function checkin(hid, cardEl) {
     if (!result.ok) throw new Error(result.error);
     const isDone = result.done;
     const wasFullyDone = cardEl.classList.contains('done');
+    // v468: banner + konfetti uchun avvalgi "hamma bajarildi" holatini saqlab qolamiz
+    const wasAllDone = !!(data.today && data.today.total > 0 && data.today.done_count >= data.today.total);
 
     cardEl.classList.toggle('done', isDone);
 
@@ -241,13 +244,37 @@ async function checkin(hid, cardEl) {
       if (habit) { habit.done = isDone; habit.streak = result.streak; }
     }
 
-    if (result.all_done) {
+    // v468: "Barchasi bajarildi!" karta — faqat yangi yutuq paytida chiqadi
+    // (sahifa ochilganda 100% bo'lsa spam qilmaydi, render qilinishi boshida yashirin)
+    if (result.all_done && !wasAllDone) {
+      // Yangi 100%! → banner + konfetti + 3s keyin yuqoriga kollaps
       const b = document.getElementById('all-done-banner');
-      if (b) b.classList.add('show');
-    } else {
+      if (b) {
+        b.classList.remove('hiding');
+        b.classList.add('show');
+        // 3 soniyadan keyin avtomatik yuqoriga chiqib yo'qoladi
+        setTimeout(() => {
+          if (b.classList.contains('show')) {
+            b.classList.add('hiding');
+            // Animatsiya tugagach .show va .hiding ni olib tashlaymiz (qayta ishlatish uchun)
+            setTimeout(() => { b.classList.remove('show'); b.classList.remove('hiding'); }, 600);
+          }
+        }, 3000);
+      }
+      _triggerConfetti();
+      // v469: bayram emoji (🎉 SVG) — today-hero yuqori-o'ng burchakda
+      const pb = document.getElementById('hero-party-badge');
+      if (pb) pb.classList.add('show');
+    } else if (!result.all_done) {
+      // Undo holati: banner va bayram emoji darhol yashirin bo'lsin
       const b = document.getElementById('all-done-banner');
-      if (b) b.classList.remove('show');
+      if (b) { b.classList.remove('show'); b.classList.remove('hiding'); }
+      // v469: bayram emoji — 100% dan chiqqanda olib tashlanadi
+      const pb = document.getElementById('hero-party-badge');
+      if (pb) pb.classList.remove('show');
     }
+    // Izoh: agar result.all_done && wasAllDone bo'lsa (allaqachon banner chiqqan yoki
+    // hali kollaps qilinayotgan bo'lsa) — hech narsa qilmaymiz, konfetti takror otilmaydi
 
     if (result.points !== undefined) {
       updateHeaderPts(result.points);
@@ -306,6 +333,77 @@ function showTodayToast(msg, err = false) {
   t.textContent = msg;
   t.className = 'toast show' + (err ? ' err' : '');
   setTimeout(() => { t.className = 'toast'; }, 2500);
+}
+
+// v469: Bayram emoji (🎉) SVG — NASA yashil palitra, today-hero yuqori-o'ng burchakda
+// Faqat barcha odatlar bajarilganda (100%) ko'rinadi, pop + float animatsiyalar bilan
+function _partySvg() {
+  return '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs>'
+    +   '<linearGradient id="pbCone" x1="4" y1="28" x2="18" y2="14" gradientUnits="userSpaceOnUse">'
+    +     '<stop offset="0%" stop-color="#2D8A5E"/>'
+    +     '<stop offset="100%" stop-color="#4CAF7D"/>'
+    +   '</linearGradient>'
+    +   '<linearGradient id="pbLight" x1="4" y1="28" x2="16" y2="16" gradientUnits="userSpaceOnUse">'
+    +     '<stop offset="0%" stop-color="#7DC29A"/>'
+    +     '<stop offset="100%" stop-color="#A8D9BE"/>'
+    +   '</linearGradient>'
+    + '</defs>'
+    // Party popper konus (cone) — chapdan pastga qaragan
+    + '<path d="M4 28L14 6L22 14L4 28Z" fill="url(#pbCone)"/>'
+    // Konus ichidagi och-yashil yorug'lik qismi
+    + '<path d="M4 28L11 12L17 18L4 28Z" fill="url(#pbLight)" opacity="0.65"/>'
+    // Atrofga tarqalayotgan zarrachalar (yashil nuqtalar va yulduzchalar)
+    + '<circle cx="24" cy="6" r="1.8" fill="#4CAF7D"/>'
+    + '<circle cx="28" cy="11" r="1.3" fill="#7DC29A"/>'
+    + '<circle cx="20" cy="4" r="1.1" fill="#2D8A5E"/>'
+    + '<circle cx="26" cy="18" r="1.2" fill="#4CAF7D"/>'
+    + '<circle cx="29" cy="22" r="1" fill="#A8D9BE"/>'
+    // Chiziq-zarrachalar (party popper'dan otilayotgan simlar)
+    + '<path d="M22 10L25 7" stroke="#4CAF7D" stroke-width="1.6" stroke-linecap="round"/>'
+    + '<path d="M25 13L29 14" stroke="#7DC29A" stroke-width="1.4" stroke-linecap="round"/>'
+    + '<path d="M23 17L27 16" stroke="#2D8A5E" stroke-width="1.4" stroke-linecap="round"/>'
+    // Yulduzcha (sparkle) aksent
+    + '<path d="M22 4L22.6 5.4L24 6L22.6 6.6L22 8L21.4 6.6L20 6L21.4 5.4L22 4Z" fill="#A8D9BE"/>'
+    + '</svg>';
+}
+
+// v468: Bayram konfettisi — barcha odatlar bajarilganda otiladi
+// NASA yashil palitra (brand izchilligi — 19-qoida): 3 daraja yashil + bir xil mayda aksent
+function _triggerConfetti() {
+  // Agar oldingi konfetti hali ekranda bo'lsa — takroriy qo'shmaymiz
+  if (document.querySelector('.confetti-container')) return;
+  const container = document.createElement('div');
+  container.className = 'confetti-container';
+  const colors = ['#2D8A5E', '#4CAF7D', '#7DC29A', '#A8D9BE']; // yashil 4 daraja
+  const count = 42; // zichlik: bayramona, lekin performance uchun cheklangan
+  const vw = window.innerWidth || document.documentElement.clientWidth;
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const startX = Math.random() * vw;
+    const drift = (Math.random() - 0.5) * 220; // chapga-o'ngga 110px oraliq
+    const spin = (Math.random() * 720 + 360) * (Math.random() < 0.5 ? 1 : -1);
+    const duration = 2.4 + Math.random() * 1.4; // 2.4-3.8s — asta kamayib to'xtasin
+    const delay = Math.random() * 0.35; // zarlar bir-bir emas, tabiiy tarqalsin
+    const w = 6 + Math.random() * 5; // 6-11px kenglik
+    const h = 10 + Math.random() * 8; // 10-18px balandlik
+    const shape = Math.random() < 0.3 ? '50%' : '2px'; // 30% yumaloq, 70% to'rtburchak
+    piece.style.left = startX + 'px';
+    piece.style.width = w + 'px';
+    piece.style.height = h + 'px';
+    piece.style.background = color;
+    piece.style.borderRadius = shape;
+    piece.style.animationDuration = duration + 's';
+    piece.style.animationDelay = delay + 's';
+    piece.style.setProperty('--drift', drift + 'px');
+    piece.style.setProperty('--spin', spin + 'deg');
+    container.appendChild(piece);
+  }
+  document.body.appendChild(container);
+  // Konfetti tugagach containerni olib tashlaymiz (max duration + delay + zapas)
+  setTimeout(() => { if (container.parentNode) container.parentNode.removeChild(container); }, 4500);
 }
 
 // ── ESLATMALAR ──

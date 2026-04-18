@@ -590,7 +590,42 @@ body {
   padding: 22px;
   margin-bottom: 8px;
   text-align: center;
+  position: relative;
 }
+/* v469: Bayram emoji (🎉 SVG) — faqat barcha odatlar bajarilganda yuqori-o'ng burchakda */
+.hero-party-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0) rotate(-30deg);
+  transition: opacity .3s ease;
+}
+.hero-party-badge.show {
+  opacity: 1;
+  animation: partyBadgePop .6s cubic-bezier(.34,1.56,.64,1) forwards,
+             partyBadgeFloat 2.8s ease-in-out .6s infinite;
+}
+.hero-party-badge svg {
+  width: 100%; height: 100%;
+  filter: drop-shadow(1px 2px 3px rgba(45,138,94,0.35));
+}
+@keyframes partyBadgePop {
+  0%   { opacity: 0; transform: scale(0) rotate(-30deg); }
+  60%  { opacity: 1; transform: scale(1.15) rotate(8deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+@keyframes partyBadgeFloat {
+  0%, 100% { transform: scale(1) rotate(0deg) translateY(0); }
+  50%      { transform: scale(1.08) rotate(-4deg) translateY(-2px); }
+}
+
 .today-date { font-size: 11px; color: var(--sub); letter-spacing: 1.5px; text-transform: uppercase; }
 .today-prog {
   font-size: 52px; font-weight: 700; color: var(--text);
@@ -607,12 +642,48 @@ body {
   border-radius: 20px;
   padding: 20px; text-align: center; margin-bottom: 12px;
   display: none;
+  max-height: 500px;
+  overflow: hidden;
+  transform-origin: top center;
 }
 .all-done-banner.show { display: block; animation: fadeIn .4s ease; }
+/* v468: 3s keyin yuqoriga kollaps — pastdagi odatlar joyini egallaydi */
+.all-done-banner.hiding {
+  animation: bannerCollapse .55s cubic-bezier(.4,0,.2,1) forwards;
+}
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bannerCollapse {
+  0%   { max-height: 500px; opacity: 1; transform: translateY(0) scaleY(1); padding: 20px; margin-bottom: 12px; }
+  60%  { max-height: 500px; opacity: 0; transform: translateY(-20px) scaleY(1); padding: 20px; margin-bottom: 12px; }
+  100% { max-height: 0;     opacity: 0; transform: translateY(-20px) scaleY(0.5); padding: 0 20px; margin-bottom: 0; }
+}
 .all-done-banner .bd-icon  { font-size: 32px; }
 .all-done-banner .bd-title { font-size: 15px; font-weight: 700; color: var(--text); margin-top: 8px; }
 .all-done-banner .bd-sub   { font-size: 12px; color: var(--sub); margin-top: 4px; }
+
+/* v468: Konfetti (bayram zarlari) — barcha odatlar bajarilganda */
+.confetti-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+.confetti-piece {
+  position: absolute;
+  top: -20px;
+  width: 8px; height: 14px;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  0%   { opacity: 1; transform: translateY(-20px) translateX(0) rotate(0deg); }
+  10%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(105vh) translateX(var(--drift, 0px)) rotate(var(--spin, 720deg)); }
+}
 
 .checkin-card {
   background: var(--bg);
