@@ -498,6 +498,10 @@ function renderShop(d) {
   const svgShield = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgShSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#059669"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs><path d="M12 3L4 7v5c0 5 4 9 8 10 4-1 8-5 8-10V7L12 3z" fill="url(#svgShSm)" opacity="0.85"/></svg>';
   const svgBolt = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgBtSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="url(#svgBtSm)"/></svg>';
   const svgGift = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgGift" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs><rect x="3" y="10" width="18" height="12" rx="2" stroke="url(#svgGift)" stroke-width="2"/><path d="M3 10h18v3H3zM12 10V22M12 10c0 0-2-5 0-7 1-1 3-1 3 1s-2 3-3 6M12 10c0 0 2-5 0-7-1-1-3-1-3 1s2 3 3 6" stroke="url(#svgGift)" stroke-width="1.5" stroke-linecap="round"/></svg>';
+  const svgBadge = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgBdgSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><circle cx="12" cy="10" r="6" stroke="url(#svgBdgSm)" stroke-width="2" fill="url(#svgBdgSm)" fill-opacity="0.18"/><path d="M8.5 14.5L7 22l5-3 5 3-1.5-7.5" stroke="url(#svgBdgSm)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const svgPet = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgPetSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><ellipse cx="12" cy="17" rx="5" ry="4" fill="url(#svgPetSm)" opacity="0.85"/><ellipse cx="6" cy="10" rx="2" ry="2.5" fill="url(#svgPetSm)"/><ellipse cx="18" cy="10" rx="2" ry="2.5" fill="url(#svgPetSm)"/><ellipse cx="9" cy="6" rx="1.8" ry="2.3" fill="url(#svgPetSm)"/><ellipse cx="15" cy="6" rx="1.8" ry="2.3" fill="url(#svgPetSm)"/></svg>';
+  const svgCar = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgCarSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M4 14l1.5-5a2 2 0 012-1.5h9a2 2 0 012 1.5L20 14v4a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1H7v1a1 1 0 01-1 1H5a1 1 0 01-1-1v-4z" fill="url(#svgCarSm)" opacity="0.85"/><circle cx="8" cy="17" r="1.5" fill="#1A1D2E"/><circle cx="16" cy="17" r="1.5" fill="#1A1D2E"/></svg>';
+  const svgGiftCat = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgGiftCat" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><rect x="3" y="10" width="18" height="11" rx="1.5" fill="url(#svgGiftCat)" opacity="0.85"/><rect x="2" y="8" width="20" height="4" rx="1" fill="url(#svgGiftCat)"/><path d="M12 8v13" stroke="#FFFFFF" stroke-width="1.5" opacity="0.9"/><path d="M12 8c-1-2-4-3-5-1s1 3 5 1zM12 8c1-2 4-3 5-1s-1 3-5 1z" fill="url(#svgGiftCat)"/></svg>';
   const svgActiveChk = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M7 12l4 4 6-7" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   // Kategoriya labeli
@@ -544,10 +548,10 @@ function renderShop(d) {
     ['all',       S('bozor','all')],
     ['protection',svgShield+S('bozor','protection')],
     ['bonus',     svgBolt+S('bozor','bonus')],
-    ['badge',     '🏅 '+S('shop','cat_badge')],
-    ['pet',       '🐾 '+S('shop','cat_pet')],
-    ['car',       '🚗 '+S('shop','cat_car')],
-    ['gift',      S('shop','gift')]
+    ['badge',     svgBadge+S('shop','cat_badge')],
+    ['pet',       svgPet+S('shop','cat_pet')],
+    ['car',       svgCar+S('shop','cat_car')],
+    ['gift',      svgGiftCat+S('shop','gift')]
   ];
   const catBtns = cats.map(([k,l]) =>
     `<button onclick="setShopCat('${k}')" class="shop-cat-btn${_shopCat===k?' active':''}" type="button">${l}</button>`
