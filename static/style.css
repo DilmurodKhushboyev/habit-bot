@@ -685,6 +685,39 @@ body {
   100% { opacity: 0; transform: translateY(105vh) translateX(var(--drift, 0px)) rotate(var(--spin, 720deg)); }
 }
 
+/* v470: Avatar ustida yashil zarrachalar — reyting sahifasida bugun 100% bajargan foydalanuvchilarga */
+.avatar-snow-wrap {
+  position: relative;
+  display: inline-block;
+  border-radius: 50%;
+  /* avatar overflow: visible — zarrachalar yuqoridan tushishi uchun */
+}
+.avatar-snow-container {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden; /* zarrachalar avatar doirasidan tashqariga chiqmasin */
+  pointer-events: none;
+  z-index: 2;
+}
+.avatar-snowflake {
+  position: absolute;
+  top: -6px;
+  border-radius: 50%;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation-name: avatarSnowFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  box-shadow: 0 0 2px rgba(76,175,125,0.5); /* yengil yashil nur */
+}
+@keyframes avatarSnowFall {
+  0%   { opacity: 0; transform: translateY(0) translateX(0); }
+  15%  { opacity: 0.85; }
+  85%  { opacity: 0.85; }
+  100% { opacity: 0; transform: translateY(56px) translateX(var(--snow-drift, 0px)); }
+}
+
 .checkin-card {
   background: var(--bg);
   box-shadow: var(--sh-sm);

@@ -927,12 +927,42 @@ function userAvatarHTML(u, size = 32) {
   const initial = (u.name || '?')[0].toUpperCase();
   const clickStyle = u.is_me ? 'cursor:pointer;' : '';
   const clickAttr  = u.is_me ? " onclick=\"switchTab('profile',document.getElementById('nav-profile'))\"" : '';
+  // v470: bugun barcha odatlarini 100% bajargan foydalanuvchining avatari ustida
+  // yashil zarrachalar tepadan pastga tushadi (minimalist — 5 ta kichik zar, doimiy)
+  const snowHtml = u.today_done ? _avatarSnowHTML() : '';
+  // Avatar asosiy HTML ichki qismi — keyin wrapper ichiga joylanadi
+  let avatarInner;
   if (u.photo_url) {
-    return `<img src="${u.photo_url}"${clickAttr} style="${clickStyle}width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0"
+    avatarInner = `<img src="${u.photo_url}"${clickAttr} style="${clickStyle}width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;flex-shrink:0;display:block"
       onerror="this.outerHTML='<div style=\\'${clickStyle}width:${size}px;height:${size}px;border-radius:50%;background:var(--bg);box-shadow:var(--sh-sm);display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.4)}px;font-weight:700;color:var(--text);flex-shrink:0\\'>${initial}</div>'">`;
+  } else {
+    avatarInner = `<div${clickAttr} style="${clickStyle}width:${size}px;height:${size}px;border-radius:50%;background:var(--bg);box-shadow:var(--sh-sm);
+      display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.4)}px;font-weight:700;color:var(--text);flex-shrink:0">${initial}</div>`;
   }
-  return `<div${clickAttr} style="${clickStyle}width:${size}px;height:${size}px;border-radius:50%;background:var(--bg);box-shadow:var(--sh-sm);
-    display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.4)}px;font-weight:700;color:var(--text);flex-shrink:0">${initial}</div>`;
+  // today_done bo'lmasa — avval bo'lgani kabi oddiy avatar (wrapper qo'shilmaydi, sinxronlikni saqlaymiz)
+  if (!u.today_done) return avatarInner;
+  // today_done: wrapper ichiga zar konteyneri qo'shamiz (avatar ustida overflow:visible)
+  return `<div class="avatar-snow-wrap" style="width:${size}px;height:${size}px;flex-shrink:0">
+    ${avatarInner}
+    ${snowHtml}
+  </div>`;
+}
+
+// v470: Avatar ustida yashil zarrachalar (5 ta, har biri random delay + duration)
+// NASA yashil palitra (3 daraja), doimiy infinite, profil rasmini to'smaydi
+function _avatarSnowHTML() {
+  const colors = ['#4CAF7D', '#7DC29A', '#A8D9BE'];
+  let html = '<div class="avatar-snow-container" aria-hidden="true">';
+  for (let i = 0; i < 5; i++) {
+    const leftPct = 12 + Math.random() * 76;         // 12-88% — chetga yaqin emas
+    const dur = 1.8 + Math.random() * 1.2;           // 1.8-3.0s — tabiiy turlilik
+    const delay = Math.random() * 2.5;               // 0-2.5s — bir-biridan uzoq
+    const size = 2.5 + Math.random() * 1.8;          // 2.5-4.3px — mayda zarra
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const drift = (Math.random() - 0.5) * 8;         // -4 to +4px yon tebranish
+    html += `<span class="avatar-snowflake" style="left:${leftPct.toFixed(1)}%;width:${size.toFixed(1)}px;height:${size.toFixed(1)}px;background:${color};animation-duration:${dur.toFixed(2)}s;animation-delay:${delay.toFixed(2)}s;--snow-drift:${drift.toFixed(1)}px"></span>`;
+  }
+  return html + '</div>';
 }
 
 function renderRating(d) {
