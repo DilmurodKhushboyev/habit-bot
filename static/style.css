@@ -59,6 +59,29 @@ body {
   padding-top: calc(var(--tg-safe-top, 0px) + 20px);
   position: sticky; top: 0; z-index: 10;
 }
+/* Status bar ostida gradient fade — scroll paytida kontent soft xiralashib yo'qoladi (tekis kesilish yo'q) */
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: var(--tg-safe-top, 0px);
+  background: linear-gradient(
+    to bottom,
+    var(--bg) 0%,
+    var(--bg) 60%,
+    rgba(224, 227, 234, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 11;
+}
+body.dark .header::before {
+  background: linear-gradient(
+    to bottom,
+    var(--bg) 0%,
+    var(--bg) 60%,
+    rgba(30, 33, 48, 0) 100%
+  );
+}
 .header-top {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 20px;
