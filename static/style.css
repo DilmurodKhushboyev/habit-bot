@@ -2072,7 +2072,7 @@ body.dark @keyframes splIconPulse {
 .shop-modal-overlay.show .shop-modal-box { transform: scale(1); }
 .shop-modal-emoji { font-size: 42px; margin-bottom: 8px; }
 .shop-modal-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-.shop-modal-desc { font-size: 14px; color: var(--text); line-height: 1.5; margin-bottom: 16px; opacity: .85; }
+.shop-modal-desc { font-size: 14px; color: var(--text); line-height: 1.5; margin-bottom: 16px; font-weight: 500; }
 .shop-modal-effect {
   background: var(--bg); border-radius: 12px;
   box-shadow: var(--sh-in); padding: 12px 14px;
