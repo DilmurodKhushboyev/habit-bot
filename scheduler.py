@@ -79,12 +79,27 @@ def send_reminder(user_id, habit):
     )
 
     try:
-        bot.send_message(
+        sent_msg = bot.send_message(
             user_id,
             text,
             parse_mode="Markdown",
             reply_markup=done_keyboard(user_id, habit["id"])
         )
+        # Javobsiz eslatma xabarini kuzatish: ertasi 00:00 UZ+5 da o'chiriladi (daily_reset)
+        try:
+            u2 = load_user(user_id)
+            pending = u2.get("pending_reminders", [])
+            pending.append({
+                "message_id": sent_msg.message_id,
+                "date_uz5":   today,
+            })
+            # Xavfsizlik: ro'yxat cheksiz o'smasligi uchun oxirgi 200 bilan cheklaymiz
+            if len(pending) > 200:
+                pending = pending[-200:]
+            u2["pending_reminders"] = pending
+            save_user(user_id, u2)
+        except Exception as _pe:
+            print(f"[reminder] pending saqlash xatosi: {_pe}")
     except Exception as e:
         print(f"[reminder] xato: {e}")
 
@@ -507,6 +522,36 @@ def daily_reset():
             groups_col.update_one({"_id": g_id}, {"$set": g})
     except Exception as e:
         print(f"[daily_reset] guruh reset xatosi: {e}")
+
+    # Kechagi (va undan oldingi) javobsiz eslatma xabarlarini chatdan o'chirish
+    # — bugungilar qoladi (hali javob berish vaqti bor)
+    try:
+        for uid, udata in users.items():
+            pending = udata.get("pending_reminders", [])
+            if not pending:
+                continue
+            keep = []
+            removed = 0
+            for entry in pending:
+                entry_date = entry.get("date_uz5", "")
+                msg_id     = entry.get("message_id")
+                if not entry_date or not msg_id:
+                    continue  # Buzuq entry — tushirib yuboramiz
+                if entry_date >= today_str:
+                    # Bugungi (yoki kelajakdagi) — tegmaymiz
+                    keep.append(entry)
+                else:
+                    # Kechagi yoki eski — chatdan o'chiramiz
+                    try:
+                        bot.delete_message(int(uid), msg_id)
+                    except Exception:
+                        pass  # Foydalanuvchi qo'li bilan o'chirgan yoki Telegram 48h limiti
+                    removed += 1
+            if removed > 0 or len(keep) != len(pending):
+                udata["pending_reminders"] = keep
+                save_user(int(uid), udata)
+    except Exception as e:
+        print(f"[daily_reset] pending_reminders tozalash xatosi: {e}")
 
     # daily_reset ni saqlab, faqat habit jadvallarini tozalash
     all_jobs = schedule.get_jobs()
