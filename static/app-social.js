@@ -678,8 +678,8 @@ function confirmBuyItem(itemId, method) {
     <div class="shop-modal-title">${S('shop','confirm_title')}</div>
     <div class="shop-modal-desc">${msg}</div>
     <div class="shop-modal-btns">
-      <button onclick="closeShopModal()" type="button" class="shop-modal-btn-no">${S('shop','confirm_no')}</button>
-      <button onclick="_doConfirmedBuy('${itemId}','${method}')" type="button" class="shop-modal-btn-yes">${S('shop','confirm_yes')}</button>
+      <button onclick="closeShopModal()" type="button" class="shop-modal-btn-no"><svg class="shop-modal-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg><span>${S('shop','confirm_no')}</span></button>
+      <button onclick="_doConfirmedBuy('${itemId}','${method}')" type="button" class="shop-modal-btn-yes"><svg class="shop-modal-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>${S('shop','confirm_yes')}</span></button>
     </div>
   </div>`;
   requestAnimationFrame(() => ov.classList.add('show'));
