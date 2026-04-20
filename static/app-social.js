@@ -664,7 +664,8 @@ function confirmBuyItem(itemId, method) {
   const priceText = method === 'stars'
     ? `${item.price_stars} Stars`
     : `${item.price_ball} ${S('shop','points_unit')}`;
-  const msg = S('shop','confirm_msg').replace('{name}', item.name).replace('{price}', priceText);
+  const cleanName = String(item.name || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}]/gu, '').trim();
+  const msg = S('shop','confirm_msg').replace('{name}', cleanName).replace('{price}', priceText);
   let ov = document.getElementById('shop-modal-ov');
   if (!ov) {
     ov = document.createElement('div');
@@ -673,13 +674,13 @@ function confirmBuyItem(itemId, method) {
     ov.onclick = (e) => { if (e.target === ov) closeShopModal(); };
     document.body.appendChild(ov);
   }
-  ov.innerHTML = `<div class="shop-modal-box">
-    <div class="shop-modal-emoji">${item.emoji}</div>
+  ov.innerHTML = `<div class="shop-modal-box shop-modal-confirm">
+    <div class="shop-modal-emoji-wrap"><div class="shop-modal-emoji">${item.emoji}</div></div>
     <div class="shop-modal-title">${S('shop','confirm_title')}</div>
     <div class="shop-modal-desc">${msg}</div>
     <div class="shop-modal-btns">
-      <button onclick="closeShopModal()" type="button" class="shop-modal-btn-no">${S('shop','confirm_no')}</button>
-      <button onclick="_doConfirmedBuy('${itemId}','${method}')" type="button" class="shop-modal-btn-yes">${S('shop','confirm_yes')}</button>
+      <button onclick="closeShopModal()" type="button" class="shop-modal-btn-no"><svg class="shop-modal-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg><span>${S('shop','confirm_no')}</span></button>
+      <button onclick="_doConfirmedBuy('${itemId}','${method}')" type="button" class="shop-modal-btn-yes"><svg class="shop-modal-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>${S('shop','confirm_yes')}</span></button>
     </div>
   </div>`;
   requestAnimationFrame(() => ov.classList.add('show'));
