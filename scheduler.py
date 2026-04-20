@@ -553,10 +553,17 @@ def daily_reset():
     except Exception as e:
         print(f"[daily_reset] pending_reminders tozalash xatosi: {e}")
 
-    # daily_reset ni saqlab, faqat habit jadvallarini tozalash
+    # Faqat odat eslatma joblarini tozalash — tizim joblariga tegmaymiz
+    # (daily_reset, weekly/monthly/yearly_report, evening_reminder,
+    #  group_daily_reset, challenge_resolve, habit_health saqlanishi kerak)
+    SYSTEM_JOB_TAGS = {
+        "daily_reset", "weekly_report", "monthly_report", "yearly_report",
+        "evening_reminder", "group_daily_reset", "challenge_resolve", "habit_health"
+    }
     all_jobs = schedule.get_jobs()
     for job in all_jobs:
-        if "daily_reset" not in job.tags:
+        # Agar job tags'i tizim tagiga tegishli bo'lmasa — bu odat eslatmasi, uni o'chiramiz
+        if not (set(job.tags) & SYSTEM_JOB_TAGS):
             schedule.cancel_job(job)
     load_all_schedules()
 
