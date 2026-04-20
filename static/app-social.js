@@ -664,7 +664,8 @@ function confirmBuyItem(itemId, method) {
   const priceText = method === 'stars'
     ? `${item.price_stars} Stars`
     : `${item.price_ball} ${S('shop','points_unit')}`;
-  const msg = S('shop','confirm_msg').replace('{name}', item.name).replace('{price}', priceText);
+  const cleanName = String(item.name || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}]/gu, '').trim();
+  const msg = S('shop','confirm_msg').replace('{name}', cleanName).replace('{price}', priceText);
   let ov = document.getElementById('shop-modal-ov');
   if (!ov) {
     ov = document.createElement('div');
@@ -673,8 +674,8 @@ function confirmBuyItem(itemId, method) {
     ov.onclick = (e) => { if (e.target === ov) closeShopModal(); };
     document.body.appendChild(ov);
   }
-  ov.innerHTML = `<div class="shop-modal-box">
-    <div class="shop-modal-emoji">${item.emoji}</div>
+  ov.innerHTML = `<div class="shop-modal-box shop-modal-confirm">
+    <div class="shop-modal-emoji-wrap"><div class="shop-modal-emoji">${item.emoji}</div></div>
     <div class="shop-modal-title">${S('shop','confirm_title')}</div>
     <div class="shop-modal-desc">${msg}</div>
     <div class="shop-modal-btns">
