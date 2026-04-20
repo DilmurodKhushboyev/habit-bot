@@ -201,7 +201,7 @@ index.html (WebApp entry point)
 | Fayl | Qatorlar | Vazifasi |
 |------|----------|----------|
 | `groups.py` | ~375 | `_save_new_habit()` (repeat_times + repeat_count), `_send_group_view()`, `_build_group_rating()`, `_save_new_group()` |
-| `scheduler.py` | ~864 | `send_reminder()`, `daily_reset()`, `_try_pet_cat_save()` (7 kunda 1 marta streak saqlash), `_apply_pet_rabbit_soften()` (jon jazosi 50% yumshatish), `schedule_habit()` (repeat_times massivini qo'llab-quvvatlaydi), `_uz5_to_utc()`, `scheduler_loop()`, `send_evening_reminders()` |
+| `scheduler.py` | ~916 | `send_reminder()` (yuborilgan xabarni `pending_reminders: [{message_id, date_uz5}, ...]` ga yozadi, 200 entry limit), `daily_reset()` (00:00 UZ+5 da `date_uz5 < today_str` bo'lgan javobsiz eslatma xabarlarini chatdan `bot.delete_message()` bilan o'chiradi — bugungilar qoladi; **tizim joblarini saqlaydi** `SYSTEM_JOB_TAGS` set orqali — §22), `_try_pet_cat_save()` (7 kunda 1 marta streak saqlash), `_apply_pet_rabbit_soften()` (jon jazosi 50% yumshatish), `schedule_habit()` (repeat_times massivini qo'llab-quvvatlaydi), `_uz5_to_utc()`, `scheduler_loop()`, `send_evening_reminders()` |
 
 ### Flask Web App API
 
@@ -370,7 +370,7 @@ Har feature uchun "v-N → v-(N-1) qaytarish, qator 681 o'chirish..." kabi ko'rs
 Quyidagi holatlardan biri yuz bersa — README **tozalash seansi** kerak:
 
 1. **Fayl hajmi > 40 KB** (hozirgi: ~29 KB, chegara: 40 KB)
-2. **"Muhim eslatmalar" qoidalari > 25 ta** (hozirgi: 21 ta)
+2. **"Muhim eslatmalar" qoidalari > 25 ta** (hozirgi: 23 ta)
 3. **Jadval qatori > 1500 belgi** (bitta fayl haddan tashqari to'lgan — bo'lish kerak)
 4. **3+ qoida bir xil mavzuda** (takrorlanuvchi — birlashtirish kerak)
 5. **Versiya raqamlari (`v4XX`) README'da 10+ marta uchragan bo'lsa** (git tarix shovqini kirib kelgan)
@@ -403,3 +403,9 @@ Tozalash seansi so'ralsa, Claude quyidagilarni qiladi: (1) takroriy bandlarni bi
 > `updateHeaderPts(points)` markaziy helper — DOM + global state sinxron yangilanadi. Yangi endpoint ball o'zgartirganda faqat shu chaqiriladi, inline kod yozilmaydi (DRY pattern).
 
 Farqi: birinchisi **tarix** (git bor), ikkinchisi **qoida** (kelajakka).
+
+### 22. Scheduler job tozalash intizomi
+`daily_reset()` ichida `schedule.get_jobs()` aylantirilganda — **tizim joblari saqlanishi SHART**: `SYSTEM_JOB_TAGS` set'i (`daily_reset`, `weekly_report`, `monthly_report`, `yearly_report`, `evening_reminder`, `group_daily_reset`, `challenge_resolve`, `habit_health`). Faqat **odat eslatma joblari** (tagsiz yoki boshqa tagli) tozalanadi, chunki ular kun davomida o'zgarishi mumkin (odat qo'shilish/o'chirilish). Yangi tizim jobi qo'shilganda — `SYSTEM_JOB_TAGS` ga ham qo'shing, aks holda 00:00 da `daily_reset` uni o'chirib yuboradi va hisobot/eslatma kelmay qoladi.
+
+### 23. Javobsiz eslatmalarni avto-tozalash
+`send_reminder()` yuborilgan xabarning `{message_id, date_uz5}` ni `pending_reminders` ga yozadi (max 200 entry). `daily_reset()` 00:00 UZ+5 da kechagi (`date_uz5 < today_str`) entry'larni `bot.delete_message()` bilan chatdan o'chiradi — bugungilar qoladi (hali javob berish vaqti bor). Tugma bosilganda xabar darhol/3s keyin o'chadi (mavjud xulq `callbacks_habits.py` da), stale entry ertasi kuni sukut bilan tozalanadi. Maqsad: foydalanuvchi chati toza.
