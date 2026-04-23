@@ -1076,6 +1076,9 @@ function maybeShowOnboard(todayData) {
   const state = getObState();
   // Agar oldin tugatilgan bo'lsa — ko'rsatma
   if (state._done) return;
+  // Agar odat yaratish modali ochiq bo'lsa — onboarding ustidan chiqmasin
+  const habitModal = document.getElementById('habit-modal');
+  if (habitModal && habitModal.classList.contains('open')) return;
   // Agar odatlar bor bo'lsa — habit qadamini done deb belgilaymiz
   if (todayData && todayData.habits && todayData.habits.length > 0) {
     if (!state.habit) {
