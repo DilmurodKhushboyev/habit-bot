@@ -1573,7 +1573,7 @@ body {
   display: none; position: fixed; z-index: 9999;
   left: 50%; bottom: 0;
   transform: translateX(-50%);
-  background: var(--surface);
+  background: var(--bg);
   border-radius: 24px 24px 0 0;
   padding: 28px 24px 36px;
   width: 100%; max-width: 480px;
@@ -1600,17 +1600,20 @@ body {
 }
 #onboard-modal .ob-dot.done { background: var(--green); }
 #onboard-modal .ob-dot.active { background: var(--accent); }
-#onboard-modal .ob-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+#onboard-modal .ob-steps { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
 #onboard-modal .ob-step {
   display: flex; align-items: center; gap: 14px;
   background: var(--bg); border-radius: 16px;
   padding: 14px 16px;
-  border: 1.5px solid transparent;
-  transition: border-color .2s, opacity .2s;
+  box-shadow: var(--sh-out);
+  transition: box-shadow .2s, transform .15s;
   cursor: pointer;
 }
-#onboard-modal .ob-step:active { opacity: .75; }
-#onboard-modal .ob-step.done { background: var(--bg); border-color: var(--green); }
+#onboard-modal .ob-step:active {
+  box-shadow: var(--sh-in);
+  transform: scale(0.98);
+}
+#onboard-modal .ob-step.done { box-shadow: var(--sh-in); }
 #onboard-modal .ob-step .ob-check {
   width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
   background: var(--bg); box-shadow: var(--sh-sm);
@@ -1638,6 +1641,12 @@ body {
   background: var(--bg); color: var(--sub);
   font-size: 14px; font-weight: 600;
   font-family: inherit; cursor: pointer;
+  box-shadow: var(--sh-btn);
+  transition: box-shadow .15s, transform .15s;
+}
+#onboard-modal .ob-close:active {
+  box-shadow: var(--sh-press);
+  transform: scale(0.98);
 }
 /* ── OB HINT ── */
 #ob-hint {
