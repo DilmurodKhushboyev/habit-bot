@@ -1643,12 +1643,35 @@ body {
   font-size: 22px;
   line-height: 1;
   display: inline-block;
+  transform-origin: 50% 80%;
   animation: obTapBounce 1.4s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+#onboard-modal .ob-step .ob-arrow::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 50%;
+  width: 14px; height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+  animation: obTapRipple 1.4s ease-out infinite;
+  z-index: 1;
 }
 @keyframes obTapBounce {
-  0%, 100% { transform: translateY(0); }
-  30%      { transform: translateY(-6px); }
-  60%      { transform: translateY(2px); }
+  0%, 100% { transform: rotate(-15deg) translateY(0); }
+  30%      { transform: rotate(-15deg) translateY(-6px); }
+  60%      { transform: rotate(-15deg) translateY(2px); }
+}
+@keyframes obTapRipple {
+  0%, 25% { opacity: 0; transform: scale(0); }
+  30%     { opacity: 0.55; transform: scale(0.4); }
+  70%     { opacity: 0; transform: scale(2.4); }
+  100%    { opacity: 0; transform: scale(2.4); }
 }
 #onboard-modal .ob-step.done .ob-arrow { display: none; }
 #onboard-modal .ob-close {
