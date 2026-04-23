@@ -1573,7 +1573,7 @@ body {
   display: none; position: fixed; z-index: 9999;
   left: 50%; bottom: 0;
   transform: translateX(-50%);
-  background: var(--surface);
+  background: var(--bg);
   border-radius: 24px 24px 0 0;
   padding: 28px 24px 36px;
   width: 100%; max-width: 480px;
@@ -1600,17 +1600,20 @@ body {
 }
 #onboard-modal .ob-dot.done { background: var(--green); }
 #onboard-modal .ob-dot.active { background: var(--accent); }
-#onboard-modal .ob-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+#onboard-modal .ob-steps { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
 #onboard-modal .ob-step {
   display: flex; align-items: center; gap: 14px;
   background: var(--bg); border-radius: 16px;
   padding: 14px 16px;
-  border: 1.5px solid transparent;
-  transition: border-color .2s, opacity .2s;
+  box-shadow: var(--sh-out);
+  transition: box-shadow .2s, transform .15s;
   cursor: pointer;
 }
-#onboard-modal .ob-step:active { opacity: .75; }
-#onboard-modal .ob-step.done { background: var(--bg); border-color: var(--green); }
+#onboard-modal .ob-step:active {
+  box-shadow: var(--sh-in);
+  transform: scale(0.98);
+}
+#onboard-modal .ob-step.done { box-shadow: var(--sh-in); }
 #onboard-modal .ob-step .ob-check {
   width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
   background: var(--bg); box-shadow: var(--sh-sm);
@@ -1629,7 +1632,46 @@ body {
   font-size: 12px; color: var(--sub); line-height: 1.4;
 }
 #onboard-modal .ob-step .ob-arrow {
-  font-size: 18px; color: var(--sub); flex-shrink: 0; opacity: .6;
+  font-size: 0;
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+#onboard-modal .ob-step .ob-arrow::before {
+  content: '👆';
+  font-size: 22px;
+  line-height: 1;
+  display: inline-block;
+  transform-origin: 50% 80%;
+  animation: obTapBounce 1.4s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+#onboard-modal .ob-step .ob-arrow::after {
+  content: '';
+  position: absolute;
+  top: -4px; left: 26%;
+  width: 18px; height: 18px;
+  margin-left: -9px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;
+  animation: obTapRipple 1.4s ease-out infinite;
+  z-index: 1;
+}
+@keyframes obTapBounce {
+  0%, 100% { transform: rotate(-15deg) translateY(0); }
+  30%      { transform: rotate(-15deg) translateY(-6px); }
+  60%      { transform: rotate(-15deg) translateY(2px); }
+}
+@keyframes obTapRipple {
+  0%, 25% { opacity: 0; transform: scale(0); }
+  30%     { opacity: 0.6; transform: scale(0.4); }
+  70%     { opacity: 0; transform: scale(3.5); }
+  100%    { opacity: 0; transform: scale(3.5); }
 }
 #onboard-modal .ob-step.done .ob-arrow { display: none; }
 #onboard-modal .ob-close {
@@ -1638,6 +1680,12 @@ body {
   background: var(--bg); color: var(--sub);
   font-size: 14px; font-weight: 600;
   font-family: inherit; cursor: pointer;
+  box-shadow: var(--sh-btn);
+  transition: box-shadow .15s, transform .15s;
+}
+#onboard-modal .ob-close:active {
+  box-shadow: var(--sh-press);
+  transform: scale(0.98);
 }
 /* ── OB HINT ── */
 #ob-hint {

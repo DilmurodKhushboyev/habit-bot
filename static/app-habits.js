@@ -240,7 +240,7 @@ function openAdd() {
   document.getElementById('habit-modal').classList.add('open');
   setTimeout(() => {
     const inp = document.getElementById('h-name');
-    if (inp) inp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (inp) inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, 320);
 }
 async function openEdit(id, name, icon, time, type, repeatCount, timesJson) {
@@ -268,7 +268,7 @@ async function openEdit(id, name, icon, time, type, repeatCount, timesJson) {
   document.getElementById('habit-modal').classList.add('open');
   setTimeout(() => {
     const inp = document.getElementById('h-name');
-    if (inp) inp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (inp) inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, 320);
 }
 function closeModal() {

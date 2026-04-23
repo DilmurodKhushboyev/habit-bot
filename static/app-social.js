@@ -1039,14 +1039,12 @@ function renderOnboard() {
 
 function obStepClick(key, tab) {
   closeOnboard();
+  // Stats qadami: tugma bosilgan zahoti bajarilgan deb belgilaymiz
+  if (key === 'stats') obMarkDone('stats');
   const navEl = document.getElementById('nav-' + tab);
   if (navEl) switchTab(tab, navEl);
-  // Habit qadami: odat qo'shish formasini darhol ochamiz
-  if (key === 'habit') setTimeout(openAdd, 150);
-  // Hint ko'rsatish
-  const lang = (currentLang && OB_TEXT[currentLang]) ? currentLang : 'uz';
-  const step = OB_TEXT[lang].steps.find(s => s.key === key);
-  if (step && step.hint) setTimeout(() => showObHint(step.hint), key === 'habit' ? 500 : 0);
+  // Habit qadami: "+ Odat yaratish" tugmasi bosilgandek oynaga o'tish
+  if (key === 'habit') setTimeout(openAddFromToday, 250);
 }
 
 let _obHintTimer = null;
@@ -1080,6 +1078,9 @@ function maybeShowOnboard(todayData) {
   const state = getObState();
   // Agar oldin tugatilgan bo'lsa — ko'rsatma
   if (state._done) return;
+  // Agar odat yaratish modali ochiq bo'lsa — onboarding ustidan chiqmasin
+  const habitModal = document.getElementById('habit-modal');
+  if (habitModal && habitModal.classList.contains('open')) return;
   // Agar odatlar bor bo'lsa — habit qadamini done deb belgilaymiz
   if (todayData && todayData.habits && todayData.habits.length > 0) {
     if (!state.habit) {
@@ -1109,7 +1110,7 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', () => {
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
-      setTimeout(() => active.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      setTimeout(() => active.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
     }
   });
 }
