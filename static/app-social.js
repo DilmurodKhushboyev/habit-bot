@@ -1110,7 +1110,7 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', () => {
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
-      setTimeout(() => active.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      setTimeout(() => active.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
     }
   });
 }
