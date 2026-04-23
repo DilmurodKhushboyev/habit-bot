@@ -615,6 +615,13 @@ function renderShop(d) {
 function setShopCat(cat) {
   _shopCat = cat;
   if (_shopData) renderShop(_shopData);
+  // Aktiv kategoriya tugmasini ekranga tortib kelish (smooth scroll)
+  requestAnimationFrame(() => {
+    const activeBtn = document.querySelector('.shop-cat-btn.active');
+    if (activeBtn && activeBtn.scrollIntoView) {
+      activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  });
 }
 
 /* ── Shop: Info modal ── */

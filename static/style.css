@@ -1884,13 +1884,19 @@ body.dark @keyframes splIconPulse {
 .shop-cats::-webkit-scrollbar { display: none; }
 .shop-cat-btn {
   flex-shrink: 0;
-  border: none; background: none; border-radius: 10px;
-  padding: 7px 12px; font-size: 11px; font-weight: 600;
+  border: none; background: var(--bg); border-radius: 12px;
+  padding: 10px 14px; font-size: 12px; font-weight: 600;
+  min-height: 40px;
   color: var(--sub); cursor: pointer; font-family: inherit;
-  transition: all .2s; white-space: nowrap;
+  transition: box-shadow .2s, color .2s, transform .1s;
+  white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.shop-cat-btn:active {
+  transform: scale(0.96);
 }
 .shop-cat-btn.active {
-  background: var(--bg); box-shadow: var(--sh-sm); color: var(--text);
+  background: var(--bg); box-shadow: var(--sh-in); color: var(--text);
 }
 
 /* -- Mahsulot kartochkasi -- */
