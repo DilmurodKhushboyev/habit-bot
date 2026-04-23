@@ -1651,9 +1651,9 @@ body {
 #onboard-modal .ob-step .ob-arrow::after {
   content: '';
   position: absolute;
-  top: 2px; left: 50%;
-  width: 14px; height: 14px;
-  margin-left: -7px;
+  top: 0; left: 38%;
+  width: 16px; height: 16px;
+  margin-left: -8px;
   border-radius: 50%;
   background: var(--accent);
   opacity: 0;
@@ -1669,9 +1669,9 @@ body {
 }
 @keyframes obTapRipple {
   0%, 25% { opacity: 0; transform: scale(0); }
-  30%     { opacity: 0.55; transform: scale(0.4); }
-  70%     { opacity: 0; transform: scale(2.4); }
-  100%    { opacity: 0; transform: scale(2.4); }
+  30%     { opacity: 0.6; transform: scale(0.4); }
+  70%     { opacity: 0; transform: scale(3.5); }
+  100%    { opacity: 0; transform: scale(3.5); }
 }
 #onboard-modal .ob-step.done .ob-arrow { display: none; }
 #onboard-modal .ob-close {
