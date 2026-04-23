@@ -1039,6 +1039,8 @@ function renderOnboard() {
 
 function obStepClick(key, tab) {
   closeOnboard();
+  // Stats qadami: tugma bosilgan zahoti bajarilgan deb belgilaymiz
+  if (key === 'stats') obMarkDone('stats');
   const navEl = document.getElementById('nav-' + tab);
   if (navEl) switchTab(tab, navEl);
   // Habit qadami: "+ Odat yaratish" tugmasi bosilgandek oynaga o'tish
