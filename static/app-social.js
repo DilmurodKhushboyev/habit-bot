@@ -1043,10 +1043,6 @@ function obStepClick(key, tab) {
   if (navEl) switchTab(tab, navEl);
   // Habit qadami: odat qo'shish formasini darhol ochamiz
   if (key === 'habit') setTimeout(openAdd, 150);
-  // Hint ko'rsatish
-  const lang = (currentLang && OB_TEXT[currentLang]) ? currentLang : 'uz';
-  const step = OB_TEXT[lang].steps.find(s => s.key === key);
-  if (step && step.hint) setTimeout(() => showObHint(step.hint), key === 'habit' ? 500 : 0);
 }
 
 let _obHintTimer = null;
