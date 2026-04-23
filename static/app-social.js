@@ -1041,8 +1041,8 @@ function obStepClick(key, tab) {
   closeOnboard();
   const navEl = document.getElementById('nav-' + tab);
   if (navEl) switchTab(tab, navEl);
-  // Habit qadami: odat qo'shish formasini darhol ochamiz
-  if (key === 'habit') setTimeout(openAdd, 150);
+  // Habit qadami: "+ Odat yaratish" tugmasi bosilgandek oynaga o'tish
+  if (key === 'habit') setTimeout(openAddFromToday, 250);
 }
 
 let _obHintTimer = null;
