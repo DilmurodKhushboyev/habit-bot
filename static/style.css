@@ -1632,7 +1632,23 @@ body {
   font-size: 12px; color: var(--sub); line-height: 1.4;
 }
 #onboard-modal .ob-step .ob-arrow {
-  font-size: 18px; color: var(--sub); flex-shrink: 0; opacity: .6;
+  font-size: 0;
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+#onboard-modal .ob-step .ob-arrow::before {
+  content: '👆';
+  font-size: 22px;
+  line-height: 1;
+  display: inline-block;
+  animation: obTapBounce 1.4s ease-in-out infinite;
+}
+@keyframes obTapBounce {
+  0%, 100% { transform: translateY(0); }
+  30%      { transform: translateY(-6px); }
+  60%      { transform: translateY(2px); }
 }
 #onboard-modal .ob-step.done .ob-arrow { display: none; }
 #onboard-modal .ob-close {
