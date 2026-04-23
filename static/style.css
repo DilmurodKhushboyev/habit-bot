@@ -1651,7 +1651,7 @@ body {
 #onboard-modal .ob-step .ob-arrow::after {
   content: '';
   position: absolute;
-  top: -1px; left: 32%;
+  top: -4px; left: 26%;
   width: 18px; height: 18px;
   margin-left: -9px;
   border-radius: 50%;
