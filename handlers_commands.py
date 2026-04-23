@@ -160,6 +160,26 @@ def cmd_start(msg):
 
     u = load_user(uid)
 
+    # Adminga yangi foydalanuvchi kirganligi haqida xabar (telefondan qat'iy nazar)
+    # Dedup: start_notified bayrog'i orqali bir user uchun faqat 1 marta yuboriladi
+    if not u.get("phone") and not u.get("lang") and not u.get("start_notified"):
+        try:
+            user_name = msg.from_user.first_name or "Noma'lum"
+            username  = f"@{msg.from_user.username}" if msg.from_user.username else "—"
+            bot.send_message(
+                ADMIN_ID,
+                f"🆕 *Yangi foydalanuvchi* (hali ro'yxatdan o'tmagan)\n\n"
+                f"Ismi: *{user_name}*\n"
+                f"Username: {username}\n"
+                f"ID: `{uid}`\n"
+                f"📞 Telefon: kutilmoqda...",
+                parse_mode="Markdown", reply_markup=ok_kb()
+            )
+            u["start_notified"] = True
+            save_user(uid, u)
+        except Exception as e:
+            print(f"[start_notify] xato: {e}")
+
     if u.get("phone"):
         # Allaqachon ro'yxatdan o'tgan
         if not check_subscription(uid):
@@ -245,7 +265,7 @@ def handle_contact(msg):
         username    = f"@{msg.from_user.username}" if msg.from_user.username else "—"
         bot.send_message(
             ADMIN_ID,
-            f"🆕 *Yangi Foydalanuvchi!*\n\n"
+            f"✅ *Ro'yxatdan o'tdi!*\n\n"
             f"Umumiy: *{total_users}*\n"
             f"Ismi: *{user_name}*\n"
             f"Username: {username}\n"
