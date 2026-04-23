@@ -179,7 +179,7 @@ index.html (WebApp entry point)
 
 | Fayl | Qatorlar | Vazifasi |
 |------|----------|----------|
-| `handlers_commands.py` | 362 | `/start`, til tanlash, deep link, `/admin_panel`, kontakt qabul qilish |
+| `handlers_commands.py` | 382 | `/start` (+ admin notification: yangi user botga kirganda, `start_notified` dedup flag), til tanlash, deep link, `/admin_panel`, kontakt qabul qilish (admin notification: "Ro'yxatdan o'tdi") |
 | `handlers_callbacks.py` | 165 | **Dispatcher**: darhol `answer_callback_query` → umumiy preamble (til, obuna) → 6 ta sub-handlerga yo'naltirish. `ack_delete_msg` — universal xabar o'chirish |
 | `handlers_text.py` | ~1065 | Matn xabarlari (state machine), Stars to'lov (faqat `gift_box`: random 100/200/500 ball, 1 shield, 3 kun XP booster), broadcast, inline query |
 | `handlers_rating.py` | 381 | PIL bilan reyting rasm generatsiyasi (top-10 grid) |
