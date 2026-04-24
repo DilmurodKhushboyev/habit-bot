@@ -3,7 +3,6 @@
 // Mavjud loadToday pattern'ni to'ldiradi, unga tegmaydi
 // ═══════════════════════════════════════════════════════════
 
-let _remModalMode = 'quick';  // 'quick' | 'full'
 let _cachedReminders = [];    // Load qilinganlarni cache
 
 // ── API YORDAMCHI (apiFetch'dan farqli — backend error body'ni o'qish uchun) ──
@@ -176,7 +175,6 @@ async function deleteReminder(rid) {
 
 // ── YARATISH MODALI ──
 function openReminderModal() {
-  _remModalMode = 'quick';
   // Default vaqt: hozirdan +1 soat, dumaloq 00 daqiqa
   const now = new Date();
   const def = new Date(now.getTime() + 60*60*1000);
@@ -192,7 +190,6 @@ function openReminderModal() {
   const overlay = document.createElement('div');
   overlay.className = 'rem1-modal-overlay show';
   overlay.id = 'rem1-modal';
-  overlay.dataset.day = 'today';
   overlay.onclick = function(e) { if (e.target === overlay) closeReminderModal(); };
   overlay.innerHTML = `
     <div class="rem1-modal-box" onclick="event.stopPropagation()">
@@ -202,28 +199,10 @@ function openReminderModal() {
       <textarea class="rem1-modal-input rem1-modal-textarea" id="rem-text-inp" maxlength="200" placeholder="${S('rem_modal','text_ph')}" oninput="_updateRemCharCount()"></textarea>
       <div class="rem1-char-count"><span id="rem-char-cnt">0</span>/200</div>
 
-      <label class="rem1-modal-label">${S('rem_modal','mode_label')}</label>
-      <div class="rem1-mode-toggle">
-        <button class="rem1-mode-btn active" id="rem1-mode-q" onclick="setRemMode('quick')" type="button">${S('rem_modal','mode_quick')}</button>
-        <button class="rem1-mode-btn" id="rem1-mode-f" onclick="setRemMode('full')" type="button">${S('rem_modal','mode_full')}</button>
-      </div>
-
-      <div id="rem-q-wrap">
-        <label class="rem1-modal-label">${S('rem_modal','when_label')}</label>
-        <div class="rem1-day-row">
-          <button class="rem1-day-btn active" id="rem-d-today" onclick="setRemDay('today')" type="button">${S('rem_modal','today_btn')}</button>
-          <button class="rem1-day-btn" id="rem-d-tomorrow" onclick="setRemDay('tomorrow')" type="button">${S('rem_modal','tomorrow_btn')}</button>
-        </div>
-        <label class="rem1-modal-label">${S('rem_modal','time_label')}</label>
-        <input class="rem1-modal-input" type="time" id="rem-time-q" value="${timeStr}">
-      </div>
-
-      <div id="rem-f-wrap" style="display:none">
-        <label class="rem1-modal-label">${S('rem_modal','date_label')}</label>
-        <input class="rem1-modal-input" type="date" id="rem-date-f" value="${dateStr}">
-        <label class="rem1-modal-label">${S('rem_modal','time_label')}</label>
-        <input class="rem1-modal-input" type="time" id="rem-time-f" value="${timeStr}">
-      </div>
+      <label class="rem1-modal-label">${S('rem_modal','date_label')}</label>
+      <input class="rem1-modal-input" type="date" id="rem-date-f" value="${dateStr}">
+      <label class="rem1-modal-label">${S('rem_modal','time_label')}</label>
+      <input class="rem1-modal-input" type="time" id="rem-time-f" value="${timeStr}">
 
       <div class="rem1-modal-actions">
         <button class="rem1-modal-cancel" onclick="closeReminderModal()" type="button">${S('rem_modal','cancel')}</button>
@@ -245,27 +224,6 @@ function _updateRemCharCount() {
   if (el && cnt) cnt.textContent = (el.value || '').length;
 }
 
-function setRemMode(mode) {
-  _remModalMode = mode;
-  const q = document.getElementById('rem1-mode-q');
-  const f = document.getElementById('rem1-mode-f');
-  if (q) q.classList.toggle('active', mode === 'quick');
-  if (f) f.classList.toggle('active', mode === 'full');
-  const qw = document.getElementById('rem-q-wrap');
-  const fw = document.getElementById('rem-f-wrap');
-  if (qw) qw.style.display = mode === 'quick' ? 'block' : 'none';
-  if (fw) fw.style.display = mode === 'full'  ? 'block' : 'none';
-}
-
-function setRemDay(day) {
-  const m = document.getElementById('rem1-modal');
-  if (m) m.dataset.day = day;
-  const t = document.getElementById('rem-d-today');
-  const tm = document.getElementById('rem-d-tomorrow');
-  if (t)  t.classList.toggle('active', day === 'today');
-  if (tm) tm.classList.toggle('active', day === 'tomorrow');
-}
-
 // ── SAQLASH ──
 async function saveReminder() {
   const textEl = document.getElementById('rem-text-inp');
@@ -277,24 +235,12 @@ async function saveReminder() {
 
   // remind_at hisoblash
   let remindAt;
-  if (_remModalMode === 'quick') {
-    const m   = document.getElementById('rem1-modal');
-    const day = (m && m.dataset.day) || 'today';
-    const tStr = document.getElementById('rem-time-q').value;
-    if (!tStr) { alert(S('rem_modal','err_time')); return; }
-    const [hh, mm] = tStr.split(':').map(Number);
-    const now = new Date();
-    const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0, 0);
-    if (day === 'tomorrow') target.setDate(target.getDate() + 1);
-    remindAt = target.toISOString();
-  } else {
-    const dStr = document.getElementById('rem-date-f').value;
-    const tStr = document.getElementById('rem-time-f').value;
-    if (!dStr || !tStr) { alert(S('rem_modal','err_time')); return; }
-    const target = new Date(`${dStr}T${tStr}:00`);
-    if (isNaN(target.getTime())) { alert(S('rem_modal','err_generic')); return; }
-    remindAt = target.toISOString();
-  }
+  const dStr = document.getElementById('rem-date-f').value;
+  const tStr = document.getElementById('rem-time-f').value;
+  if (!dStr || !tStr) { alert(S('rem_modal','err_time')); return; }
+  const target = new Date(`${dStr}T${tStr}:00`);
+  if (isNaN(target.getTime())) { alert(S('rem_modal','err_generic')); return; }
+  remindAt = target.toISOString();
 
   // O'tgan vaqt tekshiruvi (1 daqiqa tolerance)
   if (new Date(remindAt).getTime() - Date.now() < -60000) {
