@@ -34,6 +34,7 @@ import achievements           # noqa — yutuqlar
 
 # ── Scheduler ──
 from scheduler import scheduler_loop, load_all_schedules
+from reminders_scheduler import start_reminders_scheduler
 
 # ── Flask API ──
 from flask_api import run_api, api_app
@@ -47,6 +48,7 @@ if __name__ == "__main__":
     print("  Odatlar Shakllantirish Boti ishga tushdi!")
     print("=" * 45)
     threading.Thread(target=scheduler_loop, daemon=True).start()
+    start_reminders_scheduler()  # Bir martalik eslatmalar fon scheduler
     if run_api:
         threading.Thread(target=run_api, daemon=True).start()
     print("Bot tayyor! /setup_webhook endpointini bir marta oching.")

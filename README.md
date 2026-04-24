@@ -61,17 +61,20 @@ super_habits/
 ├── callbacks_menu.py         ← Menyu navigatsiya
 ├── callbacks_groups.py       ← Guruh: yaratish, a'zo, reyting
 ├── callbacks_shop.py         ← Bozor: jon, referral, transfer, reset
+├── callbacks_reminders.py    ← Eslatma (bir martalik): remdone_*, remskip_*
 │
 ├── ─── GURUH VA JADVAL ────────────────────────────────
 ├── groups.py                 ← Guruh funksiyalari + yangi odat saqlash
 ├── scheduler.py              ← Eslatmalar, kunlik reset, pet_cat/pet_rabbit bonuslar
+├── reminders_scheduler.py    ← Bir martalik eslatmalar (30s loop, remind_at <= now → yuborish)
 │
 ├── ─── FLASK WEB APP API ──────────────────────────────
 ├── flask_api.py              ← Flask app yaratish va route registratsiya
 ├── flask_helpers.py          ← CORS, rate limiter, Telegram auth
 ├── flask_routes_core.py      ← API: rating, profile, habits, groups CRUD
 ├── flask_routes_data.py      ← API: today, checkin, stats
-└── flask_routes_extra.py     ← API: achievements, shop, friends, challenges, webhook
+├── flask_routes_extra.py     ← API: achievements, shop, friends, challenges, webhook
+└── flask_routes_reminders.py ← API: /api/reminders CRUD (bir martalik eslatma)
 ```
 
 ### Frontend (Telegram WebApp)
@@ -91,7 +94,8 @@ super_habits/static/
 ├── app-stats.js             ← (~1235 qator) Statistika, chartlar, heatmap, reyting, inventory modal
 ├── app-profile.js           ← (~617 qator) Profil, tahrirlash, til, dark mode, referral
 ├── app-habits.js            ← (~380 qator) Odatlar CRUD, icon picker, modal
-└── app-social.js            ← (~1432 qator) Guruh, do'st, shop, challenge, init, PTR
+├── app-social.js            ← (~1432 qator) Guruh, do'st, shop, challenge, init, PTR
+└── app-reminders.js         ← (~337 qator) Bir martalik eslatmalar: CRUD, modal, Today kartalar
 ```
 
 ---
@@ -113,15 +117,16 @@ habit_bot.py (entry point)
     ├── achievements.py ......... database, bot_setup, helpers
     │
     ├── handlers_commands.py .... config, database, helpers, bot_setup, menus
-    ├── handlers_callbacks.py ... → dispatcher (6 ta callbacks_* ga yo'naltiradi)
+    ├── handlers_callbacks.py ... → dispatcher (7 ta callbacks_* ga yo'naltiradi)
     ├── handlers_text.py ........ database, helpers, bot_setup, groups, scheduler
     ├── handlers_rating.py ...... database, helpers, bot_setup
     ├── handlers_stats.py ....... database, helpers, bot_setup
     │
     ├── groups.py ............... database, helpers, bot_setup, menus
     ├── scheduler.py ............ database, helpers, bot_setup, handlers_stats
+    ├── reminders_scheduler.py .. database, helpers, bot_setup, config (mustaqil 30s loop)
     │
-    └── flask_api.py ............ flask_helpers + 3 ta route modul
+    └── flask_api.py ............ flask_helpers + 4 ta route modul
 ```
 
 ### Frontend
@@ -149,8 +154,12 @@ index.html (WebApp entry point)
     ├── app-habits.js ............ strings.js, app-core.js
     │   ↑ loadHabits, openAdd, openEdit, saveHabit, ICON_CATS
     │
-    └── app-social.js ............ strings.js, app-core.js + barcha yuqoridagilar
-        ↑ loadGroups, loadFriends, loadShop, buyItem, window.onload, PTR
+    ├── app-social.js ............ strings.js, app-core.js + barcha yuqoridagilar
+    │   ↑ loadGroups, loadFriends, loadShop, buyItem, window.onload, PTR
+    │
+    └── app-reminders.js ......... strings.js, app-core.js, app-pages.js (loadToday chaqiradi)
+        ↑ loadReminderCards, renderReminderSections, openReminderModal,
+        ↑ saveReminder, markReminderDone, deleteReminder
 ```
 
 ---
@@ -195,6 +204,7 @@ index.html (WebApp entry point)
 | `callbacks_menu.py` | 347 | Menyu navigatsiya, hisobot ro'yxatlari (weekly/monthly/yearly) |
 | `callbacks_groups.py` | 564 | Guruh yaratish/o'chirish, a'zo qo'shish/chiqarish, guruh reyting va checkin |
 | `callbacks_shop.py` | 248 | Jon sotib olish, referral, ball transfer, tahrirlash, reset — 3 tilga. Narxlar `config.py` dan. Helper: `_bozor_back_row(uid)` |
+| `callbacks_reminders.py` | ~88 | **Bir martalik eslatma** callbacks: `remdone_<rid>` → `mark_reminder_done()` (+2 ball, matn "bajarildi" bilan edit), `remskip_<rid>` → `mark_reminder_skipped()` (matn "o'tkazildi"). `edit_message_text(reply_markup=None)` orqali tugmalar olib tashlanadi. `reminders_scheduler.py` dan import. Pattern: `handle_reminder_callbacks(call, uid, cdata, u) -> bool` |
 
 ### Guruh va jadval
 
@@ -202,6 +212,7 @@ index.html (WebApp entry point)
 |------|----------|----------|
 | `groups.py` | ~375 | `_save_new_habit()` (repeat_times + repeat_count), `_send_group_view()`, `_build_group_rating()`, `_save_new_group()` |
 | `scheduler.py` | ~929 | `send_reminder()` (yuborilgan xabarni `pending_reminders: [{message_id, date_uz5}, ...]` ga yozadi, 200 entry limit), `daily_reset()` (00:00 UZ+5 da `date_uz5 < today_str` bo'lgan javobsiz eslatma xabarlarini chatdan `bot.delete_message()` bilan o'chiradi — bugungilar qoladi; **tizim joblarini saqlaydi** `SYSTEM_JOB_TAGS` set orqali — §22), `send_evening_reminders()` (kechki eslatma — 21:00 UZ+5, ham `pending_reminders` ga yozadi — §23), `_try_pet_cat_save()` (7 kunda 1 marta streak saqlash), `_apply_pet_rabbit_soften()` (jon jazosi 50% yumshatish), `schedule_habit()` (repeat_times massivini qo'llab-quvvatlaydi), `_uz5_to_utc()`, `scheduler_loop()` |
+| `reminders_scheduler.py` | ~172 | **Bir martalik eslatma scheduler** (odat eslatmalaridan mustaqil). Fon thread har 30 soniyada `list_pending_reminders_all()` → `remind_at <= now` bo'lsa `send_one_time_reminder()`. Telegram xabari: Markdown matn + 2 inline tugma (`remdone_*`, `remskip_*`). Status: `pending → sent → done/skipped/expired`. `start_reminders_scheduler()` ni `habit_bot.py` ishga tushirganda chaqiriladi. `mark_reminder_done(rid, uid)` +2 ball (`REMINDER_COMPLETE_POINTS`). SYSTEM_JOB_TAGS dan mustaqil — daily_reset tegmaydi |
 
 ### Flask Web App API
 
@@ -212,6 +223,7 @@ index.html (WebApp entry point)
 | `flask_routes_core.py` | ~644 | `/api/rating`, `/api/profile` (GET + PUT bio, max 200 belgi), `/api/habits` CRUD (repeat_times), `/api/groups` CRUD. **Inventory:** `items_count` + `items_list: [{id, qty, price}, ...]` maydonlari — frontend `S('inventory','item_'+id)` orqali tarjima qiladi, top-1 emoji tanlash uchun `price` ham yuboriladi |
 | `flask_routes_data.py` | ~596 | `/api/today` (`days_66_done`, `times`), `/api/checkin` — **badge/car ball bonus** (`_apply_item_bonuses()`: `SHOP_BONUS_EFFECTS` dan foiz + B variant majburiy +1 kafolat, stack qilinadi), **pet_dog kunlik +2** (`_apply_pet_dog_bonus()`), **har odat uchun `best_streak`** (streak oshgach `max(h["best_streak"], h["streak"])`). `/api/stats` — `summary.streak` = barcha odatlar streaklari yig'indisi, `summary.best_streak` = all-time rekord |
 | `flask_routes_extra.py` | ~868 | `/api/achievements`, **`/api/shop`** (15 mahsulot: 14 ball + 1 Stars `gift_box`), **`/api/shop/buy`** (per-user `threading.Lock` + 3s timeout → 429), **`/api/shop/sell`**, **`/api/shop/activate`** (hammasi lock bilan himoyalangan), **`/api/shop/stars_invoice`**, `/api/friends`, `/api/challenges`, `/api/reminder`, `/api/share-card`, webhook. Helper: `_get_shop_lock(uid)` lazy per-user lock |
+| `flask_routes_reminders.py` | ~148 | **Bir martalik eslatmalar CRUD:** `GET /api/reminders/<uid>` (ro'yxat, ixtiyoriy `?status=` filter), `POST /api/reminders/<uid>` (yaratish, `REMINDER_MAX_TEXT_LEN=200` cheklov, o'tgan vaqt tekshiruvi 60s tolerance), `DELETE /api/reminders/<uid>/<rid>` (egasi tekshirish), `PATCH /api/reminders/<uid>/<rid>/done` (+2 ball, `REMINDER_COMPLETE_POINTS`). Helper: `_parse_iso_datetime()`, `_serialize_reminder()` (datetime → ISO). `@require_auth` hamma endpointlarda |
 
 ### Frontend (Telegram WebApp)
 
@@ -226,6 +238,7 @@ index.html (WebApp entry point)
 | `app-profile.js` | ~617 | `loadProfile`, `renderProfile` (avatar `d.photo_url`, bio XSS himoyali, jon bar, achievements progress bar, **referral kompakt tugma** `rem-card` patternida, **inventory kompakt banda** `🎒 N` → `openUserInventoryByKey('profile_me')` app-stats modali qayta ishlatiladi; `d.active_pet`/`active_badge` tegilmagan). **Modal:** `openReferralModal`/`closeReferralModal` (bonuslar, 3 milestone, referral link, gradient "Havolani nusxalash", ✕, haptic). **Tahrirlash:** `openEditProfile` (bio textarea 200 belgi + counter), `saveEditProfile` (loading holat). **Sozlamalar:** `updateNavLabels`, `setLang`/`openLangModal`/`saveLang`, `saveDarkMode`, `saveEveningNotify`, `copyRefLink` (clipboard + fallback) |
 | `app-habits.js` | ~380 | `loadHabits`, `renderHabits`, `openAdd`/`openEdit`, `saveHabit` (`repeat_times` API), `deleteHabit`, `closeModal`. **Dinamik vaqtlar:** `_buildTimeInputs`, `addHabitTime`, `_onRepeatCountChange`, `_sortHabitTimes` (avtomatik chronologik). **Icon picker:** `ICON_CATS` (10 kategoriya, neumorphic 3D dome dizayn), `selectIconCat`, `selectIcon`, `_buildIconGrid`. `openAddFromToday` — today sahifasidan |
 | `app-social.js` | ~1432 | **Guruhlar:** `loadGroups`, `renderGroups`, `saveGroup`, `groupCheckin` (`updateHeaderPts(r.points)` done/undo branch'larda). **Do'stlar:** `loadFriends`, `searchFriends`, `addFriend`, `removeFriend`. **Shop:** `_shopData`/`_shopContentId`/`_shopCat`, `_shopActionLock = new Set()` double-tap guard, `loadShop`, `renderShop` (7 kategoriya: all/protection/bonus/badge/pet/car/gift), **`openShopInfo`** (info modal — emoji, nom, vazifa `bozor.info_*`, narx, sotish narxi), **`confirmBuyItem`** → `_doConfirmedBuy` → `_executeBuy` (zanjir: tasdiq → lock → `updateHeaderPts`), `sellItem`/`activateItem`, `closeShopModal` (overlay bosish ham), haptic feedback. **Challenge**, **Init** (`window.onload`: splash 5s → `loadToday`, visibilitychange). **PTR:** pull-to-refresh (yuqori + pastki, intent lock: `|dx| > |dy|` → bekor, `|dy| > 8` → locked). **Ovoz:** `playHabitSound`, `playProgressSound` |
+| `app-reminders.js` | ~337 | **Bir martalik eslatmalar (Today sahifa bo'limi):** `loadReminderCards` (cache `_cachedReminders`, `loadToday` parallel chaqiradi — `Promise.all`), `renderReminderSections` (pending+sent filter, Bugun/Keyin ajratish `remind_at` bo'yicha), `_renderRemCard` (neumorphic mini karta: qo'ng'iroq SVG icon + matn + vaqt + ✅/🗑 tugmalar). **Modal:** `openReminderModal` (Tez/To'liq toggle — bugun/ertaga tugmalari + sana input), `saveReminder` (POST `/api/reminders/<uid>`, alert fallback). **Actions:** `markReminderDone` → PATCH `/done` (+2 ball, fade-out 400ms → `loadToday` yangilash), `deleteReminder` → DELETE. Helper: `_remFetch` (apiFetch'dan farqli — backend error body'ni `body.error` orqali o'qiydi), `_formatRemTime`, `_escRemHtml`. **Strings:** `today.add_reminder`/`rem_today_section`/`rem_upcoming_section`/`rem_done_btn`/`rem_del_btn`, `rem_modal.*` (20 kalit × 3 til) |
 
 ---
 
@@ -237,9 +250,9 @@ index.html (WebApp entry point)
 
 **Matn/tarjima o'zgartirmoqchimisiz?** → `texts.py` (bot) yoki `strings.js` (WebApp) — 3 tilga ham qo'shing
 
-**Yangi callback tugma qo'shmoqchimisiz?** → Tegishli `callbacks_*.py` + `handlers_callbacks.py` dispatcherda tartibni tekshiring
+**Yangi callback tugma qo'shmoqchimisiz?** → Tegishli `callbacks_*.py` + `handlers_callbacks.py` dispatcherda tartibni tekshiring. Eslatma callback'lari (`remdone_*`, `remskip_*`) — `callbacks_reminders.py` ichida
 
-**Scheduler/eslatma o'zgartirmoqchimisiz?** → `scheduler.py`
+**Scheduler/eslatma o'zgartirmoqchimisiz?** → **Odat eslatmalari** (takroriy): `scheduler.py`. **Bir martalik eslatmalar** (alohida funksiya): `reminders_scheduler.py` — fon thread har 30s tekshiradi
 
 **WebApp UI/stil o'zgartirmoqchimisiz?** → `style.css` + tegishli `app-*.js` (render funksiyasi). **Inline CSS yozmang — class'lardan foydalaning**
 
@@ -261,13 +274,13 @@ index.html (WebApp entry point)
 `habit_bot.py` dagi import tartibi handlerlarni telebot'da ro'yxatdan o'tkazadi. Circular import yo'q — `schedule_habit` kabi funksiyalar lazy import (`from scheduler import ...` funksiya ichida).
 
 ### 2. Callback dispatcher
-`handlers_callbacks.py` barcha callback'larni oladi va 6 ta sub-modulga yo'naltiradi — sub-modul `True` qaytarsa, boshqasiga o'tmaydi.
+`handlers_callbacks.py` barcha callback'larni oladi va 7 ta sub-modulga yo'naltiradi — sub-modul `True` qaytarsa, boshqasiga o'tmaydi.
 
 ### 3. Flask routes
 `register_*_routes(app)` funksiyalari orqali ro'yxatdan o'tadi — `flask_api.py` dan chaqiriladi.
 
 ### 4. Frontend script tartibi muhim
-`strings.js` → `app-core.js` (`<head>` da), keyin `app-pages.js` → `app-stats.js` → `app-profile.js` → `app-habits.js` → `app-social.js` (body oxirida). Tartibni buzish global o'zgaruvchilarning topilmasligiga olib keladi.
+`strings.js` → `app-core.js` (`<head>` da), keyin `app-pages.js` → `app-stats.js` → `app-profile.js` → `app-habits.js` → `app-social.js` → `app-reminders.js` (body oxirida). Tartibni buzish global o'zgaruvchilarning topilmasligiga olib keladi.
 
 ### 5. 🚨 Frontend cache-busting (MAJBURIY AVTOMATIK)
 Barcha `<script src>` va `<link href>` larda `?v=NNN`. **Har qanday frontend fayl o'zgartirilganda — `index.html` dagi BARCHA `?v=` larni +1 ga oshirish SHART.** Bu Claude vazifasi — foydalanuvchi so'ramaydi. Versiya bir vaqtda barcha fayllarda sinxron oshiriladi. Sabab: Telegram WebApp va brauzerlar eski faylni cache dan oladi.
