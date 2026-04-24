@@ -2231,3 +2231,318 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   box-shadow: var(--sh-press);
   transform: scale(.98);
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   ESLATMALAR (bir martalik) — nav-bell sphere + sahifa stili
+   ═══════════════════════════════════════════════════════════ */
+
+/* -- Nav ustidagi kichik qo'ng'iroq shari (50% nav-ball) -- */
+/* Faqat Today tabi faol bo'lganda ko'rinadi (JS orqali .visible toggle) */
+.nav-bell-sphere {
+  position: absolute;
+  width: 31px; height: 31px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(93,190,142,0.75), rgba(45,138,94,0.75));
+  box-shadow:
+    0 4px 10px rgba(76,175,125,0.25),
+    0 1px 3px rgba(76,175,125,0.15),
+    inset 0 2px 4px rgba(255,255,255,0.3),
+    inset 0 -2px 5px rgba(0,80,40,0.12);
+  top: -55px;
+  left: 0;
+  z-index: 4;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1.5px solid rgba(255,255,255,0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  opacity: 0;
+}
+.nav-bell-sphere.visible {
+  display: flex;
+  animation: bellSphereIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.nav-bell-sphere:active {
+  transform: scale(0.88);
+  box-shadow:
+    0 2px 4px rgba(76,175,125,0.20),
+    inset 0 2px 5px rgba(0,80,40,0.2);
+}
+.nav-bell-sphere::before {
+  content: '';
+  position: absolute;
+  top: 3px; left: 7px;
+  width: 12px; height: 6px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0));
+  pointer-events: none;
+}
+@keyframes bellSphereIn {
+  0%   { opacity: 0; transform: scale(0.3) translateY(10px); }
+  60%  { opacity: 1; transform: scale(1.1) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* -- Eslatmalar sahifa: "+ Yangi eslatma" yirik tugma -- */
+.my-rem-add-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #5DBE8E, #2D8A5E);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow:
+    0 4px 12px rgba(76,175,125,0.30),
+    inset 0 2px 4px rgba(255,255,255,0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  margin: 6px 0 14px;
+}
+.my-rem-add-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 6px rgba(76,175,125,0.25);
+}
+
+/* -- Eslatma karta -- */
+.my-rem-card {
+  background: var(--bg);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  box-shadow: var(--sh-sm);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.my-rem-card.done {
+  opacity: 0.55;
+}
+.my-rem-card-icon {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: var(--sh-in);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.my-rem-card-body {
+  flex: 1;
+  min-width: 0;
+}
+.my-rem-card-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 3px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.my-rem-card-meta {
+  font-size: 11px;
+  color: var(--sub);
+}
+.my-rem-card-status-pending { color: #4CAF7D; }
+.my-rem-card-status-done    { color: var(--sub); }
+.my-rem-card-status-expired { color: #E05050; }
+.my-rem-card-del {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: var(--sh-sm);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #E05050;
+  flex-shrink: 0;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.my-rem-card-del:active {
+  box-shadow: var(--sh-press);
+  transform: scale(0.92);
+}
+
+/* -- Empty state -- */
+.my-rem-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--sub);
+}
+.my-rem-empty-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: var(--sh-in);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+.my-rem-empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.my-rem-empty-sub {
+  font-size: 12px;
+  color: var(--sub);
+}
+
+/* -- Yaratish modali -- */
+.my-rem-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 999;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.my-rem-modal-overlay.show {
+  display: flex;
+  animation: fadeIn 0.2s ease;
+}
+.my-rem-modal-box {
+  width: 100%;
+  max-width: 500px;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  padding: 16px 16px 24px;
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.my-rem-modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  text-align: center;
+}
+.my-rem-modal-label {
+  display: block;
+  font-size: 11px;
+  color: var(--sub);
+  margin: 10px 0 5px;
+  font-weight: 600;
+}
+.my-rem-modal-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 14px;
+  box-shadow: var(--sh-in);
+  outline: none;
+  font-family: inherit;
+}
+.my-rem-modal-textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+.my-rem-mode-toggle {
+  display: flex;
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 3px;
+  box-shadow: var(--sh-in);
+  margin: 4px 0 8px;
+}
+.my-rem-mode-btn {
+  flex: 1;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: var(--sub);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.my-rem-mode-btn.active {
+  background: var(--bg);
+  color: var(--green);
+  box-shadow: var(--sh-sm);
+}
+.my-rem-day-row {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+.my-rem-day-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: var(--bg);
+  box-shadow: var(--sh-sm);
+  color: var(--sub);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.my-rem-day-btn.active {
+  box-shadow: var(--sh-in);
+  color: var(--green);
+}
+.my-rem-char-count {
+  font-size: 10px;
+  color: var(--sub);
+  text-align: right;
+  margin-top: 3px;
+}
+.my-rem-modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.my-rem-modal-cancel {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: var(--bg);
+  box-shadow: var(--sh-sm);
+  color: var(--sub);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.my-rem-modal-save {
+  flex: 2;
+  padding: 12px;
+  border: none;
+  background: linear-gradient(135deg, #5DBE8E, #2D8A5E);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(76,175,125,0.25);
+}
+.my-rem-modal-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

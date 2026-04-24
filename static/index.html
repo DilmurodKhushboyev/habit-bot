@@ -9,9 +9,9 @@
 <title>Super Habits</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=487">
-<script src="strings.js?v=487"></script>
-<script src="app-core.js?v=487"></script>
+<link rel="stylesheet" href="style.css?v=488">
+<script src="strings.js?v=488"></script>
+<script src="app-core.js?v=488"></script>
 </head>
 <body>
 
@@ -110,9 +110,16 @@
   </div>
 </div>
 
-<!-- ESLATMALAR -->
+<!-- ESLATMALAR (mavjud — odat eslatma sozlamalari) -->
 <div class="page" id="page-reminders">
   <div id="reminders-content">
+    <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+  </div>
+</div>
+
+<!-- YANGI ESLATMALAR (bir martalik) -->
+<div class="page" id="page-my-reminders">
+  <div id="my-reminders-content">
     <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
   </div>
 </div>
@@ -205,6 +212,9 @@
 <nav class="bottom-nav" id="bottom-nav">
   <svg class="nav-bg" id="nav-bg" preserveAspectRatio="none"><path id="nav-bg-path" fill="var(--bg)"/></svg>
   <div class="nav-ball" id="nav-ball"><div class="nav-ball-icon" id="nav-ball-icon"></div><span class="nav-ball-label" id="nav-ball-label"></span></div>
+  <div class="nav-bell-sphere" id="nav-bell-sphere" onclick="switchTab('my_reminders', null)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C11 2 8 4 8 10v5H6l2 2h8l2-2h-2v-5c0-6-3-8-4-8z" fill="#fff" opacity="0.95"/><circle cx="12" cy="20" r="1.5" fill="#fff"/></svg>
+  </div>
   <button class="nav-item active" id="nav-today" onclick="switchTab('today', this)">
     <span class="nav-icon">
       <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
@@ -274,10 +284,10 @@
   </div>
 </div>
 
-<script src="app-pages.js?v=487"></script>
-<script src="app-stats.js?v=487"></script>
-<script src="app-profile.js?v=487"></script>
-<script src="app-habits.js?v=487"></script>
-<script src="app-social.js?v=487"></script>
+<script src="app-pages.js?v=488"></script>
+<script src="app-stats.js?v=488"></script>
+<script src="app-profile.js?v=488"></script>
+<script src="app-habits.js?v=488"></script>
+<script src="app-social.js?v=488"></script>
 </body>
 </html>
