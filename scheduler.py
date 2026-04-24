@@ -628,7 +628,20 @@ def send_evening_reminders():
                 "callback_data": "evening_dismiss",
                 "style": "success"
             }]]})
-            bot.send_message(int(uid_str), text, parse_mode="Markdown", reply_markup=kb_json)
+            sent_msg = bot.send_message(int(uid_str), text, parse_mode="Markdown", reply_markup=kb_json)
+            # Javobsiz kechki eslatmani kuzatish: ertasi 00:00 UZ+5 da o'chiriladi (daily_reset)
+            try:
+                pending = udata.get("pending_reminders", [])
+                pending.append({
+                    "message_id": sent_msg.message_id,
+                    "date_uz5":   today,
+                })
+                if len(pending) > 200:
+                    pending = pending[-200:]
+                udata["pending_reminders"] = pending
+                save_user(int(uid_str), udata)
+            except Exception as _pe:
+                print(f"[evening] pending saqlash xatosi: {_pe}")
         except Exception as e:
             print(f"[evening] uid={uid_str} xato: {e}")
 
