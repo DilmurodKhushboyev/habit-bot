@@ -2260,7 +2260,7 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
 }
 
 /* -- Bugungi/Keyingi eslatmalar bo'lim sarlavhasi -- */
-.rem-section-title {
+.rem1-section-title {
   font-size: 11px;
   font-weight: 700;
   color: var(--sub);
@@ -2270,7 +2270,7 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
 }
 
 /* -- Eslatma kartasi (kichik, neumorphism) -- */
-.rem-card {
+.rem1-card {
   background: var(--bg);
   border-radius: 12px;
   padding: 10px 12px;
@@ -2281,11 +2281,11 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   gap: 10px;
   transition: opacity 0.4s ease, transform 0.3s ease, box-shadow 0.15s ease;
 }
-.rem-card.done-anim {
+.rem1-card.done-anim {
   opacity: 0;
   transform: scale(0.92);
 }
-.rem-card-icon {
+.rem1-card-icon {
   width: 32px; height: 32px;
   border-radius: 50%;
   background: var(--bg);
@@ -2295,11 +2295,11 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   justify-content: center;
   flex-shrink: 0;
 }
-.rem-card-body {
+.rem1-card-body {
   flex: 1;
   min-width: 0;
 }
-.rem-card-text {
+.rem1-card-text {
   font-size: 13px;
   font-weight: 600;
   color: var(--text);
@@ -2308,17 +2308,17 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   overflow-wrap: break-word;
   line-height: 1.3;
 }
-.rem-card-meta {
+.rem1-card-meta {
   font-size: 10px;
   color: var(--sub);
   font-weight: 500;
 }
-.rem-card-actions {
+.rem1-card-actions {
   display: flex;
   gap: 6px;
   flex-shrink: 0;
 }
-.rem-card-done-btn, .rem-card-del-btn {
+.rem1-card-done-btn, .rem1-card-del-btn {
   width: 32px; height: 32px;
   border-radius: 50%;
   background: var(--bg);
@@ -2330,15 +2330,15 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   justify-content: center;
   transition: box-shadow .15s ease, transform .15s ease;
 }
-.rem-card-done-btn { color: var(--green); }
-.rem-card-del-btn  { color: #E05050; }
-.rem-card-done-btn:active, .rem-card-del-btn:active {
+.rem1-card-done-btn { color: var(--green); }
+.rem1-card-del-btn  { color: #E05050; }
+.rem1-card-done-btn:active, .rem1-card-del-btn:active {
   box-shadow: var(--sh-press);
   transform: scale(.92);
 }
 
 /* -- Modal overlay -- */
-.rem-modal-overlay {
+.rem1-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.45);
@@ -2347,11 +2347,11 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   align-items: flex-end;
   justify-content: center;
 }
-.rem-modal-overlay.show {
+.rem1-modal-overlay.show {
   display: flex;
   animation: fadeIn 0.2s ease;
 }
-.rem-modal-box {
+.rem1-modal-box {
   width: 100%;
   max-width: 500px;
   background: var(--bg);
@@ -2366,21 +2366,21 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   from { transform: translateY(20px); opacity: 0.6; }
   to   { transform: translateY(0); opacity: 1; }
 }
-.rem-modal-title {
+.rem1-modal-title {
   font-size: 15px;
   font-weight: 700;
   color: var(--text);
   margin-bottom: 12px;
   text-align: center;
 }
-.rem-modal-label {
+.rem1-modal-label {
   display: block;
   font-size: 11px;
   color: var(--sub);
   margin: 10px 0 5px;
   font-weight: 600;
 }
-.rem-modal-input {
+.rem1-modal-input {
   width: 100%;
   box-sizing: border-box;
   background: var(--bg);
@@ -2393,11 +2393,11 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   outline: none;
   font-family: inherit;
 }
-.rem-modal-textarea {
+.rem1-modal-textarea {
   min-height: 56px;
   resize: vertical;
 }
-.rem-mode-toggle {
+.rem1-mode-toggle {
   display: flex;
   background: var(--bg);
   border-radius: 12px;
@@ -2405,7 +2405,7 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   box-shadow: var(--sh-in);
   margin: 4px 0 8px;
 }
-.rem-mode-btn {
+.rem1-mode-btn {
   flex: 1;
   padding: 8px 10px;
   border: none;
@@ -2418,17 +2418,17 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.rem-mode-btn.active {
+.rem1-mode-btn.active {
   background: var(--bg);
   color: var(--green);
   box-shadow: var(--sh-sm);
 }
-.rem-day-row {
+.rem1-day-row {
   display: flex;
   gap: 6px;
   margin: 4px 0 8px;
 }
-.rem-day-btn {
+.rem1-day-btn {
   flex: 1;
   padding: 10px;
   border: none;
@@ -2442,22 +2442,22 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   cursor: pointer;
   transition: all 0.15s ease;
 }
-.rem-day-btn.active {
+.rem1-day-btn.active {
   box-shadow: var(--sh-in);
   color: var(--green);
 }
-.rem-char-count {
+.rem1-char-count {
   font-size: 10px;
   color: var(--sub);
   text-align: right;
   margin-top: 3px;
 }
-.rem-modal-actions {
+.rem1-modal-actions {
   display: flex;
   gap: 8px;
   margin-top: 14px;
 }
-.rem-modal-cancel {
+.rem1-modal-cancel {
   flex: 1;
   padding: 12px;
   border: none;
@@ -2470,7 +2470,7 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   border-radius: 12px;
   cursor: pointer;
 }
-.rem-modal-save {
+.rem1-modal-save {
   flex: 2;
   padding: 12px;
   border: none;
@@ -2483,7 +2483,7 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   cursor: pointer;
   box-shadow: 0 3px 8px rgba(76,175,125,0.25);
 }
-.rem-modal-save:disabled {
+.rem1-modal-save:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

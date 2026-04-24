@@ -66,11 +66,11 @@ function renderReminderSections(reminders) {
 
   let html = '';
   if (todayRems.length) {
-    html += `<div class="rem-section-title">${S('today','rem_today_section')}</div>`;
+    html += `<div class="rem1-section-title">${S('today','rem_today_section')}</div>`;
     html += todayRems.map(_renderRemCard).join('');
   }
   if (upcomingRems.length) {
-    html += `<div class="rem-section-title">${S('today','rem_upcoming_section')}</div>`;
+    html += `<div class="rem1-section-title">${S('today','rem_upcoming_section')}</div>`;
     html += upcomingRems.map(_renderRemCard).join('');
   }
   return html;
@@ -80,23 +80,23 @@ function _renderRemCard(r) {
   const timeLabel = _formatRemTime(r.remind_at);
   const safeText = _escRemHtml(r.text || '');
   return `
-    <div class="rem-card" id="rem-card-${r._id}">
-      <div class="rem-card-icon">
+    <div class="rem1-card" id="rem1-card-${r._id}">
+      <div class="rem1-card-icon">
         <svg width="16" height="16" viewBox="0 0 26 26" fill="none">
           <defs><linearGradient id="svgBell${r._id}" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5DBE8E"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs>
           <path d="M13 3C13 3 8 6 8 13v5H5l2 2h12l2-2h-3v-5c0-7-5-10-5-10z" fill="url(#svgBell${r._id})" opacity="0.85"/>
           <circle cx="13" cy="22" r="1.5" fill="url(#svgBell${r._id})"/>
         </svg>
       </div>
-      <div class="rem-card-body">
-        <div class="rem-card-text">${safeText}</div>
-        <div class="rem-card-meta">${timeLabel}</div>
+      <div class="rem1-card-body">
+        <div class="rem1-card-text">${safeText}</div>
+        <div class="rem1-card-meta">${timeLabel}</div>
       </div>
-      <div class="rem-card-actions">
-        <button class="rem-card-done-btn" onclick="markReminderDone('${r._id}')" type="button" title="${S('today','rem_done_btn')}">
+      <div class="rem1-card-actions">
+        <button class="rem1-card-done-btn" onclick="markReminderDone('${r._id}')" type="button" title="${S('today','rem_done_btn')}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <button class="rem-card-del-btn" onclick="deleteReminder('${r._id}')" type="button" title="${S('today','rem_del_btn')}">
+        <button class="rem1-card-del-btn" onclick="deleteReminder('${r._id}')" type="button" title="${S('today','rem_del_btn')}">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
         </button>
       </div>
@@ -129,7 +129,7 @@ function _formatRemTime(iso) {
 
 // ── BAJARILDI (+2 ball + karta yo'qolish animation) ──
 async function markReminderDone(rid) {
-  const card = document.getElementById('rem-card-' + rid);
+  const card = document.getElementById('rem1-card-' + rid);
   if (card) card.classList.add('done-anim');  // Fade-out animation boshlash
   try {
     const r = await _remFetch(`reminders/${userId}/${rid}/done`, { method: 'PATCH' });
@@ -153,7 +153,7 @@ async function markReminderDone(rid) {
 
 // ── O'CHIRISH ──
 async function deleteReminder(rid) {
-  const card = document.getElementById('rem-card-' + rid);
+  const card = document.getElementById('rem1-card-' + rid);
   if (card) card.classList.add('done-anim');
   try {
     const r = await _remFetch(`reminders/${userId}/${rid}`, { method: 'DELETE' });
@@ -190,44 +190,44 @@ function openReminderModal() {
   const dateStr = `${yyyy}-${MM}-${dd}`;
 
   const overlay = document.createElement('div');
-  overlay.className = 'rem-modal-overlay show';
-  overlay.id = 'rem-modal';
+  overlay.className = 'rem1-modal-overlay show';
+  overlay.id = 'rem1-modal';
   overlay.dataset.day = 'today';
   overlay.onclick = function(e) { if (e.target === overlay) closeReminderModal(); };
   overlay.innerHTML = `
-    <div class="rem-modal-box" onclick="event.stopPropagation()">
-      <div class="rem-modal-title">${S('rem_modal','title')}</div>
+    <div class="rem1-modal-box" onclick="event.stopPropagation()">
+      <div class="rem1-modal-title">${S('rem_modal','title')}</div>
 
-      <label class="rem-modal-label">${S('rem_modal','text_label')}</label>
-      <textarea class="rem-modal-input rem-modal-textarea" id="rem-text-inp" maxlength="200" placeholder="${S('rem_modal','text_ph')}" oninput="_updateRemCharCount()"></textarea>
-      <div class="rem-char-count"><span id="rem-char-cnt">0</span>/200</div>
+      <label class="rem1-modal-label">${S('rem_modal','text_label')}</label>
+      <textarea class="rem1-modal-input rem1-modal-textarea" id="rem-text-inp" maxlength="200" placeholder="${S('rem_modal','text_ph')}" oninput="_updateRemCharCount()"></textarea>
+      <div class="rem1-char-count"><span id="rem-char-cnt">0</span>/200</div>
 
-      <label class="rem-modal-label">${S('rem_modal','mode_label')}</label>
-      <div class="rem-mode-toggle">
-        <button class="rem-mode-btn active" id="rem-mode-q" onclick="setRemMode('quick')" type="button">${S('rem_modal','mode_quick')}</button>
-        <button class="rem-mode-btn" id="rem-mode-f" onclick="setRemMode('full')" type="button">${S('rem_modal','mode_full')}</button>
+      <label class="rem1-modal-label">${S('rem_modal','mode_label')}</label>
+      <div class="rem1-mode-toggle">
+        <button class="rem1-mode-btn active" id="rem1-mode-q" onclick="setRemMode('quick')" type="button">${S('rem_modal','mode_quick')}</button>
+        <button class="rem1-mode-btn" id="rem1-mode-f" onclick="setRemMode('full')" type="button">${S('rem_modal','mode_full')}</button>
       </div>
 
       <div id="rem-q-wrap">
-        <label class="rem-modal-label">${S('rem_modal','when_label')}</label>
-        <div class="rem-day-row">
-          <button class="rem-day-btn active" id="rem-d-today" onclick="setRemDay('today')" type="button">${S('rem_modal','today_btn')}</button>
-          <button class="rem-day-btn" id="rem-d-tomorrow" onclick="setRemDay('tomorrow')" type="button">${S('rem_modal','tomorrow_btn')}</button>
+        <label class="rem1-modal-label">${S('rem_modal','when_label')}</label>
+        <div class="rem1-day-row">
+          <button class="rem1-day-btn active" id="rem-d-today" onclick="setRemDay('today')" type="button">${S('rem_modal','today_btn')}</button>
+          <button class="rem1-day-btn" id="rem-d-tomorrow" onclick="setRemDay('tomorrow')" type="button">${S('rem_modal','tomorrow_btn')}</button>
         </div>
-        <label class="rem-modal-label">${S('rem_modal','time_label')}</label>
-        <input class="rem-modal-input" type="time" id="rem-time-q" value="${timeStr}">
+        <label class="rem1-modal-label">${S('rem_modal','time_label')}</label>
+        <input class="rem1-modal-input" type="time" id="rem-time-q" value="${timeStr}">
       </div>
 
       <div id="rem-f-wrap" style="display:none">
-        <label class="rem-modal-label">${S('rem_modal','date_label')}</label>
-        <input class="rem-modal-input" type="date" id="rem-date-f" value="${dateStr}">
-        <label class="rem-modal-label">${S('rem_modal','time_label')}</label>
-        <input class="rem-modal-input" type="time" id="rem-time-f" value="${timeStr}">
+        <label class="rem1-modal-label">${S('rem_modal','date_label')}</label>
+        <input class="rem1-modal-input" type="date" id="rem-date-f" value="${dateStr}">
+        <label class="rem1-modal-label">${S('rem_modal','time_label')}</label>
+        <input class="rem1-modal-input" type="time" id="rem-time-f" value="${timeStr}">
       </div>
 
-      <div class="rem-modal-actions">
-        <button class="rem-modal-cancel" onclick="closeReminderModal()" type="button">${S('rem_modal','cancel')}</button>
-        <button class="rem-modal-save" id="rem-save-btn" onclick="saveReminder()" type="button">${S('rem_modal','save')}</button>
+      <div class="rem1-modal-actions">
+        <button class="rem1-modal-cancel" onclick="closeReminderModal()" type="button">${S('rem_modal','cancel')}</button>
+        <button class="rem1-modal-save" id="rem-save-btn" onclick="saveReminder()" type="button">${S('rem_modal','save')}</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -235,7 +235,7 @@ function openReminderModal() {
 }
 
 function closeReminderModal() {
-  const el = document.getElementById('rem-modal');
+  const el = document.getElementById('rem1-modal');
   if (el) el.remove();
 }
 
@@ -247,8 +247,8 @@ function _updateRemCharCount() {
 
 function setRemMode(mode) {
   _remModalMode = mode;
-  const q = document.getElementById('rem-mode-q');
-  const f = document.getElementById('rem-mode-f');
+  const q = document.getElementById('rem1-mode-q');
+  const f = document.getElementById('rem1-mode-f');
   if (q) q.classList.toggle('active', mode === 'quick');
   if (f) f.classList.toggle('active', mode === 'full');
   const qw = document.getElementById('rem-q-wrap');
@@ -258,7 +258,7 @@ function setRemMode(mode) {
 }
 
 function setRemDay(day) {
-  const m = document.getElementById('rem-modal');
+  const m = document.getElementById('rem1-modal');
   if (m) m.dataset.day = day;
   const t = document.getElementById('rem-d-today');
   const tm = document.getElementById('rem-d-tomorrow');
@@ -278,7 +278,7 @@ async function saveReminder() {
   // remind_at hisoblash
   let remindAt;
   if (_remModalMode === 'quick') {
-    const m   = document.getElementById('rem-modal');
+    const m   = document.getElementById('rem1-modal');
     const day = (m && m.dataset.day) || 'today';
     const tStr = document.getElementById('rem-time-q').value;
     if (!tStr) { alert(S('rem_modal','err_time')); return; }
