@@ -225,7 +225,7 @@ const STRINGS = {
       reminder_settings:'Eslatma sozlamalari',
     },
     my_reminders: {
-      add_new:"＋ Yangi eslatma",
+      add_new:"Eslatma yaratish",
       empty_title:"Hali eslatma yo'q",
       empty_sub:"Yuqoridagi tugmani bosing va birinchi eslatmangizni qo'shing!",
       error:"Yuklashda xato. Qayta urinib ko'ring.",
@@ -618,7 +618,7 @@ const STRINGS = {
       reminder_settings:'Настройки напоминаний',
     },
     my_reminders: {
-      add_new:"＋ Новое напоминание",
+      add_new:"Создать напоминание",
       empty_title:"Напоминаний пока нет",
       empty_sub:"Нажмите кнопку выше, чтобы добавить первое напоминание!",
       error:"Ошибка загрузки. Попробуйте ещё раз.",
@@ -1011,7 +1011,7 @@ const STRINGS = {
       reminder_settings:'Reminder settings',
     },
     my_reminders: {
-      add_new:"＋ New reminder",
+      add_new:"Create reminder",
       empty_title:"No reminders yet",
       empty_sub:"Tap the button above to add your first reminder!",
       error:"Loading error. Try again.",

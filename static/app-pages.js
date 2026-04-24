@@ -1109,21 +1109,33 @@ async function saveNewReminder() {
   if (saveBtn) saveBtn.disabled = true;
 
   try {
-    const r = await apiFetch(`reminders/${userId}`, {
+    // apiFetch o'rniga to'g'ridan-to'g'ri fetch — backend error body'ni o'qish uchun
+    const res = await fetch(`${API}/reminders/${userId}`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Init-Data': initData,
+        'X-User-Id': userId,
+      },
       body: JSON.stringify({ text: text, remind_at: remindAt })
     });
-    if (r && r.ok) {
+    let r = null;
+    try { r = await res.json(); } catch(je) { r = null; }
+    console.log('[my_reminders] Save response:', res.status, r);
+
+    if (res.ok && r && r.ok) {
       closeNewReminderModal();
       _showMyRemToast(S('my_reminders','ok_created'), 'ok');
       await loadMyReminders();
     } else {
-      const errKey = r && r.error ? r.error : 'create_failed';
-      _showMyRemToast(S('my_reminders','err_' + errKey) || S('my_reminders','err_generic'), 'err');
+      const errKey = (r && r.error) ? r.error : ('http_' + res.status);
+      const errMsg = S('my_reminders','err_' + errKey) || (S('my_reminders','err_generic') + ' (' + errKey + ')');
+      alert(errMsg);  // Modal ochiq bo'lgani uchun toast ko'rinmaydi — alert
       if (saveBtn) saveBtn.disabled = false;
     }
   } catch(e) {
-    _showMyRemToast(S('my_reminders','err_generic'), 'err');
+    console.error('[my_reminders] Save error:', e);
+    alert(S('my_reminders','err_generic') + '\n\n' + (e && e.message ? e.message : 'unknown'));
     if (saveBtn) saveBtn.disabled = false;
   }
 }
