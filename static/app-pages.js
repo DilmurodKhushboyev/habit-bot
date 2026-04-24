@@ -147,8 +147,8 @@ function renderToday(d) {
     </div>
 
     <div style="display:flex;gap:8px;justify-content:center;margin:14px 0 6px;flex-wrap:wrap">
-      <button onclick="openReminderModal()" type="button" class="today-add-rem-btn">${S('today','add_reminder')}</button>
       <button onclick="openAddFromToday()" type="button" class="today-add-btn">${S('today','add_habit')}</button>
+      <button onclick="openReminderModal()" type="button" class="today-add-rem-btn">${S('today','add_reminder')}</button>
     </div>
 
     ${renderReminderSections(_cachedReminders)}

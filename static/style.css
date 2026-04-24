@@ -2210,8 +2210,9 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
 .shop-modal-btn-close:active { transform: scale(.96); box-shadow: var(--sh-in); }
 
 
-/* -- Today sahifa: "+ Odat yaratish" neumorphic tugma -- */
-.today-add-btn {
+/* -- Today sahifa: "+ Odat yaratish" va "+ Eslatma yaratish" neumorphic tugma -- */
+.today-add-btn,
+.today-add-rem-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -2227,7 +2228,8 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   cursor: pointer;
   transition: box-shadow .15s ease, transform .15s ease;
 }
-.today-add-btn:active {
+.today-add-btn:active,
+.today-add-rem-btn:active {
   box-shadow: var(--sh-press);
   transform: scale(.98);
 }
@@ -2236,28 +2238,6 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
 /* ═══════════════════════════════════════════════════════════
    ESLATMALAR (bir martalik) — Today sahifa: tugma, kartalar, modal
    ═══════════════════════════════════════════════════════════ */
-
-/* -- Today sahifa: "🔔 Eslatma yaratish" tugma (today-add-btn yoniga) -- */
-.today-add-rem-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 14px;
-  background: var(--bg);
-  box-shadow: var(--sh-sm);
-  color: var(--green);
-  font-size: 13px;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  transition: box-shadow .15s ease, transform .15s ease;
-}
-.today-add-rem-btn:active {
-  box-shadow: var(--sh-press);
-  transform: scale(.98);
-}
 
 /* -- Bugungi/Keyingi eslatmalar bo'lim sarlavhasi -- */
 .rem1-section-title {
