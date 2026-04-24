@@ -6,7 +6,7 @@ Ma'lumotlar bazasi funksiyalari
 import time as _cache_time
 from datetime import date
 
-from config import mongo_col, groups_col
+from config import mongo_col, groups_col, reminders_col
 
 # ── Exponential backoff retry yordamchi ──────────────────────
 # 3 urinish: 0.3s → 0.7s → crash + log
@@ -142,3 +142,78 @@ def delete_group(group_id):
         groups_col.delete_one({"_id": str(group_id)})
 
     _retry_mongo(_fn, f"delete_group ({group_id})")
+
+# ============================================================
+#  ESLATMALAR (bir martalik)
+# ============================================================
+def create_reminder(reminder_doc):
+    """Yangi eslatma yaratadi. reminder_doc dict — _id avtomatik."""
+    def _fn():
+        res = reminders_col.insert_one(reminder_doc)
+        return str(res.inserted_id)
+
+    return _retry_mongo(_fn, "create_reminder", default=None)
+
+def get_reminder(reminder_id):
+    """Bitta eslatma olish (_id bo'yicha)."""
+    from bson import ObjectId
+    def _fn():
+        try:
+            doc = reminders_col.find_one({"_id": ObjectId(reminder_id)})
+        except Exception:
+            return None
+        if doc:
+            doc["_id"] = str(doc["_id"])
+        return doc
+
+    return _retry_mongo(_fn, f"get_reminder ({reminder_id})", default=None)
+
+def list_reminders(user_id, status=None):
+    """Foydalanuvchining eslatmalari. status=None → barchasi."""
+    def _fn():
+        query = {"user_id": int(user_id)}
+        if status:
+            query["status"] = status
+        docs = list(reminders_col.find(query).sort("remind_at", 1))
+        for d in docs:
+            d["_id"] = str(d["_id"])
+        return docs
+
+    return _retry_mongo(_fn, f"list_reminders ({user_id})", default=[])
+
+def update_reminder(reminder_id, updates):
+    """Eslatma yangilash (status o'zgartirish, notified_at belgilash)."""
+    from bson import ObjectId
+    def _fn():
+        try:
+            reminders_col.update_one(
+                {"_id": ObjectId(reminder_id)},
+                {"$set": updates}
+            )
+            return True
+        except Exception:
+            return False
+
+    return _retry_mongo(_fn, f"update_reminder ({reminder_id})", default=False)
+
+def delete_reminder(reminder_id):
+    """Eslatma o'chirish."""
+    from bson import ObjectId
+    def _fn():
+        try:
+            reminders_col.delete_one({"_id": ObjectId(reminder_id)})
+            return True
+        except Exception:
+            return False
+
+    return _retry_mongo(_fn, f"delete_reminder ({reminder_id})", default=False)
+
+def list_pending_reminders_all():
+    """Server restart'da qayta rejalash uchun — barcha pending eslatmalar."""
+    def _fn():
+        docs = list(reminders_col.find({"status": "pending"}))
+        for d in docs:
+            d["_id"] = str(d["_id"])
+        return docs
+
+    return _retry_mongo(_fn, "list_pending_reminders_all", default=[])
