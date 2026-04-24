@@ -1097,27 +1097,27 @@ body {
   border-radius: 20px; padding: 18px; margin-bottom: 12px;
 }
 .heatmap-title { font-size: 12px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
-.heatmap-outer { display: flex; gap: 8px; }
+.heatmap-outer { display: flex; gap: 6px; }
 .heatmap-day-labels {
-  display: flex; flex-direction: column; gap: 4px; padding-top: 0;
-  flex-shrink: 0; width: 18px;
+  display: flex; flex-direction: column; gap: 3px; padding-top: 0;
+  flex-shrink: 0; width: 20px;
 }
 .heatmap-day-labels span {
-  height: 20px; font-size: 9px; color: var(--sub); font-weight: 600;
+  height: 14px; font-size: 8px; color: var(--sub); font-weight: 600;
   display: flex; align-items: center; line-height: 1;
 }
 .heatmap-grid {
   display: grid;
-  grid-template-rows: repeat(7, 20px);
+  grid-template-rows: repeat(7, 14px);
   grid-auto-flow: column;
-  grid-auto-columns: 20px;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
-  justify-content: space-between;
+  grid-auto-columns: 14px;
+  gap: 3px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.heatmap-grid::-webkit-scrollbar { display: none; }
 .hm-cell {
-  width: 20px; height: 20px; border-radius: 4px;
+  width: 14px; height: 14px; border-radius: 3px;
   background: var(--bg); box-shadow: var(--sh-in);
   transition: all .2s;
 }
@@ -1133,6 +1133,54 @@ body {
 .hm-leg.hm-lv1 { background: #4CAF7D44; }
 .hm-leg.hm-lv2 { background: #4CAF7D88; }
 .hm-leg.hm-lv3 { background: var(--green); }
+
+/* Oylik rekordlar paneli (heatmap yonida) */
+.heatmap-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding-left: 14px;
+  gap: 10px;
+  min-width: 0;
+}
+.hm-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px 6px;
+  background: var(--bg);
+  border-radius: 14px;
+  box-shadow: var(--sh-in);
+}
+.hm-stat-icon {
+  font-size: 18px;
+  line-height: 1;
+  margin-bottom: 4px;
+  filter: saturate(1.1);
+}
+.hm-stat-val {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.hm-stat-val-sub {
+  font-size: 12px;
+  color: var(--sub);
+  font-weight: 600;
+}
+.hm-stat-lbl {
+  font-size: 9px;
+  color: var(--sub);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
 
 /* Trend card */
 .trend-card {
