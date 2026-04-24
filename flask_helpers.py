@@ -42,33 +42,51 @@ def rate_limit_check(uid=None, limit=60, window=60):
 
 
 def verify_init_data(init_data_raw: str):
-    """Telegram WebApp initData ni HMAC-SHA256 bilan tekshiradi."""
+    """Telegram WebApp initData ni HMAC-SHA256 bilan tekshiradi.
+    Qaytadi: (uid, user_obj) yoki (None, {}).
+    user_obj — Telegram'dan kelgan toʻliq foydalanuvchi ma'lumoti
+    (first_name, last_name, username, language_code va h.k.)."""
     if not init_data_raw:
-        return None
+        return None, {}
     try:
         params = dict(urllib.parse.parse_qsl(init_data_raw, keep_blank_values=True))
         received_hash = params.pop("hash", None)
         if not received_hash:
-            return None
+            return None, {}
         data_check_string = "\n".join(
             f"{k}={v}" for k, v in sorted(params.items())
         )
         secret_key = hmac.new(BOT_TOKEN.encode(), b"WebAppData", hashlib.sha256).digest()
         computed   = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
         if not hmac.compare_digest(computed, received_hash):
-            return None
+            return None, {}
         auth_date = int(params.get("auth_date", 0))
         age = int(_time.time() - auth_date)
         if age > 604800:
-            return None
+            return None, {}
         user_obj = _json.loads(params.get("user", "{}"))
         uid = int(user_obj.get("id", 0)) or None
         if uid:
             print(f"[auth] OK: uid={uid}, age={age}s")
-        return uid
+        return uid, user_obj
     except Exception as e:
         print(f"[auth] EXCEPTION: {e}")
-        return None
+        return None, {}
+
+
+def get_init_tg_first_name():
+    """X-Init-Data headeridan Telegram first_name ni xavfsiz oladi.
+    HMAC tasdiqlangan ma'lumotdan keladi (frontend soxta qila olmaydi).
+    Boʻsh yoki yo'q boʻlsa "" qaytadi. Ishlatish: DB'da ism yoʻq foydalanuvchi
+    uchun Telegram'dan kelgan haqiqiy ismni olish (maxfiylikni saqlash —
+    Telegram'da ism boʻsh boʻlsa, DB ga yozilmaydi)."""
+    from flask import request
+    raw = request.headers.get("X-Init-Data", "")
+    if not raw:
+        return ""
+    _, user_obj = verify_init_data(raw)
+    name = (user_obj or {}).get("first_name", "") or ""
+    return name.strip()
 
 
 def require_auth(f):
