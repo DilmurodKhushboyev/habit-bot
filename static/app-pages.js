@@ -852,12 +852,25 @@ function closeAllCheckinDrops() {
 let _myRemMode = 'quick';  // 'quick' | 'full' — modal toggle
 
 async function loadMyReminders() {
+  const container = document.getElementById('my-reminders-content');
+  if (!container) return;
   try {
     const d = await apiFetch(`reminders/${userId}`);
     renderMyReminders(d.reminders || []);
   } catch(e) {
-    document.getElementById('my-reminders-content').innerHTML =
-      `<div class="my-rem-empty"><div class="my-rem-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 3L2 21h20L12 3z" stroke="#E05050" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div><div class="my-rem-empty-title">${S('my_reminders','error')}</div></div>`;
+    const errMsg = (e && e.message) ? String(e.message) : 'unknown';
+    container.innerHTML = `
+      <button class="my-rem-add-btn" onclick="openNewReminderModal()" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+        ${S('my_reminders','add_new')}
+      </button>
+      <div class="my-rem-empty">
+        <div class="my-rem-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 3L2 21h20L12 3z" stroke="#E05050" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="#E05050" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="my-rem-empty-title">${S('my_reminders','error')}</div>
+        <div class="my-rem-empty-sub" style="color:#E05050;font-family:monospace;margin-top:8px">${_escMyRemHtml(errMsg)}</div>
+      </div>
+      <div class="toast" id="toast-myrem"></div>`;
+    console.error('[my_reminders] Load error:', e);
   }
 }
 
