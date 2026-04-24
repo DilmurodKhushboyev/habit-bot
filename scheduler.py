@@ -324,6 +324,7 @@ def daily_reset():
     users = load_all_users(force=True)
     for uid, udata in users.items():
         changed = False
+        at_risk_habits = []   # Shield bo'lsa — xavf ostidagi odatlar shu yerda yig'iladi, loop oxirida 1 ta xabar yuboriladi
         for habit in udata.get("habits", []):
             hab_type = habit.get("type", "simple")
             if hab_type == "repeat":
@@ -337,29 +338,17 @@ def daily_reset():
                     if habit.get("streak", 0) > 0:
                         shields = udata.get("streak_shields", 0)
                         if shields > 0:
+                            # Xavf ostidagi odatlarni yig'amiz — xabar loop oxirida 1 marta yuboriladi
                             streak_val = habit.get("streak", 0)
                             habit["streak"] = 0
                             pending = udata.get("pending_shield", {})
                             pending[habit["id"]] = streak_val
                             udata["pending_shield"] = pending
-                            try:
-                                kb_sh = InlineKeyboardMarkup()
-                                kb_sh.row(
-                                    InlineKeyboardButton("✅ Ha, ishlatish",    callback_data=f"shield_use_{habit['id']}"),
-                                    InlineKeyboardButton("❌ Yo'q, nollansin", callback_data=f"shield_skip_{habit['id']}")
-                                )
-                                bot.send_message(
-                                    int(uid),
-                                    f"⚠️ *Streakingiz xavf ostida!*\n\n"
-                                    f"*🔥 Streak:* {streak_val} kun\n"
-                                    f"*📌 Odat:* {habit['name']}\n\n"
-                                    f"*🛡 Himoyangiz bor* — ishlatinmi?\n"
-                                    f"_(Yo'q desangiz himoya saqlanib qoladi)_",
-                                    parse_mode="Markdown",
-                                    reply_markup=kb_sh
-                                )
-                            except Exception:
-                                pass
+                            at_risk_habits.append({
+                                "id":     habit["id"],
+                                "name":   habit["name"],
+                                "streak": streak_val,
+                            })
                         else:
                             # pet_cat orqali streak saqlashga urinish
                             if _try_pet_cat_save(udata, habit, today_str):
@@ -398,7 +387,7 @@ def daily_reset():
                 if missed_today and habit.get("streak", 0) > 0:
                     shields = udata.get("streak_shields", 0)
                     if shields > 0:
-                        # Himoya bor — foydalanuvchiga xabar yuborib qaror qildirish
+                        # Xavf ostidagi odatlarni yig'amiz — xabar loop oxirida 1 marta yuboriladi
                         streak_val = habit.get("streak", 0)
                         habit["streak"] = 0  # Hozircha nollanadi
                         changed = True
@@ -406,24 +395,11 @@ def daily_reset():
                         pending = udata.get("pending_shield", {})
                         pending[habit["id"]] = streak_val
                         udata["pending_shield"] = pending
-                        try:
-                            kb_sh = InlineKeyboardMarkup()
-                            kb_sh.row(
-                                InlineKeyboardButton("✅ Ha, ishlatish",      callback_data=f"shield_use_{habit['id']}"),
-                                InlineKeyboardButton("❌ Yo'q, nollansin",   callback_data=f"shield_skip_{habit['id']}")
-                            )
-                            bot.send_message(
-                                int(uid),
-                                f"⚠️ *Streakingiz xavf ostida!*\n\n"
-                                f"*🔥 Streak:* {streak_val} kun\n"
-                                f"*📌 Odat:* {habit['name']}\n\n"
-                                f"*🛡 Himoyangiz bor* — ishlatinmi?\n"
-                                f"_(Yo'q desangiz himoya saqlanib qoladi)_",
-                                parse_mode="Markdown",
-                                reply_markup=kb_sh
-                            )
-                        except Exception:
-                            pass
+                        at_risk_habits.append({
+                            "id":     habit["id"],
+                            "name":   habit["name"],
+                            "streak": streak_val,
+                        })
                     else:
                         # Himoya yo'q — pet_cat orqali streak saqlashga urinish
                         if _try_pet_cat_save(udata, habit, today_str):
@@ -441,6 +417,37 @@ def daily_reset():
                                 pass
                         else:
                             habit["streak"] = 0
+        # ── Xavf ostidagi odatlar uchun 1 ta umumiy shield xabari ──
+        # Foydalanuvchida shield bor va ≥1 odat streak uzilishi xavfida bo'lsa,
+        # har odat uchun alohida xabar o'rniga bitta umumiy xabar yuboriladi.
+        # "Ha" bosilsa — 1 ta shield barcha odatlarga ishlaydi.
+        if at_risk_habits:
+            try:
+                lang = get_lang(int(uid))
+                L    = LANGS.get(lang, LANGS["uz"])
+                # Har odat uchun bitta qator: "🔥 N kun — nom"
+                lines = "\n".join(
+                    L["shield_risk_habit_line"].format(streak=h["streak"], name=h["name"])
+                    for h in at_risk_habits
+                )
+                text = (
+                    f"{L['shield_risk_title']}\n\n"
+                    f"{lines}\n\n"
+                    f"{L['shield_risk_prompt']}"
+                )
+                kb_sh = InlineKeyboardMarkup()
+                kb_sh.row(
+                    InlineKeyboardButton(L["shield_btn_yes"], callback_data="shield_use_all"),
+                    InlineKeyboardButton(L["shield_btn_no"],  callback_data="shield_skip_all"),
+                )
+                bot.send_message(
+                    int(uid),
+                    text,
+                    parse_mode="Markdown",
+                    reply_markup=kb_sh,
+                )
+            except Exception as e:
+                print(f"[daily_reset] shield xabar xatosi uid={uid}: {e}")
         # Jon hisoblash
         habits_list = udata.get("habits", [])
         n = len(habits_list)

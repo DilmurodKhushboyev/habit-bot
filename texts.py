@@ -142,6 +142,15 @@ LANGS = {
         "stars_item_gift_box": "🎁 Sovga qutisi",
         "stars_desc_gift_box": "Tasodifiy mukofot: 100/200/500 ball, streak himoyasi yoki XP Booster",
         "streak_milestone":  "🔥 *Tabriklaymiz!*\n\n*{days} kunlik streak!*\n\nSiz ajoyib yoʻldasiz — davom eting! 💪",
+        # ── Shield (streak himoyasi) — bitta umumiy xabar barcha xavfli odatlarga ──
+        "shield_risk_title":      "⚠️ *Streakingiz xavf ostida!*",
+        "shield_risk_habit_line": "*🔥* {streak} kun — *{name}*",
+        "shield_risk_prompt":     "*🛡 Himoyangiz bor* — ishlatinmi?\n_(1 ta himoya barcha odatlarga ishlaydi. Yoʻq desangiz himoya saqlanib qoladi.)_",
+        "shield_btn_yes":         "✅ Ha, ishlatish",
+        "shield_btn_no":          "❌ Yoʻq, nollansin",
+        "shield_used_title":      "🛡 *Streak himoyangiz ishlatildi!*",
+        "shield_used_body":       "*🔥 Saqlangan streaklar:* {count} ta odat\n*🛡 Qolgan himoyalar:* {remaining} ta",
+        "shield_skipped":         "❌ *Streaklar nollandi.*\n\n🛡 Himoyangiz saqlanib qoldi — keyingi safar ishlatishingiz mumkin!",
     },
     "en": {
         "choose_lang":       "🌐 Choose language:",
@@ -281,6 +290,15 @@ LANGS = {
         "stars_item_gift_box": "🎁 Gift Box",
         "stars_desc_gift_box": "Random reward: 100/200/500 points, streak shield or XP Booster",
         "streak_milestone":  "🔥 *Congrats!*\n\n*{days}-day streak!*\n\nYou're on a great path — keep going! 💪",
+        # ── Shield (streak protection) — one combined message for all at-risk habits ──
+        "shield_risk_title":      "⚠️ *Your streaks are at risk!*",
+        "shield_risk_habit_line": "*🔥* {streak} days — *{name}*",
+        "shield_risk_prompt":     "*🛡 You have protection* — use it?\n_(1 shield covers all habits. If you say No, the shield stays.)_",
+        "shield_btn_yes":         "✅ Yes, use it",
+        "shield_btn_no":          "❌ No, reset",
+        "shield_used_title":      "🛡 *Streak shield activated!*",
+        "shield_used_body":       "*🔥 Streaks saved:* {count} habit(s)\n*🛡 Shields left:* {remaining}",
+        "shield_skipped":         "❌ *Streaks reset.*\n\n🛡 Your shield is saved — you can use it next time!",
     },
     "ru": {
         "choose_lang":       "🌐 Выберите язык:",
@@ -420,6 +438,15 @@ LANGS = {
         "stars_item_gift_box": "🎁 Подарочная коробка",
         "stars_desc_gift_box": "Случайная награда: 100/200/500 очков, защита стрика или XP Бустер",
         "streak_milestone":  "🔥 *Поздравляем!*\n\n*Streak {days} дней!*\n\nВы на отличном пути — продолжайте! 💪",
+        # ── Shield (защита стрика) — одно общее сообщение для всех привычек под угрозой ──
+        "shield_risk_title":      "⚠️ *Ваш стрик под угрозой!*",
+        "shield_risk_habit_line": "*🔥* {streak} дн. — *{name}*",
+        "shield_risk_prompt":     "*🛡 У вас есть защита* — использовать?\n_(1 защита покрывает все привычки. Если нет — защита сохранится.)_",
+        "shield_btn_yes":         "✅ Да, использовать",
+        "shield_btn_no":          "❌ Нет, обнулить",
+        "shield_used_title":      "🛡 *Защита стрика активирована!*",
+        "shield_used_body":       "*🔥 Сохранено стриков:* {count} привычек\n*🛡 Осталось защит:* {remaining}",
+        "shield_skipped":         "❌ *Стрики обнулены.*\n\n🛡 Защита сохранилась — используйте её в следующий раз!",
     },
 }
 

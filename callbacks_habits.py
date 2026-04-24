@@ -143,7 +143,7 @@ def handle_habits_callbacks(call, uid, cdata, u):
         send_main_menu(uid)
         return True
 
-    if cdata.startswith("shield_use_"):
+    if cdata.startswith("shield_use_") and cdata != "shield_use_all":
 
         habit_id = cdata[len("shield_use_"):]
         bot.answer_callback_query(call.id)
@@ -175,7 +175,7 @@ def handle_habits_callbacks(call, uid, cdata, u):
             except: pass
         return True
 
-    if cdata.startswith("shield_skip_"):
+    if cdata.startswith("shield_skip_") and cdata != "shield_skip_all":
         habit_id = cdata[len("shield_skip_"):]
         bot.answer_callback_query(call.id)
         pending = u.get("pending_shield", {})
@@ -186,6 +186,61 @@ def handle_habits_callbacks(call, uid, cdata, u):
             bot.edit_message_text(
                 "❌ *Streak nollandi.*\n\n"
                 "🛡 Himoyangiz saqlanib qoldi — keyingi safar ishlatishingiz mumkin!",
+                uid, call.message.message_id,
+                parse_mode="Markdown",
+                reply_markup=ok_kb(uid)
+            )
+        except Exception:
+            pass
+        return True
+
+    # ── YANGI: Bitta shield barcha xavf ostidagi odatlarga ──
+    # scheduler.py `daily_reset()` umumiy xabar yuboradi, bu handler uni qayta ishlaydi.
+    # "Ha" bosilsa: 1 ta shield ishlatiladi, pending_shield dagi BARCHA odat streaki tiklanadi.
+    if cdata == "shield_use_all":
+        bot.answer_callback_query(call.id)
+        pending = u.get("pending_shield", {}) or {}
+        shields = u.get("streak_shields", 0)
+        if pending and shields > 0:
+            # Barcha pending odatlar streakini tiklash
+            restored_count = 0
+            pending_ids = set(pending.keys())
+            for h in u.get("habits", []):
+                if h["id"] in pending_ids:
+                    h["streak"] = pending[h["id"]]
+                    restored_count += 1
+            # 1 ta shield ishlatildi, pending tozalandi
+            u["streak_shields"] = shields - 1
+            u["pending_shield"] = {}
+            save_user(uid, u)
+            try:
+                title = T(uid, "shield_used_title")
+                body  = T(uid, "shield_used_body").format(
+                    count=restored_count,
+                    remaining=u["streak_shields"],
+                )
+                bot.edit_message_text(
+                    f"{title}\n\n{body}",
+                    uid, call.message.message_id,
+                    parse_mode="Markdown",
+                    reply_markup=ok_kb(uid)
+                )
+            except Exception:
+                pass
+        else:
+            # Pending bo'sh yoki shield yo'q — xabarni o'chirish
+            try: bot.delete_message(uid, call.message.message_id)
+            except: pass
+        return True
+
+    if cdata == "shield_skip_all":
+        bot.answer_callback_query(call.id)
+        # Pending tozalanadi — odatlar allaqachon scheduler.py da nollangan
+        u["pending_shield"] = {}
+        save_user(uid, u)
+        try:
+            bot.edit_message_text(
+                T(uid, "shield_skipped"),
                 uid, call.message.message_id,
                 parse_mode="Markdown",
                 reply_markup=ok_kb(uid)
