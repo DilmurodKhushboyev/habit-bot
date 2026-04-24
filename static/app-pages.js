@@ -151,11 +151,12 @@ function renderToday(d) {
       <button onclick="openReminderModal()" type="button" class="today-add-rem-btn">${S('today','add_reminder')}</button>
     </div>
 
-    ${renderReminderSections(_cachedReminders)}
-
     <div class="section-title">${S('today','section_title')}</div>
     <div style="font-size:11px;color:var(--sub);margin:-6px 0 10px 2px">${S('today','tap_hint')}</div>
     ${cardsHtml || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>' + S('msg','no_habits_yet') + '</div>'}
+
+    ${renderReminderSections(_cachedReminders)}
+
     <div class="toast" id="toast-today"></div>`;
 
   // Swipe handlerlarni ulash
