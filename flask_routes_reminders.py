@@ -37,10 +37,13 @@ def _serialize_reminder(rem):
     if not rem:
         return None
     out = dict(rem)
-    # datetime → ISO string
+    # datetime → ISO string (UTC, 'Z' bilan — frontend new Date() to'g'ri talqin qilishi uchun)
     for key in ("remind_at", "created_at", "notified_at", "done_at"):
         if key in out and isinstance(out[key], datetime):
-            out[key] = out[key].isoformat()
+            dt = out[key]
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            out[key] = dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
     return out
 
 # ============================================================
