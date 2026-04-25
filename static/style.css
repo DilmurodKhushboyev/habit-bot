@@ -2317,6 +2317,7 @@ body.dark .rem1-section-title-collapsible:active {
   border-radius: 12px;
   margin-bottom: 6px;
   position: relative;
+  overflow: hidden;
   transition: opacity 0.4s ease, transform 0.3s ease;
 }
 .rem1-card.done-anim {
@@ -2331,8 +2332,6 @@ body.dark .rem1-section-title-collapsible:active {
   display: flex;
   align-items: stretch;
   z-index: 1;
-  border-radius: 12px;
-  overflow: hidden;
 }
 .rem1-swipe-btn {
   height: 100%;

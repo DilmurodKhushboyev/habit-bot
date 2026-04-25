@@ -748,8 +748,7 @@ function checkinFromFront(hid, frontEl) {
     return;
   }
   if (_checkinSwiped) { _checkinSwiped = false; return; }
-  const card = document.getElementById('ccard-' + hid);
-  if (card) checkin(hid, card);
+  // Checkin faqat ✓ tugma orqali bo'ladi (kartning boshqa joyiga bosish hech narsa qilmaydi)
 }
 
 function _initCheckinSwipe() {
