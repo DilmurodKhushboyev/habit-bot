@@ -2474,44 +2474,6 @@ body.dark .rem1-section-title-collapsible:active {
   background: var(--bg);
 }
 
-/* ── Dropdown menyu ── */
-.rem1-card {
-  position: relative; /* dropdown absolute uchun anchor */
-}
-.rem1-card-dropdown {
-  display: none;
-  position: absolute;
-  top: 44px; right: 12px;
-  z-index: 30;
-  background: var(--raised);
-  box-shadow: 0 8px 24px rgba(0,0,0,.15);
-  border-radius: 12px;
-  overflow: hidden;
-  min-width: 160px;
-  animation: rem1DropIn .18s ease-out;
-}
-.rem1-card-dropdown.open { display: block; }
-@keyframes rem1DropIn {
-  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.rem1-card-dropdown-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 12px 16px;
-  font-size: 13px; font-weight: 500;
-  color: var(--text);
-  cursor: pointer; border: none;
-  background: transparent;
-  width: 100%; text-align: left;
-  font-family: inherit;
-  transition: background .12s;
-}
-.rem1-card-dropdown-item:active { background: var(--bg2); }
-.rem1-card-dropdown-item.danger { color: var(--red); }
-.rem1-card-dropdown-item + .rem1-card-dropdown-item {
-  border-top: 1px solid var(--bg2);
-}
-
 /* -- Modal overlay -- */
 .rem1-modal-overlay {
   position: fixed;
