@@ -285,7 +285,8 @@ function _formatRemTime(iso) {
     const mo = String(dt.getMonth()+1).padStart(2,'0');
     const yr = dt.getFullYear();
     const yrSuffix = (yr === now.getFullYear()) ? '' : `.${yr}`;
-    return `${d}.${mo}${yrSuffix} ${timeStr}`;
+    const sep = yrSuffix ? ' - ' : ' ';
+    return `${d}.${mo}${yrSuffix}${sep}${timeStr}`;
   } catch(e) { return ''; }
 }
 
