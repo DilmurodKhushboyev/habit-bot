@@ -109,7 +109,7 @@ function _renderRemCard(r) {
   return `
     <div class="rem1-card" id="rem1-card-${r._id}">
       <div class="rem1-actions-bg">
-        <button class="rem1-swipe-btn rem1-swipe-edit" onclick="event.stopPropagation();editReminderPlaceholder('${r._id}')" type="button">
+        <button class="rem1-swipe-btn rem1-swipe-edit" onclick="event.stopPropagation();editReminder('${r._id}')" type="button">
           <svg width="18" height="18" viewBox="0 0 26 26" fill="none"><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="#fff" opacity="0.9"/></svg>
           <span>${S('today','rem_edit_btn')}</span>
         </button>
@@ -233,10 +233,26 @@ function closeAllRem1Swipes(except) {
   });
 }
 
-// ── TAHRIRLASH: hozircha placeholder (Bosqich 2 da to'liq qo'shiladi) ──
-function editReminderPlaceholder(rid) {
-  _showTodayToast(S('today','rem_edit_coming_soon'), 'err');
-  try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning'); } catch(e) {}
+// ── TAHRIRLASH: cache'dan reminder topib edit modal ochadi ──
+function editReminder(rid) {
+  // Avval swipe yopilsin
+  closeAllRem1Swipes();
+  // Cache'dan reminder topish
+  const rem = (_cachedReminders || []).find(r => String(r._id) === String(rid));
+  if (!rem) {
+    _showTodayToast(S('rem_modal','err_generic'), 'err');
+    return;
+  }
+  // Faqat pending va kelajakdagi eslatmalarni edit qilish mumkin
+  const isPending = rem.status === 'pending';
+  const isFuture  = rem.remind_at && (new Date(rem.remind_at).getTime() - Date.now() >= -60000);
+  if (!isPending || !isFuture) {
+    _showTodayToast(S('rem_modal','err_expired'), 'err');
+    try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning'); } catch(e) {}
+    return;
+  }
+  // Edit rejimida modalni ochish
+  openReminderModal(rem);
 }
 
 // Tashqariga bosilganda swipe ochiq bo'lsa yopish
@@ -319,11 +335,22 @@ async function deleteReminder(rid) {
 }
 
 // ── YARATISH MODALI ──
-function openReminderModal() {
-  // Default vaqt: hozirdan +1 soat, dumaloq 00 daqiqa
-  const now = new Date();
-  const def = new Date(now.getTime() + 60*60*1000);
-  def.setMinutes(0, 0, 0);
+// Edit rejimida joriy reminder ID si (null = yangi yaratish)
+let _editingReminderId = null;
+
+function openReminderModal(existing) {
+  _editingReminderId = existing ? String(existing._id) : null;
+
+  // Default vaqt: hozirdan +1 soat, dumaloq 00 daqiqa (yangi uchun)
+  // Edit holatida: mavjud remind_at ishlatiladi
+  let def;
+  if (existing && existing.remind_at) {
+    def = new Date(existing.remind_at);
+    if (isNaN(def.getTime())) def = new Date(Date.now() + 60*60*1000);
+  } else {
+    def = new Date(Date.now() + 60*60*1000);
+    def.setMinutes(0, 0, 0);
+  }
   const hh = String(def.getHours()).padStart(2,'0');
   const mm = String(def.getMinutes()).padStart(2,'0');
   const timeStr = `${hh}:${mm}`;
@@ -331,6 +358,13 @@ function openReminderModal() {
   const MM   = String(def.getMonth()+1).padStart(2,'0');
   const yyyy = def.getFullYear();
   const dateStr = `${yyyy}-${MM}-${dd}`;
+
+  // Edit/yaratish rejimiga qarab matnlar
+  const isEdit       = !!existing;
+  const titleText    = isEdit ? S('rem_modal','title_edit') : S('rem_modal','title');
+  const saveBtnText  = isEdit ? S('rem_modal','save_edit')  : S('rem_modal','save');
+  const initialText  = (existing && existing.text) ? _escRemHtml(existing.text) : '';
+  const initialCount = (existing && existing.text) ? (existing.text.length) : 0;
 
   const overlay = document.createElement('div');
   overlay.className = 'rem1-modal-overlay show';
@@ -341,11 +375,11 @@ function openReminderModal() {
       <button class="rem1-modal-close" onclick="closeReminderModal()" type="button" aria-label="close">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
       </button>
-      <div class="rem1-modal-title">${S('rem_modal','title')}</div>
+      <div class="rem1-modal-title">${titleText}</div>
 
       <label class="rem1-modal-label">${S('rem_modal','text_label')}</label>
-      <textarea class="rem1-modal-input rem1-modal-textarea" id="rem-text-inp" maxlength="200" placeholder="${S('rem_modal','text_ph')}" oninput="_updateRemCharCount()"></textarea>
-      <div class="rem1-char-count"><span id="rem-char-cnt">0</span>/200</div>
+      <textarea class="rem1-modal-input rem1-modal-textarea" id="rem-text-inp" maxlength="200" placeholder="${S('rem_modal','text_ph')}" oninput="_updateRemCharCount()">${initialText}</textarea>
+      <div class="rem1-char-count"><span id="rem-char-cnt">${initialCount}</span>/200</div>
 
       <label class="rem1-modal-label">${S('rem_modal','date_label')}</label>
       <input class="rem1-modal-input" type="date" id="rem-date-f" value="${dateStr}">
@@ -353,7 +387,7 @@ function openReminderModal() {
       <input class="rem1-modal-input" type="time" id="rem-time-f" value="${timeStr}">
 
       <div class="rem1-modal-actions">
-        <button class="save-btn" id="rem-save-btn" onclick="saveReminder()" type="button">${S('rem_modal','save')}</button>
+        <button class="save-btn" id="rem-save-btn" onclick="saveReminder()" type="button">${saveBtnText}</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -363,6 +397,7 @@ function openReminderModal() {
 function closeReminderModal() {
   const el = document.getElementById('rem1-modal');
   if (el) el.remove();
+  _editingReminderId = null;  // Edit holatini tozalash
 }
 
 function _updateRemCharCount() {
@@ -371,7 +406,7 @@ function _updateRemCharCount() {
   if (el && cnt) cnt.textContent = (el.value || '').length;
 }
 
-// ── SAQLASH ──
+// ── SAQLASH (yaratish yoki yangilash) ──
 async function saveReminder() {
   const textEl = document.getElementById('rem-text-inp');
   const text = (textEl && textEl.value || '').trim();
@@ -398,20 +433,38 @@ async function saveReminder() {
   const saveBtn = document.getElementById('rem-save-btn');
   if (saveBtn) saveBtn.disabled = true;
 
+  // Edit yoki yaratish?
+  const isEdit = !!_editingReminderId;
+  const path   = isEdit ? `reminders/${userId}/${_editingReminderId}` : `reminders/${userId}`;
+  const method = isEdit ? 'PUT' : 'POST';
+  const okMsgKey = isEdit ? 'ok_updated' : 'ok_created';
+
   try {
-    const r = await _remFetch(`reminders/${userId}`, {
-      method: 'POST',
+    const r = await _remFetch(path, {
+      method: method,
       body: JSON.stringify({ text: text, remind_at: remindAt })
     });
     if (r.ok && r.body && r.body.ok) {
       closeReminderModal();
-      _showTodayToast(S('rem_modal','ok_created'), 'ok');
+      _showTodayToast(S('rem_modal', okMsgKey), 'ok');
       loaded.today = false;
       loadToday();
     } else {
       const errKey = (r.body && r.body.error) ? r.body.error : ('http_' + r.status);
-      alert(S('rem_modal','err_generic') + ' (' + errKey + ')');
-      if (saveBtn) saveBtn.disabled = false;
+      // Backend "expired" error → maxsus toast
+      if (errKey === 'expired') {
+        closeReminderModal();
+        _showTodayToast(S('rem_modal','err_expired'), 'err');
+        try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning'); } catch(e) {}
+        loaded.today = false;
+        loadToday();
+      } else if (errKey === 'past_time') {
+        alert(S('rem_modal','err_past'));
+        if (saveBtn) saveBtn.disabled = false;
+      } else {
+        alert(S('rem_modal','err_generic') + ' (' + errKey + ')');
+        if (saveBtn) saveBtn.disabled = false;
+      }
     }
   } catch(e) {
     console.error('[rem] save error:', e);
