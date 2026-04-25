@@ -193,6 +193,9 @@ function openReminderModal() {
   overlay.onclick = function(e) { if (e.target === overlay) closeReminderModal(); };
   overlay.innerHTML = `
     <div class="rem1-modal-box" onclick="event.stopPropagation()">
+      <button class="rem1-modal-close" onclick="closeReminderModal()" type="button" aria-label="close">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </button>
       <div class="rem1-modal-title">${S('rem_modal','title')}</div>
 
       <label class="rem1-modal-label">${S('rem_modal','text_label')}</label>
@@ -205,7 +208,6 @@ function openReminderModal() {
       <input class="rem1-modal-input" type="time" id="rem-time-f" value="${timeStr}">
 
       <div class="rem1-modal-actions">
-        <button class="rem1-modal-cancel" onclick="closeReminderModal()" type="button">${S('rem_modal','cancel')}</button>
         <button class="rem1-modal-save" id="rem-save-btn" onclick="saveReminder()" type="button">${S('rem_modal','save')}</button>
       </div>
     </div>`;
