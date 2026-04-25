@@ -22,11 +22,13 @@ try:
     from flask_routes_core import register_core_routes
     from flask_routes_data import register_data_routes
     from flask_routes_extra import register_extra_routes
+    from flask_routes_reminders import register_reminders_routes
 
     register_helpers(api_app)
     register_core_routes(api_app)
     register_data_routes(api_app)
     register_extra_routes(api_app)
+    register_reminders_routes(api_app)
 
     def run_api():
         port = int(os.environ.get("PORT", 8080))

@@ -15,7 +15,8 @@ from texts import LANGS
 from bot_setup import bot, get_bot_username
 from achievements import _ACHIEVEMENTS as ACHIEVEMENTS
 from flask_helpers import (require_auth, rate_limit_check, _tz_today,
-                           _is_done_today, _calc_best_streak)
+                           _is_done_today, _calc_best_streak,
+                           get_init_tg_first_name)
 
 
 def register_core_routes(app):
@@ -29,6 +30,24 @@ def register_core_routes(app):
         sort_by = request.args.get("sort", "points")   # points | streak | score
         period  = request.args.get("period", "month")  # month | week | all
         uid_arg = request.args.get("uid", "0")
+
+        # ── Auto-save: Telegram'dan kelgan haqiqiy first_name ni DB'ga yozish ──
+        # Sabab: foydalanuvchi /start bosmasdan toʻgʻridan-toʻgʻri WebApp'ga
+        # kirsa, DB'da "name" boʻsh qoladi va reytingda "?" koʻrinadi.
+        # Yechim: agar DB'da ism boʻsh boʻlsa VA initData'da first_name bor
+        # boʻlsa — yozamiz. Telegram'da ham ism boʻsh boʻlsa — tegmaymiz
+        # (maxfiylikni saqlash). initData HMAC tasdiqlangan — ishonchli manba.
+        try:
+            caller_uid_hdr = int(request.headers.get("X-User-Id", 0))
+        except Exception:
+            caller_uid_hdr = 0
+        if caller_uid_hdr:
+            _caller = load_user(caller_uid_hdr)
+            if _caller and not (_caller.get("name") or "").strip():
+                _tg_name = get_init_tg_first_name()
+                if _tg_name:
+                    _caller["name"] = _tg_name
+                    save_user(caller_uid_hdr, _caller)
 
         today_dt  = _tz_today()
         today_str = today_dt.strftime("%Y-%m-%d")
@@ -158,6 +177,12 @@ def register_core_routes(app):
     @require_auth
     def api_profile(uid):
         u = load_user(uid)
+        # ── Auto-save: Telegram first_name (§25 — isoh /api/rating'da) ──
+        if u and not (u.get("name") or "").strip():
+            _tg_name = get_init_tg_first_name()
+            if _tg_name:
+                u["name"] = _tg_name
+                save_user(uid, u)
         # Rank: load_all_users o'rniga tez MongoDB so'rov
         my_points  = u.get("points", 0)
         rank       = mongo_col.count_documents({

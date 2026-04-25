@@ -1,7 +1,11 @@
 // ── BUGUN ──
 async function loadToday() {
   try {
-    const d = await apiFetch(`today/${userId}`);
+    // Today va eslatmalarni parallel yuklash (tezlik uchun)
+    const [d, _] = await Promise.all([
+      apiFetch(`today/${userId}`),
+      loadReminderCards()  // _cachedReminders ni yangilaydi
+    ]);
     data.today = d;
     if (d.lang && d.lang !== currentLang) {
       currentLang = d.lang;
@@ -132,23 +136,25 @@ function renderToday(d) {
       <div style="display:flex;justify-content:center;gap:24px;align-items:center;margin:16px 0 4px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
           <div class="prog-ring-wrap" style="margin:0" id="prog-ring">${ringHTML(percent)}</div>
-          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">${S('today','habit_label')}</div>
+          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px" id="habit-label">${S('today','habit_label')} ${done_count}/${total}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
           <div class="prog-ring-wrap" style="margin:0" id="jon-ring">${jonRingHTML(currentJon)}</div>
           <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">${S('today','life_label')}</div>
         </div>
       </div>
-      <div class="today-sub" id="prog-sub">${done_count} / ${total} ${S('today','progress_sub')}</div>
     </div>
 
-    <div style="display:flex;gap:8px;justify-content:center;margin:14px 0 6px">
+    <div style="display:flex;gap:8px;justify-content:center;margin:14px 0 6px;flex-wrap:wrap">
       <button onclick="openAddFromToday()" type="button" class="today-add-btn">${S('today','add_habit')}</button>
+      <button onclick="openReminderModal()" type="button" class="today-add-rem-btn">${S('today','add_reminder')}</button>
     </div>
 
     <div class="section-title">${S('today','section_title')}</div>
-    <div style="font-size:11px;color:var(--sub);margin:-6px 0 10px 2px">${S('today','tap_hint')}</div>
     ${cardsHtml || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>' + S('msg','no_habits_yet') + '</div>'}
+
+    ${renderReminderSections(_cachedReminders)}
+
     <div class="toast" id="toast-today"></div>`;
 
   // Swipe handlerlarni ulash
@@ -239,8 +245,8 @@ async function checkin(hid, cardEl) {
       const pct = data.today.total ? Math.round(data.today.done_count / data.today.total * 100) : 0;
       const ringEl = document.getElementById('prog-ring');
       if (ringEl) ringEl.innerHTML = ringHTML(pct);
-      const subEl = document.getElementById('prog-sub');
-      if (subEl) subEl.textContent = `${data.today.done_count} / ${data.today.total} ${S('today','progress_sub')}`;
+      const labelEl = document.getElementById('habit-label');
+      if (labelEl) labelEl.textContent = `${S('today','habit_label')} ${data.today.done_count}/${data.today.total}`;
       if (habit) { habit.done = isDone; habit.streak = result.streak; }
     }
 
@@ -742,8 +748,7 @@ function checkinFromFront(hid, frontEl) {
     return;
   }
   if (_checkinSwiped) { _checkinSwiped = false; return; }
-  const card = document.getElementById('ccard-' + hid);
-  if (card) checkin(hid, card);
+  // Checkin faqat ✓ tugma orqali bo'ladi (kartning boshqa joyiga bosish hech narsa qilmaydi)
 }
 
 function _initCheckinSwipe() {

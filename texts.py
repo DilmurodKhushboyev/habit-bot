@@ -151,6 +151,14 @@ LANGS = {
         "shield_used_title":      "🛡 *Streak himoyangiz ishlatildi!*",
         "shield_used_body":       "*🔥 Saqlangan streaklar:* {count} ta odat\n*🛡 Qolgan himoyalar:* {remaining} ta",
         "shield_skipped":         "❌ *Streaklar nollandi.*\n\n🛡 Himoyangiz saqlanib qoldi — keyingi safar ishlatishingiz mumkin!",
+
+        # ── ESLATMALAR (bir martalik) ──
+        "rem_notif_title":        "⏰ *Eslatma!*",
+        "rem_btn_done":           "✅ Bajardim (+2)",
+        "rem_btn_skip":           "❌ O'tkazib yuborish",
+        "rem_done_toast":         "🎉 Ajoyib! *+{pts} ball* qo'shildi.",
+        "rem_skipped_toast":      "❌ Eslatma o'tkazib yuborildi.",
+        "rem_expired":            "⏳ *Eslatma muddati o'tdi.*",
     },
     "en": {
         "choose_lang":       "🌐 Choose language:",
@@ -299,6 +307,14 @@ LANGS = {
         "shield_used_title":      "🛡 *Streak shield activated!*",
         "shield_used_body":       "*🔥 Streaks saved:* {count} habit(s)\n*🛡 Shields left:* {remaining}",
         "shield_skipped":         "❌ *Streaks reset.*\n\n🛡 Your shield is saved — you can use it next time!",
+
+        # ── REMINDERS (one-time) ──
+        "rem_notif_title":        "⏰ *Reminder!*",
+        "rem_btn_done":           "✅ Done (+2)",
+        "rem_btn_skip":           "❌ Skip",
+        "rem_done_toast":         "🎉 Great! *+{pts} points* added.",
+        "rem_skipped_toast":      "❌ Reminder skipped.",
+        "rem_expired":            "⏳ *Reminder expired.*",
     },
     "ru": {
         "choose_lang":       "🌐 Выберите язык:",
@@ -447,6 +463,14 @@ LANGS = {
         "shield_used_title":      "🛡 *Защита стрика активирована!*",
         "shield_used_body":       "*🔥 Сохранено стриков:* {count} привычек\n*🛡 Осталось защит:* {remaining}",
         "shield_skipped":         "❌ *Стрики обнулены.*\n\n🛡 Защита сохранилась — используйте её в следующий раз!",
+
+        # ── НАПОМИНАНИЯ (одноразовые) ──
+        "rem_notif_title":        "⏰ *Напоминание!*",
+        "rem_btn_done":           "✅ Выполнил (+2)",
+        "rem_btn_skip":           "❌ Пропустить",
+        "rem_done_toast":         "🎉 Отлично! *+{pts} баллов* добавлено.",
+        "rem_skipped_toast":      "❌ Напоминание пропущено.",
+        "rem_expired":            "⏳ *Срок напоминания истёк.*",
     },
 }
 

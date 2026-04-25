@@ -37,7 +37,7 @@ let   userId   = user.id || 0;
 const API      = window.location.origin + '/api';
 
 // ── STATE ──
-let loaded = { today: false, profile: false, habits: false, stats: false, achievements: false, reminders: false, bozor: false };
+let loaded = { today: false, profile: false, habits: false, stats: false, achievements: false, reminders: false, my_reminders: false, bozor: false };
 let data   = {};
 
 // ── HEADER BALL SINXRON YANGILASH ──
@@ -314,9 +314,15 @@ function switchTab(tab, el) {
   _prevTab = _curTab;
   _curTab  = tab;
   // Ichki sahifalarda orqa tugma
-  const backPages = ['achievements','reminders'];
+  const backPages = ['achievements','reminders','my_reminders'];
   const backBar   = document.getElementById('back-bar');
   if (backBar) backBar.style.display = backPages.includes(tab) ? 'flex' : 'none';
+  // Nav-bell sharini faqat Today tabida ko'rsatish
+  const bellSphere = document.getElementById('nav-bell-sphere');
+  if (bellSphere) {
+    if (tab === 'today') bellSphere.classList.add('visible');
+    else                 bellSphere.classList.remove('visible');
+  }
   // Nav ball
   var navTarget = el || document.getElementById('nav-' + tab);
   if (navTarget) moveNavBall(navTarget, true);
@@ -339,6 +345,7 @@ async function loadTab(tab) {
     if (tab === 'stats')        await loadStats();
     if (tab === 'achievements') await loadAchievements();
     if (tab === 'reminders')    await loadReminders();
+    if (tab === 'my_reminders') await loadMyReminders();
     if (tab === 'profile')      await loadProfile();
     if (tab === 'habits')       await loadStatsPage();
     if (tab === 'bozor') {
@@ -412,6 +419,12 @@ function jonRingHTML(jon, size = 80) {
 document.addEventListener('DOMContentLoaded', function() {
   var firstActive = document.querySelector('.nav-item.active');
   if (firstActive) setTimeout(function() { moveNavBall(firstActive, false); }, 80);
+  // Startup'da Today faol — nav-bell sharini ko'rsatish
+  var bellSphere = document.getElementById('nav-bell-sphere');
+  if (bellSphere) {
+    var activeTab = (document.querySelector('.nav-item.active') || {}).id || '';
+    if (activeTab === 'nav-today') bellSphere.classList.add('visible');
+  }
 });
 window.addEventListener('resize', function() {
   var act = document.querySelector('.nav-item.active');

@@ -23,6 +23,7 @@ from callbacks_habits import handle_habits_callbacks
 from callbacks_menu import handle_menu_callbacks
 from callbacks_groups import handle_group_callbacks
 from callbacks_shop import handle_shop_callbacks
+from callbacks_reminders import handle_reminder_callbacks
 
 
 @bot.callback_query_handler(func=lambda c: True)
@@ -166,3 +167,4 @@ def callback_handler(call):
     if handle_menu_callbacks(call, uid, cdata, u): return
     if handle_group_callbacks(call, uid, cdata, u): return
     if handle_shop_callbacks(call, uid, cdata, u): return
+    if handle_reminder_callbacks(call, uid, cdata, u): return

@@ -29,9 +29,10 @@ mongo_client = MongoClient(
     maxIdleTimeMS=30000,             # YANGI: 30s ishlatilmagan ulanishni yopadi (Atlas M0 uchun)
     heartbeatFrequencyMS=10000,      # YANGI: 10s da bir ulanish tekshiruvi (cluster uyg'oq turadi)
 )
-mongo_db   = mongo_client.get_default_database()
-mongo_col  = mongo_db["users"]
-groups_col = mongo_db["groups"]
+mongo_db      = mongo_client.get_default_database()
+mongo_col     = mongo_db["users"]
+groups_col    = mongo_db["groups"]
+reminders_col = mongo_db["reminders"]
 
 # -- MongoDB indekslar (bot ishga tushganda bir marta) --
 try:
@@ -39,6 +40,8 @@ try:
     mongo_col.create_index([("streak", DESCENDING)], name="idx_streak",  background=True)
     mongo_col.create_index([("name",   ASCENDING)],  name="idx_name",    background=True)
     groups_col.create_index([("members", ASCENDING)], name="idx_members", background=True)
+    reminders_col.create_index([("user_id", ASCENDING), ("status", ASCENDING)], name="idx_user_status", background=True)
+    reminders_col.create_index([("remind_at", ASCENDING)], name="idx_remind_at", background=True)
 except Exception as _e:
     print(f"[warn] MongoDB indeks yaratishda xato: {_e}")
 
@@ -107,3 +110,10 @@ SHOP_BONUS_EFFECTS = {
     # ── CAR: ball bonus + vizual status ──
     "car_sport":   {"type": "points_percent", "value": 8},   # +8% har bir checkin ball'iga + reytingda gold ramka
 }
+
+# ============================================================
+#  ESLATMALAR (bir martalik, odatlardan ajratilgan)
+# ============================================================
+REMINDER_COMPLETE_POINTS = 2              # Eslatma bajarilganda beriladigan ball
+REMINDER_JOB_PREFIX      = "reminder_"    # schedule job tag prefix (SYSTEM_JOB_TAGS bilan konflikt yo'q)
+REMINDER_MAX_TEXT_LEN    = 200            # Eslatma matnining maksimal uzunligi (profil bio bilan bir xil)
