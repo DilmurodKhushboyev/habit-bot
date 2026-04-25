@@ -67,7 +67,7 @@ def send_one_time_reminder(reminder_id):
 
     # Xabar matni
     title   = T(user_id, "rem_notif_title")   # "⏰ Eslatma!"
-    note    = T(user_id, "rem_notif_body")    # "💪 Endi eslatma vaqti! ..."
+    note    = T(user_id, "rem_notif_body")    # "💡 Bu vazifani bajardingizmi?"
     body    = f"{title}\n\n*{text}*\n\n{note}"
 
     # Inline tugmalar — bir qatorda (row_width=2), Bot API 9.4 ranglar

@@ -153,8 +153,8 @@ LANGS = {
         "shield_skipped":         "❌ *Streaklar nollandi.*\n\n🛡 Himoyangiz saqlanib qoldi — keyingi safar ishlatishingiz mumkin!",
 
         # ── ESLATMALAR (bir martalik) ──
-        "rem_notif_title":        "⏰ *Eslatma!*",
-        "rem_notif_body":         "💡 Eslatma vaqti! Bu vazifani bajardingizmi?",
+        "rem_notif_title":        "⏰ *Eslatma vaqti!*",
+        "rem_notif_body":         "💡 Bu vazifani bajardingizmi?",
         "rem_btn_done":           "✅ Bajardim",
         "rem_btn_skip":           "❌ Bajarmadim",
         "rem_done_toast":         "🎉 Ajoyib! *+{pts} ball* qo'shildi.",
@@ -310,8 +310,8 @@ LANGS = {
         "shield_skipped":         "❌ *Streaks reset.*\n\n🛡 Your shield is saved — you can use it next time!",
 
         # ── REMINDERS (one-time) ──
-        "rem_notif_title":        "⏰ *Reminder!*",
-        "rem_notif_body":         "💡 Reminder time! Did you complete this task?",
+        "rem_notif_title":        "⏰ *Reminder time!*",
+        "rem_notif_body":         "💡 Did you complete this task?",
         "rem_btn_done":           "✅ Done",
         "rem_btn_skip":           "❌ Didn't do",
         "rem_done_toast":         "🎉 Great! *+{pts} points* added.",
@@ -467,8 +467,8 @@ LANGS = {
         "shield_skipped":         "❌ *Стрики обнулены.*\n\n🛡 Защита сохранилась — используйте её в следующий раз!",
 
         # ── НАПОМИНАНИЯ (одноразовые) ──
-        "rem_notif_title":        "⏰ *Напоминание!*",
-        "rem_notif_body":         "💡 Время напоминания! Вы выполнили эту задачу?",
+        "rem_notif_title":        "⏰ *Время напоминания!*",
+        "rem_notif_body":         "💡 Вы выполнили эту задачу?",
         "rem_btn_done":           "✅ Выполнил",
         "rem_btn_skip":           "❌ Не выполнил",
         "rem_done_toast":         "🎉 Отлично! *+{pts} баллов* добавлено.",
