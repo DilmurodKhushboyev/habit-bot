@@ -70,16 +70,18 @@ def send_one_time_reminder(reminder_id):
     note    = T(user_id, "rem_notif_body")    # "💪 Endi eslatma vaqti! ..."
     body    = f"{title}\n\n*{text}*\n\n{note}"
 
-    # Inline tugmalar — ustun shaklida (row_width=1)
-    kb = InlineKeyboardMarkup(row_width=1)
-    kb.add(InlineKeyboardButton(
-        T(user_id, "rem_btn_done"),          # "✅ Bajardim"
-        callback_data=f"remdone_{reminder_id}"
-    ))
-    kb.add(InlineKeyboardButton(
-        T(user_id, "rem_btn_skip"),          # "❌ Bajarmadim"
-        callback_data=f"remskip_{reminder_id}"
-    ))
+    # Inline tugmalar — bir qatorda (row_width=2)
+    kb = InlineKeyboardMarkup(row_width=2)
+    kb.add(
+        InlineKeyboardButton(
+            T(user_id, "rem_btn_done"),          # "✅ Bajardim"
+            callback_data=f"remdone_{reminder_id}"
+        ),
+        InlineKeyboardButton(
+            T(user_id, "rem_btn_skip"),          # "❌ Bajarmadim"
+            callback_data=f"remskip_{reminder_id}"
+        )
+    )
 
     try:
         msg = bot.send_message(

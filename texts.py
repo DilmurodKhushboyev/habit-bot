@@ -154,7 +154,7 @@ LANGS = {
 
         # ── ESLATMALAR (bir martalik) ──
         "rem_notif_title":        "⏰ *Eslatma!*",
-        "rem_notif_body":         "💪 Endi eslatma vaqti! Ushbu vazifani bajardingizmi?",
+        "rem_notif_body":         "💡 Eslatma vaqti! Bu vazifani bajardingizmi?",
         "rem_btn_done":           "✅ Bajardim",
         "rem_btn_skip":           "❌ Bajarmadim",
         "rem_done_toast":         "🎉 Ajoyib! *+{pts} ball* qo'shildi.",
@@ -311,7 +311,7 @@ LANGS = {
 
         # ── REMINDERS (one-time) ──
         "rem_notif_title":        "⏰ *Reminder!*",
-        "rem_notif_body":         "💪 It's reminder time! Did you complete this task?",
+        "rem_notif_body":         "💡 Reminder time! Did you complete this task?",
         "rem_btn_done":           "✅ Done",
         "rem_btn_skip":           "❌ Didn't do",
         "rem_done_toast":         "🎉 Great! *+{pts} points* added.",
@@ -468,7 +468,7 @@ LANGS = {
 
         # ── НАПОМИНАНИЯ (одноразовые) ──
         "rem_notif_title":        "⏰ *Напоминание!*",
-        "rem_notif_body":         "💪 Время напоминания! Вы выполнили эту задачу?",
+        "rem_notif_body":         "💡 Время напоминания! Вы выполнили эту задачу?",
         "rem_btn_done":           "✅ Выполнил",
         "rem_btn_skip":           "❌ Не выполнил",
         "rem_done_toast":         "🎉 Отлично! *+{pts} баллов* добавлено.",
