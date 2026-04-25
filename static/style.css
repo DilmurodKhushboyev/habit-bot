@@ -2313,20 +2313,61 @@ body.dark .rem1-section-title-collapsible:active {
 
 /* -- Eslatma kartasi (kichik, neumorphism) -- */
 .rem1-card {
-  background: var(--bg);
+  background: transparent;
   border-radius: 12px;
-  padding: 10px 12px;
   margin-bottom: 6px;
-  box-shadow: var(--sh-sm);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: opacity 0.4s ease, transform 0.3s ease, box-shadow 0.15s ease;
+  position: relative;
+  transition: opacity 0.4s ease, transform 0.3s ease;
 }
 .rem1-card.done-anim {
   opacity: 0;
   transform: scale(0.92);
 }
+
+/* Swipe orqasi — Tahrirlash / O'chirish tugmalari */
+.rem1-actions-bg {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: stretch;
+  z-index: 1;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.rem1-swipe-btn {
+  height: 100%;
+  width: 64px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: opacity .15s;
+}
+.rem1-swipe-edit { background: var(--accent2); color: #fff; }
+.rem1-swipe-del  { background: var(--red);     color: #fff; border-radius: 0 12px 12px 0; }
+
+/* Old qatlam — asosiy kontent (swipe qiluvchi) */
+.rem1-front {
+  position: relative;
+  z-index: 2;
+  background: var(--bg);
+  border-radius: 12px;
+  box-shadow: var(--sh-sm);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform .28s cubic-bezier(.25,.46,.45,.94);
+  will-change: transform;
+}
+.rem1-front.swiped { transform: translateX(-128px); }
+
 .rem1-card-icon {
   width: 32px; height: 32px;
   border-radius: 50%;

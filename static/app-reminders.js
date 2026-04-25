@@ -81,6 +81,8 @@ function renderReminderSections(reminders) {
     </div>`;
     html += `<div class="rem1-upcoming-list collapsed" id="rem1-upcoming-list">${upcomingRems.map(_renderRemCard).join('')}</div>`;
   }
+  // Swipe handlerlarni keyingi tick'da ulash (HTML DOMga inject qilingach)
+  setTimeout(() => _initRem1Swipe(), 60);
   return html;
 }
 
@@ -106,39 +108,51 @@ function _renderRemCard(r) {
   const safeText = _escRemHtml(r.text || '');
   return `
     <div class="rem1-card" id="rem1-card-${r._id}">
-      <div class="rem1-card-icon">
-        <svg width="16" height="16" viewBox="0 0 26 26" fill="none">
-          <defs><linearGradient id="svgBell${r._id}" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5DBE8E"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs>
-          <path d="M13 3C13 3 8 6 8 13v5H5l2 2h12l2-2h-3v-5c0-7-5-10-5-10z" fill="url(#svgBell${r._id})" opacity="0.85"/>
-          <circle cx="13" cy="22" r="1.5" fill="url(#svgBell${r._id})"/>
-        </svg>
-      </div>
-      <div class="rem1-card-body">
-        <div class="rem1-card-text">${safeText}</div>
-        <div class="rem1-card-meta">${timeLabel}</div>
-      </div>
-      <div class="rem1-card-actions">
-        <button class="rem1-card-done-btn" onclick="event.stopPropagation();markReminderDone('${r._id}')" type="button" title="${S('today','rem_done_btn')}">
-          <svg class="rem1-glow-ring" viewBox="0 0 50 50" preserveAspectRatio="xMidYMid meet"><circle class="rem1-glow-circle" cx="25" cy="25" r="23" fill="none" stroke="#4CAF7D" stroke-width="2"/></svg>
-          <span class="rem1-done-tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#4CAF7D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div class="rem1-actions-bg">
+        <button class="rem1-swipe-btn rem1-swipe-edit" onclick="event.stopPropagation();editReminderPlaceholder('${r._id}')" type="button">
+          <svg width="18" height="18" viewBox="0 0 26 26" fill="none"><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="#fff" opacity="0.9"/></svg>
+          <span>${S('today','rem_edit_btn')}</span>
         </button>
-        <button class="rem1-card-dots-btn" id="rem1-dots-${r._id}" onclick="event.stopPropagation();toggleRem1Drop('${r._id}')" type="button" aria-label="menu">
-          <svg class="rem1-dots-icon" width="4" height="16" viewBox="0 0 4 16" fill="currentColor"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="8" r="2"/><circle cx="2" cy="14" r="2"/></svg>
-          <svg class="rem1-x-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <button class="rem1-swipe-btn rem1-swipe-del" onclick="event.stopPropagation();deleteReminder('${r._id}')" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          <span>${S('today','rem_del_menu')}</span>
         </button>
-        <div class="rem1-card-dropdown" id="rem1-drop-${r._id}">
-          <button class="rem1-card-dropdown-item" onclick="event.stopPropagation();closeAllRem1Drops();markReminderDone('${r._id}')" type="button">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            ${S('today','rem_done_menu')}
+      </div>
+      <div class="rem1-front" data-rid="${r._id}">
+        <div class="rem1-card-icon">
+          <svg width="16" height="16" viewBox="0 0 26 26" fill="none">
+            <defs><linearGradient id="svgBell${r._id}" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5DBE8E"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs>
+            <path d="M13 3C13 3 8 6 8 13v5H5l2 2h12l2-2h-3v-5c0-7-5-10-5-10z" fill="url(#svgBell${r._id})" opacity="0.85"/>
+            <circle cx="13" cy="22" r="1.5" fill="url(#svgBell${r._id})"/>
+          </svg>
+        </div>
+        <div class="rem1-card-body">
+          <div class="rem1-card-text">${safeText}</div>
+          <div class="rem1-card-meta">${timeLabel}</div>
+        </div>
+        <div class="rem1-card-actions">
+          <button class="rem1-card-done-btn" onclick="event.stopPropagation();markReminderDone('${r._id}')" type="button" title="${S('today','rem_done_btn')}">
+            <svg class="rem1-glow-ring" viewBox="0 0 50 50" preserveAspectRatio="xMidYMid meet"><circle class="rem1-glow-circle" cx="25" cy="25" r="23" fill="none" stroke="#4CAF7D" stroke-width="2"/></svg>
+            <span class="rem1-done-tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#4CAF7D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           </button>
-          <button class="rem1-card-dropdown-item" onclick="event.stopPropagation();closeAllRem1Drops();editReminderPlaceholder('${r._id}')" type="button">
-            <svg width="15" height="15" viewBox="0 0 26 26" fill="none"><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="var(--accent2)" opacity="0.85"/></svg>
-            ${S('today','rem_edit_btn')}
+          <button class="rem1-card-dots-btn" id="rem1-dots-${r._id}" onclick="event.stopPropagation();toggleRem1Drop('${r._id}')" type="button" aria-label="menu">
+            <svg class="rem1-dots-icon" width="4" height="16" viewBox="0 0 4 16" fill="currentColor"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="8" r="2"/><circle cx="2" cy="14" r="2"/></svg>
+            <svg class="rem1-x-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
           </button>
-          <button class="rem1-card-dropdown-item danger" onclick="event.stopPropagation();closeAllRem1Drops();deleteReminder('${r._id}')" type="button">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="var(--red)" stroke-width="2" stroke-linecap="round"/></svg>
-            ${S('today','rem_del_menu')}
-          </button>
+          <div class="rem1-card-dropdown" id="rem1-drop-${r._id}">
+            <button class="rem1-card-dropdown-item" onclick="event.stopPropagation();closeAllRem1Drops();markReminderDone('${r._id}')" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              ${S('today','rem_done_menu')}
+            </button>
+            <button class="rem1-card-dropdown-item" onclick="event.stopPropagation();closeAllRem1Drops();editReminderPlaceholder('${r._id}')" type="button">
+              <svg width="15" height="15" viewBox="0 0 26 26" fill="none"><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="var(--accent2)" opacity="0.85"/></svg>
+              ${S('today','rem_edit_btn')}
+            </button>
+            <button class="rem1-card-dropdown-item danger" onclick="event.stopPropagation();closeAllRem1Drops();deleteReminder('${r._id}')" type="button">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="var(--red)" stroke-width="2" stroke-linecap="round"/></svg>
+              ${S('today','rem_del_menu')}
+            </button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -151,6 +165,7 @@ function toggleRem1Drop(rid) {
   if (!drop) return;
   const wasOpen = drop.classList.contains('open');
   closeAllRem1Drops();
+  closeAllRem1Swipes();  // dropdown ochilganda boshqa swipe yopilsin
   if (!wasOpen) {
     drop.classList.add('open');
     if (dotsBtn) dotsBtn.classList.add('is-x');
@@ -161,6 +176,78 @@ function toggleRem1Drop(rid) {
 function closeAllRem1Drops() {
   document.querySelectorAll('.rem1-card-dropdown.open').forEach(d => d.classList.remove('open'));
   document.querySelectorAll('.rem1-card-dots-btn.is-x').forEach(b => b.classList.remove('is-x'));
+}
+
+// ── SWIPE: chap tomonga siljitish (odat kartochkasi pattern'iga moslashtirilgan) ──
+function _initRem1Swipe() {
+  document.querySelectorAll('.rem1-front').forEach(front => {
+    if (front.dataset.swipeInit === '1') return;  // double-bind oldini olish
+    front.dataset.swipeInit = '1';
+    let startX = 0, curX = 0, swiping = false, startY = 0, locked = false;
+
+    front.addEventListener('touchstart', e => {
+      closeAllRem1Drops();
+      closeAllRem1Swipes(front);
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      curX = 0; swiping = true; locked = false;
+      front.style.transition = 'none';
+    }, {passive: true});
+
+    front.addEventListener('touchmove', e => {
+      if (!swiping) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      // Yo'nalish qulflash: birinchi g'olib yo'nalish (8px threshold)
+      if (!locked) {
+        if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) {
+          swiping = false; front.style.transition = ''; front.style.transform = ''; return;
+        }
+        if (Math.abs(dx) > 8) locked = true;
+      }
+      // Gorizontal qulflangach — vertikal scrollni to'xtatish
+      if (locked && e.cancelable) e.preventDefault();
+      curX = dx;
+      if (curX > 0) curX = 0;
+      if (curX < -130) curX = -130;
+      front.style.transform = 'translateX(' + curX + 'px)';
+    }, {passive: false});
+
+    front.addEventListener('touchend', () => {
+      if (!swiping) return;
+      swiping = false;
+      front.style.transition = '';
+      // Harakat (swipe) bo'lmagan bo'lsa — tap, swiped holatga tegmaslik
+      if (!locked) {
+        front.style.transform = '';
+        return;
+      }
+      const rid = front.getAttribute('data-rid');
+      const dotsBtn = rid ? document.getElementById('rem1-dots-' + rid) : null;
+      if (curX < -50) {
+        front.classList.add('swiped');
+        if (dotsBtn) dotsBtn.classList.add('is-x'); // ⋮ → ✕
+      } else {
+        front.classList.remove('swiped');
+        if (dotsBtn) dotsBtn.classList.remove('is-x'); // ✕ → ⋮
+      }
+      front.style.transform = '';
+    });
+  });
+}
+
+function closeAllRem1Swipes(except) {
+  document.querySelectorAll('.rem1-front.swiped').forEach(f => {
+    if (f !== except) {
+      f.classList.remove('swiped');
+      // 3-nuqta tugmasini ham vizual reset qilamiz (✕ → ⋮)
+      const card = f.closest('.rem1-card');
+      if (card) {
+        const btn = card.querySelector('.rem1-card-dots-btn.is-x');
+        if (btn) btn.classList.remove('is-x');
+      }
+    }
+  });
 }
 
 // ── TAHRIRLASH: hozircha placeholder (Bosqich 2 da to'liq qo'shiladi) ──
@@ -174,6 +261,10 @@ document.addEventListener('click', function(e) {
   // Agar dots tugma yoki dropdown ichida bosilmagan bo'lsa — yopamiz
   if (!e.target.closest('.rem1-card-dots-btn') && !e.target.closest('.rem1-card-dropdown')) {
     closeAllRem1Drops();
+  }
+  // Swipe ochiq bo'lsa: rem1-card tashqarisiga bosilsa yopiladi
+  if (!e.target.closest('.rem1-card')) {
+    closeAllRem1Swipes();
   }
 });
 
