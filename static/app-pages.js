@@ -136,14 +136,13 @@ function renderToday(d) {
       <div style="display:flex;justify-content:center;gap:24px;align-items:center;margin:16px 0 4px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
           <div class="prog-ring-wrap" style="margin:0" id="prog-ring">${ringHTML(percent)}</div>
-          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">${S('today','habit_label')}</div>
+          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px" id="habit-label">${S('today','habit_label')} ${done_count}/${total}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
           <div class="prog-ring-wrap" style="margin:0" id="jon-ring">${jonRingHTML(currentJon)}</div>
           <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">${S('today','life_label')}</div>
         </div>
       </div>
-      <div class="today-sub" id="prog-sub">${done_count} / ${total} ${S('today','progress_sub')}</div>
     </div>
 
     <div style="display:flex;gap:8px;justify-content:center;margin:14px 0 6px;flex-wrap:wrap">
@@ -246,8 +245,8 @@ async function checkin(hid, cardEl) {
       const pct = data.today.total ? Math.round(data.today.done_count / data.today.total * 100) : 0;
       const ringEl = document.getElementById('prog-ring');
       if (ringEl) ringEl.innerHTML = ringHTML(pct);
-      const subEl = document.getElementById('prog-sub');
-      if (subEl) subEl.textContent = `${data.today.done_count} / ${data.today.total} ${S('today','progress_sub')}`;
+      const labelEl = document.getElementById('habit-label');
+      if (labelEl) labelEl.textContent = `${S('today','habit_label')} ${data.today.done_count}/${data.today.total}`;
       if (habit) { habit.done = isDone; habit.streak = result.streak; }
     }
 
