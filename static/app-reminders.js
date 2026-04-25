@@ -208,7 +208,7 @@ function openReminderModal() {
       <input class="rem1-modal-input" type="time" id="rem-time-f" value="${timeStr}">
 
       <div class="rem1-modal-actions">
-        <button class="rem1-modal-save" id="rem-save-btn" onclick="saveReminder()" type="button">${S('rem_modal','save')}</button>
+        <button class="save-btn" id="rem-save-btn" onclick="saveReminder()" type="button">${S('rem_modal','save')}</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
