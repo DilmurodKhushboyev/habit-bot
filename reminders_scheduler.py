@@ -67,18 +67,24 @@ def send_one_time_reminder(reminder_id):
 
     # Xabar matni
     title   = T(user_id, "rem_notif_title")   # "⏰ Eslatma!"
-    body    = f"{title}\n\n*{text}*"
+    note    = T(user_id, "rem_notif_body")    # "💡 Bu vazifani bajardingizmi?"
+    body    = f"{title}\n\n*{text}*\n\n{note}"
 
-    # Inline tugma: "Bajardim" (+2 ball)
-    kb = InlineKeyboardMarkup()
-    kb.add(InlineKeyboardButton(
-        T(user_id, "rem_btn_done"),          # "✅ Bajardim (+2)"
+    # Inline tugmalar — bir qatorda (row_width=2), Bot API 9.4 ranglar
+    kb = InlineKeyboardMarkup(row_width=2)
+    btn_done = InlineKeyboardButton(
+        T(user_id, "rem_btn_done"),          # "✅ Bajardim"
         callback_data=f"remdone_{reminder_id}"
-    ))
-    kb.add(InlineKeyboardButton(
-        T(user_id, "rem_btn_skip"),          # "❌ O'tkazib yuborish"
+    )
+    btn_skip = InlineKeyboardButton(
+        T(user_id, "rem_btn_skip"),          # "❌ Bajarmadim"
         callback_data=f"remskip_{reminder_id}"
-    ))
+    )
+    # Bot API 9.4 (2026-02-09) — tugma rangi: success=yashil, danger=qizil
+    # Eski client'larda e'tiborga olinmaydi (xato bermaydi)
+    btn_done.style = "success"
+    btn_skip.style = "danger"
+    kb.add(btn_done, btn_skip)
 
     try:
         msg = bot.send_message(

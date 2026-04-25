@@ -129,8 +129,8 @@ def main_menu(uid=None, page=1):
 def done_keyboard(uid, habit_id):
     kb = InlineKeyboardMarkup()
     kb.row(
-        InlineKeyboardButton(T(uid, "btn_done"), callback_data=f"done_{habit_id}"),
-        InlineKeyboardButton(T(uid, "btn_skip"),  callback_data=f"skip_{habit_id}")
+        cBtn(T(uid, "btn_done"), f"done_{habit_id}", "success"),
+        cBtn(T(uid, "btn_skip"), f"skip_{habit_id}", "danger")
     )
     return kb
 
