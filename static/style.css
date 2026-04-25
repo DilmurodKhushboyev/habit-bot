@@ -2299,12 +2299,13 @@ body.dark .rem1-section-title-collapsible:active {
 
 /* -- Keyingi eslatmalar roʻyxati: yopilish/ochilish animatsiyasi -- */
 .rem1-upcoming-list {
-  overflow: hidden;
-  max-height: 2000px;
+  overflow: visible;
+  max-height: 3000px;
   opacity: 1;
   transition: max-height 0.35s ease, opacity 0.25s ease;
 }
 .rem1-upcoming-list.collapsed {
+  overflow: hidden;
   max-height: 0;
   opacity: 0;
   pointer-events: none;
