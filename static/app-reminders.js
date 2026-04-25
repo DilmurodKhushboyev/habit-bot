@@ -283,7 +283,9 @@ function _formatRemTime(iso) {
     if (dtDay.getTime() === tomorrow.getTime()) return `${S('rem_modal','tomorrow_btn')} ${timeStr}`;
     const d = String(dt.getDate()).padStart(2,'0');
     const mo = String(dt.getMonth()+1).padStart(2,'0');
-    return `${d}.${mo} ${timeStr}`;
+    const yr = dt.getFullYear();
+    const yrSuffix = (yr === now.getFullYear()) ? '' : `.${yr}`;
+    return `${d}.${mo}${yrSuffix} ${timeStr}`;
   } catch(e) { return ''; }
 }
 
