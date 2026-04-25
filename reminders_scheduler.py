@@ -67,16 +67,17 @@ def send_one_time_reminder(reminder_id):
 
     # Xabar matni
     title   = T(user_id, "rem_notif_title")   # "⏰ Eslatma!"
-    body    = f"{title}\n\n*{text}*"
+    note    = T(user_id, "rem_notif_body")    # "💪 Endi eslatma vaqti! ..."
+    body    = f"{title}\n\n*{text}*\n\n{note}"
 
-    # Inline tugma: "Bajardim" (+2 ball)
-    kb = InlineKeyboardMarkup()
+    # Inline tugmalar — ustun shaklida (row_width=1)
+    kb = InlineKeyboardMarkup(row_width=1)
     kb.add(InlineKeyboardButton(
-        T(user_id, "rem_btn_done"),          # "✅ Bajardim (+2)"
+        T(user_id, "rem_btn_done"),          # "✅ Bajardim"
         callback_data=f"remdone_{reminder_id}"
     ))
     kb.add(InlineKeyboardButton(
-        T(user_id, "rem_btn_skip"),          # "❌ O'tkazib yuborish"
+        T(user_id, "rem_btn_skip"),          # "❌ Bajarmadim"
         callback_data=f"remskip_{reminder_id}"
     ))
 
