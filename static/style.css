@@ -2313,12 +2313,13 @@ body.dark .rem1-section-title-collapsible:active {
 
 /* -- Eslatma kartasi (kichik, neumorphism) -- */
 .rem1-card {
-  background: transparent;
+  background: var(--bg);
   border-radius: 12px;
   margin-bottom: 6px;
   position: relative;
   overflow: hidden;
-  transition: opacity 0.4s ease, transform 0.3s ease;
+  box-shadow: var(--sh-sm);
+  transition: opacity 0.4s ease, transform 0.3s ease, box-shadow 0.15s ease;
 }
 .rem1-card.done-anim {
   opacity: 0;
@@ -2356,8 +2357,6 @@ body.dark .rem1-section-title-collapsible:active {
   position: relative;
   z-index: 2;
   background: var(--bg);
-  border-radius: 12px;
-  box-shadow: var(--sh-sm);
   padding: 10px 12px;
   display: flex;
   align-items: center;
