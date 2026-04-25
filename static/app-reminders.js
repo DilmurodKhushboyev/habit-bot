@@ -279,8 +279,8 @@ function _formatRemTime(iso) {
     const hh = String(dt.getHours()).padStart(2,'0');
     const mm = String(dt.getMinutes()).padStart(2,'0');
     const timeStr = `${hh}:${mm}`;
-    if (dtDay.getTime() === today.getTime())    return `${S('rem_modal','today_btn')} ${timeStr}`;
-    if (dtDay.getTime() === tomorrow.getTime()) return `${S('rem_modal','tomorrow_btn')} ${timeStr}`;
+    if (dtDay.getTime() === today.getTime())    return `${S('rem_modal','today_btn')}: ${timeStr}`;
+    if (dtDay.getTime() === tomorrow.getTime()) return `${S('rem_modal','tomorrow_btn')}: ${timeStr}`;
     const d = String(dt.getDate()).padStart(2,'0');
     const mo = String(dt.getMonth()+1).padStart(2,'0');
     const yr = dt.getFullYear();
