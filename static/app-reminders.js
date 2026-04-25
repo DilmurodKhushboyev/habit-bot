@@ -71,7 +71,10 @@ function renderReminderSections(reminders) {
   if (upcomingRems.length) {
     // "Keyingi eslatmalar" — default YOPIQ (collapsible), sarlavha bosilsa ochiladi
     html += `<div class="rem1-section-title rem1-section-title-collapsible" onclick="_toggleUpcomingRems()" id="rem1-upcoming-title">
-      <span>${S('today','rem_upcoming_section')}</span>
+      <span class="rem1-section-title-left">
+        <span>${S('today','rem_upcoming_section')}</span>
+        <span class="rem1-section-count">${upcomingRems.length}</span>
+      </span>
       <svg class="rem1-section-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>

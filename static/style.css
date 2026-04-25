@@ -2267,6 +2267,26 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
 body.dark .rem1-section-title-collapsible:active {
   background: rgba(255,255,255,0.04);
 }
+.rem1-section-title-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.rem1-section-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 7px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 10px;
+  letter-spacing: 0;
+  line-height: 1;
+}
 .rem1-section-chevron {
   color: var(--sub);
   transform: rotate(-90deg);
