@@ -5,6 +5,7 @@ Flask API — bir martalik eslatmalar CRUD.
 Endpoints:
   GET    /api/reminders/<uid>           — foydalanuvchi eslatmalari ro'yxati
   POST   /api/reminders/<uid>           — yangi eslatma yaratish
+  PUT    /api/reminders/<uid>/<rid>     — eslatma tahrirlash (faqat pending + kelajak)
   DELETE /api/reminders/<uid>/<rid>     — eslatma o'chirish
   PATCH  /api/reminders/<uid>/<rid>/done — bajarilgan deb belgilash (+2 ball)
 """
@@ -107,6 +108,60 @@ def register_reminders_routes(app):
         return jsonify({
             "ok": True,
             "reminder": _serialize_reminder(doc)
+        })
+
+    @app.route("/api/reminders/<int:uid>/<rid>", methods=["PUT"])
+    @require_auth
+    def api_reminders_update(uid, rid):
+        """Eslatmani tahrirlash. Faqat pending va kelajakdagi eslatmalarni o'zgartirish mumkin.
+        Body: { "text": "...", "remind_at": "2026-04-24T15:30:00Z" }
+        """
+        rem = get_reminder(rid)
+        if not rem:
+            return jsonify({"ok": False, "error": "not_found"}), 404
+        if rem.get("user_id") != int(uid):
+            return jsonify({"ok": False, "error": "forbidden"}), 403
+
+        # Faqat pending eslatmalarni edit qilish mumkin (sent/done/skipped/expired emas)
+        if rem.get("status") != "pending":
+            return jsonify({"ok": False, "error": "expired"}), 400
+
+        # Eski remind_at vaqti o'tib ketgan bo'lsa — edit mumkin emas (60s tolerance)
+        now = datetime.now(timezone.utc)
+        old_remind_at = rem.get("remind_at")
+        if isinstance(old_remind_at, datetime):
+            if old_remind_at.tzinfo is None:
+                old_remind_at = old_remind_at.replace(tzinfo=timezone.utc)
+            if (old_remind_at - now).total_seconds() < -60:
+                return jsonify({"ok": False, "error": "expired"}), 400
+
+        data = request.get_json() or {}
+        text = str(data.get("text", "")).strip()
+        remind_at_str = data.get("remind_at")
+
+        # Validatsiya (POST bilan bir xil pattern)
+        if not text:
+            return jsonify({"ok": False, "error": "text_required"}), 400
+        if len(text) > REMINDER_MAX_TEXT_LEN:
+            text = text[:REMINDER_MAX_TEXT_LEN]
+
+        new_remind_at = _parse_iso_datetime(remind_at_str)
+        if not new_remind_at:
+            return jsonify({"ok": False, "error": "invalid_remind_at"}), 400
+
+        # Yangi vaqt o'tgan emasligini tekshirish (1 daqiqa tolerance)
+        if (new_remind_at - now).total_seconds() < -60:
+            return jsonify({"ok": False, "error": "past_time"}), 400
+
+        update_reminder(rid, {
+            "text":      text,
+            "remind_at": new_remind_at,
+        })
+        # Yangilangan obyektni qaytarish
+        updated = get_reminder(rid)
+        return jsonify({
+            "ok": True,
+            "reminder": _serialize_reminder(updated)
         })
 
     @app.route("/api/reminders/<int:uid>/<rid>", methods=["DELETE"])
