@@ -2249,6 +2249,47 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   text-transform: uppercase;
 }
 
+/* -- "Keyingi eslatmalar" — bosiladigan (collapsible) sarlavha -- */
+.rem1-section-title-collapsible {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  padding: 4px 6px 4px 2px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+.rem1-section-title-collapsible:active {
+  background: rgba(0,0,0,0.04);
+}
+body.dark .rem1-section-title-collapsible:active {
+  background: rgba(255,255,255,0.04);
+}
+.rem1-section-chevron {
+  color: var(--sub);
+  transform: rotate(-90deg);
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+.rem1-section-title-collapsible.expanded .rem1-section-chevron {
+  transform: rotate(0deg);
+}
+
+/* -- Keyingi eslatmalar roʻyxati: yopilish/ochilish animatsiyasi -- */
+.rem1-upcoming-list {
+  overflow: hidden;
+  max-height: 2000px;
+  opacity: 1;
+  transition: max-height 0.35s ease, opacity 0.25s ease;
+}
+.rem1-upcoming-list.collapsed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* -- Eslatma kartasi (kichik, neumorphism) -- */
 .rem1-card {
   background: var(--bg);

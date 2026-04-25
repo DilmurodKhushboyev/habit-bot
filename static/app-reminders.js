@@ -69,10 +69,33 @@ function renderReminderSections(reminders) {
     html += todayRems.map(_renderRemCard).join('');
   }
   if (upcomingRems.length) {
-    html += `<div class="rem1-section-title">${S('today','rem_upcoming_section')}</div>`;
-    html += upcomingRems.map(_renderRemCard).join('');
+    // "Keyingi eslatmalar" — default YOPIQ (collapsible), sarlavha bosilsa ochiladi
+    html += `<div class="rem1-section-title rem1-section-title-collapsible" onclick="_toggleUpcomingRems()" id="rem1-upcoming-title">
+      <span>${S('today','rem_upcoming_section')}</span>
+      <svg class="rem1-section-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>`;
+    html += `<div class="rem1-upcoming-list collapsed" id="rem1-upcoming-list">${upcomingRems.map(_renderRemCard).join('')}</div>`;
   }
   return html;
+}
+
+// "Keyingi eslatmalar" boʻlimini ochish/yopish
+function _toggleUpcomingRems() {
+  const list  = document.getElementById('rem1-upcoming-list');
+  const title = document.getElementById('rem1-upcoming-title');
+  if (!list || !title) return;
+  const isCollapsed = list.classList.contains('collapsed');
+  if (isCollapsed) {
+    list.classList.remove('collapsed');
+    title.classList.add('expanded');
+  } else {
+    list.classList.add('collapsed');
+    title.classList.remove('expanded');
+  }
+  // Haptic feedback (mavjud bo'lsa)
+  try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); } catch(e) {}
 }
 
 function _renderRemCard(r) {
