@@ -290,31 +290,12 @@ function renderStats(d) {
   // Hafta kun nomlari (7 ta)
   const dayLabelsHtml = hmDayLabels.map(l => `<span>${l}</span>`).join('');
 
-  // ── Oylik rekordlar (B variant) — heatmap yonida ──
-  // Bajarilgan kunlar: monthlyDays ichida count > 0 bo'lgan kunlar soni
-  const doneDaysCount = (monthlyDays || []).filter(m => m.count > 0).length;
-  const doneDaysTotal = (monthlyDays || []).length || 30;
-  // Streak: summary.streak (hozirgi umumiy streak — yuqoridagi Streak kartasi bilan bir xil manba)
-  const currentStreak = summary.streak || 0;
-
   const heatmapHtml = `
     <div class="heatmap-wrap">
       <div class="heatmap-title">${S('stats','heatmap_title')}</div>
       <div class="heatmap-outer">
         <div class="heatmap-day-labels">${dayLabelsHtml}</div>
         <div class="heatmap-grid">${allHmCells}</div>
-        <div class="heatmap-side">
-          <div class="hm-stat">
-            <div class="hm-stat-icon">🔥</div>
-            <div class="hm-stat-val">${currentStreak}</div>
-            <div class="hm-stat-lbl">${S('stats','hm_streak_lbl')}</div>
-          </div>
-          <div class="hm-stat">
-            <div class="hm-stat-icon">✓</div>
-            <div class="hm-stat-val">${doneDaysCount}<span class="hm-stat-val-sub">/${doneDaysTotal}</span></div>
-            <div class="hm-stat-lbl">${S('stats','hm_done_lbl')}</div>
-          </div>
-        </div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
         <div class="heatmap-legend">

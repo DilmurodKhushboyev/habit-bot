@@ -1134,54 +1134,6 @@ body {
 .hm-leg.hm-lv2 { background: #4CAF7D88; }
 .hm-leg.hm-lv3 { background: var(--green); }
 
-/* Oylik rekordlar paneli (heatmap yonida) */
-.heatmap-side {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  padding-left: 14px;
-  gap: 10px;
-  min-width: 0;
-}
-.hm-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 10px 6px;
-  background: var(--bg);
-  border-radius: 14px;
-  box-shadow: var(--sh-in);
-}
-.hm-stat-icon {
-  font-size: 18px;
-  line-height: 1;
-  margin-bottom: 4px;
-  filter: saturate(1.1);
-}
-.hm-stat-val {
-  font-size: 22px;
-  font-weight: 900;
-  color: var(--text);
-  font-family: 'DM Mono', monospace;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-.hm-stat-val-sub {
-  font-size: 12px;
-  color: var(--sub);
-  font-weight: 600;
-}
-.hm-stat-lbl {
-  font-size: 9px;
-  color: var(--sub);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  line-height: 1.2;
-}
-
 /* Trend card */
 .trend-card {
   background: var(--bg); box-shadow: var(--sh-card);
