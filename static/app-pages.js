@@ -31,6 +31,26 @@ async function loadToday() {
 function renderToday(d) {
   const { habits, done_count, total, percent, today } = d;
   const currentJon = d.jon ?? 100;
+
+  // Eslatma foizi: bugun ichida rejalashtirilgan eslatmalar — done/jami × 100
+  // Sabab: ODAT ringi bilan bir xil mantiq — bajarilmagan (expired/skipped) ham jami'ga kiradi
+  // chunki "haqiqatda nima boʻldi"ni koʻrsatadi (sof matematik foiz)
+  const remPercent = (() => {
+    const rems = (typeof _cachedReminders !== 'undefined' && Array.isArray(_cachedReminders)) ? _cachedReminders : [];
+    if (!rems.length) return 0;
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const todayEnd   = todayStart + 86400000;
+    let totalToday = 0, doneToday = 0;
+    for (const r of rems) {
+      const dt = new Date(r.remind_at).getTime();
+      if (isNaN(dt) || dt < todayStart || dt >= todayEnd) continue;
+      totalToday += 1;
+      if (r.status === 'done') doneToday += 1;
+    }
+    return totalToday > 0 ? Math.round(doneToday / totalToday * 100) : 0;
+  })();
+
   const dt = new Date(today);
   const _dayNamesMap = {
     uz:['Yakshanba','Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba'],
@@ -133,10 +153,14 @@ function renderToday(d) {
     <div class="today-hero">
       <div class="hero-party-badge ${allDone ? 'show' : ''}" id="hero-party-badge">${_partySvg()}</div>
       <div class="today-date">${dateStr}</div>
-      <div style="display:flex;justify-content:center;gap:24px;align-items:center;margin:16px 0 4px">
+      <div style="display:flex;justify-content:center;gap:16px;align-items:center;margin:16px 0 4px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
           <div class="prog-ring-wrap" style="margin:0" id="prog-ring">${ringHTML(percent)}</div>
           <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px" id="habit-label">${S('today','habit_label')} ${done_count}/${total}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="prog-ring-wrap" style="margin:0" id="rem-ring">${ringHTML(remPercent)}</div>
+          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">${S('today','reminder_label')}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
           <div class="prog-ring-wrap" style="margin:0" id="jon-ring">${jonRingHTML(currentJon)}</div>
