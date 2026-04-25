@@ -153,7 +153,7 @@ LANGS = {
         "shield_skipped":         "❌ *Streaklar nollandi.*\n\n🛡 Himoyangiz saqlanib qoldi — keyingi safar ishlatishingiz mumkin!",
 
         # ── ESLATMALAR (bir martalik) ──
-        "rem_notif_title":        "⏰ *Eslatma vaqti!*",
+        "rem_notif_title":        "📌 *Eslatma vaqti!*",
         "rem_notif_body":         "💡 Bu vazifani bajardingizmi?",
         "rem_btn_done":           "✅ Bajardim",
         "rem_btn_skip":           "❌ Bajarmadim",
@@ -310,7 +310,7 @@ LANGS = {
         "shield_skipped":         "❌ *Streaks reset.*\n\n🛡 Your shield is saved — you can use it next time!",
 
         # ── REMINDERS (one-time) ──
-        "rem_notif_title":        "⏰ *Reminder time!*",
+        "rem_notif_title":        "📌 *Reminder time!*",
         "rem_notif_body":         "💡 Did you complete this task?",
         "rem_btn_done":           "✅ Done",
         "rem_btn_skip":           "❌ Didn't do",
@@ -467,7 +467,7 @@ LANGS = {
         "shield_skipped":         "❌ *Стрики обнулены.*\n\n🛡 Защита сохранилась — используйте её в следующий раз!",
 
         # ── НАПОМИНАНИЯ (одноразовые) ──
-        "rem_notif_title":        "⏰ *Время напоминания!*",
+        "rem_notif_title":        "📌 *Время напоминания!*",
         "rem_notif_body":         "💡 Вы выполнили эту задачу?",
         "rem_btn_done":           "✅ Выполнил",
         "rem_btn_skip":           "❌ Не выполнил",
