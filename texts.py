@@ -160,6 +160,13 @@ LANGS = {
         "rem_done_toast":         "🎉 Ajoyib! *+{pts} ball* qo'shildi.",
         "rem_skipped_toast":      "❌ Eslatma o'tkazib yuborildi.",
         "rem_expired":            "⏳ *Eslatma muddati o'tdi.*",
+        # ── ADMIN NOTIFICATION (yangi user xabari) ──
+        "admin_new_pending":      "🆕 *Yangi foydalanuvchi* (hali ro'yxatdan o'tmagan)",
+        "admin_registered":       "✅ *Ro'yxatdan o'tdi!*",
+        "admin_total":            "Umumiy",
+        "admin_name":             "Ismi",
+        "admin_phone_pending":    "📞 Telefon: kutilmoqda...",
+        "admin_phone":            "📞 Telefon",
     },
     "en": {
         "choose_lang":       "🌐 Choose language:",
@@ -317,6 +324,13 @@ LANGS = {
         "rem_done_toast":         "🎉 Great! *+{pts} points* added.",
         "rem_skipped_toast":      "❌ Reminder skipped.",
         "rem_expired":            "⏳ *Reminder expired.*",
+        # ── ADMIN NOTIFICATION (new user message) ──
+        "admin_new_pending":      "🆕 *New user* (not registered yet)",
+        "admin_registered":       "✅ *Registered!*",
+        "admin_total":            "Total",
+        "admin_name":             "Name",
+        "admin_phone_pending":    "📞 Phone: pending...",
+        "admin_phone":            "📞 Phone",
     },
     "ru": {
         "choose_lang":       "🌐 Выберите язык:",
@@ -474,6 +488,13 @@ LANGS = {
         "rem_done_toast":         "🎉 Отлично! *+{pts} баллов* добавлено.",
         "rem_skipped_toast":      "❌ Напоминание пропущено.",
         "rem_expired":            "⏳ *Срок напоминания истёк.*",
+        # ── ADMIN NOTIFICATION (сообщение о новом пользователе) ──
+        "admin_new_pending":      "🆕 *Новый пользователь* (ещё не зарегистрирован)",
+        "admin_registered":       "✅ *Зарегистрировался!*",
+        "admin_total":            "Всего",
+        "admin_name":             "Имя",
+        "admin_phone_pending":    "📞 Телефон: ожидание...",
+        "admin_phone":            "📞 Телефон",
     },
 }
 
