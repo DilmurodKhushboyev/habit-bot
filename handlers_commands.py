@@ -162,20 +162,25 @@ def cmd_start(msg):
 
     # Adminga yangi foydalanuvchi kirganligi haqida xabar (telefondan qat'iy nazar)
     # Dedup: start_notified bayrog'i orqali bir user uchun faqat 1 marta yuboriladi
+    # Edit pattern: yuborilgan xabarning message_id u["pending_admin_msg_id"] ga saqlanadi —
+    # kontakt kelganda handle_contact() shu xabarni edit qiladi (yangi xabar yubormasdan)
     if not u.get("phone") and not u.get("lang") and not u.get("start_notified"):
         try:
+            total_users = count_users()
             user_name = msg.from_user.first_name or "Noma'lum"
             username  = f"@{msg.from_user.username}" if msg.from_user.username else "—"
-            bot.send_message(
+            sent_admin = bot.send_message(
                 ADMIN_ID,
-                f"🆕 *Yangi foydalanuvchi* (hali ro'yxatdan o'tmagan)\n\n"
-                f"Ismi: *{user_name}*\n"
+                f"{T(ADMIN_ID, 'admin_new_pending')}\n\n"
+                f"{T(ADMIN_ID, 'admin_total')}: *{total_users}*\n"
+                f"{T(ADMIN_ID, 'admin_name')}: *{user_name}*\n"
                 f"Username: {username}\n"
                 f"ID: `{uid}`\n"
-                f"📞 Telefon: kutilmoqda...",
+                f"{T(ADMIN_ID, 'admin_phone_pending')}",
                 parse_mode="Markdown", reply_markup=ok_kb()
             )
             u["start_notified"] = True
+            u["pending_admin_msg_id"] = sent_admin.message_id
             save_user(uid, u)
         except Exception as e:
             print(f"[start_notify] xato: {e}")
@@ -259,19 +264,43 @@ def handle_contact(msg):
         _cleanup_ids.append(reg_msg_id)
     _cleanup_ids.append(msg.message_id)
     # Adminga yangi foydalanuvchi haqida xabar — subscription tekshirishdan OLDIN
+    # Edit pattern: cmd_start() da saqlangan pending_admin_msg_id bo'yicha
+    # mavjud xabarni edit qilamiz (yangi xabar yubormasdan).
+    # Fallback: agar edit fail bo'lsa (xabar o'chirilgan/topilmadi) — yangi xabar yuboriladi.
     try:
         total_users = count_users()
         user_name   = msg.from_user.first_name or "Noma'lum"
         username    = f"@{msg.from_user.username}" if msg.from_user.username else "—"
-        bot.send_message(
-            ADMIN_ID,
-            f"✅ *Ro'yxatdan o'tdi!*\n\n"
-            f"Umumiy: *{total_users}*\n"
-            f"Ismi: *{user_name}*\n"
+        phone       = msg.contact.phone_number
+        admin_text = (
+            f"{T(ADMIN_ID, 'admin_registered')}\n\n"
+            f"{T(ADMIN_ID, 'admin_total')}: *{total_users}*\n"
+            f"{T(ADMIN_ID, 'admin_name')}: *{user_name}*\n"
             f"Username: {username}\n"
-            f"ID: `{uid}`",
-            parse_mode="Markdown", reply_markup=ok_kb()
+            f"ID: `{uid}`\n"
+            f"{T(ADMIN_ID, 'admin_phone')}: `{phone}`"
         )
+        pending_mid = u.pop("pending_admin_msg_id", None)
+        save_user(uid, u)
+        edited = False
+        if pending_mid:
+            try:
+                bot.edit_message_text(
+                    admin_text,
+                    chat_id=ADMIN_ID,
+                    message_id=pending_mid,
+                    parse_mode="Markdown",
+                    reply_markup=ok_kb()
+                )
+                edited = True
+            except Exception as _edit_e:
+                print(f"[admin_notify_edit] fallback: {_edit_e}")
+        if not edited:
+            bot.send_message(
+                ADMIN_ID,
+                admin_text,
+                parse_mode="Markdown", reply_markup=ok_kb()
+            )
     except Exception:
         pass
 
