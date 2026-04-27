@@ -82,7 +82,6 @@ def register_extra_routes(app):
                 "cat":     cat_id,
                 "icon":    ach["icon"],
                 "title":   ach["title"],
-                "desc":    ach["desc"],
                 "req":     ach["req"],
                 "current": current,
                 "earned":  1 if earned else 0,
