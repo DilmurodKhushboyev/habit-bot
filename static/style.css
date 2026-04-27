@@ -635,6 +635,7 @@ body {
 .today-sub { font-size: 13px; color: var(--sub); }
 .prog-ring-wrap { display: flex; justify-content: center; margin: 16px 0 4px; }
 .prog-ring-wrap svg { filter: drop-shadow(3px 3px 8px #B8BBCA) drop-shadow(-2px -2px 6px #FFFFFF); }
+body.dark .prog-ring-wrap svg { filter: none; }
 
 .all-done-banner {
   background: var(--bg);
