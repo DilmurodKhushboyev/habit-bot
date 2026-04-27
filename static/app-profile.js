@@ -221,6 +221,17 @@ function renderProfile(d) {
         <div style="color:var(--sub);font-size:18px">›</div>
       </div>
     </div>
+    <!-- Yutuqlarim tugmasi — yutuqlar sahifasiga oʻtadi (qozonilgan + qulflanganlar) -->
+    <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('achievements',null)">
+      <div class="rem-top" style="margin-bottom:0">
+        <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgTrophyLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M7 4h12v4a6 6 0 01-12 0V4z" fill="url(#svgTrophyLg)" opacity="0.9"/><path d="M5 6H3v3a3 3 0 003 3M21 6h2v3a3 3 0 01-3 3" stroke="url(#svgTrophyLg)" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M10 14h6v3l1 4H9l1-4v-3z" fill="url(#svgTrophyLg)" opacity="0.85"/><rect x="7" y="21" width="12" height="2" rx="1" fill="url(#svgTrophyLg)"/></svg></div>
+        <div>
+          <div class="rem-name">${S('profile','see_achievements')}</div>
+          ${d.total_ach ? `<div style="font-size:10px;color:var(--sub)">${d.earned_ach || 0}/${d.total_ach} ${S('achievements','earned_of')}</div>` : ''}
+        </div>
+        <div style="color:var(--sub);font-size:18px;margin-left:auto">›</div>
+      </div>
+    </div>
 
     <div class="rem-card" style="margin-top:4px">
       <div class="rem-top" style="margin-bottom:0;justify-content:space-between">

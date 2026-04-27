@@ -1419,6 +1419,7 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
 .ach-info { flex: 1; min-width: 0; }
 .ach-title { font-size: 14px; font-weight: 700; color: var(--text); }
 .ach-desc  { font-size: 11px; color: var(--sub); margin-top: 2px; }
+.ach-earned-date { font-size: 10px; color: #4CAF7D; margin-top: 4px; font-weight: 600; font-family: 'DM Mono', monospace; }
 .ach-prog-wrap { margin-top: 8px; }
 .ach-prog-bg {
   height: 5px; border-radius: 4px;

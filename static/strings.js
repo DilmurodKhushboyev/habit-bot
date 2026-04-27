@@ -12,6 +12,7 @@ const STRINGS = {
       edit_profile:"Ma'lumotlarni tahrirlash",
       bot_lang:'Bot tili',
       reminders:'Eslatmalar',
+      see_achievements:'Yutuqlarim',
       evening:'Kechki eslatma',
       evening_sub:'Har kuni 21:00 — bajarilmagan odatlar',
       onboarding:"Onboarding'ni qayta ko'rish",
@@ -87,6 +88,7 @@ const STRINGS = {
     achievements: {
       title:'Yutuqlarim',
       earned_of:'qozonildi',
+      earned_on:'Qozonilgan: {date}',
       new_badge:'Yangi yutuq qozonildi!',
       empty:"Bu kategoriyada hali yutuq yo'q",
       all_cat:'Barchasi',
@@ -400,6 +402,7 @@ const STRINGS = {
       edit_profile:'Редактировать данные',
       bot_lang:'Язык бота',
       reminders:'Напоминания',
+      see_achievements:'Мои достижения',
       evening:'Вечернее напоминание',
       evening_sub:'Каждый день 21:00 — невыполненные привычки',
       onboarding:'Посмотреть онбординг снова',
@@ -474,6 +477,7 @@ const STRINGS = {
     achievements: {
       title:'Мои достижения',
       earned_of:'получено',
+      earned_on:'Получено: {date}',
       new_badge:'Новое достижение получено!',
       empty:'В этой категории пока нет достижений',
       all_cat:'Все',
@@ -787,6 +791,7 @@ const STRINGS = {
       edit_profile:'Edit profile',
       bot_lang:'Bot language',
       reminders:'Reminders',
+      see_achievements:'My achievements',
       evening:'Evening reminder',
       evening_sub:'Every day 21:00 — unfinished habits',
       onboarding:'View onboarding again',
@@ -861,6 +866,7 @@ const STRINGS = {
     achievements: {
       title:'My Achievements',
       earned_of:'earned',
+      earned_on:'Earned: {date}',
       new_badge:'New achievement earned!',
       empty:'No achievements in this category yet',
       all_cat:'All',

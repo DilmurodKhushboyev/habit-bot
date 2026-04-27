@@ -688,9 +688,23 @@ function renderAchievements(d, filter = 'all') {
   // Avval qozonilganlar
   const sorted = [...filtered].sort((a,b) => b.earned - a.earned);
 
+  // Sana formatlash: "2026-04-25" → "25 Apr 2026" (joriy til month_abbr bilan)
+  const _formatAchDate = (iso) => {
+    if (!iso || typeof iso !== 'string') return '';
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return '';
+    const year = m[1];
+    const month = parseInt(m[2], 10);
+    const day = parseInt(m[3], 10);
+    const months = S('profile', 'month_abbr');
+    const monStr = (Array.isArray(months) && months[month]) ? months[month] : String(month);
+    return `${day} ${monStr} ${year}`;
+  };
+
   const cardsHtml = sorted.map(a => {
     const progPct   = a.req ? Math.round(a.current / a.req * 100) : 0;
     const progColor = a.earned ? '#4CAF7D' : progPct >= 50 ? '#5B8DEF' : '#E07040';
+    const earnedDateStr = (a.earned && a.earned_at) ? _formatAchDate(a.earned_at) : '';
     return `
       <div class="ach-card ${a.earned ? 'earned' : 'locked'}">
         <div class="ach-badge">
@@ -700,6 +714,7 @@ function renderAchievements(d, filter = 'all') {
         <div class="ach-info">
           <div class="ach-title">${a.title}</div>
           <div class="ach-desc">${a.desc}</div>
+          ${earnedDateStr ? `<div class="ach-earned-date">${S('achievements','earned_on').replace('{date}', earnedDateStr)}</div>` : ''}
           ${!a.earned ? `
           <div class="ach-prog-wrap">
             <div class="ach-prog-bg">
