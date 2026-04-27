@@ -713,7 +713,6 @@ function renderAchievements(d, filter = 'all') {
         </div>
         <div class="ach-info">
           <div class="ach-title">${a.title}</div>
-          <div class="ach-desc">${a.desc}</div>
           ${earnedDateStr ? `<div class="ach-earned-date">${S('achievements','earned_on').replace('{date}', earnedDateStr)}</div>` : ''}
           ${!a.earned ? `
           <div class="ach-prog-wrap">
