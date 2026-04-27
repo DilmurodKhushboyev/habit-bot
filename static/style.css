@@ -635,6 +635,8 @@ body {
 .today-sub { font-size: 13px; color: var(--sub); }
 .prog-ring-wrap { display: flex; justify-content: center; margin: 16px 0 4px; }
 .prog-ring-wrap svg { filter: drop-shadow(3px 3px 8px #B8BBCA) drop-shadow(-2px -2px 6px #FFFFFF); }
+body.dark .prog-ring-wrap svg { filter: none; }
+body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
 
 .all-done-banner {
   background: var(--bg);
@@ -2396,7 +2398,7 @@ body.dark .rem1-section-title-collapsible:active {
 }
 .rem1-card-actions {
   display: flex;
-  gap: 6px;
+  gap: 14px;
   flex-shrink: 0;
 }
 .rem1-card-done-btn, .rem1-card-del-btn {
