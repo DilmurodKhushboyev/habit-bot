@@ -301,13 +301,25 @@ async function checkin(hid, cardEl) {
     loaded.profile = false; loaded.rating = false; loaded.achievements = false; loaded.stats = false;
     if (document.getElementById('page-stats')?.classList.contains('active')) { loadStats(); }
     // Bajarilgan odat pastga, bekor qilingan odat tepaga
+    // (kartalar oraligʻidagina koʻchadi — eslatmalar blokiga oʻtib ketmaydi)
     const container = cardEl.parentNode;
     if (container) {
       if (isDone) {
-        // Pastga: barcha done bo'lmagan kartalardan keyin qo'y
+        // Pastga: barcha done bo'lmagan kartalardan keyin qo'y,
+        // lekin oxirgi .checkin-card dan keyinga emas (aks holda eslatmalar ostiga tushadi)
         const undoneCards = [...container.querySelectorAll('.checkin-card:not(.done)')];
         if (undoneCards.length > 0) {
-          setTimeout(() => container.appendChild(cardEl), 300);
+          setTimeout(() => {
+            const allCards = [...container.querySelectorAll('.checkin-card')];
+            const lastCard = allCards[allCards.length - 1];
+            if (lastCard && lastCard !== cardEl) {
+              // Oxirgi kartadan keyingi pozitsiyaga qo'yamiz (lastCard.nextSibling oldiga)
+              // Bu .checkin-card lar bloki ichida qoldiradi, eslatmalar blokiga o'tmaydi
+              container.insertBefore(cardEl, lastCard.nextSibling);
+            } else {
+              container.appendChild(cardEl);
+            }
+          }, 300);
         }
       } else if (isUndo) {
         // Tepaga: birinchi done kartadan oldin qo'y
