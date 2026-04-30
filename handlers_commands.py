@@ -304,43 +304,20 @@ def handle_contact(msg):
     except Exception:
         pass
 
-    if not check_subscription(uid):
-        sent_rm = bot.send_message(uid, "✅", reply_markup=ReplyKeyboardRemove())
-        _cleanup_ids.append(sent_rm.message_id)
-        send_sub_required(uid)
-        # Yangi kontent ko'rsatilgandan KEYIN eski xabarlarni o'chirish
-        def _del_batch_sub(cid, ids):
-            time.sleep(1)
-            for mid in ids:
-                try: bot.delete_message(cid, mid)
-                except: pass
-        threading.Thread(target=_del_batch_sub, args=(uid, _cleanup_ids), daemon=True).start()
-        return
-    sent_reg = bot.send_message(uid, "✅", reply_markup=ReplyKeyboardRemove())
-    _cleanup_ids.append(sent_reg.message_id)
-    # Yangi kontent ko'rsatilgandan KEYIN eski xabarlarni o'chirish
-    def _del_batch_reg(cid, ids):
-        time.sleep(2)
-        for mid in ids:
-            try: bot.delete_message(cid, mid)
-            except: pass
-    threading.Thread(target=_del_batch_reg, args=(uid, list(_cleanup_ids)), daemon=True).start()
-
-    # Referal bonus berish
+    # Referal bonus berish — subscription tekshirishdan OLDIN
+    # (foydalanuvchi obunaga yozilmagan bo'lsa ham, telefon yuborilgan zahoti
+    #  referrer'ga +50 ball, yangi foydalanuvchiga +25 ball berilishi shart;
+    #  obunaga yozilish referal bonusga aloqasi yo'q.)
     referrer_id = u.pop("pending_referrer", None)
     if referrer_id and not u.get("ref_used"):
         try:
             u["points"] = u.get("points", 0) + 25
             u["ref_used"] = True
-            sent_ref = bot.send_message(uid,
+            save_user(uid, u)  # subscription yo'q bo'lsa return bo'ladi — shu yerda saqlash SHART
+            bot.send_message(uid,
                 "🎁 *Do'st taklifi bonusi!*\n\n"
                 "*⭐ +25 ball* hisobingizga qo'shildi!",
-                parse_mode="Markdown")
-            def _del_ref(cid, mid):
-                time.sleep(5)
-                try: bot.delete_message(cid, mid)
-                except: pass
-            threading.Thread(target=_del_ref, args=(uid, sent_ref.message_id), daemon=True).start()
+                parse_mode="Markdown", reply_markup=ok_kb(uid))
         except Exception:
             pass
         try:
@@ -365,9 +342,31 @@ def handle_contact(msg):
                 f"*⭐ +50 ball* hisobingizga qo'shildi!\n"
                 f"*👥 Jami taklif qilganlar:* {len(refs)} ta"
                 + milestone_msg,
-                parse_mode="Markdown", reply_markup=ok_kb())
+                parse_mode="Markdown", reply_markup=ok_kb(referrer_id))
         except Exception:
             pass
+
+    if not check_subscription(uid):
+        sent_rm = bot.send_message(uid, "✅", reply_markup=ReplyKeyboardRemove())
+        _cleanup_ids.append(sent_rm.message_id)
+        send_sub_required(uid)
+        # Yangi kontent ko'rsatilgandan KEYIN eski xabarlarni o'chirish
+        def _del_batch_sub(cid, ids):
+            time.sleep(1)
+            for mid in ids:
+                try: bot.delete_message(cid, mid)
+                except: pass
+        threading.Thread(target=_del_batch_sub, args=(uid, _cleanup_ids), daemon=True).start()
+        return
+    sent_reg = bot.send_message(uid, "✅", reply_markup=ReplyKeyboardRemove())
+    _cleanup_ids.append(sent_reg.message_id)
+    # Yangi kontent ko'rsatilgandan KEYIN eski xabarlarni o'chirish
+    def _del_batch_reg(cid, ids):
+        time.sleep(2)
+        for mid in ids:
+            try: bot.delete_message(cid, mid)
+            except: pass
+    threading.Thread(target=_del_batch_reg, args=(uid, list(_cleanup_ids)), daemon=True).start()
 
     # Pending guruh — ro'yxatdan o'tgach avtomatik qo'shilish
     pending_g = u.pop("pending_group", None)
