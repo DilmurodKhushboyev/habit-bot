@@ -734,6 +734,7 @@ function openAchievementDetail(achId) {
       <div class="ach-detail-badge ${earned ? 'earned' : 'locked'}">${iconContent}</div>
       ${earnedDateStr ? `<div class="ach-detail-date">${earnedDateStr}</div>` : ''}
       <div class="ach-detail-title">${a.title}</div>
+      ${a.desc ? `<div class="ach-detail-desc">${a.desc}</div>` : ''}
       ${!earned ? `
         <div class="ach-detail-progress">
           <div class="ach-detail-prog-bg">
