@@ -92,6 +92,9 @@ const STRINGS = {
       new_badge:'Yangi yutuq qozonildi!',
       empty:"Bu kategoriyada hali yutuq yo'q",
       all_cat:'Barchasi',
+      progress:'Progress',
+      close:'Yopish',
+      locked_status:'Qulflangan',
     },
     stats: {
       general:'Umumiy', week_chart:'Haftalik bajarilish', month_chart:'30 kunlik bajarilish', avg_30:"O'rtacha bajarilish",
@@ -481,6 +484,9 @@ const STRINGS = {
       new_badge:'Новое достижение получено!',
       empty:'В этой категории пока нет достижений',
       all_cat:'Все',
+      progress:'Прогресс',
+      close:'Закрыть',
+      locked_status:'Заблокировано',
     },
     stats: {
       general:'Общее', week_chart:'Выполнение за неделю', month_chart:'Выполнение за 30 дней', avg_30:'Среднее выполнение',
@@ -870,6 +876,9 @@ const STRINGS = {
       new_badge:'New achievement earned!',
       empty:'No achievements in this category yet',
       all_cat:'All',
+      progress:'Progress',
+      close:'Close',
+      locked_status:'Locked',
     },
     stats: {
       general:'General', week_chart:'Weekly completion', month_chart:'30-day completion', avg_30:'Average completion',
