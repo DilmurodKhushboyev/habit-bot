@@ -314,15 +314,10 @@ def handle_contact(msg):
             u["points"] = u.get("points", 0) + 25
             u["ref_used"] = True
             save_user(uid, u)  # subscription yo'q bo'lsa return bo'ladi — shu yerda saqlash SHART
-            sent_ref = bot.send_message(uid,
+            bot.send_message(uid,
                 "🎁 *Do'st taklifi bonusi!*\n\n"
                 "*⭐ +25 ball* hisobingizga qo'shildi!",
-                parse_mode="Markdown")
-            def _del_ref(cid, mid):
-                time.sleep(5)
-                try: bot.delete_message(cid, mid)
-                except: pass
-            threading.Thread(target=_del_ref, args=(uid, sent_ref.message_id), daemon=True).start()
+                parse_mode="Markdown", reply_markup=ok_kb(uid))
         except Exception:
             pass
         try:
@@ -347,7 +342,7 @@ def handle_contact(msg):
                 f"*⭐ +50 ball* hisobingizga qo'shildi!\n"
                 f"*👥 Jami taklif qilganlar:* {len(refs)} ta"
                 + milestone_msg,
-                parse_mode="Markdown", reply_markup=ok_kb())
+                parse_mode="Markdown", reply_markup=ok_kb(referrer_id))
         except Exception:
             pass
 
