@@ -650,37 +650,14 @@ async function loadAchievements() {
 function renderAchievements(d, filter = 'all') {
   const { achievements, cats, earned_count, total_count } = d;
 
-  // Ring SVG
-  const pct  = total_count ? Math.round(earned_count / total_count * 100) : 0;
-  const r    = 34; const circ = 2 * Math.PI * r;
-  const dash = circ * pct / 100;
-  const ringColor = pct >= 80 ? '#4CAF7D' : pct >= 40 ? '#5B8DEF' : '#E07040';
-  const ringSvg = `<svg width="80" height="80" viewBox="0 0 80 80">
-    <circle cx="40" cy="40" r="${r}" fill="none" stroke="#C8CBD8" stroke-width="6"/>
-    <circle cx="40" cy="40" r="${r}" fill="none" stroke="${ringColor}" stroke-width="6"
-      stroke-dasharray="${dash} ${circ}" stroke-dashoffset="${circ/4}" stroke-linecap="round"/>
-  </svg>`;
+  // === Chess.com uslubi: oddiy sarlavha + counter (sumHtml/catTabsHtml olib tashlandi) ===
+  // JS o'zgaruvchilar (cats, filterAch, achFilter) saqlanadi - kelajakda kerak bo'lishi mumkin
 
-  const sumHtml = `
-    <div class="ach-summary">
-      <div class="ach-ring-wrap">
-        ${ringSvg}
-        <div class="ach-ring-center">
-          <div class="ach-ring-num">${pct}%</div>
-        </div>
-      </div>
-      <div class="ach-sum-info">
-        <div class="ach-sum-title">${S('achievements','title')}</div>
-        <div class="ach-sum-sub">${earned_count} / ${total_count} ${S('achievements','earned_of')}</div>
-      </div>
+  const headerHtml = `
+    <div class="ach-page-header">
+      <div class="ach-page-title">${S('achievements','title')}</div>
+      <div class="ach-page-counter">${earned_count} / ${total_count} ${S('achievements','earned_of')}</div>
     </div>`;
-
-  // Category tabs
-  const allCats = [{id:'all',label:S('today','all_filter')}, ...cats];
-  const catTabsHtml = allCats.map(c => `
-    <button class="ach-cat-btn ${filter === c.id ? 'active' : ''}"
-      onclick="filterAch('${c.id}')">${c.label}</button>`
-  ).join('');
 
   // Cards
   const filtered = filter === 'all' ? achievements : achievements.filter(a => a.cat === filter);
@@ -719,8 +696,7 @@ function renderAchievements(d, filter = 'all') {
   }).join('');
 
   document.getElementById('achievements-content').innerHTML = `
-    ${sumHtml}
-    <div class="ach-cat-tabs">${catTabsHtml}</div>
+    ${headerHtml}
     ${cardsHtml ? `<div class="ach-grid">${cardsHtml}</div>` : `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgLock" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><rect x="5" y="11" width="14" height="10" rx="2" stroke="url(#svgLock)" stroke-width="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="url(#svgLock)" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="url(#svgLock)"/></svg></div>${S('achievements','empty')}</div>`}`;
 }
 

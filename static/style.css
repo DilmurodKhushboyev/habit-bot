@@ -1432,6 +1432,27 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
 }
 .ach-prog-txt { font-size: 10px; color: var(--sub); margin-top: 4px; font-family: 'DM Mono', monospace; }
 
+/* === YANGI: Sahifa sarlavhasi (chess.com uslubi) === */
+.ach-page-header {
+  padding: 8px 4px 16px;
+  margin-bottom: 4px;
+}
+.ach-page-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  text-align: center;
+  letter-spacing: -0.3px;
+}
+.ach-page-counter {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sub);
+  margin-top: 6px;
+  text-align: left;
+  font-family: 'DM Mono', monospace;
+}
+
 /* === YANGI: Grid layout (chess.com uslubi) === */
 .ach-grid {
   display: grid;
