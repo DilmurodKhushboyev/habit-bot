@@ -77,13 +77,15 @@ def register_extra_routes(app):
             if cat_id not in cats_seen:
                 label = CAT_LABELS.get(cat_id, {}).get(lang, cat_id)
                 cats_seen[cat_id] = {"id": cat_id, "label": label}
+            # desc tanlash: qozonilgan boʻlsa desc_done (oʻtgan zamon), yoʻq boʻlsa desc_todo (buyruq)
+            desc_dict = ach.get("desc_done" if earned else "desc_todo") or {}
+            desc_text = desc_dict.get(lang) or desc_dict.get("uz", "")
             result.append({
                 "id":      ach["id"],
                 "cat":     cat_id,
                 "icon":    ach["icon"],
                 "title":   ach["title"],
-                # desc: 3 tilli dictdan joriy tilga, agar yoʻq boʻlsa uz, agar u ham yoʻq boʻlsa boʻsh string
-                "desc":    (ach.get("desc") or {}).get(lang) or (ach.get("desc") or {}).get("uz", ""),
+                "desc":    desc_text,
                 "req":     ach["req"],
                 "current": current,
                 "earned":  1 if earned else 0,
