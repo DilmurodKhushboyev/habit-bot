@@ -53,7 +53,8 @@ def register_extra_routes(app):
     def api_achievements(uid):
         u    = load_user(uid)
         lang = u.get("lang", "uz")
-        earned_ids = {a["id"] for a in u.get("achievements", []) if isinstance(a, dict)}
+        # earned_map: {ach_id: earned_at_date_str} — sana koʻrsatish uchun
+        earned_map = {a["id"]: a.get("earned_at") for a in u.get("achievements", []) if isinstance(a, dict)}
         streak      = u.get("streak", 0)
         points      = u.get("points", 0)
         habits      = u.get("habits", [])
@@ -70,21 +71,25 @@ def register_extra_routes(app):
         result = []
         cats_seen = {}
         for ach in ACHIEVEMENTS:
-            earned = ach["id"] in earned_ids
+            earned = ach["id"] in earned_map
             current = min(field_vals.get(ach["field"], 0), ach["req"])
             cat_id  = ach["cat"]
             if cat_id not in cats_seen:
                 label = CAT_LABELS.get(cat_id, {}).get(lang, cat_id)
                 cats_seen[cat_id] = {"id": cat_id, "label": label}
+            # desc tanlash: qozonilgan boʻlsa desc_done (oʻtgan zamon), yoʻq boʻlsa desc_todo (buyruq)
+            desc_dict = ach.get("desc_done" if earned else "desc_todo") or {}
+            desc_text = desc_dict.get(lang) or desc_dict.get("uz", "")
             result.append({
                 "id":      ach["id"],
                 "cat":     cat_id,
                 "icon":    ach["icon"],
                 "title":   ach["title"],
-                "desc":    ach["desc"],
+                "desc":    desc_text,
                 "req":     ach["req"],
                 "current": current,
                 "earned":  1 if earned else 0,
+                "earned_at": earned_map.get(ach["id"]),  # YYYY-MM-DD yoki None
             })
         earned_count = sum(1 for a in result if a["earned"])
         return jsonify({

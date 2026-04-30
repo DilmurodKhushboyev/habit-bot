@@ -650,37 +650,14 @@ async function loadAchievements() {
 function renderAchievements(d, filter = 'all') {
   const { achievements, cats, earned_count, total_count } = d;
 
-  // Ring SVG
-  const pct  = total_count ? Math.round(earned_count / total_count * 100) : 0;
-  const r    = 34; const circ = 2 * Math.PI * r;
-  const dash = circ * pct / 100;
-  const ringColor = pct >= 80 ? '#4CAF7D' : pct >= 40 ? '#5B8DEF' : '#E07040';
-  const ringSvg = `<svg width="80" height="80" viewBox="0 0 80 80">
-    <circle cx="40" cy="40" r="${r}" fill="none" stroke="#C8CBD8" stroke-width="6"/>
-    <circle cx="40" cy="40" r="${r}" fill="none" stroke="${ringColor}" stroke-width="6"
-      stroke-dasharray="${dash} ${circ}" stroke-dashoffset="${circ/4}" stroke-linecap="round"/>
-  </svg>`;
+  // === Chess.com uslubi: oddiy sarlavha + counter (sumHtml/catTabsHtml olib tashlandi) ===
+  // JS o'zgaruvchilar (cats, filterAch, achFilter) saqlanadi - kelajakda kerak bo'lishi mumkin
 
-  const sumHtml = `
-    <div class="ach-summary">
-      <div class="ach-ring-wrap">
-        ${ringSvg}
-        <div class="ach-ring-center">
-          <div class="ach-ring-num">${pct}%</div>
-        </div>
-      </div>
-      <div class="ach-sum-info">
-        <div class="ach-sum-title">${S('achievements','title')}</div>
-        <div class="ach-sum-sub">${earned_count} / ${total_count} ${S('achievements','earned_of')}</div>
-      </div>
+  const headerHtml = `
+    <div class="ach-page-header">
+      <div class="ach-page-title">${S('achievements','title')}</div>
+      <div class="ach-page-counter">${earned_count} / ${total_count} ${S('achievements','earned_of')}</div>
     </div>`;
-
-  // Category tabs
-  const allCats = [{id:'all',label:S('today','all_filter')}, ...cats];
-  const catTabsHtml = allCats.map(c => `
-    <button class="ach-cat-btn ${filter === c.id ? 'active' : ''}"
-      onclick="filterAch('${c.id}')">${c.label}</button>`
-  ).join('');
 
   // Cards
   const filtered = filter === 'all' ? achievements : achievements.filter(a => a.cat === filter);
@@ -688,38 +665,96 @@ function renderAchievements(d, filter = 'all') {
   // Avval qozonilganlar
   const sorted = [...filtered].sort((a,b) => b.earned - a.earned);
 
+  // Sana formatlash: "2026-04-25" → "25 Apr 2026" (joriy til month_abbr bilan)
+  // window'ga chiqarilgan - openAchievementDetail() ham foydalanadi
+  window._formatAchDate = (iso) => {
+    if (!iso || typeof iso !== 'string') return '';
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return '';
+    const year = m[1];
+    const month = parseInt(m[2], 10);
+    const day = parseInt(m[3], 10);
+    const months = S('profile', 'month_abbr');
+    const monStr = (Array.isArray(months) && months[month]) ? months[month] : String(month);
+    return `${day} ${monStr} ${year}`;
+  };
+
+  // Yutuqlarni window'ga saqlaymiz - modal foydalanish uchun
+  window._achievementsList = sorted;
+
   const cardsHtml = sorted.map(a => {
-    const progPct   = a.req ? Math.round(a.current / a.req * 100) : 0;
-    const progColor = a.earned ? '#4CAF7D' : progPct >= 50 ? '#5B8DEF' : '#E07040';
+    // Qulflanganda emoji oʻrniga 🔒 koʻrsatamiz (emoji grayscale qilib boʻlmaydi)
+    const iconContent = a.earned ? a.icon : '🔒';
     return `
-      <div class="ach-card ${a.earned ? 'earned' : 'locked'}">
-        <div class="ach-badge">
-          ${a.icon}
-          ${a.earned ? '<div class="ach-badge-check"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgTick" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M4 10l5 5 7-8" stroke="url(#svgTick)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' : ''}
+      <div class="ach-card-mini ${a.earned ? 'earned' : 'locked'}" onclick="openAchievementDetail('${a.id}')">
+        <div class="ach-mini-badge">
+          ${iconContent}
+          ${a.earned ? '<div class="ach-mini-check"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><defs><linearGradient id="svgTickMini-' + a.id + '" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs><path d="M4 10l5 5 7-8" stroke="url(#svgTickMini-' + a.id + ')" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' : ''}
         </div>
-        <div class="ach-info">
-          <div class="ach-title">${a.title}</div>
-          <div class="ach-desc">${a.desc}</div>
-          ${!a.earned ? `
-          <div class="ach-prog-wrap">
-            <div class="ach-prog-bg">
-              <div class="ach-prog-fill" style="width:${progPct}%;background:${progColor}"></div>
-            </div>
-            <div class="ach-prog-txt">${a.current} / ${a.req}</div>
-          </div>` : ''}
-        </div>
+        <div class="ach-mini-title">${a.title}</div>
       </div>`;
   }).join('');
 
   document.getElementById('achievements-content').innerHTML = `
-    ${sumHtml}
-    <div class="ach-cat-tabs">${catTabsHtml}</div>
-    ${cardsHtml || `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgLock" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><rect x="5" y="11" width="14" height="10" rx="2" stroke="url(#svgLock)" stroke-width="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="url(#svgLock)" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="url(#svgLock)"/></svg></div>${S('achievements','empty')}</div>`}`;
+    ${headerHtml}
+    ${cardsHtml ? `<div class="ach-grid">${cardsHtml}</div>` : `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgLock" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><rect x="5" y="11" width="14" height="10" rx="2" stroke="url(#svgLock)" stroke-width="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="url(#svgLock)" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="url(#svgLock)"/></svg></div>${S('achievements','empty')}</div>`}`;
 }
 
 function filterAch(cat) {
   achFilter = cat;
   if (data.achievements) renderAchievements(data.achievements, cat);
+}
+
+// Yutuq batafsil modal (kartani bosganda ochiladi)
+function openAchievementDetail(achId) {
+  const list = window._achievementsList || [];
+  const a = list.find(x => x.id === achId);
+  if (!a) return;
+
+  const earned = !!a.earned;
+  const iconContent = earned ? a.icon : '🔒';
+  const earnedDateStr = (earned && a.earned_at && window._formatAchDate) ? window._formatAchDate(a.earned_at) : '';
+  const progPct = a.req ? Math.round(a.current / a.req * 100) : 0;
+  const progColor = earned ? '#4CAF7D' : progPct >= 50 ? '#5B8DEF' : '#E07040';
+
+  // Eski modal bor boʻlsa olib tashlaymiz
+  const existing = document.getElementById('ach-detail-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'ach-detail-modal';
+  modal.className = 'ach-detail-backdrop';
+  modal.onclick = (e) => { if (e.target === modal) closeAchievementDetail(); };
+
+  modal.innerHTML = `
+    <div class="ach-detail-card ${earned ? 'earned' : 'locked'}">
+      <button class="ach-detail-close" onclick="closeAchievementDetail()" aria-label="${S('achievements','close')}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <div class="ach-detail-badge ${earned ? 'earned' : 'locked'}">${iconContent}</div>
+      ${earnedDateStr ? `<div class="ach-detail-date">${earnedDateStr}</div>` : ''}
+      <div class="ach-detail-title">${a.title}</div>
+      ${a.desc ? `<div class="ach-detail-desc">${a.desc}</div>` : ''}
+      ${!earned ? `
+        <div class="ach-detail-progress">
+          <div class="ach-detail-prog-bg">
+            <div class="ach-detail-prog-fill" style="width:${progPct}%;background:${progColor}"></div>
+          </div>
+          <div class="ach-detail-prog-txt">${a.current} / ${a.req}</div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+  document.body.appendChild(modal);
+  // Animatsiya uchun keyingi frame'da .visible klassi
+  requestAnimationFrame(() => modal.classList.add('visible'));
+}
+
+function closeAchievementDetail() {
+  const modal = document.getElementById('ach-detail-modal');
+  if (!modal) return;
+  modal.classList.remove('visible');
+  setTimeout(() => modal.remove(), 200);
 }
 
 // Badge popup (check-in dan keyin)

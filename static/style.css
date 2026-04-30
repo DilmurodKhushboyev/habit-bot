@@ -1419,6 +1419,7 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
 .ach-info { flex: 1; min-width: 0; }
 .ach-title { font-size: 14px; font-weight: 700; color: var(--text); }
 .ach-desc  { font-size: 11px; color: var(--sub); margin-top: 2px; }
+.ach-earned-date { font-size: 10px; color: #4CAF7D; margin-top: 4px; font-weight: 600; font-family: 'DM Mono', monospace; }
 .ach-prog-wrap { margin-top: 8px; }
 .ach-prog-bg {
   height: 5px; border-radius: 4px;
@@ -1430,6 +1431,183 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   transition: width .5s ease;
 }
 .ach-prog-txt { font-size: 10px; color: var(--sub); margin-top: 4px; font-family: 'DM Mono', monospace; }
+
+/* === YANGI: Sahifa sarlavhasi (chess.com uslubi) === */
+.ach-page-header {
+  padding: 8px 4px 16px;
+  margin-bottom: 4px;
+}
+.ach-page-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  text-align: center;
+  letter-spacing: -0.3px;
+}
+.ach-page-counter {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sub);
+  margin-top: 6px;
+  text-align: left;
+  font-family: 'DM Mono', monospace;
+}
+
+/* === YANGI: Grid layout (chess.com uslubi) === */
+.ach-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 0 4px;
+}
+.ach-card-mini {
+  background: var(--bg);
+  border-radius: 16px;
+  box-shadow: var(--sh-card);
+  padding: 14px 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+  position: relative;
+}
+.ach-card-mini:active { transform: scale(0.96); }
+.ach-card-mini.locked { opacity: 0.6; }
+.ach-card-mini.earned { box-shadow: var(--sh-card), inset 0 0 0 1.5px rgba(76,175,125,0.25); }
+
+.ach-mini-badge {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: var(--sh-in);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.ach-card-mini.locked .ach-mini-badge { font-size: 24px; opacity: 0.85; }
+.ach-mini-check {
+  position: absolute;
+  bottom: -3px; right: -3px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: var(--sh-card);
+  display: flex; align-items: center; justify-content: center;
+}
+.ach-mini-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.25;
+  word-break: break-word;
+  hyphens: auto;
+}
+.ach-card-mini.locked .ach-mini-title { color: var(--sub); }
+
+/* === YANGI: Detail modal (yutuqni bosganda) === */
+.ach-detail-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(20, 22, 30, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 400;
+  padding: 24px;
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+.ach-detail-backdrop.visible { opacity: 1; }
+.ach-detail-card {
+  background: var(--bg);
+  border-radius: 24px;
+  box-shadow: var(--sh-card);
+  padding: 32px 24px 28px;
+  max-width: 320px; width: 100%;
+  display: flex; flex-direction: column; align-items: center;
+  position: relative;
+  transform: scale(0.92);
+  transition: transform .25s cubic-bezier(.32,1.2,.5,1);
+}
+.ach-detail-backdrop.visible .ach-detail-card { transform: scale(1); }
+.ach-detail-close {
+  position: absolute; top: 12px; right: 12px;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg);
+  box-shadow: var(--sh-card);
+  color: var(--sub);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+.ach-detail-close:active { transform: scale(0.92); }
+.ach-detail-badge {
+  width: 96px; height: 96px;
+  border-radius: 22px;
+  background: var(--bg);
+  box-shadow: var(--sh-in);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 56px;
+  margin-bottom: 16px;
+}
+.ach-detail-badge.locked { font-size: 44px; opacity: 0.85; }
+.ach-detail-date {
+  display: inline-block;
+  background: var(--bg);
+  box-shadow: var(--sh-in);
+  color: #4CAF7D;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  font-family: 'DM Mono', monospace;
+}
+.ach-detail-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 4px;
+}
+.ach-detail-desc {
+  font-size: 14px;
+  color: var(--sub);
+  text-align: center;
+  line-height: 1.4;
+  margin-top: 6px;
+  padding: 0 8px;
+}
+.ach-detail-progress {
+  width: 100%;
+  margin-top: 16px;
+}
+.ach-detail-prog-bg {
+  height: 8px;
+  border-radius: 6px;
+  background: var(--bg);
+  box-shadow: var(--sh-in);
+  overflow: hidden;
+}
+.ach-detail-prog-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width .5s ease;
+}
+.ach-detail-prog-txt {
+  font-size: 13px;
+  color: var(--sub);
+  margin-top: 8px;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-weight: 600;
+}
 
 /* Badge notification popup */
 .badge-popup {
