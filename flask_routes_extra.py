@@ -82,6 +82,8 @@ def register_extra_routes(app):
                 "cat":     cat_id,
                 "icon":    ach["icon"],
                 "title":   ach["title"],
+                # desc: 3 tilli dictdan joriy tilga, agar yoʻq boʻlsa uz, agar u ham yoʻq boʻlsa boʻsh string
+                "desc":    (ach.get("desc") or {}).get(lang) or (ach.get("desc") or {}).get("uz", ""),
                 "req":     ach["req"],
                 "current": current,
                 "earned":  1 if earned else 0,
