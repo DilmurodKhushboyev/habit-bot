@@ -211,12 +211,6 @@ function renderProfile(d) {
         <div style="color:var(--sub);font-size:18px;margin-left:auto">›</div>
       </div>
     </div>
-    <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('reminders',null)">
-      <div class="rem-top" style="margin-bottom:0">
-        <div class="rem-icon"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><defs><linearGradient id="svgBellLg" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M13 3C13 3 8 6 8 13v5H5l2 2h12l2-2h-3v-5c0-7-5-10-5-10z" fill="url(#svgBellLg)" opacity="0.85"/><circle cx="13" cy="22" r="1.5" fill="url(#svgBellLg)"/></svg></div><div class="rem-name">${S('profile','reminders')}</div>
-        <div style="color:var(--sub);font-size:18px">›</div>
-      </div>
-    </div>
     <!-- Yutuqlarim tugmasi — yutuqlar sahifasiga oʻtadi (qozonilgan + qulflanganlar) -->
     <div class="rem-card" style="margin-top:4px;cursor:pointer" onclick="switchTab('achievements',null)">
       <div class="rem-top" style="margin-bottom:0">
