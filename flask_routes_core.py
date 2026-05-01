@@ -319,6 +319,81 @@ def register_core_routes(app):
         save_user(uid, u)
         return jsonify({"ok": True, "updated": updated})
 
+    # ─────────────────────────────────────────────────────
+    # PUBLIC PROFILE — boshqa foydalanuvchining profil ma'lumotlari
+    # Reyting sahifasidan avatar bosilganda chaqiriladi.
+    # /api/profile dan farqi: privat maydonlar qaytmaydi (phone, lang,
+    # dark_mode, evening_notify, ref_link, xp_booster_days). Auto-save
+    # name ham bu yerda yo'q (caller'ning init_data'si boshqa user uchun
+    # noto'g'ri). Faqat "maqtanish" uchun ko'rinadigan ma'lumotlar.
+    # ─────────────────────────────────────────────────────
+    @app.route("/api/user/<int:uid>/public-profile")
+    @require_auth
+    def api_user_public_profile(uid):
+        u = load_user(uid)
+        if not u:
+            return jsonify({"error": "user_not_found"}), 404
+
+        # Rank — /api/profile bilan bir xil mantiq
+        my_points = u.get("points", 0)
+        rank = mongo_col.count_documents({
+            "_id":    {"$not": {"$regex": "^_"}},
+            "points": {"$gt": my_points}
+        }) + 1
+        total_users = mongo_col.count_documents({"_id": {"$not": {"$regex": "^_"}}})
+
+        today_str = _tz_today().strftime("%Y-%m-%d")
+
+        # Inventory ro'yxati — /api/profile bilan aynan bir xil format
+        # (frontend bandasi `_invBadgeDisplay` xuddi shu strukturani kutadi)
+        _p_items_list = []
+        _p_shown_ids = set()
+        if u.get("active_pet"):
+            _p_items_list.append({"id": u["active_pet"], "qty": 1, "price": SHOP_PRICES.get(u["active_pet"], 0)})
+            _p_shown_ids.add(u["active_pet"])
+        if u.get("active_badge"):
+            _p_items_list.append({"id": u["active_badge"], "qty": 1, "price": SHOP_PRICES.get(u["active_badge"], 0)})
+            _p_shown_ids.add(u["active_badge"])
+        if u.get("active_car"):
+            _p_items_list.append({"id": u["active_car"], "qty": 1, "price": SHOP_PRICES.get(u["active_car"], 0)})
+            _p_shown_ids.add(u["active_car"])
+        _p_raw_inv = u.get("inventory", {})
+        if isinstance(_p_raw_inv, list):
+            _p_inv_dict = {i: 1 for i in _p_raw_inv}
+        else:
+            _p_inv_dict = dict(_p_raw_inv)
+        _p_KNOWN_IDS = {"pet_cat", "pet_dog", "pet_rabbit", "badge_fire", "badge_star", "badge_secret", "car_sport"}
+        for _p_iid, _p_qty in _p_inv_dict.items():
+            if _p_qty > 0 and _p_iid not in _p_shown_ids and _p_iid in _p_KNOWN_IDS:
+                _p_items_list.append({"id": _p_iid, "qty": _p_qty, "price": SHOP_PRICES.get(_p_iid, 0)})
+                _p_shown_ids.add(_p_iid)
+        if u.get("streak_shields", 0) > 0:
+            _p_items_list.append({"id": "shield", "qty": u.get("streak_shields", 0), "price": SHOP_PRICES.get("shield_1", 0)})
+        if u.get("bonus_2x_active") and u.get("bonus_2x_date", "") == today_str:
+            _p_items_list.append({"id": "bonus_2x", "qty": 1, "price": SHOP_PRICES.get("bonus_2x", 0)})
+        if u.get("bonus_3x_active") and u.get("bonus_3x_date", "") == today_str:
+            _p_items_list.append({"id": "bonus_3x", "qty": 1, "price": SHOP_PRICES.get("bonus_3x", 0)})
+        if u.get("xp_booster_days", 0) > 0:
+            _p_items_list.append({"id": "xp_booster", "qty": u.get("xp_booster_days", 0), "price": SHOP_PRICES.get("xp_booster", 0)})
+
+        return jsonify({
+            "name":          u.get("name", "?"),
+            "display_name":  u.get("display_name", ""),
+            "photo_url":     u.get("photo_url", ""),
+            "rank":          rank,
+            "total_users":   total_users,
+            "joined_at":     u.get("joined_at", ""),
+            "jon":           u.get("jon", 100),
+            "bio":           u.get("bio", ""),
+            "is_vip":        u.get("is_vip", False),
+            "active_pet":    {"pet_cat":"🐱","pet_dog":"🐶","pet_rabbit":"🐰"}.get(u.get("active_pet",""), u.get("active_pet","")),
+            "active_badge":  {"badge_fire":"🔥","badge_star":"⭐","badge_secret":"👑"}.get(u.get("active_badge",""), u.get("active_badge","")),
+            "earned_ach":    len([a for a in u.get("achievements", []) if isinstance(a, dict)]),
+            "total_ach":     len(ACHIEVEMENTS),
+            "items_count":   len(_p_items_list),
+            "items_list":    _p_items_list,
+        })
+
     @app.route("/api/habits/<int:uid>", methods=["GET"])
     @require_auth
     def api_habits_get(uid):
