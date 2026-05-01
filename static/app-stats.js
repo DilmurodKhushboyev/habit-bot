@@ -925,8 +925,17 @@ function setRatPeriod(p) { _ratPeriod = p; loadRating(); }
 
 function userAvatarHTML(u, size = 32) {
   const initial = (u.name || '?')[0].toUpperCase();
-  const clickStyle = u.is_me ? 'cursor:pointer;' : '';
-  const clickAttr  = u.is_me ? " onclick=\"switchTab('profile',document.getElementById('nav-profile'))\"" : '';
+  // is_me → profile sahifasiga o'tadi (eski xulq saqlangan)
+  // boshqa user → openUserProfile modal ochadi (yangi xulq)
+  let clickStyle = '';
+  let clickAttr = '';
+  if (u.is_me) {
+    clickStyle = 'cursor:pointer;';
+    clickAttr = " onclick=\"event.stopPropagation();switchTab('profile',document.getElementById('nav-profile'))\"";
+  } else if (u.uid) {
+    clickStyle = 'cursor:pointer;';
+    clickAttr = " onclick=\"event.stopPropagation();openUserProfile(" + u.uid + ")\"";
+  }
   // v470: bugun barcha odatlarini 100% bajargan foydalanuvchining avatari ustida
   // yashil zarrachalar tepadan pastga tushadi (minimalist — 5 ta kichik zar, doimiy)
   const snowHtml = u.today_done ? _avatarSnowHTML() : '';
@@ -1231,4 +1240,169 @@ function closeUserInventory() {
     setTimeout(() => { if (modal.parentNode) modal.remove(); }, 250);
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// USER PROFILE MODAL — reyting sahifasidan avatar bosilganda
+// Boshqa foydalanuvchining profil kartochkasini ko'rsatadi (1:1 nusxa
+// app-profile.js renderProfile dagidek, lekin tahrirlash/sozlamalar yo'q).
+// Backend: GET /api/user/<uid>/public-profile (flask_routes_core.py)
+// ─────────────────────────────────────────────────────────────
+async function openUserProfile(targetUid) {
+  if (!targetUid) return;
+  // Mavjud modallarni yopish (chalkashlik bo'lmasligi uchun)
+  closeUserProfile();
+  closeUserInventory();
+
+  // Loading modal — fetch davom etayotganda
+  const loadingModal = document.createElement('div');
+  loadingModal.id = 'user-profile-modal';
+  loadingModal.className = 'shop-modal-overlay';
+  loadingModal.onclick = function(e) { if (e.target === loadingModal) closeUserProfile(); };
+  loadingModal.innerHTML = `
+    <div class="shop-modal-box" onclick="event.stopPropagation()">
+      <div style="text-align:center;padding:30px 0;color:var(--sub);font-size:13px">
+        <div style="display:inline-block;width:24px;height:24px;border:3px solid var(--bg);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite"></div>
+      </div>
+    </div>`;
+  document.body.appendChild(loadingModal);
+  requestAnimationFrame(() => { loadingModal.classList.add('show'); });
+
+  // Haptic
+  try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
+
+  // Fetch
+  let d;
+  try {
+    d = await apiFetch('/api/user/' + targetUid + '/public-profile');
+  } catch (err) {
+    console.error('openUserProfile fetch failed:', err);
+    closeUserProfile();
+    return;
+  }
+  if (!d || d.error) {
+    closeUserProfile();
+    return;
+  }
+
+  // Loading konteynerini topib ichini almashtiramiz (qayta DOM yaratmaymiz)
+  const modal = document.getElementById('user-profile-modal');
+  if (!modal) return; // foydalanuvchi yopib ulgurgan
+
+  modal.querySelector('.shop-modal-box').innerHTML = _userProfileCardHTML(d);
+}
+
+function closeUserProfile() {
+  const modal = document.getElementById('user-profile-modal');
+  if (modal) {
+    modal.classList.remove('show');
+    setTimeout(() => { if (modal.parentNode) modal.remove(); }, 250);
+  }
+}
+
+// Profil kartochkasi HTML — app-profile.js renderProfile bilan 1:1 mos
+// Faqat ko'rsatish: tahrirlash, sozlamalar, referral qismlari yo'q.
+function _userProfileCardHTML(d) {
+  const jon = d.jon ?? 100;
+  const jonColor = jon >= 70 ? '#4CAF7D' : jon >= 40 ? '#D4963A' : '#E05050';
+  const initial = (d.name || '?')[0].toUpperCase();
+  const photoUrl = d.photo_url || '';
+  const safeName = _invEscapeHtml(d.display_name || d.name || S('msg','default_user'));
+
+  // Avatar (renderProfile pattern)
+  const avatarHtml = photoUrl
+    ? `<img src="${photoUrl}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;box-shadow:var(--sh-sm)" onerror="this.outerHTML='<div class=\\'avatar\\'>${initial}</div>'">`
+    : `<div class="avatar">${initial}</div>`;
+
+  // Qo'shilgan sana
+  const joinedStr = d.joined_at ? (() => {
+    const months = S('profile','month_abbr') || ['','Yan','Fev','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const p = d.joined_at.split('-');
+    return p[2] + ' ' + (months[+p[1]] || p[1]) + ' ' + p[0];
+  })() : '—';
+
+  const rankTxt = d.rank ? `#${d.rank} / ${d.total_users || '?'}` : '';
+  const vipBadge = d.is_vip
+    ? '<span style="background:#5B8DEF22;color:#5B8DEF;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700;margin-left:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgUpVip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><path d="M12 2l1.8 5.5H20l-4.9 3.6 1.8 5.5L12 13l-4.9 3.6 1.8-5.5L4 7.5h6.2z" fill="url(#svgUpVip)"/></svg> VIP</span>'
+    : '';
+
+  // Yutuqlar progress
+  const achPct = d.total_ach ? Math.round(d.earned_ach / d.total_ach * 100) : 0;
+  const achColor = achPct >= 80 ? '#4CAF7D' : achPct >= 40 ? '#5B8DEF' : '#E07040';
+
+  // Inventory chips banda — _invCache'ga yozib qo'yamiz, chunki openUserInventoryByKey shu bilan ishlaydi
+  let invChipsHtml = '';
+  if (d.items_count > 0) {
+    window._invCache = window._invCache || {};
+    const _upKey = 'up_' + Math.random().toString(36).slice(2);
+    window._invCache[_upKey] = {
+      name: d.display_name || d.name || '',
+      list: d.items_list || []
+    };
+    const _badgeEmoji = {
+      pet_cat:'🐱', pet_dog:'🐶', pet_rabbit:'🐰',
+      badge_fire:'🔥', badge_star:'⭐', badge_secret:'👑',
+      car_sport:'🏎️',
+      shield:'🛡️', bonus_2x:'⚡', bonus_3x:'🚀', xp_booster:'💎',
+    };
+    const sorted = (d.items_list || []).slice().sort((a,b) => (b.price||0) - (a.price||0));
+    const top = sorted.slice(0,1);
+    const rest = sorted.length - top.length;
+    const emojis = top.map(it => _badgeEmoji[it.id] || '📦').join('');
+    const display = emojis + (rest > 0 ? ' +' + rest : '');
+    invChipsHtml = `
+      <div class="profile-chips">
+        <div class="profile-chip" style="cursor:pointer" onclick="openUserInventoryByKey('${_upKey}')">
+          <span class="profile-chip-accent" style="color:var(--accent);letter-spacing:-0.5px;font-size:15px">${display}</span>
+          <span style="color:var(--sub);font-size:11px;margin-left:4px">${d.items_count} ${S('inventory','badge_label')}</span>
+        </div>
+      </div>`;
+  }
+
+  // Bio (faqat mavjud bo'lsa)
+  const bioHtml = d.bio
+    ? `<div class="profile-bio">${d.bio.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
+    : '';
+
+  // Active badge emoji (ism yonida)
+  const activeBadgeHtml = d.active_badge ? ' <span title="Badge">'+d.active_badge+'</span>' : '';
+
+  // Active pet (o'ng burchakda, renderProfile pattern)
+  const activePetHtml = d.active_pet ? `<div style="font-size:36px;line-height:1" title="Pet">${d.active_pet}</div>` : '';
+
+  // ✕ tugma (yuqori-o'ng burchakda) + butun karta
+  const closeBtnHtml = `<button type="button" onclick="closeUserProfile()" aria-label="close" style="position:absolute;top:8px;right:8px;width:32px;height:32px;border:none;border-radius:50%;background:var(--bg);box-shadow:var(--sh-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub);z-index:2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>`;
+
+  return `
+    ${closeBtnHtml}
+    <div class="profile-card" style="margin:0;box-shadow:none;padding:14px;background:transparent">
+      <div class="profile-top">
+        ${avatarHtml}
+        <div style="flex:1;min-width:0">
+          <div class="profile-name">${safeName}${vipBadge}${activeBadgeHtml}</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:2px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="gUpTrophy" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M8 21h8M12 17v4M5 3h14v8a7 7 0 01-14 0V3z" stroke="url(#gUpTrophy)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M5 6H2v3a3 3 0 003 3M19 6h3v3a3 3 0 01-3 3" stroke="url(#gUpTrophy)" stroke-width="2" stroke-linecap="round" fill="none"/></svg>${rankTxt} ${S('msg','rank_position')}</div>
+          <div style="font-size:10px;color:var(--sub);margin-top:2px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="gUpCal" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><rect x="3" y="5" width="18" height="16" rx="3" stroke="url(#gUpCal)" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="url(#gUpCal)" stroke-width="2" stroke-linecap="round"/></svg>${joinedStr} ${S('msg','since_date')}</div>
+        </div>
+        ${activePetHtml}
+      </div>
+
+      ${invChipsHtml}
+
+      ${bioHtml}
+
+      <div class="profile-bar-row">
+        <span class="profile-bar-label"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgUpHeart" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B8A"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 17C10 17 2 12 2 6.5A4.5 4.5 0 0110 4a4.5 4.5 0 018 2.5C18 12 10 17 10 17z" fill="url(#svgUpHeart)"/></svg> ${S('profile','jon_label')}</span>
+        <span class="profile-bar-value" style="color:${jonColor}">${jon}%</span>
+      </div>
+      <div class="jon-bar-bg"><div class="jon-bar-fill" style="width:${jon}%;background:${jonColor}"></div></div>
+
+      ${d.total_ach ? `
+      <div class="profile-bar-row">
+        <span class="profile-bar-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:2px"><defs><linearGradient id="svgUpAch" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 2l1.8 5.5H20l-4.9 3.6 1.8 5.5L12 13l-4.9 3.6 1.8-5.5L4 7.5h6.2z" fill="url(#svgUpAch)"/></svg> ${S('profile','achievements')}</span>
+        <span class="profile-bar-value" style="color:${achColor}">${d.earned_ach}/${d.total_ach} (${achPct}%)</span>
+      </div>
+      <div class="jon-bar-bg"><div class="jon-bar-fill" style="width:${achPct}%;background:${achColor}"></div></div>
+      ` : ''}
+    </div>`;
+}
+
 

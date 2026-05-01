@@ -213,6 +213,7 @@ const STRINGS = {
     inventory: {
       badge_label:'ta',
       modal_title:"{name}ning inventari",
+      profile_modal_title:"{name}ning profili",
       modal_empty:'Hech narsa sotib olinmagan',
       modal_close:'Yopish',
       modal_qty:'ta',
@@ -605,6 +606,7 @@ const STRINGS = {
     inventory: {
       badge_label:'шт',
       modal_title:'Инвентарь {name}',
+      profile_modal_title:'Профиль {name}',
       modal_empty:'Ничего не куплено',
       modal_close:'Закрыть',
       modal_qty:'шт',
@@ -997,6 +999,7 @@ const STRINGS = {
     inventory: {
       badge_label:'items',
       modal_title:"{name}'s inventory",
+      profile_modal_title:"{name}'s profile",
       modal_empty:'Nothing purchased yet',
       modal_close:'Close',
       modal_qty:'pcs',
