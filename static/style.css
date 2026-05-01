@@ -2531,7 +2531,7 @@ body.dark .rem1-section-title-collapsible:active {
   gap: 14px;
   flex-shrink: 0;
 }
-.rem1-card-done-btn, .rem1-card-del-btn {
+.rem1-card-del-btn {
   width: 32px; height: 32px;
   border-radius: 50%;
   background: var(--bg);
@@ -2542,49 +2542,27 @@ body.dark .rem1-section-title-collapsible:active {
   align-items: center;
   justify-content: center;
   transition: box-shadow .15s ease, transform .15s ease;
+  color: #E05050;
 }
-.rem1-card-done-btn { color: var(--green); }
-.rem1-card-del-btn  { color: #E05050; }
-.rem1-card-done-btn:active, .rem1-card-del-btn:active {
+.rem1-card-del-btn:active {
   box-shadow: var(--sh-press);
   transform: scale(.92);
 }
-
-/* ── Glow ring tick tugma (odat kartochkasidan ilhomlangan) ── */
+/* Done tugma — odat kartalari bilan vizual uyg'unlik uchun checkinRingHTML SVG ishlatiladi.
+   Tugma faqat konteyner: chegara/shadow yoʻq, halqa SVG ichida. */
 .rem1-card-done-btn {
-  position: relative;
-  border: 2px solid rgba(76, 175, 125, 0.35);
-}
-.rem1-glow-ring {
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 38px;
-  height: 38px;
-  transform: translate(-50%, -50%) translateZ(0);
-  pointer-events: none;
-  overflow: visible;
-  display: block;
-  z-index: 1;
-  will-change: transform;
-}
-.rem1-glow-circle {
-  stroke-dasharray: 36 108;
-  stroke-dashoffset: 0;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 2.5px rgba(76, 175, 125, 0.9));
-  animation: habitGlowRun 3s linear infinite;
-  will-change: stroke-dashoffset;
-}
-@keyframes habitGlowRun {
-  to { stroke-dashoffset: -144; }
-}
-.rem1-done-tick {
-  position: relative;
-  z-index: 2;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform .15s ease;
 }
+.rem1-card-done-btn:active { transform: scale(.92); }
 
 /* ── 3-nuqta tugma ── */
 .rem1-card-dots-btn {

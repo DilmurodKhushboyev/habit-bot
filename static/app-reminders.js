@@ -131,10 +131,7 @@ function _renderRemCard(r) {
           <div class="rem1-card-meta">${timeLabel}</div>
         </div>
         <div class="rem1-card-actions">
-          <button class="rem1-card-done-btn" onclick="event.stopPropagation();markReminderDone('${r._id}')" type="button" title="${S('today','rem_done_btn')}">
-            <svg class="rem1-glow-ring" viewBox="0 0 50 50" preserveAspectRatio="xMidYMid meet"><circle class="rem1-glow-circle" cx="25" cy="25" r="23" fill="none" stroke="#4CAF7D" stroke-width="2"/></svg>
-            <span class="rem1-done-tick"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#4CAF7D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          </button>
+          <button class="rem1-card-done-btn" onclick="event.stopPropagation();markReminderDone('${r._id}')" type="button" title="${S('today','rem_done_btn')}">${checkinRingHTML(0, false, '', 32)}</button>
           <button class="rem1-card-dots-btn" id="rem1-dots-${r._id}" onclick="event.stopPropagation();toggleRem1Swipe('${r._id}')" type="button" aria-label="menu">
             <svg class="rem1-dots-icon" width="4" height="16" viewBox="0 0 4 16" fill="currentColor"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="8" r="2"/><circle cx="2" cy="14" r="2"/></svg>
             <svg class="rem1-x-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
