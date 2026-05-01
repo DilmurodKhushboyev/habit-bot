@@ -427,8 +427,8 @@ function checkinRingHTML(percent, isDone, label, size = 42) {
   const gap  = circ - dash;
   const offset = circ * 0.25;
   const trackColor = '#C8CBD8';                                   // `Odat 1/9` halqasi bilan bir xil track
-  const progressColor = isDone ? '#4CAF7D' : '#4CAF7D';           // qisman ham yashil yoy
-  const labelColor = isDone ? '#4CAF7D' : '#A8ADB5';              // matn rangi (done=yashil, pending=kulrang)
+  const progressColor = isDone ? '#7DC29A' : '#4CAF7D';           // done=ochroq yashil (xirashroq), repeat qisman=to'q yashil
+  const labelColor = isDone ? '#7DC29A' : '#A8ADB5';              // matn rangi (done=ochroq yashil, pending=kulrang)
   // Done holatda butun halqa yashil; pending'da faqat track ko'rinadi (ichida ✓ SVG yoki matn)
   const ringStroke = isDone ? progressColor : trackColor;
   // Progress yoy faqat repeat qisman (pct>0 va !isDone) holatda chiziladi
