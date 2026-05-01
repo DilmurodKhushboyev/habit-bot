@@ -1273,7 +1273,7 @@ async function openUserProfile(targetUid) {
   // Fetch
   let d;
   try {
-    d = await apiFetch('/api/user/' + targetUid + '/public-profile');
+    d = await apiFetch('user/' + targetUid + '/public-profile');
   } catch (err) {
     console.error('openUserProfile fetch failed:', err);
     closeUserProfile();
