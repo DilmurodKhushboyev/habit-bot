@@ -61,8 +61,10 @@ function renderToday(d) {
     const rc  = h.repeat_count || 1;
     const tc  = h.today_count  || 0;
     const isRepeat = rc > 1;
-    // Tugma: bitta bo'lsa SVG-tick, ko'p bo'lsa 3/5
-    const btnContent = h.done ? '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><path d="M4 10l5 5 7-8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : (isRepeat && tc > 0 ? tc+'/'+rc : '');
+    // Pending repeat habit'da `2/3` koʻrinadigan label (oddiy/done holatda boʻsh — SVG ichida ✓)
+    const btnContent = h.done ? '' : (isRepeat && tc > 0 ? tc+'/'+rc : '');
+    // Halqa progress foizi: oddiy habit pending=0%, done=100%; repeat habit tc/rc nisbatida
+    const ringPct = h.done ? 100 : (isRepeat ? Math.round(tc / rc * 100) : 0);
     // Progress dots olib tashlandi — 2/3 raqami va aylana progress yetarli (vizual takror edi)
     const dotsHtml = '';
     const _esc = (s) => (s||'').replace(/'/g, "\\'");
@@ -89,7 +91,7 @@ function renderToday(d) {
             <svg class="dots-icon" width="4" height="16" viewBox="0 0 4 16" fill="currentColor"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="8" r="2"/><circle cx="2" cy="14" r="2"/></svg>
             <svg class="x-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
           </button>
-          <button class="checkin-btn" id="cbtn-${h.id}" onclick="event.stopPropagation();checkin('${h.id}', document.getElementById('ccard-${h.id}'))" style="${isRepeat && !h.done && tc>0 ? 'font-size:11px;font-weight:700' : ''}">${!h.done ? '<svg class="habit-glow-ring" viewBox="0 0 50 50" preserveAspectRatio="xMidYMid meet"><circle class="habit-glow-circle" cx="25" cy="25" r="23" fill="none" stroke="#4CAF7D" stroke-width="2"/></svg>' : ''}<span class="checkin-btn-content">${btnContent}</span></button>
+          <button class="checkin-btn" id="cbtn-${h.id}" onclick="event.stopPropagation();checkin('${h.id}', document.getElementById('ccard-${h.id}'))">${checkinRingHTML(ringPct, h.done, btnContent)}</button>
           <div class="checkin-dropdown" id="cdrop-${h.id}">
             <button class="checkin-dropdown-close" onclick="event.stopPropagation();closeAllCheckinDrops()">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"/></svg>
@@ -171,34 +173,11 @@ async function checkin(hid, cardEl) {
     const rc  = result.repeat_count || 1;
     const tc  = result.today_count  || 0;
     if (btn) {
-      const mainContent = isDone ? '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><path d="M4 10l5 5 7-8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : (rc > 1 && tc > 0 ? tc+'/'+rc : '');
-      // SVG glow ring-ga tegmaymiz (animatsiya uzluksiz davom etsin), faqat matn qismini yangilaymiz
-      let contentSpan = btn.querySelector('.checkin-btn-content');
-      if (!contentSpan) {
-        contentSpan = document.createElement('span');
-        contentSpan.className = 'checkin-btn-content';
-        btn.appendChild(contentSpan);
-      }
-      contentSpan.innerHTML = mainContent;
-      // Glow ring-ni kerak boʻlsa qoʻshish yoki olib tashlash
-      let glowSvg = btn.querySelector('.habit-glow-ring');
-      if (!isDone && !glowSvg) {
-        // Undo: glow qayta kerak. Boshqa kartaning animatsiyasi bilan sinxronlash uchun
-        // mavjud glow-ning computed stroke-dashoffset qiymatini olamiz
-        const existingGlow = document.querySelector('.habit-glow-circle');
-        const currentOffset = existingGlow ? getComputedStyle(existingGlow).strokeDashoffset : '0';
-        btn.insertAdjacentHTML('afterbegin', '<svg class="habit-glow-ring" viewBox="0 0 50 50" preserveAspectRatio="xMidYMid meet"><circle class="habit-glow-circle" cx="25" cy="25" r="23" fill="none" stroke="#4CAF7D" stroke-width="2"/></svg>');
-        const newCircle = btn.querySelector('.habit-glow-circle');
-        if (newCircle && currentOffset && currentOffset !== '0px') {
-          // Animatsiyani oʻsha nuqtadan davom ettirish
-          const offsetNum = parseFloat(currentOffset);
-          const progress = Math.abs(offsetNum % 144) / 144; // 0..1 oraligʻidagi joriy progres
-          newCircle.style.animationDelay = (-progress * 3) + 's';
-        }
-      } else if (isDone && glowSvg) {
-        glowSvg.remove();
-      }
-      btn.style.fontSize = (rc > 1 && !isDone && tc > 0) ? '11px' : '';
+      const isRepeat = rc > 1;
+      const lbl = isDone ? '' : (isRepeat && tc > 0 ? tc+'/'+rc : '');
+      const ringPct = isDone ? 100 : (isRepeat ? Math.round(tc / rc * 100) : 0);
+      btn.innerHTML = checkinRingHTML(ringPct, isDone, lbl);
+      btn.style.fontSize = '';
     }
     // Progress dots olib tashlandi — render paytida ham yaratilmaydi.
     // Eski sessiyalardan qolgan `.repeat-dots` element bo'lsa, DOM'dan tozalaymiz.

@@ -739,35 +739,6 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
 .checkin-card.done .checkin-btn {
   opacity: 1;
 }
-/* Bugun bajarilishi kerak — yashil nur checkin tugmasi atrofida aylanib yuradi */
-.checkin-btn { position: relative; }
-.checkin-btn-content {
-  position: relative;
-  z-index: 2;
-}
-.habit-glow-ring {
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 48px;
-  height: 48px;
-  transform: translate(-50%, -50%) translateZ(0);
-  pointer-events: none;
-  overflow: visible;
-  display: block;
-  z-index: 1;
-  will-change: transform;
-}
-.habit-glow-circle {
-  stroke-dasharray: 36 108;
-  stroke-dashoffset: 0;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 2.5px rgba(76, 175, 125, 0.9));
-  animation: habitGlowRun 3s linear infinite;
-  will-change: stroke-dashoffset;
-}
-@keyframes habitGlowRun {
-  to { stroke-dashoffset: -144; }
-}
 /* Swipe orqasi — tahrirlash / o'chirish */
 .checkin-actions-bg {
   position: absolute;
@@ -882,34 +853,13 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
 
 .checkin-btn {
   width: 42px; height: 42px; border-radius: 50%;
-  border: 2px solid rgba(76, 175, 125, 0.35); cursor: pointer; flex-shrink: 0;
-  background: var(--bg);
-  box-shadow: var(--sh-sm);
-  font-size: 16px; font-weight: 700;
+  border: none; cursor: pointer; flex-shrink: 0;
+  background: transparent;
+  padding: 0;
   display: flex; align-items: center; justify-content: center;
-  transition: all .2s; color: var(--sub);
-}
-/* Pending holatda xira ✓ belgisi — tugma "bosilishi kerak" ekanini koʻrsatadi.
-   .checkin-btn-content boʻsh boʻlganda (simple pending yoki repeat 0/N) koʻrinadi.
-   :not(:empty) orqali matn bor paytda (1/3 va h.k.) yashirinadi. */
-.checkin-btn-content:empty::before {
-  content: "";
-  display: block;
-  width: 14px; height: 14px;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 20 20' fill='none'><path d='M4 10l5 5 7-8' stroke='%234CAF7D' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-  background-size: contain;
-  background-repeat: no-repeat;
-  opacity: 0.85;
-  transition: opacity .2s;
-}
-.checkin-card.done .checkin-btn {
-  box-shadow: 0 3px 8px rgba(76, 175, 125, 0.22), var(--sh-press);
-  background: linear-gradient(135deg, #5BC28E 0%, #3D9B6B 100%);
-  color: #fff; font-size: 18px;
-  border-color: transparent;
+  transition: transform .2s;
 }
 .checkin-btn:active { transform: scale(0.88); }
-.checkin-btn:active .checkin-btn-content:empty::before { opacity: 0.7; }
 
 .confetti-pop {
   position: absolute; inset: 0; pointer-events: none;
@@ -2581,7 +2531,7 @@ body.dark .rem1-section-title-collapsible:active {
   gap: 14px;
   flex-shrink: 0;
 }
-.rem1-card-done-btn, .rem1-card-del-btn {
+.rem1-card-del-btn {
   width: 32px; height: 32px;
   border-radius: 50%;
   background: var(--bg);
@@ -2592,46 +2542,27 @@ body.dark .rem1-section-title-collapsible:active {
   align-items: center;
   justify-content: center;
   transition: box-shadow .15s ease, transform .15s ease;
+  color: #E05050;
 }
-.rem1-card-done-btn { color: var(--green); }
-.rem1-card-del-btn  { color: #E05050; }
-.rem1-card-done-btn:active, .rem1-card-del-btn:active {
+.rem1-card-del-btn:active {
   box-shadow: var(--sh-press);
   transform: scale(.92);
 }
-
-/* ── Glow ring tick tugma (odat kartochkasidan ilhomlangan) ── */
+/* Done tugma — odat kartalari bilan vizual uyg'unlik uchun checkinRingHTML SVG ishlatiladi.
+   Tugma faqat konteyner: chegara/shadow yoʻq, halqa SVG ichida. */
 .rem1-card-done-btn {
-  position: relative;
-  border: 2px solid rgba(76, 175, 125, 0.35);
-}
-.rem1-glow-ring {
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 38px;
-  height: 38px;
-  transform: translate(-50%, -50%) translateZ(0);
-  pointer-events: none;
-  overflow: visible;
-  display: block;
-  z-index: 1;
-  will-change: transform;
-}
-.rem1-glow-circle {
-  stroke-dasharray: 36 108;
-  stroke-dashoffset: 0;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 2.5px rgba(76, 175, 125, 0.9));
-  animation: habitGlowRun 3s linear infinite;
-  will-change: stroke-dashoffset;
-}
-.rem1-done-tick {
-  position: relative;
-  z-index: 2;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform .15s ease;
 }
+.rem1-card-done-btn:active { transform: scale(.92); }
 
 /* ── 3-nuqta tugma ── */
 .rem1-card-dots-btn {
