@@ -1027,7 +1027,7 @@ function renderRating(d) {
       <div style="flex:1;max-width:110px;text-align:center">
         <div style="display:flex;justify-content:center;margin-bottom:6px;position:relative">
           ${userAvatarHTML(u, idx===0?48:38)}
-          <span style="position:absolute;bottom:-8px;right:calc(50% - ${idx===0?40:32}px)">${u.pet || medals[idx]}</span>
+          ${u.pet ? `<span style="position:absolute;bottom:-8px;right:calc(50% - ${idx===0?40:32}px)">${u.pet}</span>` : ''}
         </div>
         <div style="font-size:${idx===0?'13px':'11px'};font-weight:700;color:${isMe?'var(--accent)':'var(--text)'};margin-bottom:2px">${u.name.split(' ')[0]}</div>
         ${u.badge ? `<div style="font-size:10px">${u.badge}</div>` : ''}
@@ -1036,9 +1036,9 @@ function renderRating(d) {
         </div>
         <div style="height:${h}px;background:linear-gradient(180deg,${col}44,${col}22);
           border-radius:10px 10px 0 0;border:2px solid ${col}44;
-          display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 0;gap:3px">
+          display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px 0;gap:3px">
           <div style="font-size:16px;font-weight:800;color:${col}">${idx+1}</div>
-          <div style="display:flex;align-items:center;gap:3px;flex-wrap:nowrap;justify-content:center">
+          <div style="display:flex;align-items:center;gap:3px;flex-wrap:nowrap;justify-content:center;margin-top:auto">
             ${u.habits_count ? `<div style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><rect x="8" y="2" width="8" height="4" rx="1" stroke="${col}" stroke-width="2"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="${col}" stroke-width="2"/><path d="M8 11h8M8 15h5" stroke="${col}" stroke-width="2" stroke-linecap="round"/></svg> ${u.habits_count}</div>` : ''}
             ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap;cursor:pointer">${_invBadgeDisplay(u)}</div>` : ''}
             ${(j=>{const hc=j>=60?'#4CAF7D':j>=30?'#7DC29A':'#E05050';const hb=j>=30?'rgba(76,175,125,0.13)':'rgba(224,80,80,0.13)';return `<div style="font-size:8px;font-weight:700;color:${col};background:${col}22;border-radius:4px;padding:1px 4px;white-space:nowrap;display:inline-flex;align-items:center;gap:2px"><svg width="9" height="9" viewBox="0 0 24 24" fill="${hc}" style="display:inline;vertical-align:middle"><path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z"/></svg>${j}%</div>`;})(u.jon??100)}
