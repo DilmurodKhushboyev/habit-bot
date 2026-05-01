@@ -63,14 +63,8 @@ function renderToday(d) {
     const isRepeat = rc > 1;
     // Tugma: bitta bo'lsa SVG-tick, ko'p bo'lsa 3/5
     const btnContent = h.done ? '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><path d="M4 10l5 5 7-8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : (isRepeat && tc > 0 ? tc+'/'+rc : '');
-    // Progress dots (repeat uchun)
-    let dotsHtml = '';
-    if (isRepeat) {
-      dotsHtml = '<div class="repeat-dots" style="display:flex;gap:3px;margin-top:4px">'
-        + Array.from({length: rc}, (_,i) =>
-            '<div style="width:8px;height:8px;border-radius:50%;background:'+(i<tc?'var(--green)':'var(--bg)')+';box-shadow:'+(i<tc?'none':'var(--sh-in)')+'"></div>'
-          ).join('') + '</div>';
-    }
+    // Progress dots olib tashlandi — 2/3 raqami va aylana progress yetarli (vizual takror edi)
+    const dotsHtml = '';
     const _esc = (s) => (s||'').replace(/'/g, "\\'");
     cardsHtml += `
       <div class="checkin-card ${h.done ? 'done' : ''}" id="ccard-${h.id}">
@@ -215,14 +209,12 @@ async function checkin(hid, cardEl) {
       }
       btn.style.fontSize = (rc > 1 && !isDone && tc > 0) ? '11px' : '';
     }
-    // Progress dots yangilash
+    // Progress dots olib tashlandi — render paytida ham yaratilmaydi.
+    // Eski sessiyalardan qolgan `.repeat-dots` element bo'lsa, DOM'dan tozalaymiz.
     const info = cardEl.querySelector('.checkin-info');
-    if (info && rc > 1) {
-      let dots = info.querySelector('.repeat-dots');
-      if (!dots) { dots = document.createElement('div'); dots.className='repeat-dots'; dots.style.cssText='display:flex;gap:3px;margin-top:4px'; info.appendChild(dots); }
-      dots.innerHTML = Array.from({length: rc}, (_,i) =>
-        '<div style="width:8px;height:8px;border-radius:50%;background:'+(i<tc?'var(--green)':'var(--bg)')+';box-shadow:'+(i<tc?'none':'var(--sh-in)')+'"></div>'
-      ).join('');
+    if (info) {
+      const oldDots = info.querySelector('.repeat-dots');
+      if (oldDots) oldDots.remove();
     }
     const metaEl = cardEl.querySelector('.checkin-meta');
     if (metaEl) {
