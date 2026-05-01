@@ -84,15 +84,6 @@ function renderToday(d) {
             <div class="checkin-name">${h.name}</div>
             <div class="checkin-meta">${isRepeat ? rc+S('today','times_per_day')+' · ' : (h.time !== 'vaqtsiz' ? `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgClock" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A8ADB5"/><stop offset="100%" stop-color="#8A8F98"/></linearGradient></defs><circle cx="10" cy="10" r="8" stroke="url(#svgClock)" stroke-width="2"/><path d="M10 6V10L13 12" stroke="url(#svgClock)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> `+h.time+' · ' : '')}<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle;opacity:${h.streak > 0 ? '1' : '0.5'}"><defs><linearGradient id="svgFire" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A8ADB5"/><stop offset="100%" stop-color="#8A8F98"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFire)"/></svg> ${h.streak}</div>
             ${dotsHtml}
-            ${(() => {
-              const d66 = h.days_66_done || 0;
-              const pct66 = Math.min(100, Math.round(d66 / 66 * 100));
-              const c66 = '#4CAF7D';
-              return '<div style="margin-top:6px" onclick="event.stopPropagation()">'
-                + '<div style="height:3px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);overflow:hidden">'
-                + '<div style="height:100%;border-radius:2px;width:' + pct66 + '%;background:linear-gradient(90deg,' + c66 + '99,' + c66 + ');transition:width .6s ease"></div>'
-                + '</div></div>';
-            })()}
           </div>
           <button class="checkin-dots-btn" id="cdots-${h.id}" onclick="event.stopPropagation();toggleCheckinDrop('${h.id}')">
             <svg class="dots-icon" width="4" height="16" viewBox="0 0 4 16" fill="currentColor"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="8" r="2"/><circle cx="2" cy="14" r="2"/></svg>
