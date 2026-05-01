@@ -129,16 +129,12 @@ function renderProfile(d) {
       ` : ''}
     </div>
 
-    <!-- Do'st taklif qilish — MODAL (shop-modal pattern ishlatilgan) -->
-    <div class="shop-modal-overlay" id="ref-modal" onclick="if(event.target===this)closeReferralModal()">
-      <div class="shop-modal-box" style="max-width:340px;text-align:left">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgRefMd" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="9" cy="7" r="3.5" fill="url(#svgRefMd)" opacity="0.85"/><circle cx="16.5" cy="7.5" r="2.8" fill="url(#svgRefMd)" opacity="0.6"/><path d="M1.5 20c0-3.5 3-6.5 7.5-6.5s7.5 3 7.5 6.5" stroke="url(#svgRefMd)" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M17 14c2.5.5 5 2.5 5 5" stroke="url(#svgRefMd)" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.6"/></svg>
-            <div style="font-size:16px;font-weight:700;color:var(--text)">${S('msg','ref_title')}</div>
-          </div>
-          <button onclick="closeReferralModal()" type="button" style="background:none;border:none;color:var(--sub);cursor:pointer;padding:4px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
-        </div>
+    <!-- Do'st taklif qilish — MODAL (bottom sheet pattern, lang-modal kabi) -->
+    <div class="modal-overlay" id="ref-modal" onclick="if(event.target===this)closeReferralModal()">
+      <div class="modal" style="text-align:left">
+        <div class="modal-handle"></div>
+        <button class="modal-close" onclick="closeReferralModal()" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>
+        <div class="modal-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:6px"><defs><linearGradient id="svgRefMd" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#4CAF7D"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><circle cx="9" cy="7" r="3.5" fill="url(#svgRefMd)" opacity="0.85"/><circle cx="16.5" cy="7.5" r="2.8" fill="url(#svgRefMd)" opacity="0.6"/><path d="M1.5 20c0-3.5 3-6.5 7.5-6.5s7.5 3 7.5 6.5" stroke="url(#svgRefMd)" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M17 14c2.5.5 5 2.5 5 5" stroke="url(#svgRefMd)" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.6"/></svg>${S('msg','ref_title')}</div>
 
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <div>
@@ -351,13 +347,13 @@ function renderProfile(d) {
 function openReferralModal() {
   var m = document.getElementById('ref-modal');
   if (m) {
-    m.classList.add('show');
+    m.classList.add('open');
     try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); } catch(e) {}
   }
 }
 function closeReferralModal() {
   var m = document.getElementById('ref-modal');
-  if (m) m.classList.remove('show');
+  if (m) m.classList.remove('open');
 }
 
 // ── PROFIL TAHRIRLASH ──
