@@ -1367,7 +1367,9 @@ function _userProfileCardHTML(d) {
   const activeBadgeHtml = d.active_badge ? ' <span title="Badge">'+d.active_badge+'</span>' : '';
 
   // Active pet (o'ng burchakda, renderProfile pattern)
-  const activePetHtml = d.active_pet ? `<div style="font-size:36px;line-height:1" title="Pet">${d.active_pet}</div>` : '';
+  // margin-right:40px: modal'da ✕ tugma o'ng burchakda absolute joylashgan,
+  // pet emoji u bilan to'qnashmasligi uchun (profil sahifasida ✕ yo'q, kerak emas)
+  const activePetHtml = d.active_pet ? `<div style="font-size:36px;line-height:1;margin-right:40px;flex-shrink:0" title="Pet">${d.active_pet}</div>` : '';
 
   // ✕ tugma (yuqori-o'ng burchakda) + butun karta
   const closeBtnHtml = `<button type="button" onclick="closeUserProfile()" aria-label="close" style="position:absolute;top:8px;right:8px;width:32px;height:32px;border:none;border-radius:50%;background:var(--bg);box-shadow:var(--sh-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub);z-index:2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></button>`;
