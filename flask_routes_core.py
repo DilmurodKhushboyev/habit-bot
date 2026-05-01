@@ -326,10 +326,15 @@ def register_core_routes(app):
     # dark_mode, evening_notify, ref_link, xp_booster_days). Auto-save
     # name ham bu yerda yo'q (caller'ning init_data'si boshqa user uchun
     # noto'g'ri). Faqat "maqtanish" uchun ko'rinadigan ma'lumotlar.
+    # @require_auth YO'Q: /api/rating kabi ommaviy endpoint, chunki
+    # caller'ning UID si target UID bilan mos kelmaydi (boshqa user'ni
+    # so'raydi). Himoya: rate_limit_check (60 so'rov/daqiqa per IP).
     # ─────────────────────────────────────────────────────
     @app.route("/api/user/<int:uid>/public-profile")
-    @require_auth
     def api_user_public_profile(uid):
+        rl_err = rate_limit_check(uid=None, limit=60, window=60)
+        if rl_err:
+            return rl_err
         u = load_user(uid)
         if not u:
             return jsonify({"error": "user_not_found"}), 404
