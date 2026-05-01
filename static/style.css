@@ -3,6 +3,7 @@
   --bg2:       #D6D9E0;
   --surface:   #E8EBF2;
   --raised:    #ECEEF5;
+  --card:      #ECEEF5;
   --text:      #3A3D4A;
   --sub:       #8A8D9A;
   --accent:    #4CAF7D;
@@ -26,6 +27,7 @@ body.dark {
   --bg2:       #181B28;
   --surface:   #252840;
   --raised:    #2A2D42;
+  --card:      #2A2D42;
   --text:      #E8EAF2;
   --sub:       #6B6E80;
   --accent:    #4CAF7D;
