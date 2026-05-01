@@ -414,6 +414,47 @@ function jonRingHTML(jon, size = 80) {
   </svg>`;
 }
 
+// Habit checkin tugmasi uchun progress halqa — `Odat 1/9` halqasi uslubida.
+// done=true: butun halqa yashil + ichida oq ✓
+// done=false, percent=0: kulrang halqa + ichida kulrang ✓ ikona
+// done=false, percent>0 (repeat qisman): kulrang track + yashil progress yoy + ichida kulrang `N/M`
+function checkinRingHTML(percent, isDone, label, size = 42) {
+  const sw = 3;                    // 42px tugma uchun mos chiziq qalinligi
+  const r = (size - sw - 1) / 2;   // ozgina ichkari joy (gap qoldirish)
+  const circ = 2 * Math.PI * r;
+  const pct = Math.min(Math.max(percent, 0), 100);
+  const dash = circ * pct / 100;
+  const gap  = circ - dash;
+  const offset = circ * 0.25;
+  const trackColor = '#C8CBD8';                                   // `Odat 1/9` halqasi bilan bir xil track
+  const progressColor = isDone ? '#4CAF7D' : '#4CAF7D';           // qisman ham yashil yoy
+  const labelColor = isDone ? '#4CAF7D' : '#A8ADB5';              // matn rangi (done=yashil, pending=kulrang)
+  // Done holatda butun halqa yashil; pending'da faqat track ko'rinadi (ichida ✓ SVG yoki matn)
+  const ringStroke = isDone ? progressColor : trackColor;
+  // Progress yoy faqat repeat qisman (pct>0 va !isDone) holatda chiziladi
+  const showProgressArc = !isDone && pct > 0 && pct < 100;
+  // Label HTML: done bo'lsa yashil ✓ SVG, repeat qisman bo'lsa `N/M` matn, aks holda pending ✓ SVG
+  let labelHtml = '';
+  if (isDone) {
+    // Yashil ✓ ikona (markazda)
+    labelHtml = `<path d="M${size/2 - 6} ${size/2} l4 4 8-8" fill="none" stroke="${labelColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  } else if (label) {
+    // Repeat qisman: `2/3` matn — kulrang
+    labelHtml = `<text x="${size/2}" y="${size/2 + 4}" text-anchor="middle" font-family="DM Mono,monospace" font-size="11" font-weight="700" fill="${labelColor}">${label}</text>`;
+  } else {
+    // Pending oddiy habit: kulrang ✓ ikona
+    labelHtml = `<path d="M${size/2 - 6} ${size/2} l4 4 8-8" fill="none" stroke="${labelColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>`;
+  }
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="display:block">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${ringStroke}" stroke-width="${sw}"/>
+    ${showProgressArc ? `<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${progressColor}" stroke-width="${sw}"
+      stroke-dasharray="${dash} ${gap}"
+      stroke-dashoffset="${offset}"
+      stroke-linecap="round"/>` : ''}
+    ${labelHtml}
+  </svg>`;
+}
+
 
 // ── INIT NAV BALL + NOTCH on load ──
 document.addEventListener('DOMContentLoaded', function() {
