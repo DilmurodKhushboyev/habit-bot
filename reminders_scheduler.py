@@ -16,7 +16,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from config import REMINDER_COMPLETE_POINTS
 from database import (list_pending_reminders_all, update_reminder,
                       load_user, save_user, get_reminder)
-from helpers import T, get_lang
+from helpers import T, get_lang, today_uz5
 from bot_setup import bot
 
 # ── Scheduler loop parametrlari ─────────────────────────────
@@ -80,9 +80,9 @@ def send_one_time_reminder(reminder_id):
         T(user_id, "rem_btn_skip"),          # "❌ Bajarmadim"
         callback_data=f"remskip_{reminder_id}"
     )
-    # Bot API 9.4 (2026-02-09) — tugma rangi: success=yashil, danger=qizil
+    # Bot API 9.4 (2026-02-09) — tugma rangi: primary=ko'k, danger=qizil
     # Eski client'larda e'tiborga olinmaydi (xato bermaydi)
-    btn_done.style = "success"
+    btn_done.style = "primary"
     btn_skip.style = "danger"
     kb.add(btn_done, btn_skip)
 
@@ -97,6 +97,23 @@ def send_one_time_reminder(reminder_id):
             "notified_at": _now_utc(),
             "message_id": msg.message_id
         })
+        # Javobsiz eslatma xabarini kuzatish: ertasi 00:00 UZ+5 da o'chiriladi
+        # (scheduler.py daily_reset() pending_reminders cleanup loop — §23 pattern,
+        #  odat eslatmasi bilan aynan bir xil format)
+        try:
+            u2 = load_user(user_id)
+            pending = u2.get("pending_reminders", [])
+            pending.append({
+                "message_id": msg.message_id,
+                "date_uz5":   today_uz5(),
+            })
+            # Xavfsizlik: ro'yxat cheksiz o'smasligi uchun oxirgi 200 bilan cheklaymiz
+            if len(pending) > 200:
+                pending = pending[-200:]
+            u2["pending_reminders"] = pending
+            save_user(user_id, u2)
+        except Exception as _pe:
+            print(f"[reminder] pending saqlash xatosi: {_pe}")
         print(f"[reminder] Yuborildi: {reminder_id} → {user_id}")
     except Exception as e:
         print(f"[reminder] Yuborishda xato ({reminder_id}): {e}")
