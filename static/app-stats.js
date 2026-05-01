@@ -1259,7 +1259,7 @@ async function openUserProfile(targetUid) {
   loadingModal.className = 'shop-modal-overlay';
   loadingModal.onclick = function(e) { if (e.target === loadingModal) closeUserProfile(); };
   loadingModal.innerHTML = `
-    <div class="shop-modal-box" onclick="event.stopPropagation()">
+    <div class="shop-modal-box" onclick="event.stopPropagation()" style="max-width:480px;width:calc(100% - 24px);padding:0;overflow:visible;position:relative">
       <div style="text-align:center;padding:30px 0;color:var(--sub);font-size:13px">
         <div style="display:inline-block;width:24px;height:24px;border:3px solid var(--bg);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite"></div>
       </div>
