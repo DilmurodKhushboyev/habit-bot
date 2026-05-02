@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════
 
 let _cachedReminders = [];    // Load qilinganlarni cache
+let _savingReminder  = false; // Double-submit oldini olish locki (saveReminder uchun)
 
 // ── API YORDAMCHI (apiFetch'dan farqli — backend error body'ni o'qish uchun) ──
 async function _remFetch(path, opts) {
@@ -398,6 +399,7 @@ function closeReminderModal() {
   const el = document.getElementById('rem1-modal');
   if (el) el.remove();
   _editingReminderId = null;  // Edit holatini tozalash
+  _savingReminder    = false; // Modal yopildi — keyingi save uchun lockni tiklash
 }
 
 function _updateRemCharCount() {
@@ -408,6 +410,11 @@ function _updateRemCharCount() {
 
 // ── SAQLASH (yaratish yoki yangilash) ──
 async function saveReminder() {
+  // Double-submit himoyasi: agar oldingi save hali tugamagan bo'lsa — bekor qilish
+  // (foydalanuvchi tugmani 2 marta bossa yoki tarmoq sekin javob bersa, ikkita
+  // bir xil eslatma yaratilishini oldini oladi)
+  if (_savingReminder) return;
+
   const textEl = document.getElementById('rem-text-inp');
   const text = (textEl && textEl.value || '').trim();
   if (!text) {
@@ -430,8 +437,15 @@ async function saveReminder() {
     return;
   }
 
+  // Validatsiyalar o'tdi — endi lock va tugma disable + spinner ko'rsatish
+  _savingReminder = true;
   const saveBtn = document.getElementById('rem-save-btn');
-  if (saveBtn) saveBtn.disabled = true;
+  // Asl matnni saqlab qo'yish (xato bo'lsa qaytarish uchun — finally blokida)
+  const _origSaveBtnText = saveBtn ? saveBtn.textContent : '';
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="save-btn-spinner"></span>' + (S('profile','saving_clean') || 'Saqlanmoqda...');
+  }
 
   // Edit yoki yaratish?
   const isEdit = !!_editingReminderId;
@@ -460,16 +474,25 @@ async function saveReminder() {
         loadToday();
       } else if (errKey === 'past_time') {
         alert(S('rem_modal','err_past'));
-        if (saveBtn) saveBtn.disabled = false;
       } else {
         alert(S('rem_modal','err_generic') + ' (' + errKey + ')');
-        if (saveBtn) saveBtn.disabled = false;
       }
     }
   } catch(e) {
     console.error('[rem] save error:', e);
     alert(S('rem_modal','err_generic') + '\n' + (e && e.message ? e.message : ''));
-    if (saveBtn) saveBtn.disabled = false;
+  } finally {
+    // Har holatda lockni tiklash (xato bo'lsa ham, success bo'lsa ham).
+    // Success holatida modal yopilgan, lekin closeReminderModal ham flagni
+    // tiklaydi — bu yerda qayta tiklash xavfsiz (idempotent).
+    _savingReminder = false;
+    // Tugma hali DOM'da bo'lsa (ya'ni xato bo'lib modal yopilmagan bo'lsa)
+    // — qayta bosish imkoniyati uchun enable + spinner olib tashlash, asl matn qaytadi
+    const btn = document.getElementById('rem-save-btn');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = _origSaveBtnText;
+    }
   }
 }
 

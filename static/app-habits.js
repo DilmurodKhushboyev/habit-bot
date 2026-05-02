@@ -319,8 +319,8 @@ async function saveHabit() {
     }
   }
 
-  // Barcha validatsiyalar o'tdi — tugmani bloklash
-  if (saveBtn) { saveBtn.dataset.saving = '1'; saveBtn.textContent = S('habits','saving') || S('profile','saving'); }
+  // Barcha validatsiyalar o'tdi — tugmani bloklash (spinner + matn)
+  if (saveBtn) { saveBtn.dataset.saving = '1'; saveBtn.innerHTML = '<span class="save-btn-spinner"></span>' + (S('profile','saving_clean') || 'Saqlanmoqda...'); }
   try {
     if (editingHabitId) {
       const res = await fetch(`${API}/habits/${userId}/${editingHabitId}`, {
