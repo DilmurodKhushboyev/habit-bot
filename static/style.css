@@ -390,6 +390,8 @@ body {
   display: flex;
   align-items: stretch;
   z-index: 1;
+  border-radius: 16px;
+  overflow: hidden;
 }
 .hswipe-btn {
   height: 100%;
@@ -2513,6 +2515,8 @@ body.dark .rem1-section-title-collapsible:active {
   display: flex;
   align-items: stretch;
   z-index: 1;
+  border-radius: 12px;
+  overflow: hidden;
 }
 .rem1-swipe-btn {
   height: 100%;
