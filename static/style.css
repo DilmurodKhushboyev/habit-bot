@@ -151,6 +151,17 @@ body {
   animation: spin .9s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* Save tugmasi ichidagi inline spinner (odat/eslatma modallari uchun yagona).
+   Mavjud `spin` keyframe qayta ishlatiladi. Tugma matni yonida turadi — shuning
+   uchun inline-block + vertical-align middle. */
+.save-btn-spinner {
+  display: inline-block; vertical-align: -3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.15);
+  border-top-color: var(--accent);
+  animation: spin .7s linear infinite;
+  margin-right: 8px;
+}
 @keyframes shimmerSlide { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
 @keyframes fadeSlideIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
 

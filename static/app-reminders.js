@@ -437,10 +437,15 @@ async function saveReminder() {
     return;
   }
 
-  // Validatsiyalar o'tdi — endi lock va tugma disable
+  // Validatsiyalar o'tdi — endi lock va tugma disable + spinner ko'rsatish
   _savingReminder = true;
   const saveBtn = document.getElementById('rem-save-btn');
-  if (saveBtn) saveBtn.disabled = true;
+  // Asl matnni saqlab qo'yish (xato bo'lsa qaytarish uchun — finally blokida)
+  const _origSaveBtnText = saveBtn ? saveBtn.textContent : '';
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="save-btn-spinner"></span>' + (S('profile','saving_clean') || 'Saqlanmoqda...');
+  }
 
   // Edit yoki yaratish?
   const isEdit = !!_editingReminderId;
@@ -482,9 +487,12 @@ async function saveReminder() {
     // tiklaydi — bu yerda qayta tiklash xavfsiz (idempotent).
     _savingReminder = false;
     // Tugma hali DOM'da bo'lsa (ya'ni xato bo'lib modal yopilmagan bo'lsa)
-    // — qayta bosish imkoniyati uchun enable
+    // — qayta bosish imkoniyati uchun enable + spinner olib tashlash, asl matn qaytadi
     const btn = document.getElementById('rem-save-btn');
-    if (btn) btn.disabled = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = _origSaveBtnText;
+    }
   }
 }
 
