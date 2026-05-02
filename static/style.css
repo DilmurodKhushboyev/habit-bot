@@ -792,9 +792,11 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
 /* Swipe orqasi — tahrirlash / o'chirish */
 .checkin-actions-bg {
   position: absolute;
-  top: 0; right: 0; bottom: 1px;
+  top: 4px; right: 4px; bottom: 4px;
   display: flex; align-items: center; gap: 0;
   z-index: 1;
+  border-radius: 14px;
+  overflow: hidden;
 }
 .cswipe-btn {
   height: 100%; width: 64px; border: none; cursor: pointer;
@@ -806,7 +808,7 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   background: rgba(0,0,0,.35); color: #fff; width: 40px;
 }
 .cswipe-btn.cswipe-edit { background: var(--accent2); color: #fff; }
-.cswipe-btn.cswipe-del { background: var(--red); color: #fff; border-radius: 0 18px 18px 0; }
+.cswipe-btn.cswipe-del { background: var(--red); color: #fff; }
 /* Old qatlam — asosiy kontent */
 .checkin-front {
   position: relative; z-index: 2;
