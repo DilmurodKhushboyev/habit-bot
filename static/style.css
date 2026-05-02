@@ -381,7 +381,7 @@ body {
   transition: transform .28s cubic-bezier(.25,.46,.45,.94);
   will-change: transform;
 }
-.habit-card-front.swiped { transform: translateX(-128px); }
+.habit-card-front.swiped { transform: translateX(calc(-1 * var(--swipe-w, 128px))); }
 
 /* === Habit swipe orqasi — Tahrirlash / Oʻchirish tugmalari === */
 .habit-card-actions-bg {
@@ -2555,7 +2555,7 @@ body.dark .rem1-section-title-collapsible:active {
   transition: transform .28s cubic-bezier(.25,.46,.45,.94);
   will-change: transform;
 }
-.rem1-front.swiped { transform: translateX(-128px); }
+.rem1-front.swiped { transform: translateX(calc(-1 * var(--swipe-w, 128px))); }
 
 .rem1-card-icon {
   width: 32px; height: 32px;
