@@ -353,7 +353,11 @@ async function saveHabit() {
       if (!res.ok || rj.ok === false) { showToast('❌ ' + (rj.error || S('msg','error_label')), true); return; }
       showToast('✅ Qoʼshildi!');
     }
-    const wasFromToday = _returnToToday;
+    // Qaysi sahifa aktiv ekanligini DOMdan o'qiymiz (_returnToToday flagi
+    // _ensureHabitModal() har doim body'ga qo'yganligi uchun ishonchsiz)
+    const todayPage = document.getElementById('page-today');
+    const isOnToday = todayPage && todayPage.classList.contains('active');
+    const wasFromToday = isOnToday || _returnToToday;
     closeModal();
     if (wasFromToday) {
       loaded.today = false;
