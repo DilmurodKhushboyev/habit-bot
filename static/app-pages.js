@@ -51,7 +51,13 @@ function renderToday(d) {
   const sortedHabits = [...(habits || [])].sort((a, b) => {
     // 1. Bajarilgan/bajarilmagan (bajarilmaganlar tepada)
     if (a.done !== b.done) return a.done ? 1 : -1;
-    // 2. Vaqt bo'yicha o'sish tartibida (vaqtsiz eng oxirga)
+    // 2. Done bloki ichida: tasdiqlash tartibida (oxirgi tasdiqlangan eng pastda)
+    if (a.done && b.done) {
+      const la = a.last_done_at || 0;
+      const lb = b.last_done_at || 0;
+      if (la !== lb) return la - lb;
+    }
+    // 3. Vaqt bo'yicha o'sish tartibida (vaqtsiz eng oxirga)
     const ta = a.time && a.time !== 'vaqtsiz' ? a.time : '99:99';
     const tb = b.time && b.time !== 'vaqtsiz' ? b.time : '99:99';
     return ta.localeCompare(tb);
