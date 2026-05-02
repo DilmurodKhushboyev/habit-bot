@@ -372,6 +372,7 @@ body {
   border: none;
   background: transparent;
   color: var(--sub);
+  opacity: 0.4;
   cursor: pointer;
   display: flex;
   align-items: center;
