@@ -4,6 +4,7 @@ Flask API data routes: today, checkin, stats
 """
 
 import random
+import time
 from datetime import datetime, date, timedelta, timezone
 from flask import jsonify, request
 
@@ -111,6 +112,7 @@ def register_data_routes(app):
                 "type":         hab_type,
                 "times":        h.get("repeat_times", []),
                 "days_66_done": min(h.get("total_done", 0), 66),
+                "last_done_at": h.get("last_done_at"),
             })
         total = len(habits)
         percent = round(done_count / total * 100) if total else 0
@@ -148,6 +150,7 @@ def register_data_routes(app):
                         # Allaqachon to'liq bajarilgan — bekor qilish (0 ga tushirish)
                         done = 0
                         h["last_done"] = None
+                        h["last_done_at"] = None
                         h["streak"] = max(0, h.get("streak", 0) - 1)
                         _undo_base = 5
                         if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
@@ -170,6 +173,7 @@ def register_data_routes(app):
                         done += 1
                         if done >= rep_count:
                             h["last_done"] = today
+                            h["last_done_at"] = time.time()
                             h["streak"] = h.get("streak", 0) + 1
                             if h["streak"] > h.get("best_streak", 0):
                                 h["best_streak"] = h["streak"]
@@ -198,6 +202,7 @@ def register_data_routes(app):
                 else:
                     if h.get("last_done") == today:
                         h["last_done"] = None
+                        h["last_done_at"] = None
                         h["streak"] = max(0, h.get("streak", 0) - 1)
                         _undo_base = 5
                         if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
@@ -225,6 +230,7 @@ def register_data_routes(app):
                         if h["streak"] > h.get("best_streak", 0):
                             h["best_streak"] = h["streak"]
                         h["last_done"] = today
+                        h["last_done_at"] = time.time()
                         _base = 5
                         if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
                             _base = 15
