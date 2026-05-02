@@ -153,6 +153,9 @@ function toggleRem1Swipe(rid) {
   // Avval boshqa kartalarni yopamiz
   closeAllRem1Swipes();
   if (!wasOpen) {
+    // Dinamik kenglik (til boʻyicha kengaygan boʻlishi mumkin)
+    const bg = card.querySelector('.rem1-actions-bg');
+    if (bg) front.style.setProperty('--swipe-w', (bg.offsetWidth + 4) + 'px');
     front.classList.add('swiped');
     if (dotsBtn) dotsBtn.classList.add('is-x');
   }
@@ -166,9 +169,14 @@ function _initRem1Swipe() {
     if (front.dataset.swipeInit === '1') return;  // double-bind oldini olish
     front.dataset.swipeInit = '1';
     let startX = 0, curX = 0, swiping = false, startY = 0, locked = false;
+    let actionsW = 128; // default fallback (eski qiymat)
 
     front.addEventListener('touchstart', e => {
       closeAllRem1Swipes(front);
+      // Har swipe boshida konteyner kengligini qayta oʻlchash (til boʻyicha kengaygan boʻlishi mumkin)
+      const card = front.closest('.rem1-card');
+      const bg = card ? card.querySelector('.rem1-actions-bg') : null;
+      if (bg) actionsW = bg.offsetWidth + 4; // +4 = oʻng tarafdagi inset margin
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       curX = 0; swiping = true; locked = false;
@@ -190,7 +198,8 @@ function _initRem1Swipe() {
       if (locked && e.cancelable) e.preventDefault();
       curX = dx;
       if (curX > 0) curX = 0;
-      if (curX < -130) curX = -130;
+      const dragLimit = -(actionsW + 2); // kichik elastik chegara
+      if (curX < dragLimit) curX = dragLimit;
       front.style.transform = 'translateX(' + curX + 'px)';
     }, {passive: false});
 
@@ -205,7 +214,9 @@ function _initRem1Swipe() {
       }
       const rid = front.getAttribute('data-rid');
       const dotsBtn = rid ? document.getElementById('rem1-dots-' + rid) : null;
-      if (curX < -50) {
+      const triggerThreshold = -(actionsW * 0.4); // 40% surilsa toʻliq ochiladi
+      if (curX < triggerThreshold) {
+        front.style.setProperty('--swipe-w', actionsW + 'px');
         front.classList.add('swiped');
         if (dotsBtn) dotsBtn.classList.add('is-x'); // ⋮ → ✕
       } else {

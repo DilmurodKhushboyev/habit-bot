@@ -360,6 +360,8 @@ body {
   box-shadow: var(--sh-sm);
   border-radius: 16px;
   margin-bottom: 8px;
+  position: relative;
+  overflow: hidden;
 }
 .habit-card-top {
   display: flex; align-items: center; gap: 10px; padding: 14px;
@@ -371,7 +373,45 @@ body {
 .habit-card-actions { display: flex; gap: 8px; }
 
 /* === Habit dropdown menu (3 nuqta tugma) === */
-.habit-card-front { position: relative; }
+.habit-card-front {
+  position: relative;
+  z-index: 2;
+  background: var(--bg);
+  border-radius: 16px;
+  transition: transform .28s cubic-bezier(.25,.46,.45,.94);
+  will-change: transform;
+}
+.habit-card-front.swiped { transform: translateX(calc(-1 * var(--swipe-w, 128px))); }
+
+/* === Habit swipe orqasi — Tahrirlash / Oʻchirish tugmalari === */
+.habit-card-actions-bg {
+  position: absolute;
+  top: 4px; right: 4px; bottom: 4px;
+  display: flex;
+  align-items: stretch;
+  z-index: 1;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.hswipe-btn {
+  height: 100%;
+  min-width: 64px;
+  padding: 0 12px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: opacity .15s;
+  white-space: nowrap;
+}
+.hswipe-edit { background: var(--accent2); color: #fff; }
+.hswipe-del  { background: var(--red);     color: #fff; }
 
 .habit-dots-btn {
   position: absolute;
@@ -754,21 +794,24 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
 /* Swipe orqasi — tahrirlash / o'chirish */
 .checkin-actions-bg {
   position: absolute;
-  top: 0; right: 0; bottom: 1px;
+  top: 4px; right: 4px; bottom: 4px;
   display: flex; align-items: center; gap: 0;
   z-index: 1;
+  border-radius: 14px;
+  overflow: hidden;
 }
 .cswipe-btn {
-  height: 100%; width: 64px; border: none; cursor: pointer;
+  height: 100%; min-width: 64px; padding: 0 12px; border: none; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 4px; font-size: 10px; font-weight: 600; font-family: inherit;
   transition: opacity .15s;
+  white-space: nowrap;
 }
 .cswipe-btn.cswipe-close {
   background: rgba(0,0,0,.35); color: #fff; width: 40px;
 }
 .cswipe-btn.cswipe-edit { background: var(--accent2); color: #fff; }
-.cswipe-btn.cswipe-del { background: var(--red); color: #fff; border-radius: 0 18px 18px 0; }
+.cswipe-btn.cswipe-del { background: var(--red); color: #fff; }
 /* Old qatlam — asosiy kontent */
 .checkin-front {
   position: relative; z-index: 2;
@@ -780,7 +823,7 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   transition: transform .28s cubic-bezier(.25,.46,.45,.94);
   will-change: transform;
 }
-.checkin-front.swiped { transform: translateX(-128px); }
+.checkin-front.swiped { transform: translateX(calc(-1 * var(--swipe-w, 128px))); }
 .checkin-card.done .checkin-front { background: var(--bg); }
 /* 3-nuqta tugma */
 .checkin-dots-btn {
@@ -2473,14 +2516,17 @@ body.dark .rem1-section-title-collapsible:active {
 /* Swipe orqasi — Tahrirlash / O'chirish tugmalari */
 .rem1-actions-bg {
   position: absolute;
-  top: 0; right: 0; bottom: 0;
+  top: 4px; right: 4px; bottom: 4px;
   display: flex;
   align-items: stretch;
   z-index: 1;
+  border-radius: 8px;
+  overflow: hidden;
 }
 .rem1-swipe-btn {
   height: 100%;
-  width: 64px;
+  min-width: 64px;
+  padding: 0 12px;
   border: none;
   cursor: pointer;
   display: flex;
@@ -2492,9 +2538,10 @@ body.dark .rem1-section-title-collapsible:active {
   font-weight: 600;
   font-family: inherit;
   transition: opacity .15s;
+  white-space: nowrap;
 }
 .rem1-swipe-edit { background: var(--accent2); color: #fff; }
-.rem1-swipe-del  { background: var(--red);     color: #fff; border-radius: 0 12px 12px 0; }
+.rem1-swipe-del  { background: var(--red);     color: #fff; }
 
 /* Old qatlam — asosiy kontent (swipe qiluvchi) */
 .rem1-front {
@@ -2508,7 +2555,7 @@ body.dark .rem1-section-title-collapsible:active {
   transition: transform .28s cubic-bezier(.25,.46,.45,.94);
   will-change: transform;
 }
-.rem1-front.swiped { transform: translateX(-128px); }
+.rem1-front.swiped { transform: translateX(calc(-1 * var(--swipe-w, 128px))); }
 
 .rem1-card-icon {
   width: 32px; height: 32px;

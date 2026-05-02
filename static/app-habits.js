@@ -455,9 +455,14 @@ function _onRepeatCountChange() {
 function _initHabitSwipe() {
   document.querySelectorAll('.habit-card-front').forEach(front => {
     let startX = 0, curX = 0, swiping = false, startY = 0, locked = false;
+    let actionsW = 128; // default fallback (eski qiymat)
     front.addEventListener('touchstart', e => {
       closeAllHabitDrops();
       closeAllHabitSwipes(front);
+      // Har swipe boshida konteyner kengligini qayta oʻlchash (til boʻyicha kengaygan boʻlishi mumkin)
+      const card = front.closest('.habit-card');
+      const bg = card ? card.querySelector('.habit-card-actions-bg') : null;
+      if (bg) actionsW = bg.offsetWidth + 4; // +4 = oʻng tarafdagi inset margin
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       curX = 0; swiping = true; locked = false;
@@ -475,7 +480,8 @@ function _initHabitSwipe() {
       }
       curX = dx;
       if (curX > 0) curX = 0;
-      if (curX < -130) curX = -130;
+      const dragLimit = -(actionsW + 2); // kichik elastik chegara
+      if (curX < dragLimit) curX = dragLimit;
       front.style.transform = 'translateX(' + curX + 'px)';
     }, {passive: true});
 
@@ -483,7 +489,9 @@ function _initHabitSwipe() {
       if (!swiping) return;
       swiping = false;
       front.style.transition = '';
-      if (curX < -50) {
+      const triggerThreshold = -(actionsW * 0.4); // 40% surilsa toʻliq ochiladi
+      if (curX < triggerThreshold) {
+        front.style.setProperty('--swipe-w', actionsW + 'px');
         front.classList.add('swiped');
       } else {
         front.classList.remove('swiped');

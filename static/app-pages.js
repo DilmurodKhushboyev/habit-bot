@@ -771,9 +771,14 @@ function checkinFromFront(hid, frontEl) {
 function _initCheckinSwipe() {
   document.querySelectorAll('.checkin-front').forEach(front => {
     let startX = 0, curX = 0, swiping = false, startY = 0, locked = false;
+    let actionsW = 128; // default fallback (eski qiymat)
     front.addEventListener('touchstart', e => {
       closeAllCheckinDrops();
       closeAllCheckinSwipes(front);
+      // Har swipe boshida konteyner kengligini qayta oʻlchash (til boʻyicha kengaygan boʻlishi mumkin)
+      const card = front.closest('.checkin-card');
+      const bg = card ? card.querySelector('.checkin-actions-bg') : null;
+      if (bg) actionsW = bg.offsetWidth + 4; // +4 = oʻng tarafdagi inset margin
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       curX = 0; swiping = true; locked = false;
@@ -796,7 +801,8 @@ function _initCheckinSwipe() {
       if (locked && e.cancelable) e.preventDefault();
       curX = dx;
       if (curX > 0) curX = 0;
-      if (curX < -130) curX = -130;
+      const dragLimit = -(actionsW + 2); // kichik elastik chegara
+      if (curX < dragLimit) curX = dragLimit;
       front.style.transform = 'translateX(' + curX + 'px)';
     }, {passive: false});
 
@@ -811,7 +817,9 @@ function _initCheckinSwipe() {
       }
       const hid = front.getAttribute('data-hid');
       const dotsBtn = hid ? document.getElementById('cdots-' + hid) : null;
-      if (curX < -50) {
+      const triggerThreshold = -(actionsW * 0.4); // 40% surilsa toʻliq ochiladi
+      if (curX < triggerThreshold) {
+        front.style.setProperty('--swipe-w', actionsW + 'px');
         front.classList.add('swiped');
         if (dotsBtn) dotsBtn.classList.add('is-x'); // ⋮ → ✕
         _checkinSwiped = true; // checkin qilmaslik
@@ -853,6 +861,9 @@ function toggleCheckinDrop(hid) {
   document.querySelectorAll('.checkin-dots-btn.is-x').forEach(b => b.classList.remove('is-x'));
   if (!wasOpen) {
     // Yopiq edi → ochamiz va 3-nuqta ni ✕ ga aylantiramiz
+    // Dinamik kenglik (til boʻyicha kengaygan boʻlishi mumkin)
+    const bg = card.querySelector('.checkin-actions-bg');
+    if (bg) front.style.setProperty('--swipe-w', (bg.offsetWidth + 4) + 'px');
     front.classList.add('swiped');
     if (dotsBtn) dotsBtn.classList.add('is-x');
     _checkinSwiped = true;
