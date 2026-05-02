@@ -395,7 +395,8 @@ body {
 }
 .hswipe-btn {
   height: 100%;
-  width: 64px;
+  min-width: 64px;
+  padding: 0 12px;
   border: none;
   cursor: pointer;
   display: flex;
@@ -407,6 +408,7 @@ body {
   font-weight: 600;
   font-family: inherit;
   transition: opacity .15s;
+  white-space: nowrap;
 }
 .hswipe-edit { background: var(--accent2); color: #fff; }
 .hswipe-del  { background: var(--red);     color: #fff; }
@@ -799,10 +801,11 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   overflow: hidden;
 }
 .cswipe-btn {
-  height: 100%; width: 64px; border: none; cursor: pointer;
+  height: 100%; min-width: 64px; padding: 0 12px; border: none; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 4px; font-size: 10px; font-weight: 600; font-family: inherit;
   transition: opacity .15s;
+  white-space: nowrap;
 }
 .cswipe-btn.cswipe-close {
   background: rgba(0,0,0,.35); color: #fff; width: 40px;
@@ -2522,7 +2525,8 @@ body.dark .rem1-section-title-collapsible:active {
 }
 .rem1-swipe-btn {
   height: 100%;
-  width: 64px;
+  min-width: 64px;
+  padding: 0 12px;
   border: none;
   cursor: pointer;
   display: flex;
@@ -2534,6 +2538,7 @@ body.dark .rem1-section-title-collapsible:active {
   font-weight: 600;
   font-family: inherit;
   transition: opacity .15s;
+  white-space: nowrap;
 }
 .rem1-swipe-edit { background: var(--accent2); color: #fff; }
 .rem1-swipe-del  { background: var(--red);     color: #fff; }
