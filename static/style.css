@@ -371,7 +371,8 @@ body {
   height: 36px;
   border: none;
   background: transparent;
-  color: var(--sub);
+  color: #A8ADB5;
+  opacity: 0.85;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -2348,13 +2349,13 @@ body.dark .shop-modal-confirm .shop-modal-btn-no { color: #f0f0f0; }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
+  padding: 8px 14px;
   border: none;
   border-radius: 14px;
   background: var(--bg);
   box-shadow: var(--sh-sm);
-  color: var(--green);
-  font-size: 13px;
+  color: var(--sub);
+  font-size: 12px;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
