@@ -354,10 +354,7 @@ async function saveHabit() {
       showToast('✅ Qoʼshildi!');
     }
     const wasFromToday = _returnToToday;
-    // Avval ma'lumotlarni yangilaymiz, KEYIN modal yopiladi.
-    // Sabab: closeModal() ichidagi switchTab() loadTab() ni async chaqiradi
-    // va bizning loadToday() bilan parallel ishlab race condition keltirib chiqaradi.
-    // loadToday() oldin tugasa — loaded.today=true bo'ladi va switchTab() qayta yuklamaydi.
+    closeModal();
     if (wasFromToday) {
       loaded.today = false;
       await loadToday();
@@ -365,7 +362,6 @@ async function saveHabit() {
       loaded.habits = false;
       await loadHabits();
     }
-    closeModal();
   } catch(e) { showToast(S('friends','error'), true); }
   finally {
     if (saveBtn) { saveBtn.dataset.saving = ''; saveBtn.textContent = S('habits','save_btn') || S('profile','save_btn'); }
