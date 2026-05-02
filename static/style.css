@@ -823,7 +823,7 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   transition: transform .28s cubic-bezier(.25,.46,.45,.94);
   will-change: transform;
 }
-.checkin-front.swiped { transform: translateX(-128px); }
+.checkin-front.swiped { transform: translateX(calc(-1 * var(--swipe-w, 128px))); }
 .checkin-card.done .checkin-front { background: var(--bg); }
 /* 3-nuqta tugma */
 .checkin-dots-btn {
