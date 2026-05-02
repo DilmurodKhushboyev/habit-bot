@@ -144,7 +144,6 @@ function selectIcon(el) {
   document.querySelectorAll('.icon-opt').forEach(e => e.classList.remove('selected'));
   el.classList.add('selected');
 }
-let _returnToToday = false;
 
 function _buildIconGrid() {
   return `
@@ -197,7 +196,6 @@ function _ensureHabitModal() {
 }
 
 async function openAddFromToday() {
-  _returnToToday = true;
   _ensureHabitModal();
   openAdd();
 }
@@ -245,12 +243,6 @@ function openAdd() {
 }
 async function openEdit(id, name, icon, time, type, repeatCount, timesJson) {
   _ensureHabitModal();
-  // Habits sahifasida emas — body ga ko'chirish
-  const m = document.getElementById('habit-modal');
-  if (m && m.parentElement !== document.body) {
-    _returnToToday = true;
-    document.body.appendChild(m);
-  }
   editingHabitId = id;
   document.getElementById('modal-title').textContent = S('habits','edit_title');
   _translateHabitModal();
@@ -277,10 +269,6 @@ function closeModal() {
   // (today va habits sahifalarida ochiq qolgan kartalar yopiladi)
   if (typeof closeAllCheckinSwipes === 'function') closeAllCheckinSwipes();
   if (typeof closeAllHabitSwipes === 'function') closeAllHabitSwipes();
-  if (_returnToToday) {
-    _returnToToday = false;
-    switchTab('today', document.getElementById('nav-today'));
-  }
 }
 
 function showToast(msg, err=false) {
@@ -353,13 +341,11 @@ async function saveHabit() {
       if (!res.ok || rj.ok === false) { showToast('❌ ' + (rj.error || S('msg','error_label')), true); return; }
       showToast('✅ Qoʼshildi!');
     }
-    // Qaysi sahifa aktiv ekanligini DOMdan o'qiymiz (_returnToToday flagi
-    // _ensureHabitModal() har doim body'ga qo'yganligi uchun ishonchsiz)
+    // Foydalanuvchi qaysi sahifada turganini DOMdan o'qib, kerakli yangilashni chaqiramiz
     const todayPage = document.getElementById('page-today');
     const isOnToday = todayPage && todayPage.classList.contains('active');
-    const wasFromToday = isOnToday || _returnToToday;
     closeModal();
-    if (wasFromToday) {
+    if (isOnToday) {
       loaded.today = false;
       await loadToday();
     } else {
