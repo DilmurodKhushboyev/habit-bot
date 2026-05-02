@@ -409,7 +409,7 @@ body {
   transition: opacity .15s;
 }
 .hswipe-edit { background: var(--accent2); color: #fff; }
-.hswipe-del  { background: var(--red);     color: #fff; border-radius: 0 16px 16px 0; }
+.hswipe-del  { background: var(--red);     color: #fff; }
 
 .habit-dots-btn {
   position: absolute;
@@ -2534,7 +2534,7 @@ body.dark .rem1-section-title-collapsible:active {
   transition: opacity .15s;
 }
 .rem1-swipe-edit { background: var(--accent2); color: #fff; }
-.rem1-swipe-del  { background: var(--red);     color: #fff; border-radius: 0 12px 12px 0; }
+.rem1-swipe-del  { background: var(--red);     color: #fff; }
 
 /* Old qatlam — asosiy kontent (swipe qiluvchi) */
 .rem1-front {
