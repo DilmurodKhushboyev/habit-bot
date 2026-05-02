@@ -371,8 +371,8 @@ body {
   height: 36px;
   border: none;
   background: transparent;
-  color: var(--sub);
-  opacity: 0.4;
+  color: #A8ADB5;
+  opacity: 0.85;
   cursor: pointer;
   display: flex;
   align-items: center;
