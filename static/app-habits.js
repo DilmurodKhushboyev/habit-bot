@@ -273,6 +273,10 @@ async function openEdit(id, name, icon, time, type, repeatCount, timesJson) {
 }
 function closeModal() {
   document.getElementById('habit-modal').classList.remove('open');
+  // Modal yopilganda swipe holatini darhol tozalash
+  // (today va habits sahifalarida ochiq qolgan kartalar yopiladi)
+  if (typeof closeAllCheckinSwipes === 'function') closeAllCheckinSwipes();
+  if (typeof closeAllHabitSwipes === 'function') closeAllHabitSwipes();
   if (_returnToToday) {
     _returnToToday = false;
     switchTab('today', document.getElementById('nav-today'));
