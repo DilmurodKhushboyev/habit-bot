@@ -354,19 +354,18 @@ async function saveHabit() {
       showToast('✅ Qoʼshildi!');
     }
     const wasFromToday = _returnToToday;
-    // Cache invalidatsiya closeModal()dan OLDIN — closeModal() ichidagi
-    // switchTab('today',...) eski cached today-content ni ko'rsatmasligi uchun
+    // Avval ma'lumotlarni yangilaymiz, KEYIN modal yopiladi.
+    // Sabab: closeModal() ichidagi switchTab() loadTab() ni async chaqiradi
+    // va bizning loadToday() bilan parallel ishlab race condition keltirib chiqaradi.
+    // loadToday() oldin tugasa — loaded.today=true bo'ladi va switchTab() qayta yuklamaydi.
     if (wasFromToday) {
       loaded.today = false;
-    } else {
-      loaded.habits = false;
-    }
-    closeModal();
-    if (wasFromToday) {
       await loadToday();
     } else {
+      loaded.habits = false;
       await loadHabits();
     }
+    closeModal();
   } catch(e) { showToast(S('friends','error'), true); }
   finally {
     if (saveBtn) { saveBtn.dataset.saving = ''; saveBtn.textContent = S('habits','save_btn') || S('profile','save_btn'); }
