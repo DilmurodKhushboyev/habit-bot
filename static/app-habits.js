@@ -354,12 +354,17 @@ async function saveHabit() {
       showToast('✅ Qoʼshildi!');
     }
     const wasFromToday = _returnToToday;
-    closeModal();
+    // Cache invalidatsiya closeModal()dan OLDIN — closeModal() ichidagi
+    // switchTab('today',...) eski cached today-content ni ko'rsatmasligi uchun
     if (wasFromToday) {
       loaded.today = false;
-      await loadToday();
     } else {
       loaded.habits = false;
+    }
+    closeModal();
+    if (wasFromToday) {
+      await loadToday();
+    } else {
       await loadHabits();
     }
   } catch(e) { showToast(S('friends','error'), true); }
