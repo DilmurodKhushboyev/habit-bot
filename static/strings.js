@@ -40,6 +40,11 @@ const STRINGS = {
       my_rank:"Sizning o'rningiz:",
       total_users:'Jami {n} ta foydalanuvchi',
     },
+    greeting: {
+      morning:'Xayrli tong',
+      day:'Xayrli kun',
+      evening:'Xayrli kech',
+    },
 
 
     bozor: {
@@ -434,6 +439,11 @@ const STRINGS = {
       my_rank:'Ваше место:',
       total_users:'Всего {n} пользователей',
     },
+    greeting: {
+      morning:'Доброе утро',
+      day:'Добрый день',
+      evening:'Добрый вечер',
+    },
 
 
     bozor: {
@@ -826,6 +836,11 @@ const STRINGS = {
       period_week:'Week', period_month:'Month', period_all:'All',
       my_rank:'Your rank:',
       total_users:'Total {n} users',
+    },
+    greeting: {
+      morning:'Good morning',
+      day:'Good day',
+      evening:'Good evening',
     },
 
 

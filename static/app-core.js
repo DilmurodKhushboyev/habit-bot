@@ -55,6 +55,49 @@ function updateHeaderPts(points) {
   if (data && data.profile) data.profile.points = points;
 }
 
+// ── HEADER GREETING SINXRON YANGILASH ──
+// Markaziy helper — Telegram init paytida, profil yuklanganda, va profil
+// tahrirlangandan keyin chaqiriladi. Header displeyi sinxron yangilanadi.
+// Pattern: updateHeaderPts kabi (DRY).
+// Hozir 2 joyda chaqiriladi: app-core.js init (Telegramdan tez),
+// renderProfile() (DB'dan, profil yuklanganda yoki tahrirlangach).
+// Yangi endpoint ism yoki rasmni o'zgartirsa — shu funksiyani chaqirsin.
+function updateGreeting(name, photoUrl) {
+  // 1) Salomlashish matni — vaqtga qarab dinamik (tong/kun/kech)
+  const helloEl = document.getElementById('greeting-hello');
+  if (helloEl) {
+    const h = new Date().getHours();
+    const key = h < 12 ? 'morning' : (h < 18 ? 'day' : 'evening');
+    helloEl.textContent = S('greeting', key) + ' 👋';
+  }
+  // 2) Ism — bo'sh bo'lsa "?" fallback (§25 qoidasi bilan mos)
+  const nameTrim = (name && String(name).trim()) ? String(name).trim() : '';
+  const displayName = nameTrim || '?';
+  const nameEl = document.getElementById('greeting-name');
+  if (nameEl) nameEl.textContent = displayName;
+  // 3) Avatar — rasm bor bo'lsa <img>, yo'q bo'lsa ismning birinchi harfi
+  const avEl = document.getElementById('greeting-avatar');
+  if (avEl) {
+    const initial = displayName[0].toUpperCase();
+    if (photoUrl) {
+      avEl.innerHTML = `<img src="${photoUrl}" alt="" onerror="this.parentElement.innerHTML='<span>${initial}</span>'">`;
+    } else {
+      avEl.innerHTML = `<span>${initial}</span>`;
+    }
+  }
+}
+
+// Birinchi yuklash — Telegram'dan tez (DOM tayyor bo'lganda)
+function _initGreetingFromTg() {
+  if (!user) return;
+  updateGreeting(user.first_name || '', user.photo_url || '');
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _initGreetingFromTg);
+} else {
+  _initGreetingFromTg();
+}
+
 // ── TAB SWITCH ──
 let _prevTab = 'today';
 let _curTab  = 'today';
