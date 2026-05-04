@@ -152,7 +152,7 @@ body {
 .section-title {
   font-size: 10px; font-weight: 700; letter-spacing: 2px;
   color: var(--sub); text-transform: uppercase;
-  margin: 20px 0 12px 2px;
+  margin: 12px 0 12px 2px;
 }
 
 /* ── NEU CARD ── */
@@ -959,7 +959,7 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
 /* ── STATISTIKA ── */
 .summary-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-  margin-bottom: 4px;
+  margin-bottom: 12px;
 }
 .sum-card-chart { margin-top: 8px; }
 .sum-card {
