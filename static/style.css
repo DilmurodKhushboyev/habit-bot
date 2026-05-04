@@ -145,7 +145,7 @@ body {
 }
 
 /* ── PAGES ── */
-.page { display: none; padding: 0 20px; }
+.page { display: none; padding: 12px 20px 0; }
 .page.active { display: block; }
 
 /* ── SECTION TITLE ── */
