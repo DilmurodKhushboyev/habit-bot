@@ -152,7 +152,7 @@ body {
 .section-title {
   font-size: 10px; font-weight: 700; letter-spacing: 2px;
   color: var(--sub); text-transform: uppercase;
-  margin: 12px 0 12px 2px;
+  margin: 0 0 12px 2px;
 }
 
 /* ── NEU CARD ── */
