@@ -62,7 +62,7 @@ body {
   position: sticky; top: 0; z-index: 10;
 }
 .header-top {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: flex-end;
   margin-bottom: 20px;
 }
 .logo-wrap {
@@ -1968,23 +1968,18 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   visibility: hidden;
   pointer-events: none;
 }
-/* Logo yuqori chap burchakka uchib borish animatsiyasi */
+/* Logo va boshqa elementlar fade-out (header logo olib tashlangani uchun "fly" emas) */
 #splash-screen.fly .splash-content .splash-title,
 #splash-screen.fly .splash-content .splash-subtitle,
-#splash-screen.fly .splash-content .splash-dots {
-  opacity: 0;
-  transition: opacity .3s ease;
-}
-#splash-screen.fly .splash-orbit {
-  opacity: 0;
-  transition: opacity .3s ease;
-}
+#splash-screen.fly .splash-content .splash-dots,
+#splash-screen.fly .splash-orbit,
 #splash-screen.fly .splash-logo-ring {
-  transition: none;
+  opacity: 0;
+  transition: opacity .4s ease;
 }
 .splash-icon-wrap.fly-logo {
-  z-index: 100000;
-  transition: transform .55s cubic-bezier(.4, 0, .2, 1), width .55s cubic-bezier(.4, 0, .2, 1), height .55s cubic-bezier(.4, 0, .2, 1), border-radius .55s ease;
+  opacity: 0;
+  transition: opacity .4s ease;
 }
 .splash-content {
   display: flex;
