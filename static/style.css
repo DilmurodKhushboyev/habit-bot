@@ -57,7 +57,7 @@ body {
 /* ── HEADER ── */
 .header {
   background: var(--bg);
-  padding: 20px 20px 12px;
+  padding: 20px 20px 0;
   padding-top: calc(var(--tg-safe-top, 0px) + 20px);
   position: sticky; top: 0; z-index: 10;
 }
