@@ -20,6 +20,10 @@ async function loadProfile() {
 
 function renderProfile(d) {
   data.profile = d;
+  // Header greeting'ni yangilash (DB'dan kelgan eng yangi ma'lumot bilan sinxron).
+  // Sabab: foydalanuvchi profil sahifasida ism/rasm tahrirlasa, saveEditProfile()
+  // → loadProfile() → renderProfile() chaqiriladi va header avtomatik yangilanadi.
+  updateGreeting(d.display_name || d.name || '', d.photo_url || user.photo_url || '');
   const jon = d.jon ?? 100;
   const jonColor = jon >= 70 ? '#4CAF7D' : jon >= 40 ? '#D4963A' : '#E05050';
   const initial = (d.name || '?')[0].toUpperCase();

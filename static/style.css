@@ -65,6 +65,34 @@ body {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 20px;
 }
+.greeting-block {
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer;
+  padding: 4px 10px 4px 4px;
+  border-radius: 24px;
+  transition: transform .15s ease;
+  min-width: 0;
+}
+.greeting-block:active { transform: scale(0.96); }
+.greeting-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--bg);
+  box-shadow: var(--sh-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: var(--text);
+  overflow: hidden; flex-shrink: 0;
+}
+.greeting-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.greeting-text-wrap { display: flex; flex-direction: column; min-width: 0; }
+.greeting-hello {
+  font-size: 11px; color: var(--sub); font-weight: 500; line-height: 1.2;
+  white-space: nowrap;
+}
+.greeting-name {
+  font-size: 15px; font-weight: 700; color: var(--text);
+  line-height: 1.2; max-width: 140px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .logo-wrap {
   display: flex; align-items: center; gap: 12px;
 }
@@ -117,7 +145,7 @@ body {
 }
 
 /* ── PAGES ── */
-.page { display: none; padding: 0 20px; }
+.page { display: none; padding: 12px 20px 0; }
 .page.active { display: block; }
 
 /* ── SECTION TITLE ── */
@@ -1968,23 +1996,18 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   visibility: hidden;
   pointer-events: none;
 }
-/* Logo yuqori chap burchakka uchib borish animatsiyasi */
+/* Logo va boshqa elementlar fade-out (header logo olib tashlangani uchun "fly" emas) */
 #splash-screen.fly .splash-content .splash-title,
 #splash-screen.fly .splash-content .splash-subtitle,
-#splash-screen.fly .splash-content .splash-dots {
-  opacity: 0;
-  transition: opacity .3s ease;
-}
-#splash-screen.fly .splash-orbit {
-  opacity: 0;
-  transition: opacity .3s ease;
-}
+#splash-screen.fly .splash-content .splash-dots,
+#splash-screen.fly .splash-orbit,
 #splash-screen.fly .splash-logo-ring {
-  transition: none;
+  opacity: 0;
+  transition: opacity .4s ease;
 }
 .splash-icon-wrap.fly-logo {
-  z-index: 100000;
-  transition: transform .55s cubic-bezier(.4, 0, .2, 1), width .55s cubic-bezier(.4, 0, .2, 1), height .55s cubic-bezier(.4, 0, .2, 1), border-radius .55s ease;
+  opacity: 0;
+  transition: opacity .4s ease;
 }
 .splash-content {
   display: flex;
