@@ -63,7 +63,7 @@ body {
 }
 .header-top {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 .greeting-block {
   display: flex; align-items: center; gap: 10px;
