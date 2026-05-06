@@ -2847,7 +2847,7 @@ body.dark .rem1-section-title-collapsible:active {
   justify-content: space-between;
   align-items: stretch;
   padding: 4px 4px;
-  margin: 0 0 4px;
+  margin: -16px 0 4px;
   user-select: none;
   -webkit-user-select: none;
 }
