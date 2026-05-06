@@ -1,9 +1,12 @@
 // ── BUGUN ──
-async function loadToday() {
+// dateStr (optional, default null): agar berilgan bo'lsa "?date=YYYY-MM-DD" jo'natiladi.
+// null bo'lsa — eski xulq (bugun). Boshqa fayllardagi parametrsiz chaqiruvlar buzilmaydi.
+async function loadToday(dateStr = null) {
   try {
+    const _q = (dateStr && typeof dateStr === 'string') ? `?date=${encodeURIComponent(dateStr)}` : '';
     // Today va eslatmalarni parallel yuklash (tezlik uchun)
     const [d, _] = await Promise.all([
-      apiFetch(`today/${userId}`),
+      apiFetch(`today/${userId}${_q}`),
       loadReminderCards()  // _cachedReminders ni yangilaydi
     ]);
     data.today = d;
@@ -907,21 +910,25 @@ function closeAllCheckinDrops() {
   document.querySelectorAll('.checkin-dropdown.open').forEach(d => d.classList.remove('open'));
 }
 
-// ── HAFTALIK KALENDAR: kun tanlash (1-qadam: faqat UI) ──
-// Hozircha faqat selectedDate state'ni yangilaydi va renderToday'ni qayta chaqiradi.
-// Backend integratsiya keyingi qadamlarda qo'shiladi.
+// ── HAFTALIK KALENDAR: kun tanlash ──
+// 1) Kalendar highlight darhol yangilanadi (data.today bilan re-render)
+// 2) Backend chaqiriladi: ?date= parametri bilan, tanlangan kun odatlari keladi
+// 3) Backend javobi kelganda renderToday yana chaqiriladi (yangi data bilan)
 function selectDay(dateStr) {
   if (window._selectedDate === dateStr) return; // o'sha kun bosildi — hech narsa qilmaymiz
   window._selectedDate = dateStr;
   // Haptic feedback (Telegram WebApp)
   try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); } catch(e) {}
-  // Re-render: kalendar yangi highlight bilan chiqadi (odatlar ro'yxati tegmaydi — backend hali bilmaydi)
+  // Tezkor highlight: hozirgi data bilan re-render (network kechiksa ham UX silliq)
   if (data.today) renderToday(data.today);
+  // Backend chaqiruv: o'sha kun odatlari (history dan o'qiladi, read-only)
+  loadToday(dateStr);
 }
 
 // ── HAFTALIK KALENDAR: hafta surish (chap/o'ng swipe) ──
 // direction: -1 (o'ngga swipe = oldingi hafta), +1 (chapga swipe = keyingi hafta)
 // selectedDate'ni o'sha haftaning o'sha hafta-kuniga avtomatik ko'chiradi (Ch 6 → Ch 13).
+// Backend ham qayta chaqiriladi (yangi sananing odatlari).
 function _shiftWeek(direction) {
   if (!data.today) return;
   const today = data.today.today;
@@ -929,18 +936,22 @@ function _shiftWeek(direction) {
   const oldOffset = window._weekOffset || 0;
   window._weekOffset = oldOffset + direction;
   // selectedDate'ni yangi haftaning o'sha hafta-kuniga ko'chirish
+  let newSelected = window._selectedDate;
   if (window._selectedDate) {
     const _sel = new Date(window._selectedDate + 'T00:00:00');
     _sel.setDate(_sel.getDate() + direction * 7);
     const _y = _sel.getFullYear();
     const _m = String(_sel.getMonth() + 1).padStart(2, '0');
     const _d = String(_sel.getDate()).padStart(2, '0');
-    window._selectedDate = `${_y}-${_m}-${_d}`;
+    newSelected = `${_y}-${_m}-${_d}`;
+    window._selectedDate = newSelected;
   }
   // Haptic feedback
   try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); } catch(e) {}
-  // Re-render — kalendar yangi haftani ko'rsatadi
+  // Tezkor highlight: kalendar yangi haftani darhol ko'rsatadi (network kechiksa ham)
   renderToday(data.today);
+  // Backend chaqiruv: yangi sananing odatlari yuklanadi
+  loadToday(newSelected);
 }
 
 // Kalendar konteyneriga touch handlerlari ulash. Gesture intent lock (8px):
