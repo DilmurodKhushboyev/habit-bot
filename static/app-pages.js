@@ -115,7 +115,7 @@ function renderToday(d) {
     const dotsHtml = '';
     const _esc = (s) => (s||'').replace(/'/g, "\\'");
     cardsHtml += `
-      <div class="checkin-card ${h.done ? 'done' : ''}" id="ccard-${h.id}">
+      <div class="checkin-card ${h.done ? 'done' : ''} ${d.is_today_view === false ? 'readonly' : ''}" id="ccard-${h.id}">
         <div class="checkin-actions-bg">
           <button class="cswipe-btn cswipe-edit" onclick="event.stopPropagation();openEdit('${h.id}','${_esc(h.name)}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}')">
             <svg width="18" height="18" viewBox="0 0 26 26" fill="none"><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="#fff" opacity="0.9"/></svg>
@@ -193,6 +193,12 @@ function renderToday(d) {
 }
 
 async function checkin(hid, cardEl) {
+  // 4d-bosqich: o'tgan/kelajak kun ko'rilayotganda checkin bloklanadi
+  // (faqat backend aniq false qaytarsa — eski backend bilan orqaga moslik)
+  if (data.today && data.today.is_today_view === false) {
+    _showReadonlyToast();
+    return;
+  }
   const btn = document.getElementById('cbtn-' + hid);
   const pop = document.getElementById('pop-' + hid);
   if (btn) btn.disabled = true;
@@ -1003,4 +1009,50 @@ function _initWeekCalSwipe() {
   cal.addEventListener('touchcancel', () => {
     swiping = false; locked = false; fired = false;
   }, { passive: true });
+}
+
+// ── READ-ONLY TOAST: o'tgan/kelajak kun ko'rilayotganda checkin urinishi uchun ──
+// Haptic warning + DOM toast + "Bugunga qaytish" tugmasi.
+// Toast 4 soniyadan keyin avtomatik yashirinadi.
+function _showReadonlyToast() {
+  // Haptic warning (qo'llab-quvvatlanmasa, jim turadi)
+  try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning'); } catch(e) {}
+  // Mavjud toastni olib tashlash (qayta-qayta bosishda chiroyli ko'rinish uchun)
+  const old = document.getElementById('readonly-toast');
+  if (old) old.remove();
+  // Yangi toast yaratish
+  const t = document.createElement('div');
+  t.id = 'readonly-toast';
+  t.className = 'readonly-toast';
+  const msg = S('today', 'readonly_msg');
+  const btnTxt = S('today', 'back_to_today');
+  t.innerHTML = `
+    <span class="readonly-toast-msg">${msg}</span>
+    <button class="readonly-toast-btn" onclick="_backToToday()">${btnTxt}</button>
+  `;
+  document.body.appendChild(t);
+  // Animatsiya bilan ko'rinish
+  requestAnimationFrame(() => t.classList.add('show'));
+  // 4s keyin avtomatik yashirinish
+  setTimeout(() => {
+    if (t && t.parentNode) {
+      t.classList.remove('show');
+      setTimeout(() => { if (t.parentNode) t.remove(); }, 300);
+    }
+  }, 4000);
+}
+
+// Toast ichidagi "Bugunga qaytish" tugmasi uchun
+function _backToToday() {
+  if (!data.today || !data.today.today) return;
+  // weekOffset ni 0 ga keltirish (joriy hafta)
+  window._weekOffset = 0;
+  // Toast yashirinish
+  const t = document.getElementById('readonly-toast');
+  if (t) {
+    t.classList.remove('show');
+    setTimeout(() => { if (t.parentNode) t.remove(); }, 300);
+  }
+  // selectedDate'ni bugunga keltirish va backend chaqirish
+  selectDay(data.today.today);
 }

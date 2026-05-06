@@ -90,6 +90,8 @@ const STRINGS = {
       days_streak:'kun',
       retry:'🔄 Qayta urinish',
       progress_label:'JARAYON',
+      readonly_msg:'Faqat bugungi odatlarni belgilash mumkin',
+      back_to_today:'Bugunga qaytish',
     },
     achievements: {
       title:'Yutuqlarim',
@@ -489,6 +491,8 @@ const STRINGS = {
       days_streak:'дней',
       retry:'🔄 Повторить',
       progress_label:'ПРОГРЕСС',
+      readonly_msg:'Отмечать можно только сегодняшние привычки',
+      back_to_today:'К сегодняшнему дню',
     },
     achievements: {
       title:'Мои достижения',
@@ -888,6 +892,8 @@ const STRINGS = {
       days_streak:'days',
       retry:'🔄 Retry',
       progress_label:'PROGRESS',
+      readonly_msg:'Only today\'s habits can be marked',
+      back_to_today:'Back to today',
     },
     achievements: {
       title:'My Achievements',
