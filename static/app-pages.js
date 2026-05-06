@@ -1027,7 +1027,21 @@ function _showReadonlyToast() {
   const msg = S('today', 'readonly_msg');
   const btnTxt = S('today', 'back_to_today');
   t.innerHTML = `
-    <span class="readonly-toast-msg">${msg}</span>
+    <div class="readonly-toast-header">
+      <div class="readonly-toast-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <defs>
+            <linearGradient id="svgRoWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#F6C93E"/>
+              <stop offset="100%" stop-color="#E07040"/>
+            </linearGradient>
+          </defs>
+          <path d="M12 3L2 21h20L12 3z" stroke="url(#svgRoWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M12 10v5M12 17.5v.5" stroke="url(#svgRoWarn)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="readonly-toast-msg">${msg}</div>
+    </div>
     <button class="readonly-toast-btn" onclick="_backToToday()">${btnTxt}</button>
   `;
   document.body.appendChild(t);
