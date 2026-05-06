@@ -86,18 +86,50 @@ def register_data_routes(app):
         u = load_user(uid)
         today = today_uz5()
         habits = u.get("habits", [])
+
+        # ── 4a-bosqich: ?date= parametri (faqat o'qish, history dan) ──
+        # Default: bugun (orqaga moslik bilan, mavjud xatti-harakat saqlanadi).
+        # Agar sana berilgan va bugun bo'lmasa — history'dan done holatini o'qiymiz.
+        # streak, last_done_at, jadval o'zgarmaydi (faqat ko'rsatish).
+        target_date = (request.args.get("date") or "").strip()
+        if target_date:
+            # Format validatsiya: YYYY-MM-DD (10 belgi, ikkita tire)
+            try:
+                from datetime import datetime as _dt_v
+                _dt_v.strptime(target_date, "%Y-%m-%d")
+            except (ValueError, TypeError):
+                return jsonify({"error": "invalid date format, expected YYYY-MM-DD"}), 400
+        else:
+            target_date = today
+        is_today_view = (target_date == today)
+        is_future_view = (target_date > today)
+        # History dagi o'sha kun holatlari (agar bor bo'lsa)
+        _hist = u.get("history", {}) if isinstance(u.get("history"), dict) else {}
+        _day_history = _hist.get(target_date, {}) if isinstance(_hist.get(target_date), dict) else {}
+        _day_habits_map = _day_history.get("habits", {}) if isinstance(_day_history.get("habits"), dict) else {}
+
         result = []
         done_count = 0
         for h in habits:
             hab_type  = h.get("type", "simple")
             rep_count = h.get("repeat_count", 1)
             today_count = 0
-            if hab_type == "repeat" and rep_count > 1:
-                if h.get("done_date") == today:
-                    today_count = h.get("done_today_count", 0)
-                is_done = today_count >= rep_count
+            if is_today_view:
+                # Bugun: mavjud mantiq (live state)
+                if hab_type == "repeat" and rep_count > 1:
+                    if h.get("done_date") == today:
+                        today_count = h.get("done_today_count", 0)
+                    is_done = today_count >= rep_count
+                else:
+                    is_done = h.get("last_done") == today
+            elif is_future_view:
+                # Kelajak: hech narsa bajarilmagan
+                is_done = False
+                today_count = 0
             else:
-                is_done = h.get("last_done") == today
+                # O'tgan kun: history'dan o'qiymiz
+                is_done = bool(_day_habits_map.get(h["id"], False))
+                today_count = rep_count if (is_done and hab_type == "repeat" and rep_count > 1) else 0
             if is_done:
                 done_count += 1
             result.append({
@@ -112,21 +144,24 @@ def register_data_routes(app):
                 "type":         hab_type,
                 "times":        h.get("repeat_times", []),
                 "days_66_done": min(h.get("total_done", 0), 66),
-                "last_done_at": h.get("last_done_at"),
+                "last_done_at": h.get("last_done_at") if is_today_view else None,
             })
         total = len(habits)
         percent = round(done_count / total * 100) if total else 0
         jon_pct = min(100, max(0, u.get("jon", 100)))
         return jsonify({
-            "habits":     result,
-            "today":      today,
-            "done_count": done_count,
-            "total":      total,
-            "percent":    percent,
-            "jon":        jon_pct,
-            "points":     u.get("points", 0),
-            "streak":     u.get("streak", 0),
-            "lang":       get_lang(uid),
+            "habits":         result,
+            "today":          today,
+            "view_date":      target_date,
+            "is_today_view":  is_today_view,
+            "is_future_view": is_future_view,
+            "done_count":     done_count,
+            "total":          total,
+            "percent":        percent,
+            "jon":            jon_pct,
+            "points":         u.get("points", 0),
+            "streak":         u.get("streak", 0),
+            "lang":           get_lang(uid),
         })
 
     @app.route("/api/checkin/<int:uid>/<hid>", methods=["POST"])
