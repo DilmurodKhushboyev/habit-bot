@@ -50,17 +50,19 @@ function renderToday(d) {
   // ── HAFTALIK KALENDAR (1-qadam: faqat UI, backend integratsiya yo'q) ──
   // selectedDate global state — default: bugun. Backend hali e'tiborga olmaydi.
   if (!window._selectedDate) window._selectedDate = today;
+  // weekOffset: 0 = joriy hafta (today asosida), -1 = oldingi, +1 = keyingi (cheklov yo'q).
+  if (typeof window._weekOffset !== 'number') window._weekOffset = 0;
   const _dayAbbrMap = {
     uz: ['Yak','Du','Se','Ch','Pa','Ju','Sh'],
     ru: ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],
     en: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
   };
   const dayAbbr = _dayAbbrMap[currentLang] || _dayAbbrMap['uz'];
-  // Joriy haftaning Yakshanba (week start) sanasini topamiz — `today` asosida
+  // Joriy haftaning Yakshanba (week start) sanasini topamiz — `today` asosida + offset
   const _todayDt = new Date(today + 'T00:00:00');
   const _weekStart = new Date(_todayDt);
-  _weekStart.setDate(_todayDt.getDate() - _todayDt.getDay()); // 0 = Yakshanba
-  let weekCalHtml = '<div class="weekcal">';
+  _weekStart.setDate(_todayDt.getDate() - _todayDt.getDay() + (window._weekOffset * 7)); // 0 = Yakshanba
+  let weekCalHtml = '<div class="weekcal" id="weekcal">';
   for (let i = 0; i < 7; i++) {
     const _d = new Date(_weekStart);
     _d.setDate(_weekStart.getDate() + i);
@@ -189,6 +191,7 @@ function renderToday(d) {
 
   // Swipe handlerlarni ulash
   setTimeout(() => _initCheckinSwipe(), 50);
+  setTimeout(() => _initWeekCalSwipe(), 50);
 }
 
 async function checkin(hid, cardEl) {
@@ -924,4 +927,79 @@ function selectDay(dateStr) {
   try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); } catch(e) {}
   // Re-render: kalendar yangi highlight bilan chiqadi (odatlar ro'yxati tegmaydi — backend hali bilmaydi)
   if (data.today) renderToday(data.today);
+}
+
+// ── HAFTALIK KALENDAR: hafta surish (chap/o'ng swipe) ──
+// direction: -1 (o'ngga swipe = oldingi hafta), +1 (chapga swipe = keyingi hafta)
+// selectedDate'ni o'sha haftaning o'sha hafta-kuniga avtomatik ko'chiradi (Ch 6 → Ch 13).
+function _shiftWeek(direction) {
+  if (!data.today) return;
+  const today = data.today.today;
+  if (!today) return;
+  const oldOffset = window._weekOffset || 0;
+  window._weekOffset = oldOffset + direction;
+  // selectedDate'ni yangi haftaning o'sha hafta-kuniga ko'chirish
+  if (window._selectedDate) {
+    const _sel = new Date(window._selectedDate + 'T00:00:00');
+    _sel.setDate(_sel.getDate() + direction * 7);
+    const _y = _sel.getFullYear();
+    const _m = String(_sel.getMonth() + 1).padStart(2, '0');
+    const _d = String(_sel.getDate()).padStart(2, '0');
+    window._selectedDate = `${_y}-${_m}-${_d}`;
+  }
+  // Haptic feedback
+  try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); } catch(e) {}
+  // Re-render — kalendar yangi haftani ko'rsatadi
+  renderToday(data.today);
+}
+
+// Kalendar konteyneriga touch handlerlari ulash. Gesture intent lock (8px):
+// - |dy| > |dx| va |dy| > 8 → vertikal scroll g'olib (PTR uchun joy bo'sh qoladi)
+// - |dx| > 8 → gorizontal qulflanadi, vertikal scroll bekor qilinadi
+// - |dx| > 50px chegarasidan oshsa → hafta o'zgaradi
+function _initWeekCalSwipe() {
+  const cal = document.getElementById('weekcal');
+  if (!cal) return;
+  // Double-bind oldini olish (renderToday har safar chaqiriladi)
+  if (cal.dataset.swipeInit === '1') return;
+  cal.dataset.swipeInit = '1';
+
+  let startX = 0, startY = 0, swiping = false, locked = false, fired = false;
+  const THRESHOLD = 50; // hafta o'zgarishi uchun minimal masofa
+  const LOCK_DIST = 8;  // intent lock chegarasi
+
+  cal.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    swiping = true; locked = false; fired = false;
+  }, { passive: true });
+
+  cal.addEventListener('touchmove', e => {
+    if (!swiping || fired) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (!locked) {
+      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > LOCK_DIST) {
+        // Vertikal g'olib — gestureni bekor qilamiz (PTR ishlasin)
+        swiping = false; return;
+      }
+      if (Math.abs(dx) > LOCK_DIST) locked = true;
+    }
+    if (locked) {
+      // Gorizontal qulflandi — vertikal scroll'ni to'xtatish
+      try { e.preventDefault(); } catch(_) {}
+      // Chegaradan o'tdi — bir martagina ot
+      if (Math.abs(dx) >= THRESHOLD) {
+        fired = true;
+        _shiftWeek(dx < 0 ? +1 : -1); // chapga swipe = keyingi, o'ngga = oldingi
+      }
+    }
+  }, { passive: false });
+
+  cal.addEventListener('touchend', () => {
+    swiping = false; locked = false; fired = false;
+  }, { passive: true });
+  cal.addEventListener('touchcancel', () => {
+    swiping = false; locked = false; fired = false;
+  }, { passive: true });
 }
