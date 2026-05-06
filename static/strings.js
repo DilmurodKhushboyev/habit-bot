@@ -89,7 +89,7 @@ const STRINGS = {
       per_day_meta:'marta/kun',
       days_streak:'kun',
       retry:'🔄 Qayta urinish',
-      progress_label:'PROGRESS',
+      progress_label:'JARAYON',
     },
     achievements: {
       title:'Yutuqlarim',
