@@ -47,6 +47,41 @@ function renderToday(d) {
   const dateStr  = `${dt.getDate()} ${months[dt.getMonth()]} — ${dayNames[dt.getDay()]}`;
   const allDone  = done_count === total && total > 0;
 
+  // ── HAFTALIK KALENDAR (1-qadam: faqat UI, backend integratsiya yo'q) ──
+  // selectedDate global state — default: bugun. Backend hali e'tiborga olmaydi.
+  if (!window._selectedDate) window._selectedDate = today;
+  const _dayAbbrMap = {
+    uz: ['Yak','Du','Se','Ch','Pa','Ju','Sh'],
+    ru: ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],
+    en: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+  };
+  const dayAbbr = _dayAbbrMap[currentLang] || _dayAbbrMap['uz'];
+  // Joriy haftaning Yakshanba (week start) sanasini topamiz — `today` asosida
+  const _todayDt = new Date(today + 'T00:00:00');
+  const _weekStart = new Date(_todayDt);
+  _weekStart.setDate(_todayDt.getDate() - _todayDt.getDay()); // 0 = Yakshanba
+  let weekCalHtml = '<div class="weekcal">';
+  for (let i = 0; i < 7; i++) {
+    const _d = new Date(_weekStart);
+    _d.setDate(_weekStart.getDate() + i);
+    const _yyyy = _d.getFullYear();
+    const _mm = String(_d.getMonth() + 1).padStart(2, '0');
+    const _dd = String(_d.getDate()).padStart(2, '0');
+    const _dateStr = `${_yyyy}-${_mm}-${_dd}`;
+    const _isToday = _dateStr === today;
+    const _isSelected = _dateStr === window._selectedDate;
+    const _isFuture = _dateStr > today;
+    const cls = ['weekcal-day'];
+    if (_isSelected) cls.push('selected');
+    if (_isToday) cls.push('today');
+    if (_isFuture) cls.push('future');
+    weekCalHtml += `<div class="${cls.join(' ')}" onclick="selectDay('${_dateStr}')">
+      <div class="weekcal-name">${dayAbbr[i]}</div>
+      <div class="weekcal-num">${_d.getDate()}</div>
+    </div>`;
+  }
+  weekCalHtml += '</div>';
+
   // Vaqt bo'yicha sort: vaqtsiz eng oxirga, bajarilganlar done bo'lmaganlardan keyin
   const sortedHabits = [...(habits || [])].sort((a, b) => {
     // 1. Bajarilgan/bajarilmagan (bajarilmaganlar tepada)
@@ -122,6 +157,8 @@ function renderToday(d) {
       <div class="bd-title">${S('today','all_done')}</div>
       <div class="bd-sub">${S('today','all_done_sub')} <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg></div>
     </div>
+
+    ${weekCalHtml}
 
     <div class="today-hero">
       <div class="hero-party-badge ${allDone ? 'show' : ''}" id="hero-party-badge">${_partySvg()}</div>
@@ -875,4 +912,16 @@ function toggleCheckinDrop(hid) {
 
 function closeAllCheckinDrops() {
   document.querySelectorAll('.checkin-dropdown.open').forEach(d => d.classList.remove('open'));
+}
+
+// ── HAFTALIK KALENDAR: kun tanlash (1-qadam: faqat UI) ──
+// Hozircha faqat selectedDate state'ni yangilaydi va renderToday'ni qayta chaqiradi.
+// Backend integratsiya keyingi qadamlarda qo'shiladi.
+function selectDay(dateStr) {
+  if (window._selectedDate === dateStr) return; // o'sha kun bosildi — hech narsa qilmaymiz
+  window._selectedDate = dateStr;
+  // Haptic feedback (Telegram WebApp)
+  try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); } catch(e) {}
+  // Re-render: kalendar yangi highlight bilan chiqadi (odatlar ro'yxati tegmaydi — backend hali bilmaydi)
+  if (data.today) renderToday(data.today);
 }

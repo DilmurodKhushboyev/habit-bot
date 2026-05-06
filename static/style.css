@@ -2835,3 +2835,80 @@ body.dark .rem1-section-title-collapsible:active {
   justify-content: center;
   z-index: 2;
 }
+
+/* ─────────────────────────────────────────────────────────
+ * HAFTALIK KALENDAR (Today sahifasi yuqorisida)
+ * 1-qadam: faqat UI — kun bosish selectedDate state'ni yangilaydi.
+ * Backend integratsiya keyingi qadamlarda.
+ * ───────────────────────────────────────────────────────── */
+.weekcal {
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 4px 4px;
+  margin: 12px 0 4px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.weekcal-day {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 2px;
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--sh-sm);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.18s ease;
+}
+
+.weekcal-day:active {
+  transform: scale(0.96);
+  box-shadow: var(--sh-press);
+}
+
+.weekcal-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sub);
+  letter-spacing: 0.3px;
+  line-height: 1;
+}
+
+.weekcal-num {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+/* Tanlangan kun — yashil accent */
+.weekcal-day.selected {
+  background: var(--accent2);
+  box-shadow: var(--sh-press);
+}
+
+.weekcal-day.selected .weekcal-name,
+.weekcal-day.selected .weekcal-num {
+  color: #fff;
+}
+
+/* Bugungi kun — kichik nuqta indikatori (selected emas bo'lsa) */
+.weekcal-day.today:not(.selected) .weekcal-num {
+  color: var(--accent2);
+}
+
+/* Kelajak kunlar — biroz xira (lekin bosiladi) */
+.weekcal-day.future:not(.selected) {
+  opacity: 0.55;
+}
+
+.weekcal-day.future:not(.selected) .weekcal-num {
+  color: var(--sub);
+}
