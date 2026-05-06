@@ -172,21 +172,6 @@ function renderToday(d) {
       </div>
     </div>
 
-    <div class="today-hero">
-      <div class="hero-party-badge ${allDone ? 'show' : ''}" id="hero-party-badge">${_partySvg()}</div>
-      <div class="today-date">${dateStr}</div>
-      <div style="display:flex;justify-content:center;gap:24px;align-items:center;margin:16px 0 4px">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-          <div class="prog-ring-wrap" style="margin:0" id="prog-ring">${ringHTML(percent)}</div>
-          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px" id="habit-label">${S('today','habit_label')} ${done_count}/${total}</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-          <div class="prog-ring-wrap" style="margin:0" id="jon-ring">${jonRingHTML(currentJon)}</div>
-          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">${S('today','life_label')}</div>
-        </div>
-      </div>
-    </div>
-
     <div style="display:flex;gap:8px;justify-content:center;margin:14px 0 6px;flex-wrap:wrap">
       <button onclick="openAddFromToday()" type="button" class="today-add-btn">${S('today','add_habit')}</button>
       <button onclick="openReminderModal()" type="button" class="today-add-rem-btn">${S('today','add_reminder')}</button>
@@ -263,11 +248,7 @@ async function checkin(hid, cardEl) {
       else if (!isDone && wasDone) data.today.done_count -= 1;
       data.today.done_count = Math.max(0, Math.min(data.today.total, data.today.done_count));
       const pct = data.today.total ? Math.round(data.today.done_count / data.today.total * 100) : 0;
-      const ringEl = document.getElementById('prog-ring');
-      if (ringEl) ringEl.innerHTML = ringHTML(pct);
-      const labelEl = document.getElementById('habit-label');
-      if (labelEl) labelEl.textContent = `${S('today','habit_label')} ${data.today.done_count}/${data.today.total}`;
-      // Progress bar (kalendar ostidagi chiziqli bar) yangilanadi — hero halqa bilan sinxron
+      // Progress bar (kalendar ostidagi chiziqli bar) yangilanadi — yagona progress ko'rsatkichi
       const pbFill = document.getElementById('progress-bar-fill');
       if (pbFill) pbFill.style.width = pct + '%';
       const pbPct = document.getElementById('progress-bar-percent');
@@ -293,16 +274,10 @@ async function checkin(hid, cardEl) {
         }, 3000);
       }
       _triggerConfetti();
-      // v469: bayram emoji (🎉 SVG) — today-hero yuqori-o'ng burchakda
-      const pb = document.getElementById('hero-party-badge');
-      if (pb) pb.classList.add('show');
     } else if (!result.all_done) {
-      // Undo holati: banner va bayram emoji darhol yashirin bo'lsin
+      // Undo holati: banner darhol yashirin bo'lsin
       const b = document.getElementById('all-done-banner');
       if (b) { b.classList.remove('show'); b.classList.remove('hiding'); }
-      // v469: bayram emoji — 100% dan chiqqanda olib tashlanadi
-      const pb = document.getElementById('hero-party-badge');
-      if (pb) pb.classList.remove('show');
     }
     // Izoh: agar result.all_done && wasAllDone bo'lsa (allaqachon banner chiqqan yoki
     // hali kollaps qilinayotgan bo'lsa) — hech narsa qilmaymiz, konfetti takror otilmaydi
