@@ -162,6 +162,16 @@ function renderToday(d) {
 
     ${weekCalHtml}
 
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-row">
+        <span class="progress-bar-label">${S('today','progress_label')}</span>
+        <span class="progress-bar-percent" id="progress-bar-percent">${percent}%</span>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progress-bar-fill" style="width:${percent}%"></div>
+      </div>
+    </div>
+
     <div class="today-hero">
       <div class="hero-party-badge ${allDone ? 'show' : ''}" id="hero-party-badge">${_partySvg()}</div>
       <div class="today-date">${dateStr}</div>
@@ -257,6 +267,11 @@ async function checkin(hid, cardEl) {
       if (ringEl) ringEl.innerHTML = ringHTML(pct);
       const labelEl = document.getElementById('habit-label');
       if (labelEl) labelEl.textContent = `${S('today','habit_label')} ${data.today.done_count}/${data.today.total}`;
+      // Progress bar (kalendar ostidagi chiziqli bar) yangilanadi — hero halqa bilan sinxron
+      const pbFill = document.getElementById('progress-bar-fill');
+      if (pbFill) pbFill.style.width = pct + '%';
+      const pbPct = document.getElementById('progress-bar-percent');
+      if (pbPct) pbPct.textContent = pct + '%';
       if (habit) { habit.done = isDone; habit.streak = result.streak; }
     }
 

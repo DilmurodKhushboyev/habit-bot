@@ -2912,3 +2912,50 @@ body.dark .rem1-section-title-collapsible:active {
 .weekcal-day.future:not(.selected) .weekcal-num {
   color: var(--sub);
 }
+
+/* ─────────────────────────────────────────────────────────
+ * PROGRESS BAR (Today sahifasi: kalendar ↔ hero halqalar orasi)
+ * "PROGRESS  N%" qatori + chiziqli bar (kulrang track + yashil fill)
+ * ───────────────────────────────────────────────────────── */
+.progress-bar-wrap {
+  margin: 12px 4px 4px;
+  padding: 0 4px;
+}
+
+.progress-bar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.progress-bar-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sub);
+  letter-spacing: 1.5px;
+}
+
+.progress-bar-percent {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.3px;
+}
+
+.progress-bar-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg2);
+  box-shadow: var(--sh-press);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent2) 0%, #66C893 100%);
+  transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-width: 0;
+}

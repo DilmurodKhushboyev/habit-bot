@@ -89,6 +89,7 @@ const STRINGS = {
       per_day_meta:'marta/kun',
       days_streak:'kun',
       retry:'🔄 Qayta urinish',
+      progress_label:'PROGRESS',
     },
     achievements: {
       title:'Yutuqlarim',
@@ -487,6 +488,7 @@ const STRINGS = {
       per_day_meta:'раз/день',
       days_streak:'дней',
       retry:'🔄 Повторить',
+      progress_label:'ПРОГРЕСС',
     },
     achievements: {
       title:'Мои достижения',
@@ -885,6 +887,7 @@ const STRINGS = {
       per_day_meta:'times/day',
       days_streak:'days',
       retry:'🔄 Retry',
+      progress_label:'PROGRESS',
     },
     achievements: {
       title:'My Achievements',
