@@ -368,17 +368,13 @@ def daily_reset():
                             # pet_cat orqali streak saqlashga urinish
                             if _try_pet_cat_save(udata, habit, today_str):
                                 # Streak saqlandi — nollashga tegmaslik, xushxabar yuborish
-                                try:
-                                    bot.send_message(
-                                        int(uid),
-                                        f"🐱 *Mushugingiz streakingizni qutqardi!*\n\n"
-                                        f"*📌 Odat:* {habit['name']}\n"
-                                        f"*🔥 Streak:* {habit.get('streak', 0)} kun saqlandi\n\n"
-                                        f"_Keyingi qutqaruv — 7 kundan keyin._",
-                                        parse_mode="Markdown"
-                                    )
-                                except Exception:
-                                    pass
+                                _send_auto_delete(
+                                    int(uid),
+                                    f"🐱 *Mushugingiz streakingizni qutqardi!*\n\n"
+                                    f"*📌 Odat:* {habit['name']}\n"
+                                    f"*🔥 Streak:* {habit.get('streak', 0)} kun saqlandi\n\n"
+                                    f"_Keyingi qutqaruv — 7 kundan keyin._"
+                                )
                             else:
                                 habit["streak"] = 0
                 # done_today_count tozalash — lekin last_done ni faqat bajarilmagan bo'lsa nollash
@@ -419,17 +415,13 @@ def daily_reset():
                         # Himoya yo'q — pet_cat orqali streak saqlashga urinish
                         if _try_pet_cat_save(udata, habit, today_str):
                             # Streak saqlandi — nollashga tegmaslik, xushxabar yuborish
-                            try:
-                                bot.send_message(
-                                    int(uid),
-                                    f"🐱 *Mushugingiz streakingizni qutqardi!*\n\n"
-                                    f"*📌 Odat:* {habit['name']}\n"
-                                    f"*🔥 Streak:* {habit.get('streak', 0)} kun saqlandi\n\n"
-                                    f"_Keyingi qutqaruv — 7 kundan keyin._",
-                                    parse_mode="Markdown"
-                                )
-                            except Exception:
-                                pass
+                            _send_auto_delete(
+                                int(uid),
+                                f"🐱 *Mushugingiz streakingizni qutqardi!*\n\n"
+                                f"*📌 Odat:* {habit['name']}\n"
+                                f"*🔥 Streak:* {habit.get('streak', 0)} kun saqlandi\n\n"
+                                f"_Keyingi qutqaruv — 7 kundan keyin._"
+                            )
                         else:
                             habit["streak"] = 0
         # ── Xavf ostidagi odatlar uchun 1 ta umumiy shield xabari ──
