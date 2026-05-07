@@ -724,7 +724,7 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   background: var(--bg);
   box-shadow: var(--sh-card);
   border-radius: 20px;
-  padding: 20px; text-align: center; margin-bottom: 12px;
+  padding: 20px; text-align: center; margin-bottom: 24px;
   display: none;
   max-height: 500px;
   overflow: hidden;
@@ -737,8 +737,8 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
 }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes bannerCollapse {
-  0%   { max-height: 500px; opacity: 1; transform: translateY(0) scaleY(1); padding: 20px; margin-bottom: 12px; }
-  60%  { max-height: 500px; opacity: 0; transform: translateY(-20px) scaleY(1); padding: 20px; margin-bottom: 12px; }
+  0%   { max-height: 500px; opacity: 1; transform: translateY(0) scaleY(1); padding: 20px; margin-bottom: 24px; }
+  60%  { max-height: 500px; opacity: 0; transform: translateY(-20px) scaleY(1); padding: 20px; margin-bottom: 24px; }
   100% { max-height: 0;     opacity: 0; transform: translateY(-20px) scaleY(0.5); padding: 0 20px; margin-bottom: 0; }
 }
 .all-done-banner .bd-icon  { font-size: 32px; }
@@ -2834,4 +2834,218 @@ body.dark .rem1-section-title-collapsible:active {
   align-items: center;
   justify-content: center;
   z-index: 2;
+}
+
+/* ─────────────────────────────────────────────────────────
+ * HAFTALIK KALENDAR (Today sahifasi yuqorisida)
+ * 1-qadam: faqat UI — kun bosish selectedDate state'ni yangilaydi.
+ * Backend integratsiya keyingi qadamlarda.
+ * ───────────────────────────────────────────────────────── */
+.weekcal {
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 4px 4px;
+  margin: -16px 0 4px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.weekcal-day {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 2px;
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--sh-sm);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.18s ease;
+}
+
+.weekcal-day:active {
+  transform: scale(0.96);
+  box-shadow: var(--sh-press);
+}
+
+.weekcal-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sub);
+  letter-spacing: 0.3px;
+  line-height: 1;
+}
+
+.weekcal-num {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+/* Tanlangan kun — yashil accent */
+.weekcal-day.selected {
+  background: var(--accent2);
+  box-shadow: var(--sh-press);
+}
+
+.weekcal-day.selected .weekcal-name,
+.weekcal-day.selected .weekcal-num {
+  color: #fff;
+}
+
+/* Bugungi kun — kichik nuqta indikatori (selected emas bo'lsa) */
+.weekcal-day.today:not(.selected) .weekcal-num {
+  color: var(--accent2);
+}
+
+/* Kelajak kunlar — biroz xira (lekin bosiladi) */
+.weekcal-day.future:not(.selected) {
+  opacity: 0.55;
+}
+
+.weekcal-day.future:not(.selected) .weekcal-num {
+  color: var(--sub);
+}
+
+/* ─────────────────────────────────────────────────────────
+ * PROGRESS BAR (Today sahifasi: kalendar ↔ hero halqalar orasi)
+ * "PROGRESS  N%" qatori + chiziqli bar (kulrang track + yashil fill)
+ * ───────────────────────────────────────────────────────── */
+.progress-bar-wrap {
+  margin: 12px 4px 4px;
+  padding: 0 4px;
+}
+
+.progress-bar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.progress-bar-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sub);
+  letter-spacing: 1.5px;
+}
+
+.progress-bar-percent {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.3px;
+}
+
+.progress-bar-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg2);
+  box-shadow: var(--sh-press);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent2) 0%, #66C893 100%);
+  transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-width: 0;
+}
+
+/* ─────────────────────────────────────────────────────────
+ * READ-ONLY (o'tgan/kelajak kun ko'rilayotganda)
+ * Faqat checkin tugmasi disabled — Tahrirlash/O'chirish ishlaydi
+ * ───────────────────────────────────────────────────────── */
+.checkin-card.readonly .checkin-btn {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: auto; /* bosish qabul qilinadi (toast chiqsin) */
+}
+
+.checkin-card.readonly .checkin-btn:active {
+  transform: none; /* bosilganda press effekti yo'q */
+}
+
+/* ─────────────────────────────────────────────────────────
+ * READ-ONLY TOAST (4d-bosqich: bugun bo'lmagan kunda checkin urinishi)
+ * Top positioning, vertikal layout (matn yuqorida, tugma pastida)
+ * ───────────────────────────────────────────────────────── */
+.readonly-toast {
+  position: fixed;
+  top: calc(var(--tg-safe-top, 0px) + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--card);
+  box-shadow: var(--sh-out);
+  border-radius: 20px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: calc(100vw - 32px);
+  max-width: 360px;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+.readonly-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.readonly-toast-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.readonly-toast-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.readonly-toast-msg {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text);
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+}
+
+.readonly-toast-btn {
+  background: var(--accent2);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  width: 100%;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  box-shadow: 0 4px 12px rgba(76, 175, 125, 0.25);
+}
+
+.readonly-toast-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 6px rgba(76, 175, 125, 0.2);
 }

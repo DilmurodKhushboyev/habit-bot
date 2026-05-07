@@ -1,9 +1,12 @@
 // ── BUGUN ──
-async function loadToday() {
+// dateStr (optional, default null): agar berilgan bo'lsa "?date=YYYY-MM-DD" jo'natiladi.
+// null bo'lsa — eski xulq (bugun). Boshqa fayllardagi parametrsiz chaqiruvlar buzilmaydi.
+async function loadToday(dateStr = null) {
   try {
+    const _q = (dateStr && typeof dateStr === 'string') ? `?date=${encodeURIComponent(dateStr)}` : '';
     // Today va eslatmalarni parallel yuklash (tezlik uchun)
     const [d, _] = await Promise.all([
-      apiFetch(`today/${userId}`),
+      apiFetch(`today/${userId}${_q}`),
       loadReminderCards()  // _cachedReminders ni yangilaydi
     ]);
     data.today = d;
@@ -47,6 +50,43 @@ function renderToday(d) {
   const dateStr  = `${dt.getDate()} ${months[dt.getMonth()]} — ${dayNames[dt.getDay()]}`;
   const allDone  = done_count === total && total > 0;
 
+  // ── HAFTALIK KALENDAR (1-qadam: faqat UI, backend integratsiya yo'q) ──
+  // selectedDate global state — default: bugun. Backend hali e'tiborga olmaydi.
+  if (!window._selectedDate) window._selectedDate = today;
+  // weekOffset: 0 = joriy hafta (today asosida), -1 = oldingi, +1 = keyingi (cheklov yo'q).
+  if (typeof window._weekOffset !== 'number') window._weekOffset = 0;
+  const _dayAbbrMap = {
+    uz: ['Yak','Du','Se','Ch','Pa','Ju','Sh'],
+    ru: ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],
+    en: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+  };
+  const dayAbbr = _dayAbbrMap[currentLang] || _dayAbbrMap['uz'];
+  // Joriy haftaning Yakshanba (week start) sanasini topamiz — `today` asosida + offset
+  const _todayDt = new Date(today + 'T00:00:00');
+  const _weekStart = new Date(_todayDt);
+  _weekStart.setDate(_todayDt.getDate() - _todayDt.getDay() + (window._weekOffset * 7)); // 0 = Yakshanba
+  let weekCalHtml = '<div class="weekcal" id="weekcal">';
+  for (let i = 0; i < 7; i++) {
+    const _d = new Date(_weekStart);
+    _d.setDate(_weekStart.getDate() + i);
+    const _yyyy = _d.getFullYear();
+    const _mm = String(_d.getMonth() + 1).padStart(2, '0');
+    const _dd = String(_d.getDate()).padStart(2, '0');
+    const _dateStr = `${_yyyy}-${_mm}-${_dd}`;
+    const _isToday = _dateStr === today;
+    const _isSelected = _dateStr === window._selectedDate;
+    const _isFuture = _dateStr > today;
+    const cls = ['weekcal-day'];
+    if (_isSelected) cls.push('selected');
+    if (_isToday) cls.push('today');
+    if (_isFuture) cls.push('future');
+    weekCalHtml += `<div class="${cls.join(' ')}" onclick="selectDay('${_dateStr}')">
+      <div class="weekcal-name">${dayAbbr[i]}</div>
+      <div class="weekcal-num">${_d.getDate()}</div>
+    </div>`;
+  }
+  weekCalHtml += '</div>';
+
   // Vaqt bo'yicha sort: vaqtsiz eng oxirga, bajarilganlar done bo'lmaganlardan keyin
   const sortedHabits = [...(habits || [])].sort((a, b) => {
     // 1. Bajarilgan/bajarilmagan (bajarilmaganlar tepada)
@@ -75,7 +115,7 @@ function renderToday(d) {
     const dotsHtml = '';
     const _esc = (s) => (s||'').replace(/'/g, "\\'");
     cardsHtml += `
-      <div class="checkin-card ${h.done ? 'done' : ''}" id="ccard-${h.id}">
+      <div class="checkin-card ${h.done ? 'done' : ''} ${d.is_today_view === false ? 'readonly' : ''}" id="ccard-${h.id}">
         <div class="checkin-actions-bg">
           <button class="cswipe-btn cswipe-edit" onclick="event.stopPropagation();openEdit('${h.id}','${_esc(h.name)}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}')">
             <svg width="18" height="18" viewBox="0 0 26 26" fill="none"><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="#fff" opacity="0.9"/></svg>
@@ -123,18 +163,15 @@ function renderToday(d) {
       <div class="bd-sub">${S('today','all_done_sub')} <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg></div>
     </div>
 
-    <div class="today-hero">
-      <div class="hero-party-badge ${allDone ? 'show' : ''}" id="hero-party-badge">${_partySvg()}</div>
-      <div class="today-date">${dateStr}</div>
-      <div style="display:flex;justify-content:center;gap:24px;align-items:center;margin:16px 0 4px">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-          <div class="prog-ring-wrap" style="margin:0" id="prog-ring">${ringHTML(percent)}</div>
-          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px" id="habit-label">${S('today','habit_label')} ${done_count}/${total}</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-          <div class="prog-ring-wrap" style="margin:0" id="jon-ring">${jonRingHTML(currentJon)}</div>
-          <div style="font-size:10px;color:var(--sub);font-weight:600;letter-spacing:.5px">${S('today','life_label')}</div>
-        </div>
+    ${weekCalHtml}
+
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-row">
+        <span class="progress-bar-label">${S('today','progress_label')}</span>
+        <span class="progress-bar-percent" id="progress-bar-percent">${percent}%</span>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progress-bar-fill" style="width:${percent}%"></div>
       </div>
     </div>
 
@@ -152,9 +189,16 @@ function renderToday(d) {
 
   // Swipe handlerlarni ulash
   setTimeout(() => _initCheckinSwipe(), 50);
+  setTimeout(() => _initWeekCalSwipe(), 50);
 }
 
 async function checkin(hid, cardEl) {
+  // 4d-bosqich: o'tgan/kelajak kun ko'rilayotganda checkin bloklanadi
+  // (faqat backend aniq false qaytarsa — eski backend bilan orqaga moslik)
+  if (data.today && data.today.is_today_view === false) {
+    _showReadonlyToast();
+    return;
+  }
   const btn = document.getElementById('cbtn-' + hid);
   const pop = document.getElementById('pop-' + hid);
   if (btn) btn.disabled = true;
@@ -213,10 +257,11 @@ async function checkin(hid, cardEl) {
       else if (!isDone && wasDone) data.today.done_count -= 1;
       data.today.done_count = Math.max(0, Math.min(data.today.total, data.today.done_count));
       const pct = data.today.total ? Math.round(data.today.done_count / data.today.total * 100) : 0;
-      const ringEl = document.getElementById('prog-ring');
-      if (ringEl) ringEl.innerHTML = ringHTML(pct);
-      const labelEl = document.getElementById('habit-label');
-      if (labelEl) labelEl.textContent = `${S('today','habit_label')} ${data.today.done_count}/${data.today.total}`;
+      // Progress bar (kalendar ostidagi chiziqli bar) yangilanadi — yagona progress ko'rsatkichi
+      const pbFill = document.getElementById('progress-bar-fill');
+      if (pbFill) pbFill.style.width = pct + '%';
+      const pbPct = document.getElementById('progress-bar-percent');
+      if (pbPct) pbPct.textContent = pct + '%';
       if (habit) { habit.done = isDone; habit.streak = result.streak; }
     }
 
@@ -238,16 +283,10 @@ async function checkin(hid, cardEl) {
         }, 3000);
       }
       _triggerConfetti();
-      // v469: bayram emoji (🎉 SVG) — today-hero yuqori-o'ng burchakda
-      const pb = document.getElementById('hero-party-badge');
-      if (pb) pb.classList.add('show');
     } else if (!result.all_done) {
-      // Undo holati: banner va bayram emoji darhol yashirin bo'lsin
+      // Undo holati: banner darhol yashirin bo'lsin
       const b = document.getElementById('all-done-banner');
       if (b) { b.classList.remove('show'); b.classList.remove('hiding'); }
-      // v469: bayram emoji — 100% dan chiqqanda olib tashlanadi
-      const pb = document.getElementById('hero-party-badge');
-      if (pb) pb.classList.remove('show');
     }
     // Izoh: agar result.all_done && wasAllDone bo'lsa (allaqachon banner chiqqan yoki
     // hali kollaps qilinayotgan bo'lsa) — hech narsa qilmaymiz, konfetti takror otilmaydi
@@ -875,4 +914,159 @@ function toggleCheckinDrop(hid) {
 
 function closeAllCheckinDrops() {
   document.querySelectorAll('.checkin-dropdown.open').forEach(d => d.classList.remove('open'));
+}
+
+// ── HAFTALIK KALENDAR: kun tanlash ──
+// 1) Kalendar highlight darhol yangilanadi (data.today bilan re-render)
+// 2) Backend chaqiriladi: ?date= parametri bilan, tanlangan kun odatlari keladi
+// 3) Backend javobi kelganda renderToday yana chaqiriladi (yangi data bilan)
+function selectDay(dateStr) {
+  if (window._selectedDate === dateStr) return; // o'sha kun bosildi — hech narsa qilmaymiz
+  window._selectedDate = dateStr;
+  // Haptic feedback (Telegram WebApp)
+  try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); } catch(e) {}
+  // Tezkor highlight: hozirgi data bilan re-render (network kechiksa ham UX silliq)
+  if (data.today) renderToday(data.today);
+  // Backend chaqiruv: o'sha kun odatlari (history dan o'qiladi, read-only)
+  loadToday(dateStr);
+}
+
+// ── HAFTALIK KALENDAR: hafta surish (chap/o'ng swipe) ──
+// direction: -1 (o'ngga swipe = oldingi hafta), +1 (chapga swipe = keyingi hafta)
+// selectedDate'ni o'sha haftaning o'sha hafta-kuniga avtomatik ko'chiradi (Ch 6 → Ch 13).
+// Backend ham qayta chaqiriladi (yangi sananing odatlari).
+function _shiftWeek(direction) {
+  if (!data.today) return;
+  const today = data.today.today;
+  if (!today) return;
+  const oldOffset = window._weekOffset || 0;
+  window._weekOffset = oldOffset + direction;
+  // selectedDate'ni yangi haftaning o'sha hafta-kuniga ko'chirish
+  let newSelected = window._selectedDate;
+  if (window._selectedDate) {
+    const _sel = new Date(window._selectedDate + 'T00:00:00');
+    _sel.setDate(_sel.getDate() + direction * 7);
+    const _y = _sel.getFullYear();
+    const _m = String(_sel.getMonth() + 1).padStart(2, '0');
+    const _d = String(_sel.getDate()).padStart(2, '0');
+    newSelected = `${_y}-${_m}-${_d}`;
+    window._selectedDate = newSelected;
+  }
+  // Haptic feedback
+  try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); } catch(e) {}
+  // Tezkor highlight: kalendar yangi haftani darhol ko'rsatadi (network kechiksa ham)
+  renderToday(data.today);
+  // Backend chaqiruv: yangi sananing odatlari yuklanadi
+  loadToday(newSelected);
+}
+
+// Kalendar konteyneriga touch handlerlari ulash. Gesture intent lock (8px):
+// - |dy| > |dx| va |dy| > 8 → vertikal scroll g'olib (PTR uchun joy bo'sh qoladi)
+// - |dx| > 8 → gorizontal qulflanadi, vertikal scroll bekor qilinadi
+// - |dx| > 50px chegarasidan oshsa → hafta o'zgaradi
+function _initWeekCalSwipe() {
+  const cal = document.getElementById('weekcal');
+  if (!cal) return;
+  // Double-bind oldini olish (renderToday har safar chaqiriladi)
+  if (cal.dataset.swipeInit === '1') return;
+  cal.dataset.swipeInit = '1';
+
+  let startX = 0, startY = 0, swiping = false, locked = false, fired = false;
+  const THRESHOLD = 50; // hafta o'zgarishi uchun minimal masofa
+  const LOCK_DIST = 8;  // intent lock chegarasi
+
+  cal.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    swiping = true; locked = false; fired = false;
+  }, { passive: true });
+
+  cal.addEventListener('touchmove', e => {
+    if (!swiping || fired) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (!locked) {
+      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > LOCK_DIST) {
+        // Vertikal g'olib — gestureni bekor qilamiz (PTR ishlasin)
+        swiping = false; return;
+      }
+      if (Math.abs(dx) > LOCK_DIST) locked = true;
+    }
+    if (locked) {
+      // Gorizontal qulflandi — vertikal scroll'ni to'xtatish
+      try { e.preventDefault(); } catch(_) {}
+      // Chegaradan o'tdi — bir martagina ot
+      if (Math.abs(dx) >= THRESHOLD) {
+        fired = true;
+        _shiftWeek(dx < 0 ? +1 : -1); // chapga swipe = keyingi, o'ngga = oldingi
+      }
+    }
+  }, { passive: false });
+
+  cal.addEventListener('touchend', () => {
+    swiping = false; locked = false; fired = false;
+  }, { passive: true });
+  cal.addEventListener('touchcancel', () => {
+    swiping = false; locked = false; fired = false;
+  }, { passive: true });
+}
+
+// ── READ-ONLY TOAST: o'tgan/kelajak kun ko'rilayotganda checkin urinishi uchun ──
+// Haptic warning + DOM toast + "Bugunga qaytish" tugmasi.
+// Toast 4 soniyadan keyin avtomatik yashirinadi.
+function _showReadonlyToast() {
+  // Haptic warning (qo'llab-quvvatlanmasa, jim turadi)
+  try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning'); } catch(e) {}
+  // Mavjud toastni olib tashlash (qayta-qayta bosishda chiroyli ko'rinish uchun)
+  const old = document.getElementById('readonly-toast');
+  if (old) old.remove();
+  // Yangi toast yaratish
+  const t = document.createElement('div');
+  t.id = 'readonly-toast';
+  t.className = 'readonly-toast';
+  const msg = S('today', 'readonly_msg');
+  const btnTxt = S('today', 'back_to_today');
+  t.innerHTML = `
+    <div class="readonly-toast-header">
+      <div class="readonly-toast-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <defs>
+            <linearGradient id="svgRoWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#F6C93E"/>
+              <stop offset="100%" stop-color="#E07040"/>
+            </linearGradient>
+          </defs>
+          <path d="M12 3L2 21h20L12 3z" stroke="url(#svgRoWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M12 10v5M12 17.5v.5" stroke="url(#svgRoWarn)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="readonly-toast-msg">${msg}</div>
+    </div>
+    <button class="readonly-toast-btn" onclick="_backToToday()">${btnTxt}</button>
+  `;
+  document.body.appendChild(t);
+  // Animatsiya bilan ko'rinish
+  requestAnimationFrame(() => t.classList.add('show'));
+  // 4s keyin avtomatik yashirinish
+  setTimeout(() => {
+    if (t && t.parentNode) {
+      t.classList.remove('show');
+      setTimeout(() => { if (t.parentNode) t.remove(); }, 300);
+    }
+  }, 4000);
+}
+
+// Toast ichidagi "Bugunga qaytish" tugmasi uchun
+function _backToToday() {
+  if (!data.today || !data.today.today) return;
+  // weekOffset ni 0 ga keltirish (joriy hafta)
+  window._weekOffset = 0;
+  // Toast yashirinish
+  const t = document.getElementById('readonly-toast');
+  if (t) {
+    t.classList.remove('show');
+    setTimeout(() => { if (t.parentNode) t.remove(); }, 300);
+  }
+  // selectedDate'ni bugunga keltirish va backend chaqirish
+  selectDay(data.today.today);
 }

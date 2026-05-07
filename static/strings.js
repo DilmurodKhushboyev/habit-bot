@@ -65,8 +65,8 @@ const STRINGS = {
       info_gift_box:'Tasodifiy mukofot: 100/200/500 ball, streak himoyasi yoki XP Booster.',
     },
     today: {
-      all_done:'Barchasi bajarildi!',
-      all_done_sub:'Ajoyib! Streak davom etmoqda',
+      all_done:'Barcha odatingiz bajarildi.',
+      all_done_sub:'Streaklar davom etmoqda',
       all_filter:'Barchasi',
       habit_label:'ODAT',
       life_label:'JON',
@@ -89,6 +89,9 @@ const STRINGS = {
       per_day_meta:'marta/kun',
       days_streak:'kun',
       retry:'🔄 Qayta urinish',
+      progress_label:'JARAYON',
+      readonly_msg:'Faqat bugungi odatlarni belgilash mumkin',
+      back_to_today:'Bugunga qaytish',
     },
     achievements: {
       title:'Yutuqlarim',
@@ -464,8 +467,8 @@ const STRINGS = {
       info_gift_box:'Случайная награда: 100/200/500 очков, защита стрика или XP Бустер.',
     },
     today: {
-      all_done:'Всё выполнено!',
-      all_done_sub:'Отлично! Стрик продолжается',
+      all_done:'Все привычки выполнены.',
+      all_done_sub:'Стрики продолжаются',
       all_filter:'Все',
       habit_label:'ПРИВЫЧКА',
       life_label:'ЖИЗНЬ',
@@ -487,6 +490,9 @@ const STRINGS = {
       per_day_meta:'раз/день',
       days_streak:'дней',
       retry:'🔄 Повторить',
+      progress_label:'ПРОГРЕСС',
+      readonly_msg:'Отмечать можно только сегодняшние привычки',
+      back_to_today:'К сегодняшнему дню',
     },
     achievements: {
       title:'Мои достижения',
@@ -862,8 +868,8 @@ const STRINGS = {
       info_gift_box:'Random reward: 100/200/500 points, streak shield or XP Booster.',
     },
     today: {
-      all_done:'All done!',
-      all_done_sub:'Great! Streak continues',
+      all_done:'All habits completed.',
+      all_done_sub:'Streaks continue',
       all_filter:'All',
       habit_label:'HABIT',
       life_label:'LIFE',
@@ -885,6 +891,9 @@ const STRINGS = {
       per_day_meta:'times/day',
       days_streak:'days',
       retry:'🔄 Retry',
+      progress_label:'PROGRESS',
+      readonly_msg:'Only today\'s habits can be marked',
+      back_to_today:'Back to today',
     },
     achievements: {
       title:'My Achievements',
