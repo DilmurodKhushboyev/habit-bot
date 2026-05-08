@@ -2028,10 +2028,17 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   align-items: center;
   justify-content: center;
 }
-/* Eski .splash-orbit va splOrbitSpin olib tashlandi — endi grow-mask ishlatamiz */
+.splash-orbit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: splOrbitSpin 8s linear infinite;
+}
+@keyframes splOrbitSpin {
+  to { transform: rotate(360deg); }
+}
 .splash-icon-wrap {
-  position: relative;
-  overflow: hidden;
   width: 88px;
   height: 88px;
   border-radius: 28px;
@@ -2041,43 +2048,6 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   align-items: center;
   justify-content: center;
   animation: splIconPulse 2s ease-in-out infinite;
-}
-.splash-grow-mask {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 100%;
-  background: var(--bg);
-  border-radius: 28px;
-  pointer-events: none;
-  z-index: 2;
-}
-.splash-icon-wrap.reveal-ready .splash-grow-mask {
-  animation: splGrowReveal 1.6s cubic-bezier(0.65, 0, 0.35, 1) 0.2s forwards;
-}
-.splash-grow-glow {
-  position: absolute;
-  top: 0;
-  left: 8%;
-  right: 8%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(76,175,125,.85), transparent);
-  box-shadow: 0 0 8px rgba(76,175,125,.65);
-  opacity: 0;
-}
-.splash-icon-wrap.reveal-ready .splash-grow-glow {
-  animation: splGlowFade 1.6s ease-in-out 0.2s forwards;
-}
-@keyframes splGrowReveal {
-  0%   { height: 100%; }
-  100% { height: 0%; }
-}
-@keyframes splGlowFade {
-  0%   { opacity: 0; }
-  15%  { opacity: 1; }
-  90%  { opacity: 1; }
-  100% { opacity: 0; }
 }
 @keyframes splIconPulse {
   0%, 100% { transform: scale(1); box-shadow: var(--sh-out); }

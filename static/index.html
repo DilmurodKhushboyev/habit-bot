@@ -19,31 +19,11 @@
 <div id="splash-screen">
   <div class="splash-content">
     <div class="splash-logo-ring">
+      <svg class="splash-orbit" viewBox="0 0 140 140"><circle cx="70" cy="70" r="64" fill="none" stroke="rgba(76,175,125,.25)" stroke-width="2" stroke-dasharray="6 8" /></svg>
       <div class="splash-icon-wrap" id="splash-logo">
-        <img src="splash-logo.png" width="54" height="54" style="border-radius:14px;display:block" alt="Super Habits Logo" id="splash-logo-img"/>
-        <div class="splash-grow-mask"><div class="splash-grow-glow"></div></div>
+        <img src="splash-logo.png" width="54" height="54" style="border-radius:14px;display:block" alt="Super Habits Logo"/>
       </div>
     </div>
-    <script>
-      (function(){
-        var img = document.getElementById('splash-logo-img');
-        var wrap = document.getElementById('splash-logo');
-        if(!img || !wrap) return;
-        var started = false;
-        function startGrow(){
-          if(started) return;
-          started = true;
-          wrap.classList.add('reveal-ready');
-        }
-        if(img.complete && img.naturalWidth > 0){
-          startGrow();
-        } else {
-          img.addEventListener('load', startGrow);
-          img.addEventListener('error', startGrow);
-        }
-        setTimeout(startGrow, 2000);
-      })();
-    </script>
     <div class="splash-title">Super Habits</div>
     <div class="splash-subtitle" id="splash-subtitle">Odatlaringizni shakllantiring</div>
     <div class="splash-dots">
