@@ -56,14 +56,16 @@ def handle_reminder_callbacks(call, uid, cdata, u):
             # Xabarni yangilash: tugmalarni olib tashlab, "bajarildi" qo'shish
             toast      = T(uid, "rem_done_toast", pts=2)
             old_text   = call.message.text or ""
-            # Markdown asterisklari call.message.text da yo'q, toast'ni ham toza qilamiz
+            # Telegram callback popup Markdown'ni qo'llab-quvvatlamaydi —
+            # popup uchun asterisksiz versiya, xabar uchun esa Markdown saqlanadi
             clean_toast = toast.replace("*", "")
-            new_text   = old_text + "\n\n" + clean_toast
+            new_text   = old_text + "\n\n" + toast
             try:
                 bot.edit_message_text(
                     chat_id=uid,
                     message_id=call.message.message_id,
                     text=new_text,
+                    parse_mode="Markdown",
                     reply_markup=None
                 )
             except Exception:
@@ -89,13 +91,16 @@ def handle_reminder_callbacks(call, uid, cdata, u):
         if ok:
             toast      = T(uid, "rem_skipped_toast")
             old_text   = call.message.text or ""
+            # Telegram callback popup Markdown'ni qo'llab-quvvatlamaydi —
+            # popup uchun asterisksiz versiya, xabar uchun esa Markdown saqlanadi
             clean_toast = toast.replace("*", "")
-            new_text   = old_text + "\n\n" + clean_toast
+            new_text   = old_text + "\n\n" + toast
             try:
                 bot.edit_message_text(
                     chat_id=uid,
                     message_id=call.message.message_id,
                     text=new_text,
+                    parse_mode="Markdown",
                     reply_markup=None
                 )
             except Exception:

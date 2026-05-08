@@ -16,7 +16,7 @@ from helpers import T, get_lang, today_uz5
 from texts import LANGS
 from motivation import MOTIVATSIYA
 from groups import _save_new_habit
-from scheduler import schedule_habit, unschedule_habit_today
+from scheduler import schedule_habit, unschedule_habit_today, _send_auto_delete
 from achievements import check_achievements_toplevel
 from bot_setup import (bot, send_main_menu, send_message_colored,
                        main_menu_dict, cBtn, ok_kb, kb_to_dict,
@@ -36,7 +36,7 @@ def _check_streak_milestone(uid: int, streak: int) -> None:
         if streak not in STREAK_MILESTONES:
             return
         text = T(uid, "streak_milestone").format(days=streak)
-        bot.send_message(uid, text, parse_mode="Markdown")
+        _send_auto_delete(uid, text)
     except Exception as e:
         print(f"[streak_milestone] xato uid={uid} streak={streak}: {e}")
 

@@ -157,8 +157,8 @@ LANGS = {
         "rem_notif_body":         "💡 Bu vazifani bajardingizmi?",
         "rem_btn_done":           "☑️ Bajardim",
         "rem_btn_skip":           "❌ Bajarmadim",
-        "rem_done_toast":         "🎉 Ajoyib! *+{pts} ball* qo'shildi.",
-        "rem_skipped_toast":      "❌ Eslatma o'tkazib yuborildi.",
+        "rem_done_toast":         "✅ Eslatma bajarildi! *+{pts} ⭐ ball*",
+        "rem_skipped_toast":      "⏭ Eslatma o'tkazib yuborildi",
         "rem_expired":            "⏳ *Eslatma muddati o'tdi.*",
         # ── ADMIN NOTIFICATION (yangi user xabari) ──
         "admin_new_pending":      "🆕 *Yangi foydalanuvchi* (hali ro'yxatdan o'tmagan)",
@@ -321,8 +321,8 @@ LANGS = {
         "rem_notif_body":         "💡 Did you complete this task?",
         "rem_btn_done":           "☑️ Done",
         "rem_btn_skip":           "❌ Didn't do",
-        "rem_done_toast":         "🎉 Great! *+{pts} points* added.",
-        "rem_skipped_toast":      "❌ Reminder skipped.",
+        "rem_done_toast":         "✅ Reminder done! *+{pts} ⭐ points*",
+        "rem_skipped_toast":      "⏭ Reminder skipped",
         "rem_expired":            "⏳ *Reminder expired.*",
         # ── ADMIN NOTIFICATION (new user message) ──
         "admin_new_pending":      "🆕 *New user* (not registered yet)",
@@ -485,8 +485,8 @@ LANGS = {
         "rem_notif_body":         "💡 Вы выполнили эту задачу?",
         "rem_btn_done":           "☑️ Выполнил",
         "rem_btn_skip":           "❌ Не выполнил",
-        "rem_done_toast":         "🎉 Отлично! *+{pts} баллов* добавлено.",
-        "rem_skipped_toast":      "❌ Напоминание пропущено.",
+        "rem_done_toast":         "✅ Напоминание выполнено! *+{pts} ⭐ баллов*",
+        "rem_skipped_toast":      "⏭ Напоминание пропущено",
         "rem_expired":            "⏳ *Срок напоминания истёк.*",
         # ── ADMIN NOTIFICATION (сообщение о новом пользователе) ──
         "admin_new_pending":      "🆕 *Новый пользователь* (ещё не зарегистрирован)",

@@ -103,6 +103,21 @@ def send_reminder(user_id, habit):
     except Exception as e:
         print(f"[reminder] xato: {e}")
 
+def _send_auto_delete(uid, text, reply_markup=None, delay=3):
+    """Tabriklash/xushxabar habarlari uchun: yuborib, X soniyadan keyin avto-o'chirish.
+    `callbacks_habits.py` da odat tasdiqlash uchun ishlatilgan pattern bilan bir xil
+    (chat tarixini toza saqlash uchun).
+    """
+    try:
+        sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=reply_markup)
+        def _del(chat_id, msg_id):
+            time.sleep(delay)
+            try: bot.delete_message(chat_id, msg_id)
+            except Exception: pass
+        threading.Thread(target=_del, args=(uid, sent.message_id), daemon=True).start()
+    except Exception as e:
+        print(f"[auto_del] xato {uid}: {e}")
+
 STREAK_MILESTONES = {
     7:   {"emoji": "🔥", "bonus": 20,  "title": "7 kunlik streak!"},
     14:  {"emoji": "⚡", "bonus": 35,  "title": "2 haftalik streak!"},
@@ -148,7 +163,7 @@ def _check_streak_milestone(uid, new_streak):
             f"\U0001f381 *Bonus:* +{ms['bonus']} \u2b50 ball qo'shildi!"
         )
     try:
-        bot.send_message(uid, text, parse_mode="Markdown", reply_markup=ok_kb(uid))
+        _send_auto_delete(uid, text, reply_markup=ok_kb(uid))
     except Exception as e:
         print(f"[milestone] xato {uid}: {e}")
 
@@ -360,7 +375,8 @@ def daily_reset():
                                         f"*📌 Odat:* {habit['name']}\n"
                                         f"*🔥 Streak:* {habit.get('streak', 0)} kun saqlandi\n\n"
                                         f"_Keyingi qutqaruv — 7 kundan keyin._",
-                                        parse_mode="Markdown"
+                                        parse_mode="Markdown",
+                                        reply_markup=ok_kb(int(uid))
                                     )
                                 except Exception:
                                     pass
@@ -411,7 +427,8 @@ def daily_reset():
                                     f"*📌 Odat:* {habit['name']}\n"
                                     f"*🔥 Streak:* {habit.get('streak', 0)} kun saqlandi\n\n"
                                     f"_Keyingi qutqaruv — 7 kundan keyin._",
-                                    parse_mode="Markdown"
+                                    parse_mode="Markdown",
+                                    reply_markup=ok_kb(int(uid))
                                 )
                             except Exception:
                                 pass
