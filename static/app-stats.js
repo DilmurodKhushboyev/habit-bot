@@ -1065,7 +1065,7 @@ function renderRating(d) {
     const subLbl = sort_by==='points'?u.points+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgStarX" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z" fill="url(#svgStarX)"/></svg>`:sort_by==='streak'?u.streak+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg>`:u.score+' '+S('profile','kun');
     rowsHtml += `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
-        border-radius:14px;margin-bottom:4px;background:var(--bg);
+        border-radius:14px;margin-bottom:8px;background:var(--bg);
         box-shadow:${isMe?'0 0 0 2px var(--accent)':'var(--sh-sm)'}">
         <div style="width:24px;height:24px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:var(--sh-sm)"><span style="font-size:10px;font-weight:800;color:var(--sub)">${rank}</span></div>
         ${userAvatarHTML(u, 34)}
@@ -1088,7 +1088,7 @@ function renderRating(d) {
     const pct = calcPct(u);
     const sub = sort_by==='points'?u.points+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgStarX" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M12 2l3 7h7l-5.5 4.5 2 7L12 16l-6.5 4.5 2-7L2 9h7z" fill="url(#svgStarX)"/></svg>`:sort_by==='streak'?u.streak+'&nbsp;' + `<svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id="svgFireX" x1="10" y1="0" x2="10" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#2D8A5E"/><stop offset="100%" stop-color="#4CAF7D"/></linearGradient></defs><path d="M10 2C10 2 14 6 14 10C14 12 13 13.5 11.5 14.5C12 13 11.5 11.5 10.5 11C11 13 9.5 15 8 15.5C9 14 8.5 12 7 11C5.5 12.5 6 15 7 16.5C5.5 15.5 4 13.5 4 11C4 7 8 4 10 2Z" fill="url(#svgFireX)"/></svg>`:u.score+' '+S('profile','kun');
     myRowHtml = `
-      <div style="margin-top:4px;border-top:1px solid var(--bg);padding-top:8px">
+      <div style="margin-top:12px;border-top:1px solid var(--bg);padding-top:12px">
         <div style="font-size:10px;color:var(--sub);margin-bottom:4px;padding-left:4px">${S('rating','my_rank')}</div>
         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
           border-radius:14px;background:var(--bg);box-shadow:0 0 0 2px var(--accent)">
