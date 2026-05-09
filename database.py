@@ -153,21 +153,49 @@ def add_points_history(udata, delta, date_str=None):
     udata["points_history"] = hist
 
 def get_points_in_period(udata, days=None):
-    """udata["points_history"] dagi oxirgi N kundagi ball yig'indisi.
-    days=None → butun tarix (lekin amalda umumiy points bilan teng bo'ladi
-    agar history to'liq saqlangan bo'lsa).
+    """Period (hafta/oy/barchasi) ichidagi ball qiymati.
 
-    Backward compat: points_history bo'sh yoki yo'q bo'lsa →
-    umumiy udata["points"] qaytariladi (eski foydalanuvchilar uchun).
+    3 qatlamli mantiq:
+    - Layer 1 (days=None, 'Barchasi'): doim umumiy udata["points"] qaytariladi
+      (chunki points_history to'liq tarix emas — yangi pattern qo'shilgandan
+      keyin saqlangan delta'lar emas, balki umumiy mavjud ball ishonchli).
+    - Layer 2 (days=N, history bor): points_history dan aniq period yig'indisi.
+    - Layer 3 (days=N, history yo'q — eski user): done_log dagi davriy faol
+      kunlar × 5 ball proxy. Bu taxminiy (bonus/booster hisobga olinmaydi),
+      lekin eski foydalanuvchilarni reytingda adolatli ko'rsatadi (chunki
+      0 ball ko'rsatish ularni butunlay yiqitardi).
+
+    Yangi action qilgan eski user uchun history asta-sekin to'lib boradi va
+    layer 2 ga o'tadi (vaqt o'tgan sari aniqlik oshadi).
     """
-    hist = udata.get("points_history") or {}
-    if not isinstance(hist, dict) or not hist:
-        return int(udata.get("points", 0))
+    # Layer 1: 'Barchasi' → umumiy points (har doim ishonchli)
     if days is None:
-        return sum(int(v) for v in hist.values())
+        return int(udata.get("points", 0))
+
+    # Layer 2: history bor → aniq period yig'indisi
+    hist = udata.get("points_history") or {}
+    if isinstance(hist, dict) and hist:
+        today = datetime.utcnow() + timedelta(hours=5)
+        cutoff = (today - timedelta(days=days)).strftime("%Y-%m-%d")
+        return sum(int(v) for d, v in hist.items() if d >= cutoff)
+
+    # Layer 3: history yo'q (eski user) → done_log dan proxy 5 ball/kun
+    done_log = udata.get("done_log") or {}
+    if not isinstance(done_log, dict) or not done_log:
+        return 0
     today = datetime.utcnow() + timedelta(hours=5)
-    cutoff = (today - timedelta(days=days)).strftime("%Y-%m-%d")
-    return sum(int(v) for d, v in hist.items() if d >= cutoff)
+    cutoff_dt = (today - timedelta(days=days)).date()
+    active_days = 0
+    for d_str, v in done_log.items():
+        if not v:
+            continue
+        try:
+            d_obj = datetime.strptime(d_str, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            continue
+        if d_obj >= cutoff_dt:
+            active_days += 1
+    return active_days * 5
 
 def get_streak_in_period(udata, days=None):
     """udata["done_log"] dan davriy oraliqdagi maksimum ketma-ket
