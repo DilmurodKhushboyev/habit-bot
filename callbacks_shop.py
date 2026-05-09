@@ -8,7 +8,7 @@ import threading
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from config import ADMIN_ID, SHOP_PRICES
-from database import load_user, save_user
+from database import load_user, save_user, add_points_history
 from helpers import T, get_lang
 from bot_setup import (bot, send_main_menu, send_message_colored,
                        main_menu_dict, cBtn, ok_kb, kb_to_dict,
@@ -81,6 +81,7 @@ def handle_shop_callbacks(call, uid, cdata, u):
             )
             return True
         u["points"] = balls - jon_price
+        add_points_history(u, -jon_price)
         u["jon"]    = 100.0
         save_user(uid, u)
         bot.send_message(uid,
