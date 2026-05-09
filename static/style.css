@@ -3075,7 +3075,8 @@ body.dark .rem1-section-title-collapsible:active {
 }
 .fab-wrap.visible {
   display: flex;
-  pointer-events: auto;
+  /* MUHIM: wrapper pointer-events: none — kliklar tagidagi kartalarga o'tadi.
+     Faqat .fab-main (har doim) va .fab-actions (ochiq paytda) klikni ushlaydi. */
 }
 
 /* -- FAB asosiy yumaloq tugma -- */
