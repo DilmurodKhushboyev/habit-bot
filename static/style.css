@@ -2922,6 +2922,11 @@ body.dark .rem1-section-title-collapsible:active {
   padding: 0 4px;
 }
 
+/* -- Today sahifasiga qo'shimcha pastki padding (FAB ostida 3-nuqta menyu berkilmasligi uchun) -- */
+#page-today {
+  padding-bottom: 80px;
+}
+
 .progress-bar-row {
   display: flex;
   justify-content: space-between;
