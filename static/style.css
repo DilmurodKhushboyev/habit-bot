@@ -3134,6 +3134,12 @@ body.dark .rem1-section-title-collapsible:active {
   pointer-events: auto;
 }
 
+/* Yopiq holatda action tugmalari klikni o'tkazib yuborishi (orqadagi karta tugmalari ishlashi uchun) */
+.fab-wrap:not(.open) .fab-actions,
+.fab-wrap:not(.open) .fab-action {
+  pointer-events: none !important;
+}
+
 /* -- Har bir action tugma (matn + ikon) -- */
 .fab-action {
   display: inline-flex;
