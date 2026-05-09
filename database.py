@@ -4,7 +4,7 @@ Ma'lumotlar bazasi funksiyalari
 """
 
 import time as _cache_time
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from config import mongo_col, groups_col, reminders_col
 
@@ -117,6 +117,106 @@ def count_users():
         default=0
     )
     return result if result is not None else 0
+
+# ============================================================
+#  POINTS HISTORY VA PERIOD HELPER'LARI
+# ============================================================
+# udata["points_history"] = {"YYYY-MM-DD": net_delta_int, ...}
+# Har kun uchun bir entry (positive yoki negative). Bu /api/rating
+# endpoint'da period (week/month/all) bo'yicha ball hisoblash uchun.
+# Backward compat: points_history bo'sh bo'lsa, eski xulq saqlanadi
+# (umumiy udata["points"] qaytariladi).
+
+def _today_uz5_str():
+    """UZ+5 timezone bo'yicha bugungi sana ('YYYY-MM-DD').
+    helpers.today_uz5() bilan sinxron — ammo circular import oldini olish
+    uchun bu yerda mustaqil hisoblanadi."""
+    return (datetime.utcnow() + timedelta(hours=5)).strftime("%Y-%m-%d")
+
+def add_points_history(udata, delta, date_str=None):
+    """udata["points_history"] ga delta qo'shadi (positive yoki negative).
+    udata ni mutate qiladi — chaqiruvchi save_user() ni o'zi qiladi
+    (mavjud pattern: udata["points"] += N; save_user(uid, udata)).
+
+    delta=0 bo'lsa hech narsa qilmaydi (DB shishishini oldini olish).
+    """
+    if delta == 0:
+        return
+    if date_str is None:
+        date_str = _today_uz5_str()
+    hist = udata.get("points_history") or {}
+    if not isinstance(hist, dict):
+        hist = {}
+    hist[date_str] = int(hist.get(date_str, 0)) + int(delta)
+    # Agar net 0 bo'lib qolsa — entry'ni tozalamaymiz (audit uchun foydali,
+    # va get_points_in_period() 0 ni e'tiborsiz qoldiradi).
+    udata["points_history"] = hist
+
+def get_points_in_period(udata, days=None):
+    """udata["points_history"] dagi oxirgi N kundagi ball yig'indisi.
+    days=None → butun tarix (lekin amalda umumiy points bilan teng bo'ladi
+    agar history to'liq saqlangan bo'lsa).
+
+    Backward compat: points_history bo'sh yoki yo'q bo'lsa →
+    umumiy udata["points"] qaytariladi (eski foydalanuvchilar uchun).
+    """
+    hist = udata.get("points_history") or {}
+    if not isinstance(hist, dict) or not hist:
+        return int(udata.get("points", 0))
+    if days is None:
+        return sum(int(v) for v in hist.values())
+    today = datetime.utcnow() + timedelta(hours=5)
+    cutoff = (today - timedelta(days=days)).strftime("%Y-%m-%d")
+    return sum(int(v) for d, v in hist.items() if d >= cutoff)
+
+def get_streak_in_period(udata, days=None):
+    """udata["done_log"] dan davriy oraliqdagi maksimum ketma-ket
+    ✅ kunlar uzunligi. days=None → butun tarix.
+
+    Misol: done_log = {"2026-05-01": True, "2026-05-02": True, "2026-05-04": True}
+    → period 7 kun → maks ketma-ket 2 kun (1-2 may), keyin 1 kun (4 may).
+    Natija: 2.
+
+    Backward compat: done_log bo'sh bo'lsa → udata["streak"] qaytariladi
+    (joriy streak — eski xulq).
+    """
+    done_log = udata.get("done_log") or {}
+    if not isinstance(done_log, dict) or not done_log:
+        return int(udata.get("streak", 0))
+
+    today = datetime.utcnow() + timedelta(hours=5)
+    if days is None:
+        cutoff_dt = None
+    else:
+        cutoff_dt = (today - timedelta(days=days)).date()
+
+    # Faqat True kunlarni date obyektlariga aylantiramiz va saralаymiz
+    active_dates = []
+    for d_str, v in done_log.items():
+        if not v:
+            continue
+        try:
+            d_obj = datetime.strptime(d_str, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            continue
+        if cutoff_dt is not None and d_obj < cutoff_dt:
+            continue
+        active_dates.append(d_obj)
+
+    if not active_dates:
+        return 0
+
+    active_dates.sort()
+    max_streak = 1
+    cur_streak = 1
+    for i in range(1, len(active_dates)):
+        if (active_dates[i] - active_dates[i-1]).days == 1:
+            cur_streak += 1
+            if cur_streak > max_streak:
+                max_streak = cur_streak
+        else:
+            cur_streak = 1
+    return max_streak
 
 def load_group(group_id):
     def _fn():
