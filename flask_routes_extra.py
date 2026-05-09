@@ -14,7 +14,7 @@ from flask import jsonify, request
 
 from config import BOT_TOKEN, ADMIN_ID, mongo_db, SHOP_PRICES, SHOP_SELL_PRICES, SHOP_STARS_PRICES, SHOP_ONE_TIME
 from database import (load_user, save_user, load_all_users, count_users,
-                      load_group, save_group, user_exists)
+                      load_group, save_group, user_exists, add_points_history)
 from helpers import T, get_lang, get_rank, today_uz5
 from texts import LANGS
 from bot_setup import bot, get_bot_username, _share_file_ids
@@ -215,6 +215,7 @@ def register_extra_routes(app):
                 if u.get("points", 0) < jon_price:
                     return jsonify({"ok": False, "error": "Ball yetarli emas"})
                 u["points"] = u.get("points", 0) - jon_price
+                add_points_history(u, -jon_price)
                 u["jon"] = 100.0
                 save_user(uid, u)
                 return jsonify({"ok": True, "points": u["points"]})
@@ -223,6 +224,7 @@ def register_extra_routes(app):
                 if u.get("points", 0) < _p:
                     return jsonify({"ok": False, "error": "Ball yetarli emas"})
                 u["points"] = u.get("points", 0) - _p
+                add_points_history(u, -_p)
                 u["streak_shields"] = u.get("streak_shields", 0) + 1
                 save_user(uid, u)
                 return jsonify({"ok": True, "points": u["points"], "streak_shields": u["streak_shields"]})
@@ -231,6 +233,7 @@ def register_extra_routes(app):
                 if u.get("points", 0) < _p:
                     return jsonify({"ok": False, "error": "Ball yetarli emas"})
                 u["points"] = u.get("points", 0) - _p
+                add_points_history(u, -_p)
                 u["streak_shields"] = u.get("streak_shields", 0) + 3
                 save_user(uid, u)
                 return jsonify({"ok": True, "points": u["points"], "streak_shields": u["streak_shields"]})
@@ -241,6 +244,7 @@ def register_extra_routes(app):
                 if u.get("bonus_2x_active") and u.get("bonus_2x_date") == today_uz5():
                     return jsonify({"ok": False, "error": "Bugun 2x bonus allaqachon aktiv"})
                 u["points"] = u.get("points", 0) - _p
+                add_points_history(u, -_p)
                 u["bonus_2x_active"] = True
                 u["bonus_2x_date"] = today_uz5()
                 save_user(uid, u)
@@ -252,6 +256,7 @@ def register_extra_routes(app):
                 if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today_uz5():
                     return jsonify({"ok": False, "error": "Bugun 3x bonus allaqachon aktiv"})
                 u["points"] = u.get("points", 0) - _p
+                add_points_history(u, -_p)
                 u["bonus_3x_active"] = True
                 u["bonus_3x_date"] = today_uz5()
                 save_user(uid, u)
@@ -261,6 +266,7 @@ def register_extra_routes(app):
                 if u.get("points", 0) < _p:
                     return jsonify({"ok": False, "error": "Ball yetarli emas"})
                 u["points"] = u.get("points", 0) - _p
+                add_points_history(u, -_p)
                 u["xp_booster_days"] = u.get("xp_booster_days", 0) + 7
                 save_user(uid, u)
                 return jsonify({"ok": True, "points": u["points"], "xp_booster_days": u["xp_booster_days"]})
@@ -270,6 +276,7 @@ def register_extra_routes(app):
                 if u.get("points", 0) < price:
                     return jsonify({"ok": False, "error": "Ball yetarli emas"})
                 u["points"] = u.get("points", 0) - price
+                add_points_history(u, -price)
             inventory[item_id] = inventory.get(item_id, 0) + 1
             u["inventory"] = inventory
             save_user(uid, u)
@@ -380,6 +387,7 @@ def register_extra_routes(app):
                         del inv_s[item_id]
                     u["inventory"] = inv_s
                 u["points"] = u.get("points", 0) + actual_refund
+                add_points_history(u, actual_refund)
                 save_user(uid, u)
                 return jsonify({"ok": True, "points": u["points"], "refund": actual_refund})
             if item_id == "bonus_2x":
@@ -387,6 +395,7 @@ def register_extra_routes(app):
                     return jsonify({"ok": False, "error": "Aktiv bonus topilmadi"})
                 u["bonus_2x_active"] = False
                 u["points"] = u.get("points", 0) + refund
+                add_points_history(u, refund)
                 save_user(uid, u)
                 return jsonify({"ok": True, "points": u["points"], "refund": refund})
             if item_id == "bonus_3x":
@@ -394,6 +403,7 @@ def register_extra_routes(app):
                     return jsonify({"ok": False, "error": "Aktiv bonus topilmadi"})
                 u["bonus_3x_active"] = False
                 u["points"] = u.get("points", 0) + refund
+                add_points_history(u, refund)
                 save_user(uid, u)
                 return jsonify({"ok": True, "points": u["points"], "refund": refund})
             if item_id == "xp_booster":
@@ -403,6 +413,7 @@ def register_extra_routes(app):
                 actual_refund = round(refund * days_left / 7)
                 u["xp_booster_days"] = 0
                 u["points"] = u.get("points", 0) + actual_refund
+                add_points_history(u, actual_refund)
                 save_user(uid, u)
                 return jsonify({"ok": True, "points": u["points"], "refund": actual_refund})
             # Inventory narsalar (badge/pet/car)
@@ -424,6 +435,7 @@ def register_extra_routes(app):
             if item_id.startswith("car_")   and u.get("active_car")   == item_id:
                 u["active_car"]   = ""
             u["points"] = u.get("points", 0) + refund
+            add_points_history(u, refund)
             save_user(uid, u)
             return jsonify({"ok": True, "points": u["points"], "refund": refund})
         finally:
@@ -646,7 +658,9 @@ def register_extra_routes(app):
         if u_send.get("points", 0) < bet:
             return jsonify({"ok": False, "error": "Challenger'da yetarli ball yo'q"})
         u_recv["points"] = u_recv.get("points", 0) - bet
+        add_points_history(u_recv, -bet)
         u_send["points"] = u_send.get("points", 0) - bet
+        add_points_history(u_send, -bet)
         save_user(uid, u_recv)
         save_user(from_uid, u_send)
         challenges_col.update_one(
