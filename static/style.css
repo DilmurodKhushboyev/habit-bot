@@ -3075,7 +3075,8 @@ body.dark .rem1-section-title-collapsible:active {
 }
 .fab-wrap.visible {
   display: flex;
-  pointer-events: auto;
+  /* MUHIM: wrapper pointer-events: none — kliklar tagidagi kartalarga o'tadi.
+     Faqat .fab-main (har doim) va .fab-actions (ochiq paytda) klikni ushlaydi. */
 }
 
 /* -- FAB asosiy yumaloq tugma -- */
@@ -3132,12 +3133,6 @@ body.dark .rem1-section-title-collapsible:active {
   opacity: 1;
   transform: translateY(0) scale(1);
   pointer-events: auto;
-}
-
-/* Yopiq holatda action tugmalari klikni o'tkazib yuborishi (orqadagi karta tugmalari ishlashi uchun) */
-.fab-wrap:not(.open) .fab-actions,
-.fab-wrap:not(.open) .fab-action {
-  pointer-events: none !important;
 }
 
 /* -- Har bir action tugma (matn + ikon) -- */
