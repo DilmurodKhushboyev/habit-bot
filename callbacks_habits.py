@@ -11,7 +11,7 @@ import schedule
 from datetime import date, datetime, timedelta, timezone
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from database import load_user, save_user, load_group, save_group
+from database import load_user, save_user, load_group, save_group, add_points_history
 from helpers import T, get_lang, today_uz5
 from texts import LANGS
 from motivation import MOTIVATSIYA
@@ -395,7 +395,9 @@ def handle_habits_callbacks(call, uid, cdata, u):
                             _undo_base = 10
                         if u.get("xp_booster_days", 0) > 0:
                             _undo_base = round(_undo_base * 1.1)
-                        u["points"] = max(0, u.get("points", 0) - _undo_base)
+                        _old_pts = u.get("points", 0)
+                        u["points"] = max(0, _old_pts - _undo_base)
+                        add_points_history(u, u["points"] - _old_pts, today)
                         # Global streak: faqat bugun boshqa odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in u.get("habits", []) if hh["id"] != habit_id)
                         if not _still_done and u.get("streak_last_date") == today:
@@ -442,6 +444,7 @@ def handle_habits_callbacks(call, uid, cdata, u):
                             if u.get("xp_booster_days", 0) > 0:
                                 _base = round(_base * 1.1)
                             u["points"] = u.get("points", 0) + _base
+                            add_points_history(u, _base, today)
                             # Global streak: kuniga bir marta oshsin
                             if u.get("streak_last_date") != today:
                                 u["streak"] = u.get("streak", 0) + 1
@@ -530,7 +533,9 @@ def handle_habits_callbacks(call, uid, cdata, u):
                             _undo_base = 10
                         if u.get("xp_booster_days", 0) > 0:
                             _undo_base = round(_undo_base * 1.1)
-                        u["points"] = max(0, u.get("points", 0) - _undo_base)
+                        _old_pts = u.get("points", 0)
+                        u["points"] = max(0, _old_pts - _undo_base)
+                        add_points_history(u, u["points"] - _old_pts, today)
                         # Global streak: faqat bugun boshqa odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in u.get("habits", []) if hh["id"] != habit_id)
                         if not _still_done and u.get("streak_last_date") == today:
@@ -576,6 +581,7 @@ def handle_habits_callbacks(call, uid, cdata, u):
                         if u.get("xp_booster_days", 0) > 0:
                             _base = round(_base * 1.1)
                         u["points"] = u.get("points", 0) + _base
+                        add_points_history(u, _base, today)
                         # Global streak: kuniga bir marta oshsin
                         if u.get("streak_last_date") != today:
                             u["streak"] = u.get("streak", 0) + 1
@@ -702,6 +708,7 @@ def handle_habits_callbacks(call, uid, cdata, u):
                         if u.get("xp_booster_days", 0) > 0:
                             _base = round(_base * 1.1)
                         u["points"] = u.get("points", 0) + _base
+                        add_points_history(u, _base, today)
                         done_log = u.get("done_log", {})
                         done_log[today] = True
                         u["done_log"] = done_log
@@ -762,6 +769,7 @@ def handle_habits_callbacks(call, uid, cdata, u):
                 if u.get("xp_booster_days", 0) > 0:
                     _base = round(_base * 1.1)
                 u["points"]     = u.get("points", 0) + _base
+                add_points_history(u, _base, today)
                 # done_log: kunlik bajarilgan kunlarni saqlash
                 done_log = u.get("done_log", {})
                 done_log[today] = True

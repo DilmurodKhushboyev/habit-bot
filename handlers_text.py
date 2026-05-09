@@ -20,7 +20,7 @@ from telebot.types import (
 from config import ADMIN_ID, BOT_TOKEN
 from database import (load_user, save_user, load_all_users, count_users,
                       load_group, save_group, user_exists,
-                      load_settings, save_settings)
+                      load_settings, save_settings, add_points_history)
 from helpers import T, get_lang, today_uz5
 from texts import LANGS
 from motivation import MOTIVATSIYA
@@ -101,6 +101,7 @@ def handle_text(msg):
             if referrer_id and not u.get("ref_used"):
                 try:
                     u["points"] = u.get("points", 0) + 25
+                    add_points_history(u, 25)
                     u["ref_used"] = True
                     sent_ref = bot.send_message(uid,
                         "🎁 *Do\'st taklifi bonusi!*\n\n"
@@ -116,6 +117,7 @@ def handle_text(msg):
                 try:
                     u_ref = load_user(referrer_id)
                     u_ref["points"] = u_ref.get("points", 0) + 50
+                    add_points_history(u_ref, 50)
                     refs = u_ref.get("referrals", [])
                     refs.append(uid)
                     u_ref["referrals"] = refs
@@ -127,6 +129,7 @@ def handle_text(msg):
                             u_ref["streak_shields"] = u_ref.get("streak_shields", 0) + 1
                         elif len(refs) == 10:
                             u_ref["points"] = u_ref.get("points", 0) + 100
+                            add_points_history(u_ref, 100)
                         elif len(refs) == 20:
                             u_ref["is_vip"] = True
                     save_user(referrer_id, u_ref)
@@ -559,10 +562,12 @@ def handle_text(msg):
             except: pass
         target_u = load_user(target_id)
         u["points"] = my_points - amount
+        add_points_history(u, -amount)
         u["state"]  = None
         u.pop("transfer_target_id", None)
         save_user(uid, u)
         target_u["points"] = target_u.get("points", 0) + amount
+        add_points_history(target_u, amount)
         save_user(target_id, target_u)
         try:
             bot.send_message(
@@ -599,6 +604,7 @@ def handle_text(msg):
         my_points = u.get("points", 0)
         deducted  = min(amount, my_points)
         u["points"] = my_points - deducted
+        add_points_history(u, -deducted)
         u["state"]  = None
         save_user(uid, u)
         sent_ok = bot.send_message(uid, T(uid, "ok_self_deduct", amount=deducted, points=u['points']), parse_mode="Markdown")
@@ -667,7 +673,9 @@ def handle_text(msg):
             send_main_menu(uid)
             return
         target_u = load_user(target_id)
-        target_u["points"] = max(0, target_u.get("points", 0) + amount)
+        _old_pts = target_u.get("points", 0)
+        target_u["points"] = max(0, _old_pts + amount)
+        add_points_history(target_u, target_u["points"] - _old_pts)
         save_user(target_id, target_u)
         # Agar admin o'ziga ball bergan bo'lsa, u va target_u bir user —
         # u ni sinxronlashtiramiz, aks holda keyingi save_user(uid, u) eski
@@ -951,6 +959,7 @@ def handle_successful_payment(msg):
             gift_type, gift_val = _rnd.choice(gifts)
             if gift_type == "points":
                 u["points"] = u.get("points", 0) + gift_val
+                add_points_history(u, gift_val)
                 msg_text = f"🎁 *Sovga qutisi ochildi!*\n\n🎉 *+{gift_val} ball* qo'shildi!"
             elif gift_type == "streak_shields":
                 u["streak_shields"] = u.get("streak_shields", 0) + gift_val

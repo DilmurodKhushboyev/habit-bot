@@ -9,7 +9,7 @@ from datetime import datetime, date, timedelta, timezone
 from flask import jsonify, request
 
 from config import SHOP_BONUS_EFFECTS
-from database import load_user, save_user, load_all_users, load_group, save_group
+from database import load_user, save_user, load_all_users, load_group, save_group, add_points_history
 from helpers import T, get_lang, get_rank, today_uz5
 from texts import LANGS
 from motivation import MOTIVATSIYA
@@ -68,7 +68,9 @@ def register_data_routes(app):
         if is_undo:
             # UNDO: agar bugun bonus berilgan bo'lsa, qaytarish
             if last_bonus_date == today:
-                u["points"] = max(0, u.get("points", 0) - bonus_value)
+                _old_pts = u.get("points", 0)
+                u["points"] = max(0, _old_pts - bonus_value)
+                add_points_history(u, u["points"] - _old_pts, today)
                 u["pet_dog_last_bonus_date"] = ""
                 return bonus_value
             return 0
@@ -76,6 +78,7 @@ def register_data_routes(app):
             # DONE: agar bugun birinchi marta bo'lsa, bonus berish
             if last_bonus_date != today:
                 u["points"] = u.get("points", 0) + bonus_value
+                add_points_history(u, bonus_value, today)
                 u["pet_dog_last_bonus_date"] = today
                 return bonus_value
             return 0
@@ -195,7 +198,9 @@ def register_data_routes(app):
                         if u.get("xp_booster_days", 0) > 0:
                             _undo_base = round(_undo_base * 1.1)
                         _undo_base = _apply_item_bonuses(u, _undo_base)
-                        u["points"] = max(0, u.get("points", 0) - _undo_base)
+                        _old_pts = u.get("points", 0)
+                        u["points"] = max(0, _old_pts - _undo_base)
+                        add_points_history(u, u["points"] - _old_pts, today)
                         # pet_dog kunlik bonusini qaytarish (agar bugun berilgan bo'lsa)
                         # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
@@ -228,6 +233,7 @@ def register_data_routes(app):
                                 _base = round(_base * 1.1)
                             _base = _apply_item_bonuses(u, _base)
                             u["points"] = u.get("points", 0) + _base
+                            add_points_history(u, _base, today)
                             # pet_dog kunlik birinchi checkin bonusi (faqat bir marta)
                             _apply_pet_dog_bonus(u, today, is_undo=False)
                     h["done_today_count"] = done
@@ -247,7 +253,9 @@ def register_data_routes(app):
                         if u.get("xp_booster_days", 0) > 0:
                             _undo_base = round(_undo_base * 1.1)
                         _undo_base = _apply_item_bonuses(u, _undo_base)
-                        u["points"] = max(0, u.get("points", 0) - _undo_base)
+                        _old_pts = u.get("points", 0)
+                        u["points"] = max(0, _old_pts - _undo_base)
+                        add_points_history(u, u["points"] - _old_pts, today)
                         # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
                         # pet_dog kunlik bonusini qaytarish (agar bugun boshqa odat qolmagan bo'lsa)
@@ -275,6 +283,7 @@ def register_data_routes(app):
                             _base = round(_base * 1.1)
                         _base = _apply_item_bonuses(u, _base)
                         u["points"] = u.get("points", 0) + _base
+                        add_points_history(u, _base, today)
                         # pet_dog kunlik birinchi checkin bonusi (faqat bir marta)
                         _apply_pet_dog_bonus(u, today, is_undo=False)
                         # Global streak: kuniga bir marta oshsin
@@ -353,6 +362,7 @@ def register_data_routes(app):
             sent_list = u.get("streak_milestones_sent", [])
             if new_global_streak not in sent_list:
                 u["points"] = u.get("points", 0) + ms["bonus"]
+                add_points_history(u, ms["bonus"])
                 sent_list.append(new_global_streak)
                 u["streak_milestones_sent"] = sent_list
                 save_user(uid, u)

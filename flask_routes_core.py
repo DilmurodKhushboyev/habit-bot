@@ -9,7 +9,9 @@ from flask import jsonify, request
 
 from config import mongo_db, mongo_col, SHOP_PRICES
 from database import (load_user, save_user, load_all_users, load_group,
-                      save_group, delete_group)
+                      save_group, delete_group,
+                      add_points_history, get_points_in_period,
+                      get_streak_in_period)
 from helpers import get_lang, get_rank, today_uz5
 from texts import LANGS
 from bot_setup import bot, get_bot_username
@@ -57,12 +59,36 @@ def register_core_routes(app):
         all_users = load_all_users()
         total_users = len(all_users)
 
+        # Period → kun soni (score, points, streak hisoblash uchun).
+        # 'all' → None (filtrlanmaydi, bot ishga tushgandan beri barcha tarix).
+        # 'week' → 7 kun, 'month' → 30 kun (default).
+        # 3 ta filtr ham period'ni hurmat qiladi:
+        # - score: done_log dagi faol kunlar soni
+        # - points: points_history dagi delta yig'indisi (DB v: points_history qo'shilgan)
+        #   Eski foydalanuvchilarda points_history bo'sh → fallback umumiy points
+        # - streak: done_log dan davriy maks ketma-ket kunlar (har doim aniq hisoblanadi)
+        if period == "week":
+            _period_days = 7
+        elif period == "all":
+            _period_days = None
+        else:  # "month" yoki noma'lum qiymat → default
+            _period_days = 30
+        _score_cutoff = (today_dt - timedelta(days=_period_days)).strftime("%Y-%m-%d") if _period_days else None
+
         entries = []
         for uid, udata in all_users.items():
             done_log  = udata.get("done_log", {})
             bot_start = min(done_log.keys()) if done_log else today_str
-            # score = oxirgi 30 kunda faol kunlar soni
-            score = sum(1 for d, v in done_log.items() if v and d >= (today_dt - timedelta(days=30)).strftime("%Y-%m-%d"))
+            # score = period ichidagi faol kunlar soni (week=7, month=30, all=hammasi)
+            if _score_cutoff is None:
+                score = sum(1 for d, v in done_log.items() if v)
+            else:
+                score = sum(1 for d, v in done_log.items() if v and d >= _score_cutoff)
+            # period_points = period ichida olingan ball (history dan); history bo'sh
+            # bo'lsa fallback umumiy points (helper avtomatik hal qiladi)
+            period_points = get_points_in_period(udata, _period_days)
+            # period_streak = period ichidagi maksimum ketma-ket kunlar (done_log dan)
+            period_streak = get_streak_in_period(udata, _period_days)
             # Faol itemlarni yig'amiz (reyting'da ko'rsatish uchun)
             _ITEM_EMOJI = {
                 "pet_cat": "🐱", "pet_dog": "🐶", "pet_rabbit": "🐰",
@@ -127,9 +153,14 @@ def register_core_routes(app):
             entries.append({
                 "uid":          uid,
                 "name":         udata.get("display_name") or udata.get("name", "?"),
-                "points":       udata.get("points", 0),
-                "streak":       udata.get("streak", 0),
-                "score":        score,
+                # points/streak — period bo'yicha (frontend ko'rsatadigan qiymat).
+                # 'all' yoki history bo'sh → fallback umumiy qiymat (backward compat).
+                "points":        period_points,
+                "streak":        period_streak,
+                # Asl umumiy qiymatlar — frontend kerak bo'lsa ishlatishi uchun
+                "total_points":  udata.get("points", 0),
+                "total_streak":  udata.get("streak", 0),
+                "score":         score,
                 "photo_url":    udata.get("photo_url", ""),
                 "done_log":     done_log,
                 "bot_start":    bot_start,
@@ -141,7 +172,11 @@ def register_core_routes(app):
                 "today_done":   today_done,
             })
 
-        # Saralash
+        # Saralash — points/streak allaqachon period qiymatlari (yuqorida o'rnatildi),
+        # shuning uchun to'g'ridan-to'g'ri shu field'lar bilan saralanadi:
+        # - points: period_points (history dan davriy delta yig'indisi)
+        # - streak: period_streak (done_log dan davriy maks ketma-ket)
+        # - score/active: score (period ichidagi faol kunlar)
         if sort_by == "streak":
             entries.sort(key=lambda x: x["streak"], reverse=True)
         elif sort_by in ("score", "active"):
@@ -674,7 +709,9 @@ def register_core_routes(app):
                 done_log[uid_str].pop(today, None)
             g["member_done_log"] = done_log
             mongo_db["groups"].replace_one({"id": gid}, g)
-            u["points"] = max(0, u.get("points", 0) - 5)
+            _old_pts = u.get("points", 0)
+            u["points"] = max(0, _old_pts - 5)
+            add_points_history(u, u["points"] - _old_pts)
             save_user(uid, u)
             return jsonify({"ok": True, "done": False, "points": u.get("points", 0)})
         # Bajarildi
@@ -705,6 +742,7 @@ def register_core_routes(app):
             g["member_streaks"] = m_streaks
         mongo_db["groups"].replace_one({"id": gid}, g)
         u["points"] = u.get("points", 0) + 5
+        add_points_history(u, 5)
         save_user(uid, u)
         m_streak_val = g.get("member_streaks", {}).get(uid_str, 1)
         return jsonify({
