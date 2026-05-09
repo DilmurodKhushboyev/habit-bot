@@ -9,9 +9,9 @@
 <title>Super Habits</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=571">
+<link rel="stylesheet" href="style.css?v=576">
 <script src="strings.js?v=553"></script>
-<script src="app-core.js?v=549"></script>
+<script src="app-core.js?v=550"></script>
 </head>
 <body>
 
@@ -201,6 +201,38 @@
 <!-- PTR BOTTOM (global — barcha sahifalar uchun) -->
 <div id="ptr-bottom"><div id="ptr-bottom-spinner"></div><span id="ptr-bottom-text">Yangilash uchun torting</span></div>
 
+<!-- FAB (Floating Action Button) — faqat "Bugun" sahifasida ko'rinadi -->
+<div class="fab-overlay" id="fab-overlay" onclick="closeFab()"></div>
+<div class="fab-wrap" id="fab-wrap">
+  <div class="fab-actions" id="fab-actions">
+    <button class="fab-action" id="fab-action-habit" type="button" onclick="fabCreateHabit()">
+      <span class="fab-action-label" id="fab-action-habit-label">＋ Odat yaratish</span>
+      <span class="fab-action-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <defs><linearGradient id="fabIconHabit" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs>
+          <path d="M9 12l2 2 4-4" stroke="url(#fabIconHabit)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12" cy="12" r="9" stroke="url(#fabIconHabit)" stroke-width="2" fill="none"/>
+        </svg>
+      </span>
+    </button>
+    <button class="fab-action" id="fab-action-reminder" type="button" onclick="fabCreateReminder()">
+      <span class="fab-action-label" id="fab-action-reminder-label">＋ Eslatma yaratish</span>
+      <span class="fab-action-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <defs><linearGradient id="fabIconRem" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs>
+          <path d="M12 2C8 2 6 5 6 9v5l-2 3h16l-2-3V9c0-4-2-7-6-7z" stroke="url(#fabIconRem)" stroke-width="2" stroke-linejoin="round" fill="none"/>
+          <path d="M10 20a2 2 0 004 0" stroke="url(#fabIconRem)" stroke-width="2" stroke-linecap="round" fill="none"/>
+        </svg>
+      </span>
+    </button>
+  </div>
+  <button class="fab-main" id="fab-main" type="button" onclick="toggleFab()" aria-label="Yaratish">
+    <svg class="fab-main-icon" width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <path d="M12 5v14M5 12h14" stroke="white" stroke-width="2.6" stroke-linecap="round"/>
+    </svg>
+  </button>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav" id="bottom-nav">
   <svg class="nav-bg" id="nav-bg" preserveAspectRatio="none"><path id="nav-bg-path" fill="var(--bg)"/></svg>
@@ -274,7 +306,7 @@
   </div>
 </div>
 
-<script src="app-pages.js?v=564"></script>
+<script src="app-pages.js?v=565"></script>
 <script src="app-stats.js?v=553"></script>
 <script src="app-profile.js?v=549"></script>
 <script src="app-habits.js?v=558"></script>

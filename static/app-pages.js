@@ -175,11 +175,6 @@ function renderToday(d) {
       </div>
     </div>
 
-    <div style="display:flex;gap:8px;justify-content:center;margin:14px 0 6px;flex-wrap:wrap">
-      <button onclick="openAddFromToday()" type="button" class="today-add-btn">${S('today','add_habit')}</button>
-      <button onclick="openReminderModal()" type="button" class="today-add-rem-btn">${S('today','add_reminder')}</button>
-    </div>
-
     <div class="section-title">${S('today','section_title')}</div>
     ${cardsHtml || '<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgClip" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8A8FA8"/><stop offset="100%" stop-color="#5B8DEF"/></linearGradient></defs><rect x="8" y="2" width="8" height="4" rx="1" stroke="url(#svgClip)" stroke-width="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="url(#svgClip)" stroke-width="1.5"/><path d="M8 11h8M8 15h5" stroke="url(#svgClip)" stroke-width="1.5" stroke-linecap="round"/></svg></div>' + S('msg','no_habits_yet') + '</div>'}
 

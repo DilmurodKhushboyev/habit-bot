@@ -366,6 +366,8 @@ function switchTab(tab, el) {
     if (tab === 'today') bellSphere.classList.add('visible');
     else                 bellSphere.classList.remove('visible');
   }
+  // FAB faqat Today (Odatlar) sahifasida ko'rinadi — yopiq holatda
+  _updateFabVisibility(tab);
   // Nav ball
   var navTarget = el || document.getElementById('nav-' + tab);
   if (navTarget) moveNavBall(navTarget, true);
@@ -511,4 +513,86 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('resize', function() {
   var act = document.querySelector('.nav-item.active');
   if (act) moveNavBall(act, false);
+});
+
+// ═══════════════════════════════════════════════════════════
+// FAB (Floating Action Button) — pastki o'ng burchakdagi suzuvchi tugma
+// "+ Odat yaratish" va "+ Eslatma yaratish" tugmalarini ochadi
+// ═══════════════════════════════════════════════════════════
+
+// FAB ni faqat Today (Odatlar) sahifasida ko'rsatish
+function _updateFabVisibility(tab) {
+  var wrap = document.getElementById('fab-wrap');
+  if (!wrap) return;
+  if (tab === 'today') {
+    wrap.classList.add('visible');
+  } else {
+    wrap.classList.remove('visible');
+    // Boshqa tabga o'tilganda — agar ochiq bo'lsa — yopib qo'yamiz
+    closeFab();
+  }
+  // Tarjimalarni yangilash (til o'zgarganda ham mos kelishi uchun)
+  _updateFabLabels();
+}
+
+// FAB action tugmalari matnlarini joriy tilga moslash
+function _updateFabLabels() {
+  try {
+    var habitLbl = document.getElementById('fab-action-habit-label');
+    var remLbl   = document.getElementById('fab-action-reminder-label');
+    if (habitLbl && typeof S === 'function') habitLbl.textContent = S('today', 'add_habit');
+    if (remLbl   && typeof S === 'function') remLbl.textContent   = S('today', 'add_reminder');
+  } catch (e) { /* strings.js hali yuklanmagan bo'lishi mumkin */ }
+}
+
+// FAB ni ochish/yopish
+function toggleFab() {
+  var wrap    = document.getElementById('fab-wrap');
+  var overlay = document.getElementById('fab-overlay');
+  if (!wrap) return;
+  var isOpen = wrap.classList.contains('open');
+  if (isOpen) closeFab();
+  else        openFab();
+}
+
+function openFab() {
+  var wrap    = document.getElementById('fab-wrap');
+  var overlay = document.getElementById('fab-overlay');
+  if (!wrap) return;
+  // Matnlarni yangilash (til o'zgargan bo'lsa)
+  _updateFabLabels();
+  wrap.classList.add('open');
+  if (overlay) overlay.classList.add('visible');
+  // Telegram haptic feedback
+  try { if (window.tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); } catch(e){}
+}
+
+function closeFab() {
+  var wrap    = document.getElementById('fab-wrap');
+  var overlay = document.getElementById('fab-overlay');
+  if (wrap)    wrap.classList.remove('open');
+  if (overlay) overlay.classList.remove('visible');
+}
+
+// Action tugmalari — ochilgan modallar uchun mavjud funksiyalarga yo'naltirish
+function fabCreateHabit() {
+  closeFab();
+  // Animatsiya tugashi uchun qisqa kechikish
+  setTimeout(function() {
+    if (typeof openAddFromToday === 'function') openAddFromToday();
+  }, 120);
+}
+
+function fabCreateReminder() {
+  closeFab();
+  setTimeout(function() {
+    if (typeof openReminderModal === 'function') openReminderModal();
+  }, 120);
+}
+
+// Sahifa yuklanganda FAB ni boshlang'ich holatda ko'rsatish (Today faol bo'lsa)
+document.addEventListener('DOMContentLoaded', function() {
+  var activeNav = document.querySelector('.nav-item.active');
+  var activeTab = (activeNav && activeNav.id === 'nav-today') ? 'today' : '';
+  _updateFabVisibility(activeTab);
 });

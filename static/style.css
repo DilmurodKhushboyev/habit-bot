@@ -2918,8 +2918,14 @@ body.dark .rem1-section-title-collapsible:active {
  * "PROGRESS  N%" qatori + chiziqli bar (kulrang track + yashil fill)
  * ───────────────────────────────────────────────────────── */
 .progress-bar-wrap {
-  margin: 12px 4px 4px;
+  margin: 12px 4px 18px;
   padding: 0 4px;
+}
+
+/* -- Today sahifasiga qo'shimcha pastki padding (FAB ostida 3-nuqta menyu berkilmasligi uchun) -- */
+/* FAB tepasi ekran pastidan ~142px, body padding-bottom 100px → 50px qo'shimcha kifoya */
+#page-today {
+  padding-bottom: 50px;
 }
 
 .progress-bar-row {
@@ -3048,4 +3054,148 @@ body.dark .rem1-section-title-collapsible:active {
 .readonly-toast-btn:active {
   transform: scale(0.97);
   box-shadow: 0 2px 6px rgba(76, 175, 125, 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FAB (Floating Action Button) — pastki o'ng burchakdagi suzuvchi tugma
+   "+ Odat yaratish" va "+ Eslatma yaratish" tugmalarini ochadi
+   ═══════════════════════════════════════════════════════════ */
+
+/* -- FAB konteyner (FAB tugmasi + actions) -- */
+.fab-wrap {
+  position: fixed;
+  right: 18px;
+  bottom: calc(72px + 14px + var(--tg-safe-bottom, 0px));
+  z-index: 25;
+  display: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: none;
+}
+.fab-wrap.visible {
+  display: flex;
+  pointer-events: auto;
+}
+
+/* -- FAB asosiy yumaloq tugma -- */
+.fab-main {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #4CAF7D 0%, #2D8A5E 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow:
+    0 6px 16px rgba(76, 175, 125, 0.40),
+    0 2px 4px rgba(0, 0, 0, 0.10),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.25),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.12);
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease;
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
+}
+.fab-main:active {
+  transform: scale(0.94);
+  box-shadow:
+    0 3px 8px rgba(76, 175, 125, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.10),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.20),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* -- FAB ochilganda + ikonkasini ×ga aylantirish -- */
+.fab-main-icon {
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.fab-wrap.open .fab-main-icon {
+  transform: rotate(135deg);
+}
+
+/* -- FAB action tugmalar konteyneri (vertikal stack) -- */
+.fab-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(12px) scale(0.92);
+  transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.fab-wrap.open .fab-actions {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* -- Har bir action tugma (matn + ikon) -- */
+.fab-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 10px 18px;
+  border: none;
+  border-radius: 28px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--sh-sm);
+  transition: box-shadow 0.15s ease, transform 0.15s ease, opacity 0.2s ease;
+  opacity: 0;
+  transform: translateY(8px);
+}
+.fab-wrap.open .fab-action {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* Stagger animatsiya — ikkinchi tugma biroz keyinroq paydo bo'ladi */
+.fab-wrap.open .fab-action:nth-child(1) { transition-delay: 0.04s; }
+.fab-wrap.open .fab-action:nth-child(2) { transition-delay: 0.10s; }
+
+.fab-action:active {
+  transform: scale(0.97);
+  box-shadow: var(--sh-press);
+}
+
+/* -- Action tugmadagi ikonka (kichik yumaloq) -- */
+.fab-action-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: var(--sh-press);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* -- Action tugma matni -- */
+.fab-action-label {
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+
+/* -- Tashqaridagi joyga bosilganda yopish uchun overlay -- */
+.fab-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 24;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.fab-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
 }
