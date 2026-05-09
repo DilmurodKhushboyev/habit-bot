@@ -2923,9 +2923,9 @@ body.dark .rem1-section-title-collapsible:active {
 }
 
 /* -- Today sahifasiga qo'shimcha pastki padding (FAB ostida 3-nuqta menyu berkilmasligi uchun) -- */
-/* 110px = habit kartasi (~95px) + margin (14px) + bir oz nafas olish joyi */
+/* FAB tepasi ekran pastidan ~142px, body padding-bottom 100px → 50px qo'shimcha kifoya */
 #page-today {
-  padding-bottom: 110px;
+  padding-bottom: 50px;
 }
 
 .progress-bar-row {
