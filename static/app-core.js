@@ -459,7 +459,7 @@ function jonRingHTML(jon, size = 80) {
 
 // Habit checkin tugmasi uchun progress halqa — `Odat 1/9` halqasi uslubida.
 // done=true: butun halqa yashil + ichida oq ✓
-// done=false, percent=0: kulrang halqa + ichida kulrang ✓ ikona
+// done=false, percent=0: kulrang halqa (bo'sh — ichida hech narsa yo'q)
 // done=false, percent>0 (repeat qisman): kulrang track + yashil progress yoy + ichida kulrang `N/M`
 function checkinRingHTML(percent, isDone, label, size = 42) {
   const sw = 3;                    // 42px tugma uchun mos chiziq qalinligi
@@ -484,10 +484,8 @@ function checkinRingHTML(percent, isDone, label, size = 42) {
   } else if (label) {
     // Repeat qisman: `2/3` matn — kulrang
     labelHtml = `<text x="${size/2}" y="${size/2 + 4}" text-anchor="middle" font-family="DM Mono,monospace" font-size="11" font-weight="700" fill="${labelColor}">${label}</text>`;
-  } else {
-    // Pending oddiy habit: kulrang ✓ ikona
-    labelHtml = `<path d="M${size/2 - 6} ${size/2} l4 4 8-8" fill="none" stroke="${labelColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>`;
   }
+  // Pending oddiy habit: hech narsa chizilmaydi — bo'sh halqa qoladi (foydalanuvchi belgilamagani sifatida toza ko'rinadi)
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="display:block">
     <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${ringStroke}" stroke-width="${sw}"/>
     ${showProgressArc ? `<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${progressColor}" stroke-width="${sw}"
