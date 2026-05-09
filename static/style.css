@@ -2918,7 +2918,7 @@ body.dark .rem1-section-title-collapsible:active {
  * "PROGRESS  N%" qatori + chiziqli bar (kulrang track + yashil fill)
  * ───────────────────────────────────────────────────────── */
 .progress-bar-wrap {
-  margin: 12px 4px 4px;
+  margin: 12px 4px 18px;
   padding: 0 4px;
 }
 
