@@ -1076,9 +1076,6 @@ function renderRating(d) {
             ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--accent);background:rgba(76,175,125,0.13);border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer;letter-spacing:-0.5px">${_invBadgeDisplay(u)}</div>` : ''}
             ${(j=>{const hc=j>=60?'#4CAF7D':j>=30?'#7DC29A':'#E05050';return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="${hc}" style="display:inline;vertical-align:middle"><path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z"/></svg>${j}%</div>`;})(u.jon??100)}
           </div>
-          <div style="height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-top:5px;overflow:hidden">
-            <div style="height:100%;border-radius:2px;background:var(--accent);width:${pct}%;transition:width .4s"></div>
-          </div>
         </div>
         <div style="font-size:12px;font-weight:700;color:var(--sub);text-align:right">${subLbl}</div>
       </div>`;
@@ -1103,9 +1100,6 @@ function renderRating(d) {
               ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#2D8A5E\"/><stop offset=\"100%\" stop-color=\"#4CAF7D\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
               ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--accent);background:rgba(76,175,125,0.13);border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer;letter-spacing:-0.5px">${_invBadgeDisplay(u)}</div>` : ''}
               ${(j=>{const hc=j>=60?'#4CAF7D':j>=30?'#7DC29A':'#E05050';return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="${hc}" style="display:inline;vertical-align:middle"><path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z"/></svg>${j}%</div>`;})(u.jon??100)}
-            </div>
-            <div style="height:4px;border-radius:2px;background:var(--bg);box-shadow:var(--sh-in);margin-top:5px;overflow:hidden">
-              <div style="height:100%;border-radius:2px;background:var(--accent);width:${pct}%"></div>
             </div>
           </div>
           <div style="font-size:12px;font-weight:700;color:var(--accent)">${sub}</div>
