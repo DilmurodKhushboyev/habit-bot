@@ -57,12 +57,28 @@ def register_core_routes(app):
         all_users = load_all_users()
         total_users = len(all_users)
 
+        # Period → kun soni (score hisoblash uchun).
+        # 'all' → None (filtrlanmaydi, bot ishga tushgandan beri barcha faol kunlar).
+        # 'week' → 7 kun, 'month' → 30 kun (default).
+        # Faqat sort=active (Faollik) filtri uchun ma'noli — points/streak umumiy qiymat
+        # bo'lib qolaveradi (DB tarixini saqlamaydi, kelajakda kengaytirish mumkin).
+        if period == "week":
+            _score_days = 7
+        elif period == "all":
+            _score_days = None
+        else:  # "month" yoki noma'lum qiymat → default
+            _score_days = 30
+        _score_cutoff = (today_dt - timedelta(days=_score_days)).strftime("%Y-%m-%d") if _score_days else None
+
         entries = []
         for uid, udata in all_users.items():
             done_log  = udata.get("done_log", {})
             bot_start = min(done_log.keys()) if done_log else today_str
-            # score = oxirgi 30 kunda faol kunlar soni
-            score = sum(1 for d, v in done_log.items() if v and d >= (today_dt - timedelta(days=30)).strftime("%Y-%m-%d"))
+            # score = period ichidagi faol kunlar soni (week=7, month=30, all=hammasi)
+            if _score_cutoff is None:
+                score = sum(1 for d, v in done_log.items() if v)
+            else:
+                score = sum(1 for d, v in done_log.items() if v and d >= _score_cutoff)
             # Faol itemlarni yig'amiz (reyting'da ko'rsatish uchun)
             _ITEM_EMOJI = {
                 "pet_cat": "🐱", "pet_dog": "🐶", "pet_rabbit": "🐰",
