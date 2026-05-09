@@ -13,7 +13,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from config import ADMIN_ID, BOT_TOKEN, mongo_col, groups_col, mongo_db, SHOP_BONUS_EFFECTS
 from database import (load_user, save_user, load_all_users, load_group,
-                      save_group, load_settings)
+                      save_group, load_settings, add_points_history)
 from helpers import T, get_lang, today_uz5
 from texts import LANGS
 from motivation import MOTIVATSIYA
@@ -140,6 +140,7 @@ def _check_streak_milestone(uid, new_streak):
         return
     # Bonus ball qo'shamiz
     u["points"] = u.get("points", 0) + ms["bonus"]
+    add_points_history(u, ms["bonus"])
     sent_list.append(new_streak)
     u["streak_milestones_sent"] = sent_list
     save_user(uid, u)
@@ -826,6 +827,7 @@ def resolve_expired_challenges():
                     u_l = load_user(int(loser_uid))
                     if u_w:
                         u_w["points"] = u_w.get("points", 0) + bet * 2
+                        add_points_history(u_w, bet * 2)
                         save_user(int(winner_uid), u_w)
                     # G'olib xabari
                     w_name = u_w.get("name", "G'olib") if u_w else "G'olib"
@@ -863,6 +865,7 @@ def resolve_expired_challenges():
                         u_r = load_user(int(ruid))
                         if u_r:
                             u_r["points"] = u_r.get("points", 0) + bet
+                            add_points_history(u_r, bet)
                             save_user(int(ruid), u_r)
                         bot.send_message(
                             int(ruid),
