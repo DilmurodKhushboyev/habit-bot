@@ -351,7 +351,9 @@ function switchTab(tab, el) {
   // Agar tab hali yuklanayotgan bo'lsa — takroriy bosishni e'tiborsiz qoldir
   if (_tabLoading) return;
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-  if (el) el.classList.add('active');
+  // Agar el berilmagan bo'lsa (masalan, header avatar bosilganda) — nav tugmani id orqali topamiz
+  const _navEl = el || document.getElementById('nav-' + tab);
+  if (_navEl) _navEl.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
   _prevTab = _curTab;
