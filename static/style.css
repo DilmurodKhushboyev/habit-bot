@@ -114,6 +114,24 @@ body {
   display: flex; align-items: center; gap: 5px;
 }
 
+/* ── PAGE TITLE (header'da, profil sahifasida greeting o'rniga ko'rinadi) ── */
+.page-title {
+  display: none;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Profil sahifasi aktiv bo'lganda: greeting yashirin, sarlavha ko'rinadi */
+body.page-profile-active .greeting-block { display: none; }
+body.page-profile-active .page-title { display: block; }
+
 /* ── TABS ── */
 .tabs-wrap {
   background: var(--bg);

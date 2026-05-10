@@ -351,11 +351,20 @@ function switchTab(tab, el) {
   // Agar tab hali yuklanayotgan bo'lsa — takroriy bosishni e'tiborsiz qoldir
   if (_tabLoading) return;
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-  if (el) el.classList.add('active');
+  // Agar el berilmagan bo'lsa (masalan, header avatar bosilganda) — nav tugmani id orqali topamiz
+  const _navEl = el || document.getElementById('nav-' + tab);
+  if (_navEl) _navEl.classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + tab).classList.add('active');
   _prevTab = _curTab;
   _curTab  = tab;
+  // Profil sahifasida header'da greeting o'rniga sahifa sarlavhasi ko'rsatiladi
+  // (vizual shovqinni kamaytirish uchun — avatar 2 marta ko'rinmasligi kerak)
+  document.body.classList.toggle('page-profile-active', tab === 'profile');
+  const pageTitleEl = document.getElementById('header-page-title');
+  if (pageTitleEl && tab === 'profile') {
+    pageTitleEl.textContent = S('nav', 'profile');
+  }
   // Ichki sahifalarda orqa tugma
   const backPages = ['achievements','reminders','my_reminders'];
   const backBar   = document.getElementById('back-bar');
