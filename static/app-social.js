@@ -598,13 +598,6 @@ function renderShop(d) {
 
   // ── Final render ──
   document.getElementById(_shopContentId || 'bozor-content').innerHTML = `
-    <div class="shop-balance">
-      <div class="shop-balance-icon">⭐</div>
-      <div class="shop-balance-info">
-        <div class="shop-balance-label">${S('shop','your_points')}</div>
-        <div class="shop-balance-value" id="shop-pts-val">${points.toLocaleString()} ${S('shop','points_unit')}</div>
-      </div>
-    </div>
     ${invHtml}
     <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgCart2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#047857"/></linearGradient></defs><path d="M2 3h2.5L7 15H19L21 7H5.5" stroke="url(#svgCart2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="19" r="2" fill="url(#svgCart2)"/><circle cx="17" cy="19" r="2" fill="url(#svgCart2)"/></svg> ${S('shop','shop_title')}</div>
     <div class="shop-cats">${catBtns}</div>
