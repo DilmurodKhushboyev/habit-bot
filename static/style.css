@@ -2158,7 +2158,7 @@ body.dark @keyframes splIconPulse {
 .shop-cat-btn.active {
   background: linear-gradient(135deg, #34D399 0%, #059669 100%);
   color: #FFFFFF;
-  box-shadow: 0 3px 10px rgba(76, 175, 125, .28);
+  box-shadow: var(--sh-sm);
 }
 .shop-cat-btn.active svg path,
 .shop-cat-btn.active svg rect,
