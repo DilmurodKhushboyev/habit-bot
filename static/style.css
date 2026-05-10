@@ -2134,27 +2134,43 @@ body.dark @keyframes splIconPulse {
 
 /* -- Kategoriya filtrlari (gorizontal scroll) -- */
 .shop-cats {
-  display: flex; gap: 6px;
+  display: flex; gap: 8px;
   overflow-x: auto; -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; padding: 2px 0 10px;
+  scrollbar-width: none; padding: 4px 2px 12px;
   margin-bottom: 4px;
 }
 .shop-cats::-webkit-scrollbar { display: none; }
 .shop-cat-btn {
   flex-shrink: 0;
-  border: none; background: var(--bg); border-radius: 12px;
-  padding: 10px 14px; font-size: 12px; font-weight: 600;
-  min-height: 40px;
+  border: none; background: rgba(0, 0, 0, 0.04); border-radius: 999px;
+  padding: 9px 16px; font-size: 12.5px; font-weight: 600;
+  min-height: 38px;
   color: var(--sub); cursor: pointer; font-family: inherit;
-  transition: box-shadow .2s, color .2s, transform .1s;
+  box-shadow: none;
+  transition: color .2s, background .2s, transform .1s;
   white-space: nowrap;
   display: inline-flex; align-items: center; gap: 4px;
 }
 .shop-cat-btn:active {
   transform: scale(0.96);
+  background: rgba(0, 0, 0, 0.07);
 }
 .shop-cat-btn.active {
-  background: var(--bg); box-shadow: var(--sh-in); color: var(--text);
+  background: linear-gradient(135deg, #34D399 0%, #059669 100%);
+  color: #FFFFFF;
+  box-shadow: none;
+}
+.shop-cat-btn.active svg path,
+.shop-cat-btn.active svg rect,
+.shop-cat-btn.active svg circle,
+.shop-cat-btn.active svg ellipse {
+  fill: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+  opacity: 1 !important;
+}
+/* Faol tabda oq detallar (deraza, tasma, medal markazi) — yarim shaffof yashil — kontrast uchun */
+.shop-cat-btn.active svg [fill="#FFFFFF"] {
+  fill: rgba(5, 150, 105, 0.45) !important;
 }
 
 /* -- Mahsulot kartochkasi -- */
@@ -2253,6 +2269,18 @@ body.dark @keyframes splIconPulse {
   transition: all .2s;
 }
 .shop-sell-btn:active { transform: scale(.95); }
+
+/* -- Sotish tugmasi: faqat ikona varianti (inventory'da) -- */
+.shop-sell-btn.shop-sell-btn-icon {
+  width: 36px; height: 36px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 15px; border-radius: 12px;
+  background: var(--bg); box-shadow: var(--sh-sm);
+  color: inherit; opacity: .7;
+}
+.shop-sell-btn.shop-sell-btn-icon:active {
+  box-shadow: var(--sh-in); opacity: 1; transform: scale(.92);
+}
 
 /* -- Inventory bo'limi -- */
 .shop-inv-item {

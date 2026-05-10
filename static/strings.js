@@ -48,7 +48,7 @@ const STRINGS = {
 
 
     bozor: {
-      all:'🌟 Barchasi', protection:'Himoya', bonus:'Bonus', general:'Umumiy',
+      all:'Barchasi', protection:'Himoya', bonus:'Bonus', general:'Umumiy',
       info_shield_1:'1 kunlik streak himoyasi. Agar odatni bajarmay qolsangiz, streak nollanmaydi.',
       info_shield_3:'3 ta streak himoyasi (bir martada). Har biri alohida ishlatiladi.',
       info_bonus_2x:'Bugun barcha checkin ballari 2 baravar koʻpayadi. Faqat 1 kun ishlaydi.',
@@ -450,7 +450,7 @@ const STRINGS = {
 
 
     bozor: {
-      all:'🌟 Все', protection:'Защита', bonus:'Бонус', general:'Общее',
+      all:'Все', protection:'Защита', bonus:'Бонус', general:'Общее',
       info_shield_1:'1 день защиты стрика. Если пропустите — стрик сохранится.',
       info_shield_3:'3 защиты стрика (пакет). Каждая используется отдельно.',
       info_bonus_2x:'Сегодня все очки за чекин удваиваются. Действует 1 день.',
@@ -851,7 +851,7 @@ const STRINGS = {
 
 
     bozor: {
-      all:'🌟 All', protection:'Protection', bonus:'Bonus', general:'General',
+      all:'All', protection:'Protection', bonus:'Bonus', general:'General',
       info_shield_1:'1-day streak protection. If you miss a day, your streak stays safe.',
       info_shield_3:'3 streak shields (bundle). Each used separately.',
       info_bonus_2x:'All checkin points doubled today. Lasts 1 day.',
