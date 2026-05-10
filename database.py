@@ -246,6 +246,52 @@ def get_streak_in_period(udata, days=None):
             cur_streak = 1
     return max_streak
 
+# ============================================================
+#  CITY (SHAHAR) HELPER'LARI
+# ============================================================
+# udata["city"] = {
+#   "version": 1,
+#   "buildings": [{id, habit_id, building_type, x, y, progress, started_at, last_updated}],
+#   "decorations": [{id, decoration_type, x, y, placed_at}],
+#   "insurance_active": bool,
+#   "insurance_until": "YYYY-MM-DD" yoki None
+# }
+# Schema oqilona: faqat band kataklarni saqlaymiz (400 ta entry emas).
+# Asosiy logic city_logic.py da — bu yerda faqat init/get helper'lari.
+
+def init_city_for_user(udata):
+    """Yangi foydalanuvchi uchun bo'sh shahar yaratadi. Idempotent —
+    agar udata["city"] allaqachon bor va to'g'ri schema'da bo'lsa,
+    hech narsa qilmaydi (eski user'larni buzmaslik uchun).
+
+    udata ni mutate qiladi — chaqiruvchi save_user() ni o'zi qiladi.
+    """
+    from config import CITY_VERSION
+
+    city = udata.get("city")
+    if isinstance(city, dict) and city.get("version") == CITY_VERSION:
+        # Allaqachon mavjud va to'g'ri versiya — tegmaymiz
+        return
+
+    udata["city"] = {
+        "version": CITY_VERSION,
+        "buildings": [],
+        "decorations": [],
+        "insurance_active": False,
+        "insurance_until": None,
+    }
+
+def get_user_city(udata):
+    """udata dan shahar obyektini qaytaradi. Agar yo'q bo'lsa —
+    init_city_for_user() chaqirib bo'sh shahar yaratadi va qaytaradi.
+
+    Helper sifatida ishlatiladi (city_logic.py va flask routes'lar uchun).
+    Mutate qilmaydi (faqat yo'q bo'lsa init qiladi).
+    """
+    if not isinstance(udata.get("city"), dict):
+        init_city_for_user(udata)
+    return udata["city"]
+
 def load_group(group_id):
     def _fn():
         doc = groups_col.find_one({"_id": str(group_id)})
