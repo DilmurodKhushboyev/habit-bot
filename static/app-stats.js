@@ -1057,6 +1057,19 @@ function renderRating(d) {
   podiumHtml += '</div>';
 
   // ── 4–10 qator ──
+  // Dinamik width hisoblash: barcha qatorlardagi (4-10 + caller_entry) eng uzun raqamga qarab
+  // har bir ustunga (habits, jon, ball) min-width beriladi. Shunda hamma vertikal chiziqda turadi.
+  // Inventory uchun width berilmaydi, chunki inventory yoʻq foydalanuvchilarda umuman render qilinmaydi (A variant).
+  const _ratRowUsers = users.slice(3).concat(caller_entry ? [caller_entry] : []);
+  const _maxHabLen   = Math.max(1, ..._ratRowUsers.map(u => String(u.habits_count || 0).length));
+  const _maxJonLen   = Math.max(2, ..._ratRowUsers.map(u => String(u.jon ?? 100).length + 1)); // +1 = '%'
+  const _maxScoreLen = Math.max(1, ..._ratRowUsers.map(u => {
+    const v = sort_by==='points' ? u.points : sort_by==='streak' ? u.streak : u.score;
+    return String(v || 0).length;
+  }));
+  const _habW   = (_maxHabLen   * 7 + 22) + 'px';
+  const _jonW   = (_maxJonLen   * 6 + 22) + 'px';
+  const _scoreW = (_maxScoreLen * 8 + 18) + 'px';
   let rowsHtml = '';
   users.slice(3).forEach((u, i) => {
     const rank   = i + 4;
@@ -1074,9 +1087,9 @@ function renderRating(d) {
         </div>
         <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
           ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--accent);background:rgba(76,175,125,0.13);border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer;letter-spacing:-0.5px">${_invBadgeDisplay(u)}</div>` : ''}
-          ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#2D8A5E\"/><stop offset=\"100%\" stop-color=\"#4CAF7D\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
-          ${(j=>{const hc=j>=60?'#4CAF7D':j>=30?'#7DC29A':'#E05050';return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="${hc}" style="display:inline;vertical-align:middle"><path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z"/></svg>${j}%</div>`;})(u.jon??100)}
-          <div style="font-size:12px;font-weight:700;color:var(--sub);text-align:right;min-width:48px;margin-left:3px">${subLbl}</div>
+          ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap;min-width:${_habW};display:inline-flex;align-items:center;justify-content:flex-end;gap:3px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;flex-shrink:0"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#2D8A5E\"/><stop offset=\"100%\" stop-color=\"#4CAF7D\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
+          ${(j=>{const hc=j>=60?'#4CAF7D':j>=30?'#7DC29A':'#E05050';return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap;min-width:${_jonW};display:inline-flex;align-items:center;justify-content:flex-end;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="${hc}" style="display:inline;vertical-align:middle;flex-shrink:0"><path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z"/></svg>${j}%</div>`;})(u.jon??100)}
+          <div style="font-size:12px;font-weight:700;color:var(--sub);text-align:right;min-width:${_scoreW};margin-left:3px">${subLbl}</div>
         </div>
       </div>`;
   });
@@ -1099,9 +1112,9 @@ function renderRating(d) {
           </div>
           <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
             ${u.items_count > 0 ? `<div class="inv-badge-clickable" onclick="event.stopPropagation();openUserInventoryByKey('${_invKey(u)}')" style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--accent);background:rgba(76,175,125,0.13);border-radius:6px;padding:2px 5px;white-space:nowrap;cursor:pointer;letter-spacing:-0.5px">${_invBadgeDisplay(u)}</div>` : ''}
-            ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#2D8A5E\"/><stop offset=\"100%\" stop-color=\"#4CAF7D\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
-            ${(j=>{const hc=j>=60?'#4CAF7D':j>=30?'#7DC29A':'#E05050';return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="${hc}" style="display:inline;vertical-align:middle"><path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z"/></svg>${j}%</div>`;})(u.jon??100)}
-            <div style="font-size:12px;font-weight:700;color:var(--accent);text-align:right;min-width:48px;margin-left:3px">${sub}</div>
+            ${u.habits_count ? `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:#4CAF7D;background:#4CAF7D18;border-radius:6px;padding:2px 5px;white-space:nowrap;min-width:${_habW};display:inline-flex;align-items:center;justify-content:flex-end;gap:3px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;flex-shrink:0"><defs><linearGradient id=\"svgClipRat\" x1=\"0\" y1=\"0\" x2=\"24\" y2=\"24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0%\" stop-color=\"#2D8A5E\"/><stop offset=\"100%\" stop-color=\"#4CAF7D\"/></linearGradient></defs><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" fill=\"url(#svgClipRat)\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" fill=\"url(#svgClipRat)\" opacity=\"0.15\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\"/><path d=\"M8 11h8M8 15h5\" stroke=\"url(#svgClipRat)\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg> ${u.habits_count}</div>` : ''}
+            ${(j=>{const hc=j>=60?'#4CAF7D':j>=30?'#7DC29A':'#E05050';return `<div style="flex-shrink:0;font-size:9px;font-weight:700;color:var(--sub);background:var(--bg);box-shadow:var(--sh-in);border-radius:6px;padding:2px 5px;white-space:nowrap;min-width:${_jonW};display:inline-flex;align-items:center;justify-content:flex-end;gap:3px"><svg width="11" height="11" viewBox="0 0 24 24" fill="${hc}" style="display:inline;vertical-align:middle;flex-shrink:0"><path d="M12 21s-7-4.5-9.5-9.5C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 7.5C19 16.5 12 21 12 21z"/></svg>${j}%</div>`;})(u.jon??100)}
+            <div style="font-size:12px;font-weight:700;color:var(--accent);text-align:right;min-width:${_scoreW};margin-left:3px">${sub}</div>
           </div>
         </div>
       </div>`;
