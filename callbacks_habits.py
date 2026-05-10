@@ -12,6 +12,7 @@ from datetime import date, datetime, timedelta, timezone
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from database import load_user, save_user, load_group, save_group, add_points_history
+from city_logic import update_building_progress, delete_building_for_habit
 from helpers import T, get_lang, today_uz5
 from texts import LANGS
 from motivation import MOTIVATSIYA
@@ -335,6 +336,11 @@ def handle_habits_callbacks(call, uid, cdata, u):
         # Schedule dan o'chirish
         schedule.clear(f"{uid}_{habit_id}")
         u["habits"] = [h for h in habits if h["id"] != habit_id]
+        # CITY: habit bilan bog'liq binoni ham o'chirish (PHASE A3)
+        try:
+            delete_building_for_habit(u, habit_id)
+        except Exception as _ce:
+            print(f"[city] delete_building_for_habit xato (uid={uid}): {_ce}")
         save_user(uid, u)
         bot.answer_callback_query(call.id)
         try:
@@ -419,6 +425,11 @@ def handle_habits_callbacks(call, uid, cdata, u):
                         day_data["habits"] = hab_map
                         history[today] = day_data
                         u["history"] = history
+                        # CITY: bino progress regress (fully_done bekor qilindi) (PHASE A3)
+                        try:
+                            update_building_progress(u, habit_id, -1)
+                        except Exception as _ce:
+                            print(f"[city] update_building_progress -1 xato (uid={uid}): {_ce}")
                         save_user(uid, u)
                         schedule_habit(uid, h)
                         bot.answer_callback_query(call.id, f"↩️ 0/{rep_count}")
@@ -474,6 +485,11 @@ def handle_habits_callbacks(call, uid, cdata, u):
                                     u["xp_booster_days"] = max(0, u["xp_booster_days"] - 1)
                                     u["xp_booster_last_day"] = today
                             unschedule_habit_today(uid, habit_id)
+                            # CITY: bino progress +1 (fully_done — to'liq bajarildi) (PHASE A3)
+                            try:
+                                update_building_progress(u, habit_id, +1)
+                            except Exception as _ce:
+                                print(f"[city] update_building_progress +1 xato (uid={uid}): {_ce}")
                             save_user(uid, u)
                             # Achievements tekshirish
                             try:
@@ -557,6 +573,11 @@ def handle_habits_callbacks(call, uid, cdata, u):
                         day_data["habits"] = hab_map
                         history[today] = day_data
                         u["history"] = history
+                        # CITY: bino progress regress (simple undo) (PHASE A3)
+                        try:
+                            update_building_progress(u, habit_id, -1)
+                        except Exception as _ce:
+                            print(f"[city] update_building_progress -1 xato (uid={uid}): {_ce}")
                         save_user(uid, u)
                         schedule_habit(uid, h)
                         bot.answer_callback_query(call.id)
@@ -610,6 +631,11 @@ def handle_habits_callbacks(call, uid, cdata, u):
                             if u.get("xp_booster_last_day", "") != today:
                                 u["xp_booster_days"] = max(0, u["xp_booster_days"] - 1)
                                 u["xp_booster_last_day"] = today
+                        # CITY: bino progress +1 (simple done) (PHASE A3)
+                        try:
+                            update_building_progress(u, habit_id, +1)
+                        except Exception as _ce:
+                            print(f"[city] update_building_progress +1 xato (uid={uid}): {_ce}")
                         save_user(uid, u)
                         # Achievements tekshirish
                         try:

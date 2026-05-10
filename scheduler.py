@@ -14,6 +14,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from config import ADMIN_ID, BOT_TOKEN, mongo_col, groups_col, mongo_db, SHOP_BONUS_EFFECTS
 from database import (load_user, save_user, load_all_users, load_group,
                       save_group, load_settings, add_points_history)
+from city_logic import update_building_progress
 from helpers import T, get_lang, today_uz5
 from texts import LANGS
 from motivation import MOTIVATSIYA
@@ -387,6 +388,12 @@ def daily_reset():
                 habit["done_today_count"] = 0
                 if not fully_done:
                     habit["last_done"] = None
+                    # CITY: kun o'tkazilgan repeat habit — bino regress (PHASE A3)
+                    # update_building_progress o'zi insurance va bino yo'qligini tekshiradi
+                    try:
+                        update_building_progress(udata, habit["id"], -1)
+                    except Exception as _ce:
+                        print(f"[city] daily_reset repeat regress xato (uid={uid}): {_ce}")
                 changed = True
             else:
                 # Oddiy: kecha ham, bugun ham bajarilmagan bo'lsa missed++ va streak nollanadi
@@ -400,6 +407,13 @@ def daily_reset():
                     habit["total_missed"] = habit.get("total_missed", 0) + 1
                     missed_today = True
                     changed = True
+                # CITY: kun o'tkazilgan simple habit — bino regress (PHASE A3)
+                # update_building_progress o'zi insurance va bino yo'qligini tekshiradi
+                if missed_today:
+                    try:
+                        update_building_progress(udata, habit["id"], -1)
+                    except Exception as _ce:
+                        print(f"[city] daily_reset simple regress xato (uid={uid}): {_ce}")
                 # Streak himoyasi
                 if missed_today and habit.get("streak", 0) > 0:
                     shields = udata.get("streak_shields", 0)

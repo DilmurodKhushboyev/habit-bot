@@ -10,6 +10,7 @@ from flask import jsonify, request
 
 from config import SHOP_BONUS_EFFECTS
 from database import load_user, save_user, load_all_users, load_group, save_group, add_points_history
+from city_logic import update_building_progress
 from helpers import T, get_lang, get_rank, today_uz5
 from texts import LANGS
 from motivation import MOTIVATSIYA
@@ -174,6 +175,9 @@ def register_data_routes(app):
         today = today_uz5()
         habits = u.get("habits", [])
         points_before = u.get("points", 0)
+        # CITY: bino progress delta — har holatda hisoblanadi va oxirida yagona joyga
+        # qo'llaniladi. +1 = fully done (simple yoki repeat full), -1 = undo, 0 = partial repeat.
+        _city_delta = 0
         found_h = None
         for h in habits:
             if h["id"] == hid:
@@ -187,6 +191,7 @@ def register_data_routes(app):
                     if done >= rep_count:
                         # Allaqachon to'liq bajarilgan — bekor qilish (0 ga tushirish)
                         done = 0
+                        _city_delta = -1   # CITY: fully bekor qilindi — bino regress (PHASE A3)
                         h["last_done"] = None
                         h["last_done_at"] = None
                         h["streak"] = max(0, h.get("streak", 0) - 1)
@@ -212,6 +217,7 @@ def register_data_routes(app):
                     else:
                         done += 1
                         if done >= rep_count:
+                            _city_delta = +1   # CITY: fully bajarildi — bino progress (PHASE A3)
                             h["last_done"] = today
                             h["last_done_at"] = time.time()
                             h["streak"] = h.get("streak", 0) + 1
@@ -242,6 +248,7 @@ def register_data_routes(app):
                     today_count = done
                 else:
                     if h.get("last_done") == today:
+                        _city_delta = -1   # CITY: simple undo — bino regress (PHASE A3)
                         h["last_done"] = None
                         h["last_done_at"] = None
                         h["streak"] = max(0, h.get("streak", 0) - 1)
@@ -269,6 +276,7 @@ def register_data_routes(app):
                         from datetime import timezone, timedelta as _td
                         _tz = timezone(_td(hours=5))
                         _yesterday = (datetime.now(_tz) - _td(days=1)).strftime("%Y-%m-%d")
+                        _city_delta = +1   # CITY: simple done — bino progress (PHASE A3)
                         h["streak"] = h.get("streak", 0) + 1 if h.get("last_done") == _yesterday else 1
                         if h["streak"] > h.get("best_streak", 0):
                             h["best_streak"] = h["streak"]
@@ -344,6 +352,12 @@ def register_data_routes(app):
             if last_boost != today:
                 u["xp_booster_days"] = max(0, u["xp_booster_days"] - 1)
                 u["xp_booster_last_day"] = today
+        # CITY: bino progress yangilash (delta hisoblangan: +1/-1/0) (PHASE A3)
+        if _city_delta != 0 and found_h:
+            try:
+                update_building_progress(u, hid, _city_delta)
+            except Exception as _ce:
+                print(f"[city] update_building_progress {_city_delta:+d} xato (uid={uid}): {_ce}")
         save_user(uid, u)
         if not found_h:
             return jsonify({"ok": False, "error": "Odat topilmadi"})
