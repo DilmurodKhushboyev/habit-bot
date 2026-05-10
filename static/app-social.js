@@ -526,15 +526,15 @@ function renderShop(d) {
         <div class="shop-inv-item-emoji">${item.emoji}</div>
         <div class="shop-inv-item-info">
           <div class="shop-inv-item-name">${item.name}</div>
-          <div class="shop-inv-item-meta">${qty} ${S('shop','items_unit')}${sellRefund ? ' · <span class="sell-hint">' + S('msg','sell_price').replace('{n}', sellRefund) + '</span>' : ''}</div>
+          <div class="shop-inv-item-meta">${qty} ${S('shop','items_unit')}${sellRefund ? ' · <span class="sell-hint">+' + sellRefund + ' ⭐</span>' : ''}</div>
         </div>
         ${isActive
           ? `<button onclick="activateItem('${item.id}', true)" type="button" class="shop-act-btn is-active">${svgActiveChk}${S('shop','active_label')}</button>`
           : canAct
             ? `<button onclick="activateItem('${item.id}')" type="button" class="shop-act-btn not-active">${S('shop','activate_btn')}</button>`
-            : `<div class="shop-item-cat-label">${_catIcon(item.cat)}</div>`
+            : ''
         }
-        ${sellRefund ? `<button onclick="sellItem('${item.id}', '${item.name}', ${sellRefund})" type="button" class="shop-sell-btn">💰 ${S('msg','sell_title')}</button>` : ''}
+        ${sellRefund ? `<button onclick="sellItem('${item.id}', '${item.name}', ${sellRefund})" type="button" class="shop-sell-btn shop-sell-btn-icon" aria-label="${S('msg','sell_title')}">💰</button>` : ''}
       </div>`;
     }).join('');
     invHtml = `
