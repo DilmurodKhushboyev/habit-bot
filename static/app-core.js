@@ -356,6 +356,13 @@ function switchTab(tab, el) {
   document.getElementById('page-' + tab).classList.add('active');
   _prevTab = _curTab;
   _curTab  = tab;
+  // Profil sahifasida header'da greeting o'rniga sahifa sarlavhasi ko'rsatiladi
+  // (vizual shovqinni kamaytirish uchun — avatar 2 marta ko'rinmasligi kerak)
+  document.body.classList.toggle('page-profile-active', tab === 'profile');
+  const pageTitleEl = document.getElementById('header-page-title');
+  if (pageTitleEl && tab === 'profile') {
+    pageTitleEl.textContent = S('nav', 'profile');
+  }
   // Ichki sahifalarda orqa tugma
   const backPages = ['achievements','reminders','my_reminders'];
   const backBar   = document.getElementById('back-bar');
