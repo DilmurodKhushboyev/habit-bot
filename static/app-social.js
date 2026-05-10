@@ -502,6 +502,7 @@ function renderShop(d) {
   const svgPet = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgPetSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><ellipse cx="12" cy="17" rx="5" ry="4" fill="url(#svgPetSm)" opacity="0.85"/><ellipse cx="6" cy="10" rx="2" ry="2.5" fill="url(#svgPetSm)"/><ellipse cx="18" cy="10" rx="2" ry="2.5" fill="url(#svgPetSm)"/><ellipse cx="9" cy="6" rx="1.8" ry="2.3" fill="url(#svgPetSm)"/><ellipse cx="15" cy="6" rx="1.8" ry="2.3" fill="url(#svgPetSm)"/></svg>';
   const svgCar = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgCarSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M4 14l1.5-5a2 2 0 012-1.5h9a2 2 0 012 1.5L20 14v4a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1H7v1a1 1 0 01-1 1H5a1 1 0 01-1-1v-4z" fill="url(#svgCarSm)" opacity="0.85"/><circle cx="8" cy="17" r="1.5" fill="#1A1D2E"/><circle cx="16" cy="17" r="1.5" fill="#1A1D2E"/></svg>';
   const svgGiftCat = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgGiftCat" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><rect x="3" y="10" width="18" height="11" rx="1.5" fill="url(#svgGiftCat)" opacity="0.85"/><rect x="2" y="8" width="20" height="4" rx="1" fill="url(#svgGiftCat)"/><path d="M12 8v13" stroke="#FFFFFF" stroke-width="1.5" opacity="0.9"/><path d="M12 8c-1-2-4-3-5-1s1 3 5 1zM12 8c1-2 4-3 5-1s-1 3-5 1z" fill="url(#svgGiftCat)"/></svg>';
+  const svgStar = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><defs><linearGradient id="svgStarSm" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#34D399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z" fill="url(#svgStarSm)" opacity="0.9"/></svg>';
   const svgActiveChk = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M7 12l4 4 6-7" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   // Kategoriya labeli
@@ -545,7 +546,7 @@ function renderShop(d) {
   // ── Kategoriya filtrlari ──
   const visItems = items.filter(i => _shopCat === 'all' || i.cat === _shopCat);
   const cats = [
-    ['all',       S('bozor','all')],
+    ['all',       svgStar+S('bozor','all')],
     ['protection',svgShield+S('bozor','protection')],
     ['bonus',     svgBolt+S('bozor','bonus')],
     ['badge',     svgBadge+S('shop','cat_badge')],
@@ -599,7 +600,6 @@ function renderShop(d) {
   // ── Final render ──
   document.getElementById(_shopContentId || 'bozor-content').innerHTML = `
     ${invHtml}
-    <div class="section-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><defs><linearGradient id="svgCart2" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#047857"/></linearGradient></defs><path d="M2 3h2.5L7 15H19L21 7H5.5" stroke="url(#svgCart2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="19" r="2" fill="url(#svgCart2)"/><circle cx="17" cy="19" r="2" fill="url(#svgCart2)"/></svg> ${S('shop','shop_title')}</div>
     <div class="shop-cats">${catBtns}</div>
     ${html || emptyHtml}
     <div class="toast" id="toast-shop"></div>`;
