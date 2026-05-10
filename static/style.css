@@ -2254,6 +2254,18 @@ body.dark @keyframes splIconPulse {
 }
 .shop-sell-btn:active { transform: scale(.95); }
 
+/* -- Sotish tugmasi: faqat ikona varianti (inventory'da) -- */
+.shop-sell-btn.shop-sell-btn-icon {
+  width: 36px; height: 36px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 15px; border-radius: 12px;
+  background: var(--bg); box-shadow: var(--sh-sm);
+  color: inherit; opacity: .7;
+}
+.shop-sell-btn.shop-sell-btn-icon:active {
+  box-shadow: var(--sh-in); opacity: 1; transform: scale(.92);
+}
+
 /* -- Inventory bo'limi -- */
 .shop-inv-item {
   display: flex; align-items: center; gap: 10px;
