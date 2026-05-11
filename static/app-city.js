@@ -39,17 +39,20 @@ async function loadCity() {
 
 // ── Statik isometric grid renderi (C2.1) ──
 function renderCityGrid(container) {
-  // SVG o'lchamlari — barcha kataklar sig'adigan minimal kanvas
-  // Eng chap nuqta: x=0, y=19 → sx = -19 * 40 = -760
-  // Eng o'ng nuqta: x=19, y=0 → sx = 19 * 40 = 760
-  // Eng tepa: x=0, y=0 → sy = 0
-  // Eng past: x=19, y=19 → sy = 38 * 20 = 760
-  const halfW   = CITY_GRID_SIZE * (CITY_TILE_W / 2);  // 800
-  const fullW   = halfW * 2 + CITY_PADDING * 2;        // 1680
-  const fullH   = CITY_GRID_SIZE * CITY_TILE_H + CITY_PADDING * 2;  // 880
-  // viewBox markazlash: SVG (0,0) grid markaziga to'g'ri kelishi uchun
-  const viewX   = -halfW - CITY_PADDING;
-  const viewY   = -CITY_PADDING;
+  // SVG o'lchamlari — barcha kataklar to'liq sig'adigan kanvas
+  // ENG ASOSIY: har bir romb cho'qqilari uchun joy ajratish kerak!
+  //   - Eng chap cho'qqi: (x=0, y=19) → cx=-760, romb chap nuqta: -760 - 40 = -800
+  //   - Eng o'ng cho'qqi: (x=19, y=0) → cx=+760, romb o'ng nuqta: +760 + 40 = +800
+  //   - Eng tepa: (x=0, y=0) → cy=0 (romb tepa cho'qqisi)
+  //   - Eng past: (x=19, y=19) → cy=760, romb pastki: 760 + 40 = 800
+  const halfW   = CITY_GRID_SIZE * (CITY_TILE_W / 2);      // 800 — markazdan eng uzoq cx
+  const halfH   = CITY_GRID_SIZE * CITY_TILE_H;            // 800 — eng pastki cy
+  // Romb cho'qqilarini ham hisobga olib, padding qo'shamiz
+  const fullW   = (halfW + CITY_TILE_W / 2) * 2 + CITY_PADDING * 2;  // (800+40)*2 + 80 = 1760
+  const fullH   = halfH + CITY_TILE_H + CITY_PADDING * 2;            // 800 + 40 + 80 = 920
+  // viewBox markazlash: chap chetdagi rombning chap cho'qqisidan boshlanadi
+  const viewX   = -(halfW + CITY_TILE_W / 2) - CITY_PADDING;  // -880
+  const viewY   = -CITY_PADDING;                              // -40
 
   // Har bir katakni alohida <polygon> sifatida chizamiz.
   // Sabab: kelajakda C5 da har katakni alohida bosish/drop target qilish kerak,

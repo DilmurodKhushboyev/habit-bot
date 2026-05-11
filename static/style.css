@@ -3248,9 +3248,9 @@ body.dark .rem1-section-title-collapsible:active {
 }
 
 /* ── CITY (Shahar) — PHASE C2.1 statik isometric grid ── */
-/* page-city: .page padding'ini bekor qilish (yashil fon to'liq chetdan chetga) */
+/* page-city: .page padding'ini bekor qilish (fon to'liq chetdan chetga) */
 #page-city { padding: 0; }
-/* Wrap: scroll konteyneri + yashil "yer" fon (chekkalardagi bo'sh joy = tabiat) */
+/* Wrap: scroll konteyneri + neutral "yer" fon (premium minimalist isometric) */
 .city-canvas-wrap {
   width: 100%;
   overflow: auto;           /* C2.1 vaqtinchalik: scroll bilan ko'rish; C2.2 da olib tashlanadi */
@@ -3259,11 +3259,11 @@ body.dark .rem1-section-title-collapsible:active {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  background: #D8EDDD;      /* light mode: yumshoq yashil "yer" (Forest stili) */
+  background: #F0F0F2;      /* light mode: asfalt-oq "yer" (Rasm 5 stili) */
   transition: background .25s ease;
 }
 body.dark .city-canvas-wrap {
-  background: #15241C;      /* dark mode: to'q yashil tabiat */
+  background: #1A1A1C;      /* dark mode: chuqur kulrang */
 }
 /* SVG kanvas */
 .city-canvas {
@@ -3273,18 +3273,18 @@ body.dark .city-canvas-wrap {
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-/* Romb katak — checkerboard pattern (Forest stilida yengil farq) */
+/* Romb katak — premium minimalist (oq palitra, yengil checkerboard) */
 .city-tile {
-  stroke: #C8E6D3;          /* light mode chiziq — yumshoq yashil */
+  stroke: #E0E0E5;          /* light mode chiziq — yumshoq kulrang */
   stroke-width: 1;
   shape-rendering: crispEdges;  /* aniq chiziq, anti-alias yo'q */
 }
-.city-tile-a { fill: #E8F5EE; }  /* juft kataklar — yorug'roq */
-.city-tile-b { fill: #DCEFE2; }  /* toq kataklar — biroz quyuqroq */
+.city-tile-a { fill: #FFFFFF; }  /* juft kataklar — toza oq (yorug') */
+.city-tile-b { fill: #F5F5F7; }  /* toq kataklar — ozgina kulrang (soyada) */
 
-/* Dark mode — bot global pattern (body.dark) */
+/* Dark mode — chuqur kulrang palitra */
 body.dark .city-tile {
-  stroke: #2D5C44;
+  stroke: #2C2C30;
 }
-body.dark .city-tile-a { fill: #1F3329; }
-body.dark .city-tile-b { fill: #1A2C24; }
+body.dark .city-tile-a { fill: #28282C; }
+body.dark .city-tile-b { fill: #232327; }
