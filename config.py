@@ -122,9 +122,9 @@ REMINDER_MAX_TEXT_LEN    = 200            # Eslatma matnining maksimal uzunligi 
 #  CITY (SHAHAR) — gamification 2.0
 #  Foydalanuvchi har odat tasdiqlasa → bino qurilishi davom etadi.
 #  66 kun = bino to'liq quriladi (odat shakllanishi ilmiy chegarasi).
-#  Grid 20x20 = 400 katak (kelajakda kengaytirish mumkin).
+#  Grid 30x30 = 900 katak (PHASE C2.1 da 20→30 ga kengaytirildi).
 # ============================================================
-CITY_GRID_SIZE   = 20                  # 20x20 = 400 katak
+CITY_GRID_SIZE   = 30                  # 30x30 = 900 katak
 BUILDING_DAYS    = 66                  # odat shakllanish kunlari (max progress)
 CITY_VERSION     = 1                   # schema versiyasi (kelajakdagi migratsiyalar uchun)
 
