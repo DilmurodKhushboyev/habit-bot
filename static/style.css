@@ -3248,10 +3248,11 @@ body.dark .rem1-section-title-collapsible:active {
 }
 
 /* ── CITY (Shahar) — PHASE C2.1 statik isometric grid ── */
+/* page-city: .page padding'ini bekor qilish (yashil fon to'liq chetdan chetga) */
+#page-city { padding: 0; }
 /* Wrap: scroll konteyneri + yashil "yer" fon (chekkalardagi bo'sh joy = tabiat) */
 .city-canvas-wrap {
   width: 100%;
-  padding: 16px;
   overflow: auto;           /* C2.1 vaqtinchalik: scroll bilan ko'rish; C2.2 da olib tashlanadi */
   -webkit-overflow-scrolling: touch;
   min-height: calc(100vh - 200px);
