@@ -84,6 +84,16 @@ function renderCityGrid(container) {
       </svg>
     </div>
   `;
+
+  // Auto-scroll grid markaziga (Forest/Hay Day stilida — foydalanuvchi
+  // tab'ga kirganda darhol shahar markazini ko'radi, cho'qqilarni emas).
+  // requestAnimationFrame — DOM render tugagach scroll qilish uchun.
+  requestAnimationFrame(() => {
+    const wrap = container.querySelector('.city-canvas-wrap');
+    if (!wrap) return;
+    wrap.scrollLeft = (wrap.scrollWidth  - wrap.clientWidth)  / 2;
+    wrap.scrollTop  = (wrap.scrollHeight - wrap.clientHeight) / 2;
+  });
 }
 
 // ── Eslatma kelajakdagi bosqichlar uchun ──
