@@ -384,6 +384,7 @@ function switchTab(tab, el) {
   else if (tab === 'habits') { loaded.habits = false; loadTab('habits'); }
   else if (tab === 'profile') { loaded.profile = false; loadTab('profile'); }
   else if (tab === 'bozor') { loaded.bozor = false; loadTab('bozor'); }
+  else if (tab === 'city')    { loaded.city = false;    loadTab('city');    } // qaytganda markazga avtoscroll
   else refreshHabitsJon();
 }
 
