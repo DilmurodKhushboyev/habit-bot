@@ -3255,6 +3255,10 @@ body.dark .rem1-section-title-collapsible:active {
   width: 100%;
   overflow: auto;           /* C2.1 vaqtinchalik: scroll bilan ko'rish; C2.2 da olib tashlanadi */
   -webkit-overflow-scrolling: touch;
+  /* Erkin diagonal scroll (Forest/Hay Day kabi) — ham X, ham Y bir vaqtda */
+  touch-action: pan-x pan-y;
+  /* Pull-to-refresh va bouncing'ni shu konteyner ichida saqlash */
+  overscroll-behavior: contain;
   min-height: calc(100vh - 200px);
   display: flex;
   align-items: flex-start;

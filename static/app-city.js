@@ -13,7 +13,7 @@
 // ── ISOMETRIC GRID KONSTANTLARI (Qoida #17 — magic number'larni markazlash) ──
 // Klassik 2:1 isometric nisbat — eng keng tarqalgan va eng tabiiy ko'rinish.
 // C2.3 (zoom) bularni dinamik o'zgartiradi, hozircha static.
-const CITY_GRID_SIZE = 20;        // 20×20 = 400 katak (backend CITY_GRID_SIZE bilan moslangan)
+const CITY_GRID_SIZE = 30;        // 30×30 = 900 katak (C2.1: 20→30 ga kengaytirildi)
 const CITY_TILE_W    = 80;        // Romb kenglik (px)
 const CITY_TILE_H    = 40;        // Romb balandlik (px) — 2:1 nisbat
 const CITY_PADDING   = 40;        // SVG ichida atrof bo'shliq
@@ -41,17 +41,17 @@ async function loadCity() {
 function renderCityGrid(container) {
   // SVG o'lchamlari — barcha kataklar to'liq sig'adigan kanvas
   // ENG ASOSIY: har bir romb cho'qqilari uchun joy ajratish kerak!
-  //   - Eng chap cho'qqi: (x=0, y=19) → cx=-760, romb chap nuqta: -760 - 40 = -800
-  //   - Eng o'ng cho'qqi: (x=19, y=0) → cx=+760, romb o'ng nuqta: +760 + 40 = +800
+  //   - Eng chap cho'qqi: (x=0, y=29) → cx=-1160, romb chap nuqta: -1160 - 40 = -1200
+  //   - Eng o'ng cho'qqi: (x=29, y=0) → cx=+1160, romb o'ng nuqta: +1160 + 40 = +1200
   //   - Eng tepa: (x=0, y=0) → cy=0 (romb tepa cho'qqisi)
-  //   - Eng past: (x=19, y=19) → cy=760, romb pastki: 760 + 40 = 800
-  const halfW   = CITY_GRID_SIZE * (CITY_TILE_W / 2);      // 800 — markazdan eng uzoq cx
-  const halfH   = CITY_GRID_SIZE * CITY_TILE_H;            // 800 — eng pastki cy
+  //   - Eng past: (x=29, y=29) → cy=1160, romb pastki: 1160 + 40 = 1200
+  const halfW   = CITY_GRID_SIZE * (CITY_TILE_W / 2);      // 1200 — markazdan eng uzoq cx
+  const halfH   = CITY_GRID_SIZE * CITY_TILE_H;            // 1200 — eng pastki cy
   // Romb cho'qqilarini ham hisobga olib, padding qo'shamiz
-  const fullW   = (halfW + CITY_TILE_W / 2) * 2 + CITY_PADDING * 2;  // (800+40)*2 + 80 = 1760
-  const fullH   = halfH + CITY_TILE_H + CITY_PADDING * 2;            // 800 + 40 + 80 = 920
+  const fullW   = (halfW + CITY_TILE_W / 2) * 2 + CITY_PADDING * 2;  // (1200+40)*2 + 80 = 2560
+  const fullH   = halfH + CITY_TILE_H + CITY_PADDING * 2;            // 1200 + 40 + 80 = 1320
   // viewBox markazlash: chap chetdagi rombning chap cho'qqisidan boshlanadi
-  const viewX   = -(halfW + CITY_TILE_W / 2) - CITY_PADDING;  // -880
+  const viewX   = -(halfW + CITY_TILE_W / 2) - CITY_PADDING;  // -1280
   const viewY   = -CITY_PADDING;                              // -40
 
   // Har bir katakni alohida <polygon> sifatida chizamiz.
