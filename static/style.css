@@ -3246,3 +3246,39 @@ body.dark .rem1-section-title-collapsible:active {
   opacity: 1;
   pointer-events: auto;
 }
+
+/* ── CITY (Shahar) — PHASE C1 placeholder ── */
+.city-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px 80px;
+  text-align: center;
+  min-height: calc(100vh - 220px);
+}
+.city-placeholder-icon {
+  margin-bottom: 24px;
+  filter: drop-shadow(0 8px 20px rgba(76, 175, 125, 0.25));
+}
+.city-placeholder-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  letter-spacing: 0.2px;
+}
+.city-placeholder-soon {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 16px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.city-placeholder-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--sub);
+  max-width: 320px;
+}

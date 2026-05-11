@@ -9,9 +9,9 @@
 <title>Super Habits</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=584">
-<script src="strings.js?v=554"></script>
-<script src="app-core.js?v=552"></script>
+<link rel="stylesheet" href="style.css?v=585">
+<script src="strings.js?v=555"></script>
+<script src="app-core.js?v=553"></script>
 </head>
 <body>
 
@@ -91,6 +91,13 @@
 <!-- BUGUN -->
 <div class="page active" id="page-today">
   <div id="today-content">
+    <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+  </div>
+</div>
+
+<!-- SHAHAR -->
+<div class="page" id="page-city">
+  <div id="city-content">
     <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
   </div>
 </div>
@@ -264,6 +271,20 @@
     </span>
     <span class="nav-label">Reyting</span>
   </button>
+  <button class="nav-item" id="nav-city" onclick="switchTab('city', this)">
+    <span class="nav-icon">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
+        <defs><linearGradient id="ni-city" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5DBE8E"/><stop offset="100%" stop-color="#2D8A5E"/></linearGradient></defs>
+        <path d="M4 20 L13 12 L22 20 L22 23 L4 23 Z" fill="url(#ni-city)"/>
+        <rect x="7" y="17" width="3" height="3" fill="#FFFFFF" opacity="0.55" rx="0.4"/>
+        <rect x="11.5" y="15" width="3" height="5" fill="#FFFFFF" opacity="0.55" rx="0.4"/>
+        <rect x="16" y="17" width="3" height="3" fill="#FFFFFF" opacity="0.55" rx="0.4"/>
+        <path d="M13 6 L13 12" stroke="url(#ni-city)" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+        <circle cx="13" cy="5" r="1.8" fill="url(#ni-city)"/>
+      </svg>
+    </span>
+    <span class="nav-label">Shahar</span>
+  </button>
   <button class="nav-item" id="nav-habits" onclick="switchTab('habits', this)" type="button">
     <span class="nav-icon">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -286,16 +307,6 @@
     </span>
     <span class="nav-label">Bozor</span>
   </button>
-  <button class="nav-item" id="nav-profile" onclick="switchTab('profile', this)">
-    <span class="nav-icon">
-      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
-        <defs><linearGradient id="ni5" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs>
-        <circle cx="13" cy="9" r="4.5" fill="url(#ni5)"/>
-        <path d="M4 22C4 17.582 8.029 14 13 14C17.971 14 22 17.582 22 22" stroke="url(#ni5)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-      </svg>
-    </span>
-    <span class="nav-label">Profil</span>
-  </button>
 </nav>
 
 <!-- Badge popup -->
@@ -313,5 +324,6 @@
 <script src="app-habits.js?v=558"></script>
 <script src="app-social.js?v=552"></script>
 <script src="app-reminders.js?v=558"></script>
+<script src="app-city.js?v=1"></script>
 </body>
 </html>

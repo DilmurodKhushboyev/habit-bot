@@ -2,7 +2,12 @@ let selectedLang = null;
 let currentLang = localStorage.getItem('sh_lang') || 'uz';
 const STRINGS = {
   uz: {
-    nav: { today:'Odatlar', stats:'Reyting', habits:'Statistika', bozor:'Bozor', profile:'Profil' },
+    nav: { today:'Odatlar', stats:'Reyting', habits:'Statistika', city:'Shahar', bozor:'Bozor', profile:'Profil' },
+    city: {
+      title:'Mening shaharim',
+      coming_soon:'Tez orada...',
+      description:"Har bir tasdiqlangan odat shahringizda bino quradi. 66 kun — bir bino to'liq quriladi."
+    },
     profile: {
       ball:'Ball', streak:'Streak', done:'Bajarildi', rekord:'rekord',
       done_label:'Bajarildi', not_done:'Bajarilmadi', kun:'kun',
@@ -404,7 +409,12 @@ const STRINGS = {
     },
   },
   ru: {
-    nav: { today:'Привычки', stats:'Рейтинг', habits:'Статистика', bozor:'Магазин', profile:'Профиль' },
+    nav: { today:'Привычки', stats:'Рейтинг', habits:'Статистика', city:'Город', bozor:'Магазин', profile:'Профиль' },
+    city: {
+      title:'Мой город',
+      coming_soon:'Скоро...',
+      description:'Каждая подтверждённая привычка строит здание в вашем городе. 66 дней — здание полностью построено.'
+    },
     profile: {
       ball:'Очки', streak:'Стрик', done:'Выполнено', rekord:'рекорд',
       done_label:'Выполнено', not_done:'Не выполнено', kun:'дней',
@@ -805,7 +815,12 @@ const STRINGS = {
     },
   },
   en: {
-    nav: { today:'Habits', stats:'Ranking', habits:'Statistics', bozor:'Store', profile:'Profile' },
+    nav: { today:'Habits', stats:'Ranking', habits:'Statistics', city:'City', bozor:'Store', profile:'Profile' },
+    city: {
+      title:'My City',
+      coming_soon:'Coming soon...',
+      description:'Every confirmed habit builds a structure in your city. 66 days — one building fully constructed.'
+    },
     profile: {
       ball:'Points', streak:'Streak', done:'Done', rekord:'record',
       done_label:'Done', not_done:'Not done', kun:'days',

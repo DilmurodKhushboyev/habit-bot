@@ -37,7 +37,7 @@ let   userId   = user.id || 0;
 const API      = window.location.origin + '/api';
 
 // ── STATE ──
-let loaded = { today: false, profile: false, habits: false, stats: false, achievements: false, reminders: false, my_reminders: false, bozor: false };
+let loaded = { today: false, profile: false, habits: false, stats: false, achievements: false, reminders: false, my_reminders: false, bozor: false, city: false };
 let data   = {};
 
 // ── HEADER BALL SINXRON YANGILASH ──
@@ -402,6 +402,7 @@ async function loadTab(tab) {
     if (tab === 'my_reminders') await loadMyReminders();
     if (tab === 'profile')      await loadProfile();
     if (tab === 'habits')       await loadStatsPage();
+    if (tab === 'city')         await loadCity();
     if (tab === 'bozor') {
       await loadShop();
     }
