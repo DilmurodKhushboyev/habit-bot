@@ -1339,7 +1339,9 @@ function playProgressSound(step, total) {
   var pulling = false;
   var threshold = 72;
   // PTR ishlamaydigan ichki sahifalar
-  var skipTabs = ['achievements', 'reminders', 'premium'];
+  // 'city' — Shahar sahifasi PTR'ni butunlay o'chiradi (PHASE C2.1 — overscroll-behavior:contain
+  // ba'zi mobil browser'larda yetarli emas, JS darajasida ham bloklash kerak)
+  var skipTabs = ['achievements', 'reminders', 'premium', 'city'];
 
   document.addEventListener('touchstart', function(e) {
     if (skipTabs.indexOf(_curTab) !== -1) return;
@@ -1400,7 +1402,8 @@ function playProgressSound(step, total) {
   var locked = false;
   var pulling = false;
   var threshold = 72;
-  var skipTabs = ['achievements', 'reminders', 'premium'];
+  // 'city' — Shahar sahifasi pastki PTR'ni butunlay o'chiradi (yuqori PTR bilan sinxron)
+  var skipTabs = ['achievements', 'reminders', 'premium', 'city'];
 
   function isAtBottom() {
     return (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 5);
