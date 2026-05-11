@@ -3248,7 +3248,7 @@ body.dark .rem1-section-title-collapsible:active {
 }
 
 /* ── CITY (Shahar) — PHASE C2.1 statik isometric grid ── */
-/* Wrap: scroll konteyneri (C2.2 da pan/drag bilan almashtiriladi) */
+/* Wrap: scroll konteyneri + yashil "yer" fon (chekkalardagi bo'sh joy = tabiat) */
 .city-canvas-wrap {
   width: 100%;
   padding: 16px;
@@ -3258,6 +3258,11 @@ body.dark .rem1-section-title-collapsible:active {
   display: flex;
   align-items: flex-start;
   justify-content: center;
+  background: #D8EDDD;      /* light mode: yumshoq yashil "yer" (Forest stili) */
+  transition: background .25s ease;
+}
+body.dark .city-canvas-wrap {
+  background: #15241C;      /* dark mode: to'q yashil tabiat */
 }
 /* SVG kanvas */
 .city-canvas {
