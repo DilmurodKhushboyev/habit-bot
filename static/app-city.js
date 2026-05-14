@@ -41,10 +41,10 @@ function cityIsoY(x, y) {
 const CITY_STAGE_THRESHOLDS = [13, 26, 39, 52, 66];
 
 // Bino vizual o'lchamlari (izometrik kub) — Qoida #17 magic number markazlash
-// Kub asosi katak romb o'lchamiga yaqin — binolar katakka "o'tirib" turadi
-// (referens: oq 3D city — binolar katakni to'liq egallaydi, suzmaydi).
-const CITY_BLD_BASE_W = 76;   // kub asos kengligi (px) — CITY_TILE_W=80 ga yaqin
-const CITY_BLD_BASE_H = 38;   // kub asos balandligi (px) — CITY_TILE_H=40 ga yaqin (2:1)
+// Kub asosi katak romb o'lchamidan kichik — binolar orasida bo'shliq qoladi,
+// shahar "havodor" ko'rinadi va atrofni ko'rish osonroq (foydalanuvchi tanlovi).
+const CITY_BLD_BASE_W = 60;   // kub asos kengligi (px) — CITY_TILE_W=80 dan kichik
+const CITY_BLD_BASE_H = 30;   // kub asos balandligi (px) — CITY_TILE_H=40 dan kichik (2:1)
 // Stage bo'yicha kub balandligi (vertikal — px). Stage 0 past poydevor, 4 to'liq.
 const CITY_BLD_HEIGHTS = [14, 34, 58, 84, 84];  // stage 0..4 balandlik
 
