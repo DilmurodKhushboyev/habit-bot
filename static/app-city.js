@@ -1,11 +1,12 @@
 // ==============================================
-// app-city.js — Shahar sahifasi (PHASE C3.2: grid + demo binolar)
+// app-city.js — Shahar sahifasi (PHASE C4: API integratsiya)
 // ==============================================
 // Bog'liqlik:
 //   - app-city-buildings.js (bino render: cityBuildingStage, cityBuildingSVG,
 //     renderCityBuildings — index.html da BU fayldan KEYIN yuklanadi)
-//   - strings.js (S() funksiya — tarjima; hozir ishlatilmaydi, C7 da kerak)
-//   - app-core.js (loaded state — sahifa yuklanganini belgilash)
+//   - app-core.js (apiFetch — GET /api/city/<uid>; userId; S() msg.connection_error;
+//     loaded state — sahifa yuklanganini belgilash)
+//   - strings.js (S() funksiya — hozir faqat msg.connection_error; city.* C7 da)
 //   - config.py BUILDING_STAGE_THRESHOLDS bilan SINXRON (Qoida #11)
 //
 // PHASE C2.1: 30×30 = 900 katak isometric grid (statik, scroll bilan).
@@ -13,11 +14,14 @@
 // PHASE C3.1: demo binolar (5 stage), monoxrom oq clay render uslubi.
 // PHASE C3.2: 10 bino turi — barchasi BIR XIL standart kub (o'lcham/shakl farqi yo'q),
 //             faqat stage bo'yicha balandlik o'zgaradi. Bino mantiqi
-//             app-city-buildings.js da (Qoida #24). Demo data — binolar orasida
-//             2 katak masofa.
+//             app-city-buildings.js da (Qoida #24).
 // PHASE C3.3: dekoratsiyalar — KEYINGA QOLDIRILDI (kichik izometrik primitivlar
-//             tanib bo'lmaydigan shakl berdi). _cityDemoData.decorations bo'sh massiv.
-//             API YO'Q (C4 da GET /api/city/<uid> bilan almashtiriladi).
+//             tanib bo'lmaydigan shakl berdi). API decorations massivi render
+//             qilinmaydi (professional SVG ikonkalar kelguncha).
+// PHASE C4:   _cityDemoData O'CHIRILDI — loadCity() endi async, GET /api/city/<uid>
+//             chaqiradi. API javobi: {buildings:[{habit_id,type,x,y,progress,stage}],
+//             decorations, insurance_active, ...}. API xato bo'lsa — xato holati
+//             + "Qayta urinish" tugma (soxta demo data ko'rsatilmaydi).
 // ==============================================
 
 // ── ISOMETRIC GRID KONSTANTLARI (Qoida #17 — magic number'larni markazlash) ──
@@ -54,44 +58,57 @@ const CITY_BLD_BASE_H = 30;   // kub asos balandligi (px) — CITY_TILE_H=40 dan
 // Stage bo'yicha kub balandligi (vertikal — px). Stage 0 past poydevor, 4 to'liq.
 const CITY_BLD_HEIGHTS = [14, 34, 58, 84, 84];  // stage 0..4 balandlik
 
-// ── DEMO DATA (C4 da GET /api/city/<uid> javobi bilan almashtiriladi) ──
-// Backend formatida: buildings massivi. Har bino: {habit_id, type, x, y, progress}.
-// progress (0-66 kun) → cityBuildingStage() orqali stage'ga aylantiriladi.
-// Grid markazi 14-16 atrofida — auto-scroll shu yerni ko'rsatadi.
-//
-// JOYLASHUV QOIDASI: binolar orasida kamida 2 katak masofa — har bino aniq
-//   ko'rinadi, bir-birini to'smaydi. Bu C5 (bino siljitish) uchun ham asos:
-//   o'yinlarda bino atrofida bo'sh joy bo'lishi kerak. Hozir bu demo data'da
-//   qo'lda; backend find_empty_slot bu qoidani majburlashi — alohida bosqich.
-//
-// Binolar 3 katak qadam bilan joylashgan (x va y bo'yicha) — orasida 2 bo'sh katak.
-// Har xil stage — qurilish bosqichlari ko'rinadi.
-const _cityDemoData = {
-  buildings: [
-    { habit_id: "demo1", type: "mosque",  x: 12, y: 12, progress: 66 }, // stage 4
-    { habit_id: "demo2", type: "house",   x: 15, y: 12, progress: 48 }, // stage 3
-    { habit_id: "demo3", type: "library", x: 18, y: 12, progress: 33 }, // stage 2
-    { habit_id: "demo4", type: "school",  x: 12, y: 15, progress: 20 }, // stage 1
-    { habit_id: "demo5", type: "bank",    x: 15, y: 15, progress: 5  }, // stage 0
-    { habit_id: "demo6", type: "cafe",    x: 18, y: 15, progress: 66 }, // stage 4
-    { habit_id: "demo7", type: "park",    x: 12, y: 18, progress: 48 }, // stage 3
-    { habit_id: "demo8", type: "studio",  x: 15, y: 18, progress: 33 }, // stage 2
-  ],
-  // Dekoratsiyalar (tree/flower/car/bench/fountain) — C3.3 da KEYINGA QOLDIRILDI.
-  // Sabab: kichik izometrik primitivlar tanib bo'lmaydigan shakllar berdi.
-  // Kelajakda professional SVG ikonkalar bilan qilinadi. Backend tayyor turadi.
-  decorations: [],
-};
+// ── API DATA (C4) ──
+// _cityDemoData O'CHIRILDI — endi haqiqiy GET /api/city/<uid> javobi ishlatiladi.
+// API javob formati (flask_routes_city.py api_city_get):
+//   { ok, grid_size, buildings: [{habit_id, type, x, y, progress, stage}],
+//     decorations: [...], insurance_active, insurance_until, version }
+// buildings massivi renderCityBuildings() ga uzatiladi (interfeys o'zgarmagan).
+// decorations — C3.3 da KEYINGA QOLDIRILGAN, hozir render qilinmaydi (professional
+// SVG ikonkalar kerak). Backend (place_decoration) tayyor turadi, C6 da ulanadi.
+
+// Oxirgi muvaffaqiyatli yuklangan shahar javobi — C5 (bino bosish) shu yerdan
+// bino ma'lumotini oladi (qayta API chaqirmasdan). C4 da faqat saqlanadi.
+let _cityData = null;
 
 // ── Asosiy yuklash funksiyasi (loadTab tomonidan chaqiriladi) ──
+// GET /api/city/<uid> chaqiradi. Loading spinner index.html da #city-content
+// ichida allaqachon bor — fetch tugaguncha ko'rinib turadi.
 async function loadCity() {
   const container = document.getElementById('city-content');
   if (!container) return;
-  renderCityGrid(container);
+  try {
+    const res = await apiFetch('city/' + userId);
+    if (!res || !res.ok) throw new Error('city_load_failed');
+    _cityData = res;
+    renderCityGrid(container, res);
+  } catch (e) {
+    _cityData = null;
+    renderCityError(container);
+  }
 }
 
-// ── Statik isometric grid renderi (C2.1) ──
-function renderCityGrid(container) {
+// ── Xato holati renderi (C4) ──
+// API ishlamasa — soxta demo data KO'RSATILMAYDI (chalkash UX: "mening
+// shahrimda nega bu binolar?"). O'rniga aniq xato + "Qayta urinish" tugma.
+// Tarjima: S('msg','connection_error') — strings.js da mavjud 3 tilli kalit
+// (city.* kalitlari C7 da qo'shiladi — handoff rejasi).
+function renderCityError(container) {
+  const msg = S('msg', 'connection_error');
+  container.innerHTML = `
+    <div class="city-error">
+      <div class="city-error-icon">📡</div>
+      <div class="city-error-msg">${msg}</div>
+      <button class="city-error-btn" onclick="loadCity()">↻</button>
+    </div>
+  `;
+}
+
+// ── Statik isometric grid renderi (C2.1) + binolar (C4: API data) ──
+// cityData — GET /api/city/<uid> javobi. cityData.buildings massivi
+// renderCityBuildings() ga uzatiladi. cityData.decorations hozir ishlatilmaydi
+// (C3.3 KEYINGA QOLDIRILGAN).
+function renderCityGrid(container, cityData) {
   // SVG o'lchamlari — barcha kataklar to'liq sig'adigan kanvas
   // ENG ASOSIY: har bir romb cho'qqilari uchun joy ajratish kerak!
   //   - Eng chap cho'qqi: (x=0, y=29) → cx=-1160, romb chap nuqta: -1160 - 40 = -1200
@@ -130,8 +147,11 @@ function renderCityGrid(container) {
   }
 
   // Binolar layer'i: grid kataklaridan KEYIN chiziladi (ustida ko'rinadi).
-  // C3.1 da demo data, C4 da API javobidan keladi.
-  const buildingsHtml = renderCityBuildings(_cityDemoData.buildings);
+  // C4: API javobidan keladi (_cityDemoData o'chirilgan). buildings yo'q yoki
+  // bo'sh bo'lsa — bo'sh string (yangi user, hali bino yo'q → faqat grid).
+  const apiBuildings = (cityData && Array.isArray(cityData.buildings))
+    ? cityData.buildings : [];
+  const buildingsHtml = renderCityBuildings(apiBuildings);
 
   container.innerHTML = `
     <div class="city-canvas-wrap">
@@ -162,18 +182,18 @@ function renderCityGrid(container) {
 // ════════════════════════════════════════════════
 // cityBuildingStage(), cityBuildingSVG(), renderCityBuildings() va bino shakl
 // konfiguratsiyalari app-city-buildings.js da. Bu fayl ulardan FAQAT renderCityGrid
-// ichida foydalanadi (yuqorida `renderCityBuildings(_cityDemoData.buildings)`).
+// ichida foydalanadi (yuqorida `renderCityBuildings(apiBuildings)`).
 // index.html da app-city-buildings.js shu fayldan KEYIN yuklanadi — chunki u shu
 // yerdagi konstantalarga (CITY_TILE_H, CITY_BLD_*, cityIsoX/Y) bog'liq.
 
 // ── Eslatma kelajakdagi bosqichlar uchun ──
 // PHASE C2.2/C2.3: touch pan/zoom — YAGNI sababli o'tkazib yuborilgan
 // PHASE C3.1: ✅ demo binolar (5 stage, oq clay render)
-// PHASE C3.2: ✅ shakl-asosida bino turlari (app-city-buildings.js) — SHU YERDA
-// PHASE C3.3: 5 dekoratsiya (tree/flower/car/bench/fountain)
-// PHASE C3.4: premium CSS polish (soyalar, 3D effekt finetune)
-// PHASE C4:   loadCityFromAPI() — GET /api/city/<uid> (_cityDemoData ni almashtiradi)
+// PHASE C3.2: ✅ shakl-asosida bino turlari (app-city-buildings.js)
+// PHASE C3.3: 5 dekoratsiya — KEYINGA QOLDIRILGAN (professional SVG ikonkalar kerak)
+// PHASE C3.4: ✅ premium CSS polish (soyalar, 3D effekt)
+// PHASE C4:   ✅ loadCity() async — GET /api/city/<uid> (_cityDemoData o'chirildi) — SHU YERDA
 // PHASE C5:   bino bosish modali (change_type) + bino ko'chirish (long-press)
-// PHASE C6:   renderDecorationsShop() — bozor modal
-// PHASE C7:   tarjimalar strings.js'ga qo'shiladi (10 bino + 5 dekoratsiya nomlari)
-// PHASE C8:   premium CSS polish (beige/gold accent — agar kerak bo'lsa)
+// PHASE C6:   renderDecorationsShop() — dekoratsiya bozor modali (buy_decoration, buy_insurance)
+// PHASE C7:   tarjimalar strings.js'ga qo'shiladi (10 bino + 5 dekoratsiya nomlari, city.* kalitlar)
+// PHASE C8:   premium CSS polish (qo'shimcha — agar kerak bo'lsa)

@@ -3323,3 +3323,28 @@ body.dark .city-bld polygon { stroke: #3A3A40; }
 body.dark .city-bld-top   { fill: #3C3C42; }
 body.dark .city-bld-left  { fill: #313137; }
 body.dark .city-bld-right { fill: #2A2A30; }
+
+/* ── City xato holati (C4) — GET /api/city/<uid> ishlamasa ──
+   Soxta demo data ko'rsatilmaydi (chalkash UX), o'rniga aniq xato + qayta urinish.
+   .loading bilan bir xil vertikal markazlash patterni, neumorphic ↻ tugma. */
+.city-error {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 80px 24px; gap: 14px; color: var(--sub);
+  text-align: center;
+}
+.city-error-icon { font-size: 40px; opacity: 0.7; }
+.city-error-msg { font-size: 14px; font-weight: 500; max-width: 260px; }
+.city-error-btn {
+  margin-top: 4px;
+  width: 48px; height: 48px; border-radius: 50%;
+  border: none; cursor: pointer;
+  background: var(--card); color: var(--accent);
+  box-shadow: var(--sh-out);
+  font-size: 22px; line-height: 1;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.city-error-btn:active {
+  box-shadow: var(--sh-in);
+  transform: scale(0.94);
+}
