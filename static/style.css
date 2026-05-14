@@ -3308,13 +3308,6 @@ body.dark .city-tile-b { fill: #232327; }
 .city-bld-top   { fill: #FFFFFF; }   /* tepa yuz — eng yorug' */
 .city-bld-left  { fill: #ECECEF; }   /* chap yuz — o'rta soya */
 .city-bld-right { fill: #DEDEE3; }   /* o'ng yuz — eng quyuq soya */
-/* Stage 4 complete: bino emoji belgisi tepa yuzda */
-.city-bld-emoji {
-  font-size: 18px;
-  pointer-events: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
 
 /* Dark mode — chuqur kulrang clay */
 body.dark .city-bld polygon { stroke: #3A3A40; }

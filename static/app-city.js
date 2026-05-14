@@ -185,14 +185,9 @@ function cityBuildingSVG(type, stage, cx, cy) {
   svg += `<polygon class="city-bld-left"  points="${leftFace}"/>`;
   svg += `<polygon class="city-bld-right" points="${rightFace}"/>`;
   svg += `<polygon class="city-bld-top"   points="${topFace}"/>`;
-
-  // Stage 4 (complete): kichik detal — bino emoji belgisi tepa yuzda.
-  // Hozircha matn (emoji) — C3.2+ da haqiqiy SVG detal bilan almashtirilishi mumkin.
-  if (stage === 4) {
-    const emoji = (type === 'mosque') ? '\u{1F54C}' : '\u{1F3E0}';  // 🕌 / 🏠
-    svg += `<text class="city-bld-emoji" x="${cx}" y="${cy - bh - h + 2}" `
-         + `text-anchor="middle" dominant-baseline="middle">${emoji}</text>`;
-  }
+  // C3.1: barcha stage'lar belgisiz toza kub (oq clay estetikasi — referensga mos).
+  // Bino TURINI farqlash C3.2 da o'ziga xos SHAKL/proporsiya bilan bo'ladi (matn emas).
+  // Bino NOMI / odat ma'lumoti C5 da — bino bosilganda modal ochiladi.
   svg += `</g>`;
   return svg;
 }
