@@ -41,9 +41,10 @@ function cityIsoY(x, y) {
 const CITY_STAGE_THRESHOLDS = [13, 26, 39, 52, 66];
 
 // Bino vizual o'lchamlari (izometrik kub) — Qoida #17 magic number markazlash
-// Kub asosi katak romb kengligidan ozgina kichik (binolar orasida bo'shliq qoladi).
-const CITY_BLD_BASE_W = 60;   // kub asos kengligi (px) — CITY_TILE_W=80 dan kichik
-const CITY_BLD_BASE_H = 30;   // kub asos balandligi (px) — 2:1 nisbat saqlanadi
+// Kub asosi katak romb o'lchamiga yaqin — binolar katakka "o'tirib" turadi
+// (referens: oq 3D city — binolar katakni to'liq egallaydi, suzmaydi).
+const CITY_BLD_BASE_W = 76;   // kub asos kengligi (px) — CITY_TILE_W=80 ga yaqin
+const CITY_BLD_BASE_H = 38;   // kub asos balandligi (px) — CITY_TILE_H=40 ga yaqin (2:1)
 // Stage bo'yicha kub balandligi (vertikal — px). Stage 0 past poydevor, 4 to'liq.
 const CITY_BLD_HEIGHTS = [14, 34, 58, 84, 84];  // stage 0..4 balandlik
 
@@ -51,13 +52,14 @@ const CITY_BLD_HEIGHTS = [14, 34, 58, 84, 84];  // stage 0..4 balandlik
 // Backend formatida: buildings massivi. Har bino: {habit_id, type, x, y, progress}.
 // progress (0-66 kun) → cityBuildingStage() orqali stage'ga aylantiriladi.
 // Grid markazi 14-16 atrofida — auto-scroll shu yerni ko'rsatadi.
+// Joylashuv: har xil depth (x+y) — overlap aniq ko'rinishi uchun (chalkashlik yo'q).
 const _cityDemoData = {
   buildings: [
-    { habit_id: "demo1", type: "house",  x: 14, y: 14, progress: 5  },  // stage 0
-    { habit_id: "demo2", type: "house",  x: 16, y: 15, progress: 33 },  // stage 2
-    { habit_id: "demo3", type: "mosque", x: 13, y: 16, progress: 48 },  // stage 3
-    { habit_id: "demo4", type: "mosque", x: 15, y: 13, progress: 66 },  // stage 4
-    { habit_id: "demo5", type: "house",  x: 17, y: 17, progress: 20 },  // stage 1
+    { habit_id: "demo1", type: "house",  x: 13, y: 13, progress: 5  },  // stage 0, depth 26
+    { habit_id: "demo2", type: "mosque", x: 16, y: 13, progress: 66 },  // stage 4, depth 29
+    { habit_id: "demo3", type: "house",  x: 14, y: 16, progress: 20 },  // stage 1, depth 30
+    { habit_id: "demo4", type: "mosque", x: 17, y: 15, progress: 48 },  // stage 3, depth 32
+    { habit_id: "demo5", type: "house",  x: 15, y: 18, progress: 33 },  // stage 2, depth 33
   ],
 };
 
@@ -198,11 +200,17 @@ function cityBuildingSVG(type, stage, cx, cy) {
 // ── Barcha binolarni render qilish (painter's algorithm) ──
 // buildings: [{habit_id, type, x, y, progress}, ...]
 // MUHIM: orqadagi binolar AVVAL chiziladi — old binolar ularni qisman to'sadi.
-// Saralash kaliti: (x + y) — izometric "chuqurlik" (kichik = orqada/tepada).
+// Birlamchi kalit: (x + y) — izometric "chuqurlik" (kichik = orqada/tepada).
+// Ikkilamchi kalit: x — depth teng bo'lsa, kichik x orqada (chap-orqa),
+//   katta x oldinda (o'ng-old) chiziladi (izometric proyeksiya mantig'i).
 function renderCityBuildings(buildings) {
   if (!Array.isArray(buildings) || buildings.length === 0) return '';
   // Nusxa ustida sort (asl massivga tegmaymiz — Qoida #13 shared state)
-  const sorted = buildings.slice().sort((a, b) => (a.x + a.y) - (b.x + b.y));
+  const sorted = buildings.slice().sort((a, b) => {
+    const depthDiff = (a.x + a.y) - (b.x + b.y);
+    if (depthDiff !== 0) return depthDiff;
+    return a.x - b.x;  // depth teng → kichik x avval (orqada)
+  });
   let html = '';
   for (const b of sorted) {
     const stage = cityBuildingStage(b.progress);
