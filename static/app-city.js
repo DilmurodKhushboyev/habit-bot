@@ -1,22 +1,24 @@
 // ==============================================
-// app-city.js — Shahar sahifasi (PHASE C3.1: grid + demo binolar)
+// app-city.js — Shahar sahifasi (PHASE C3.2: grid + demo binolar)
 // ==============================================
 // Bog'liqlik:
-//   - strings.js (S() funksiya — tarjima; C3.1 da ishlatilmaydi, C7 da kerak)
+//   - app-city-buildings.js (bino render: cityBuildingStage, cityBuildingSVG,
+//     renderCityBuildings — index.html da BU fayldan KEYIN yuklanadi)
+//   - strings.js (S() funksiya — tarjima; hozir ishlatilmaydi, C7 da kerak)
 //   - app-core.js (loaded state — sahifa yuklanganini belgilash)
 //   - config.py BUILDING_STAGE_THRESHOLDS bilan SINXRON (Qoida #11)
 //
 // PHASE C2.1: 30×30 = 900 katak isometric grid (statik, scroll bilan).
 // PHASE C2.2/C2.3 (pan/zoom): YAGNI sababli o'tkazib yuborilgan.
-// PHASE C3.1: demo binolar (2 tur — house/mosque, 5 stage), monoxrom oq clay
-//             render uslubi (3 yuzli izometrik kublar, soya bilan hajm).
+// PHASE C3.1: demo binolar (5 stage), monoxrom oq clay render uslubi.
+// PHASE C3.2: shakl-asosida bino turlari — bino mantiqi app-city-buildings.js ga
+//             ajratildi (Qoida #24 — fayl 300 qatordan oshmasligi uchun).
 //             API YO'Q (C4 da demo data → GET /api/city/<uid> bilan almashtiriladi).
-// PHASE C3.2+ da qolgan 8 bino + dekoratsiyalar qo'shiladi.
 // ==============================================
 
 // ── ISOMETRIC GRID KONSTANTLARI (Qoida #17 — magic number'larni markazlash) ──
 // Klassik 2:1 isometric nisbat — eng keng tarqalgan va eng tabiiy ko'rinish.
-// C2.3 (zoom) bularni dinamik o'zgartiradi, hozircha static.
+// Bu konstantalar app-city-buildings.js da ham ishlatiladi (global scope).
 const CITY_GRID_SIZE = 30;        // 30×30 = 900 katak (C2.1: 20→30 ga kengaytirildi)
 const CITY_TILE_W    = 80;        // Romb kenglik (px)
 const CITY_TILE_H    = 40;        // Romb balandlik (px) — 2:1 nisbat
@@ -53,13 +55,16 @@ const CITY_BLD_HEIGHTS = [14, 34, 58, 84, 84];  // stage 0..4 balandlik
 // progress (0-66 kun) → cityBuildingStage() orqali stage'ga aylantiriladi.
 // Grid markazi 14-16 atrofida — auto-scroll shu yerni ko'rsatadi.
 // Joylashuv: har xil depth (x+y) — overlap aniq ko'rinishi uchun (chalkashlik yo'q).
+// C3.2 TEST: 3 ta bino turi — house (standart), mosque (ingichka+gumbaz),
+//   stadium (keng+yapaloq). Har biri turli stage'da — shakl + stage farqi ko'rinadi.
 const _cityDemoData = {
   buildings: [
-    { habit_id: "demo1", type: "house",  x: 13, y: 13, progress: 5  },  // stage 0, depth 26
-    { habit_id: "demo2", type: "mosque", x: 16, y: 13, progress: 66 },  // stage 4, depth 29
-    { habit_id: "demo3", type: "house",  x: 14, y: 16, progress: 20 },  // stage 1, depth 30
-    { habit_id: "demo4", type: "mosque", x: 17, y: 15, progress: 48 },  // stage 3, depth 32
-    { habit_id: "demo5", type: "house",  x: 15, y: 18, progress: 33 },  // stage 2, depth 33
+    { habit_id: "demo1", type: "house",   x: 13, y: 13, progress: 20 },  // stage 1, depth 26
+    { habit_id: "demo2", type: "mosque",  x: 16, y: 13, progress: 66 },  // stage 4, depth 29
+    { habit_id: "demo3", type: "stadium", x: 14, y: 16, progress: 48 },  // stage 3, depth 30
+    { habit_id: "demo4", type: "mosque",  x: 17, y: 15, progress: 33 },  // stage 2, depth 32
+    { habit_id: "demo5", type: "house",   x: 15, y: 18, progress: 66 },  // stage 4, depth 33
+    { habit_id: "demo6", type: "stadium", x: 12, y: 16, progress: 66 },  // stage 4, depth 28
   ],
 };
 
@@ -138,90 +143,18 @@ function renderCityGrid(container) {
 }
 
 // ════════════════════════════════════════════════
-//  PHASE C3.1 — BINOLAR (demo data, monoxrom oq clay render)
+//  BINOLAR — app-city-buildings.js ga AJRATILGAN (Qoida #24)
 // ════════════════════════════════════════════════
-
-// ── progress (kun) → stage (0-4) ──
-// config.py BUILDING_STAGE_THRESHOLDS bilan SINXRON (Qoida #11).
-// progress <= 13 → stage 0, <= 26 → 1, <= 39 → 2, <= 52 → 3, qolgani → 4.
-function cityBuildingStage(progress) {
-  const p = Math.max(0, Math.min(CITY_STAGE_THRESHOLDS[4], progress || 0));
-  for (let s = 0; s < CITY_STAGE_THRESHOLDS.length; s++) {
-    if (p <= CITY_STAGE_THRESHOLDS[s]) return s;
-  }
-  return 4;  // xavfsizlik fallback (p > 66 bo'lsa ham)
-}
-
-// ── Bitta bino SVG'si (izometrik kub, 3 yuz: tepa + chap + o'ng) ──
-// type: bino turi (config.py BUILDING_TYPES kaliti — C3.1 da house/mosque)
-// stage: 0-4 (cityBuildingStage natijasi)
-// cx, cy: katak rombning MARKAZIY nuqtasi (cityIsoX/cityIsoY + romb markazi)
-// Qaytaradi: <g> ichida polygonlar (tepa/chap/o'ng yuz) — monoxrom oq, soya bilan hajm.
-function cityBuildingSVG(type, stage, cx, cy) {
-  const h  = CITY_BLD_HEIGHTS[stage];           // kub vertikal balandligi
-  const bw = CITY_BLD_BASE_W / 2;               // asos yarim kengligi
-  const bh = CITY_BLD_BASE_H / 2;               // asos yarim balandligi
-  // Kub asosining 4 cho'qqisi (izometrik romb), cx/cy — pastki markaz:
-  //   top (orqa), right (o'ng), bottom (old), left (chap)
-  const baseTop    = `${cx},${cy - bh}`;
-  const baseRight  = `${cx + bw},${cy}`;
-  const baseBottom = `${cx},${cy + bh}`;
-  const baseLeft   = `${cx - bw},${cy}`;
-  // Kub TEPA yuzi cho'qqilari (asos cho'qqilari h ga ko'tarilgan):
-  const upTop    = `${cx},${cy - bh - h}`;
-  const upRight  = `${cx + bw},${cy - h}`;
-  const upBottom = `${cx},${cy + bh - h}`;
-  const upLeft   = `${cx - bw},${cy - h}`;
-
-  // 3 yuz polygonlari:
-  //   - top: eng yorug' (upTop, upRight, upBottom, upLeft)
-  //   - left yuz (old-chap, o'rta soya): baseLeft, baseBottom, upBottom, upLeft
-  //   - right yuz (old-o'ng, eng quyuq soya): baseBottom, baseRight, upRight, upBottom
-  const topFace   = `${upTop} ${upRight} ${upBottom} ${upLeft}`;
-  const leftFace  = `${baseLeft} ${baseBottom} ${upBottom} ${upLeft}`;
-  const rightFace = `${baseBottom} ${baseRight} ${upRight} ${upBottom}`;
-
-  let svg = `<g class="city-bld" data-type="${type}" data-stage="${stage}">`;
-  svg += `<polygon class="city-bld-left"  points="${leftFace}"/>`;
-  svg += `<polygon class="city-bld-right" points="${rightFace}"/>`;
-  svg += `<polygon class="city-bld-top"   points="${topFace}"/>`;
-  // C3.1: barcha stage'lar belgisiz toza kub (oq clay estetikasi — referensga mos).
-  // Bino TURINI farqlash C3.2 da o'ziga xos SHAKL/proporsiya bilan bo'ladi (matn emas).
-  // Bino NOMI / odat ma'lumoti C5 da — bino bosilganda modal ochiladi.
-  svg += `</g>`;
-  return svg;
-}
-
-// ── Barcha binolarni render qilish (painter's algorithm) ──
-// buildings: [{habit_id, type, x, y, progress}, ...]
-// MUHIM: orqadagi binolar AVVAL chiziladi — old binolar ularni qisman to'sadi.
-// Birlamchi kalit: (x + y) — izometric "chuqurlik" (kichik = orqada/tepada).
-// Ikkilamchi kalit: x — depth teng bo'lsa, kichik x orqada (chap-orqa),
-//   katta x oldinda (o'ng-old) chiziladi (izometric proyeksiya mantig'i).
-function renderCityBuildings(buildings) {
-  if (!Array.isArray(buildings) || buildings.length === 0) return '';
-  // Nusxa ustida sort (asl massivga tegmaymiz — Qoida #13 shared state)
-  const sorted = buildings.slice().sort((a, b) => {
-    const depthDiff = (a.x + a.y) - (b.x + b.y);
-    if (depthDiff !== 0) return depthDiff;
-    return a.x - b.x;  // depth teng → kichik x avval (orqada)
-  });
-  let html = '';
-  for (const b of sorted) {
-    const stage = cityBuildingStage(b.progress);
-    // Katak rombning markaziy nuqtasi: cityIsoX/Y top cho'qqini beradi,
-    // markazga yetish uchun +CITY_TILE_H/2 (romb vertikal markazi).
-    const cx = cityIsoX(b.x, b.y);
-    const cy = cityIsoY(b.x, b.y) + CITY_TILE_H / 2;
-    html += cityBuildingSVG(b.type, stage, cx, cy);
-  }
-  return html;
-}
+// cityBuildingStage(), cityBuildingSVG(), renderCityBuildings() va bino shakl
+// konfiguratsiyalari app-city-buildings.js da. Bu fayl ulardan FAQAT renderCityGrid
+// ichida foydalanadi (yuqorida `renderCityBuildings(_cityDemoData.buildings)`).
+// index.html da app-city-buildings.js shu fayldan KEYIN yuklanadi — chunki u shu
+// yerdagi konstantalarga (CITY_TILE_H, CITY_BLD_*, cityIsoX/Y) bog'liq.
 
 // ── Eslatma kelajakdagi bosqichlar uchun ──
 // PHASE C2.2/C2.3: touch pan/zoom — YAGNI sababli o'tkazib yuborilgan
-// PHASE C3.1: ✅ demo binolar (house/mosque, 5 stage, oq clay render) — SHU YERDA
-// PHASE C3.2: qolgan 8 bino turi (stadium/library/school/park/cafe/bank/hospital/studio)
+// PHASE C3.1: ✅ demo binolar (5 stage, oq clay render)
+// PHASE C3.2: ✅ shakl-asosida bino turlari (app-city-buildings.js) — SHU YERDA
 // PHASE C3.3: 5 dekoratsiya (tree/flower/car/bench/fountain)
 // PHASE C3.4: premium CSS polish (soyalar, 3D effekt finetune)
 // PHASE C4:   loadCityFromAPI() — GET /api/city/<uid> (_cityDemoData ni almashtiradi)
