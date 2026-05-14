@@ -15,8 +15,8 @@
 //             faqat stage bo'yicha balandlik o'zgaradi. Bino mantiqi
 //             app-city-buildings.js da (Qoida #24). Demo data — binolar orasida
 //             2 katak masofa.
-// PHASE C3.3: 5 dekoratsiya (tree/flower/car/bench/fountain) — kichik, stage yo'q,
-//             bozordan keladi. Render app-city-buildings.js da.
+// PHASE C3.3: dekoratsiyalar — KEYINGA QOLDIRILDI (kichik izometrik primitivlar
+//             tanib bo'lmaydigan shakl berdi). _cityDemoData.decorations bo'sh massiv.
 //             API YO'Q (C4 da GET /api/city/<uid> bilan almashtiriladi).
 // ==============================================
 
@@ -77,16 +77,10 @@ const _cityDemoData = {
     { habit_id: "demo7", type: "park",    x: 12, y: 18, progress: 48 }, // stage 3
     { habit_id: "demo8", type: "studio",  x: 15, y: 18, progress: 33 }, // stage 2
   ],
-  // Dekoratsiyalar — binolar orasidagi BO'SH kataklarda (binolar x/y: 12,15,18).
-  // Dekoratsiyada stage YO'Q — doim bir xil ko'rinadi (bozordan sotib olinadi).
-  // 5 tur namuna: tree, flower, car, bench, fountain.
-  decorations: [
-    { type: "tree",     x: 13, y: 13, placed_at: "2026-05-14" },
-    { type: "flower",   x: 16, y: 13, placed_at: "2026-05-14" },
-    { type: "car",      x: 13, y: 16, placed_at: "2026-05-14" },
-    { type: "bench",    x: 17, y: 16, placed_at: "2026-05-14" },
-    { type: "fountain", x: 16, y: 17, placed_at: "2026-05-14" },
-  ],
+  // Dekoratsiyalar (tree/flower/car/bench/fountain) — C3.3 da KEYINGA QOLDIRILDI.
+  // Sabab: kichik izometrik primitivlar tanib bo'lmaydigan shakllar berdi.
+  // Kelajakda professional SVG ikonkalar bilan qilinadi. Backend tayyor turadi.
+  decorations: [],
 };
 
 // ── Asosiy yuklash funksiyasi (loadTab tomonidan chaqiriladi) ──
@@ -139,11 +133,6 @@ function renderCityGrid(container) {
   // C3.1 da demo data, C4 da API javobidan keladi.
   const buildingsHtml = renderCityBuildings(_cityDemoData.buildings);
 
-  // Dekoratsiyalar layer'i: binolardan KEYIN chiziladi (alohida painter qatlam).
-  // Dekoratsiyalar kichik — o'z katagida turadi, binolar bilan to'qnashmaydi
-  // (demo data'da bo'sh kataklarga joylashtirilgan).
-  const decorationsHtml = renderCityDecorations(_cityDemoData.decorations);
-
   container.innerHTML = `
     <div class="city-canvas-wrap">
       <svg class="city-canvas"
@@ -153,7 +142,6 @@ function renderCityGrid(container) {
            aria-label="City grid">
         ${tilesHtml}
         ${buildingsHtml}
-        ${decorationsHtml}
       </svg>
     </div>
   `;
