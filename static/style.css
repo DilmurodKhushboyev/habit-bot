@@ -3250,8 +3250,10 @@ body.dark .rem1-section-title-collapsible:active {
 /* ── CITY (Shahar) — PHASE C2.1 statik isometric grid ── */
 /* page-city: .page padding'ini bekor qilish (fon to'liq chetdan chetga) */
 #page-city { padding: 0; }
-/* Wrap: fixed konteyner — header va bottom-nav orasiga, mukammal diagonal scroll
-   (flex/min-height kombinatsiyasi mobil browser'larda scroll'ni buzadi — fixed bilan hal qilamiz) */
+/* Wrap: fixed konteyner — header va bottom-nav orasiga, drag-based pan (PHASE C2.2)
+   C2.1 dagi overflow:auto endi yo'q — JS pan transform orqali ishlaydi (app-city.js).
+   touch-action: none — browser default scroll/swipe butunlay bloklanadi
+   (Telegram WebApp swipe-down ham bloklanadi → shahar ichida oynani yopilmaydi). */
 .city-canvas-wrap {
   position: fixed;
   /* header balandligi: safe-top (status bar) + ~72px (padding + avatar 40 + margin 12) */
@@ -3260,12 +3262,8 @@ body.dark .rem1-section-title-collapsible:active {
   right: 0;
   /* bottom-nav balandligi: 72px + safe-bottom */
   bottom: calc(72px + var(--tg-safe-bottom, 0px));
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  /* Erkin diagonal scroll (Forest/Hay Day kabi) — ham X, ham Y bir vaqtda */
-  touch-action: pan-x pan-y;
-  /* Pull-to-refresh va bouncing'ni shu konteyner ichida saqlash */
-  overscroll-behavior: contain;
+  overflow: hidden;          /* C2.2: scroll yo'q, JS transform pan */
+  touch-action: none;        /* C2.2: barcha browser default gesture'lar bloklanadi */
   background: #F0F0F2;      /* light mode: asfalt-oq "yer" (Rasm 5 stili) */
   transition: background .25s ease;
 }
