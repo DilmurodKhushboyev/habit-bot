@@ -3295,3 +3295,29 @@ body.dark .city-tile {
 }
 body.dark .city-tile-a { fill: #28282C; }
 body.dark .city-tile-b { fill: #232327; }
+
+/* ── CITY BINOLAR — PHASE C3.1 (monoxrom oq clay render) ── */
+/* Izometrik kub 3 yuzli: top (yorug') + left (o'rta soya) + right (quyuq soya).
+   Rang yo'q — faqat oq + kulrang soya gradatsiyasi hajm yaratadi (referens: oq 3D city). */
+.city-bld { pointer-events: none; }  /* C5 da interaktiv bo'ladi */
+.city-bld polygon {
+  stroke: #DADADE;
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.city-bld-top   { fill: #FFFFFF; }   /* tepa yuz — eng yorug' */
+.city-bld-left  { fill: #ECECEF; }   /* chap yuz — o'rta soya */
+.city-bld-right { fill: #DEDEE3; }   /* o'ng yuz — eng quyuq soya */
+/* Stage 4 complete: bino emoji belgisi tepa yuzda */
+.city-bld-emoji {
+  font-size: 18px;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Dark mode — chuqur kulrang clay */
+body.dark .city-bld polygon { stroke: #3A3A40; }
+body.dark .city-bld-top   { fill: #3C3C42; }
+body.dark .city-bld-left  { fill: #313137; }
+body.dark .city-bld-right { fill: #2A2A30; }
