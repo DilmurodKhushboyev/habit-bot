@@ -3299,17 +3299,26 @@ body.dark .city-tile-b { fill: #232327; }
 /* ── CITY BINOLAR — PHASE C3.1 (monoxrom oq clay render) ── */
 /* Izometrik kub 3 yuzli: top (yorug') + left (o'rta soya) + right (quyuq soya).
    Rang yo'q — faqat oq + kulrang soya gradatsiyasi hajm yaratadi (referens: oq 3D city). */
-.city-bld { pointer-events: none; }  /* C5 da interaktiv bo'ladi */
+.city-bld {
+  pointer-events: none;  /* C5 da interaktiv bo'ladi */
+  /* C3.4 polish: yumshoq soya — bino gridga "o'tirib" turadi, suzmaydi.
+     drop-shadow butun <g> ga — 8 bino, performance muammosi yo'q. */
+  filter: drop-shadow(2px 4px 5px rgba(40, 40, 50, 0.14));
+}
 .city-bld polygon {
-  stroke: #DADADE;
+  stroke: #D4D4DA;        /* C3.4: ozgina quyuqroq — qirralar aniqroq */
   stroke-width: 1;
   stroke-linejoin: round;
 }
-.city-bld-top   { fill: #FFFFFF; }   /* tepa yuz — eng yorug' */
-.city-bld-left  { fill: #ECECEF; }   /* chap yuz — o'rta soya */
-.city-bld-right { fill: #DEDEE3; }   /* o'ng yuz — eng quyuq soya */
+/* C3.4: yuz kontrasti biroz kuchaytirildi — 3D hajm yaqqolroq seziladi */
+.city-bld-top   { fill: #FFFFFF; }   /* tepa yuz — eng yorug' (o'zgarmadi) */
+.city-bld-left  { fill: #E8E8EC; }   /* chap yuz — o'rta soya (ECECEF → E8E8EC) */
+.city-bld-right { fill: #D6D6DC; }   /* o'ng yuz — eng quyuq soya (DEDEE3 → D6D6DC) */
 
 /* Dark mode — chuqur kulrang clay */
+body.dark .city-bld {
+  filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.45));  /* dark: quyuqroq soya */
+}
 body.dark .city-bld polygon { stroke: #3A3A40; }
 body.dark .city-bld-top   { fill: #3C3C42; }
 body.dark .city-bld-left  { fill: #313137; }
