@@ -6,9 +6,10 @@
 //     CITY_STAGE_THRESHOLDS, cityIsoX/cityIsoY — shu fayldan import qilinadi)
 //   - config.py BUILDING_TYPES (10 bino turi) va BUILDING_STAGE_THRESHOLDS bilan SINXRON
 //
-// VAZIFA: har bino turi o'ziga xos SHAKL/proporsiya bilan farqlanadi (matn/emoji yo'q,
-//   oq clay estetikasi saqlanadi). C3.2 da 3 ta test bino: house/mosque/stadium.
-//   C3.2 davomi: qolgan 7 tur (library/school/park/cafe/bank/hospital/studio).
+// VAZIFA: har bino turi o'ziga xos SHAKL + CAP elementi bilan farqlanadi (matn/emoji
+//   yo'q, oq clay estetikasi saqlanadi). Cap turlari: roof (qiya tom), pyramid (uchli
+//   gumbaz), corners (kub o'zi — keng/past proporsiya). C3.2 GURUH 1: house/mosque/stadium.
+//   Guruh 2-3: qolgan 7 tur (library/school/park/cafe/bank/hospital/studio).
 //
 // MUHIM (Qoida #24): bu fayl app-city.js dan AJRATILGAN — app-city.js 300 qatordan
 //   oshmasligi uchun. index.html da app-city.js dan KEYIN yuklanadi (konstantalar
@@ -20,15 +21,20 @@
 //   heightMul (balandlik koeffitsienti), cap (tepa qo'shimcha element turi).
 // Qiymatlar app-city.js dagi CITY_BLD_BASE_W/H va CITY_BLD_HEIGHTS ga ko'paytiriladi.
 //   widthMul=1.0 → standart kenglik, heightMul=1.0 → standart balandlik.
-// cap turlari: 'none' (qo'shimcha yo'q), 'dome' (gumbaz — mosque), kelajakda ko'payadi.
+// cap turlari (cityCapSVG funksiyasida chiziladi):
+//   'none'    — qo'shimcha element yo'q (faqat kub)
+//   'roof'    — qiya tom (uchburchak prizma) — house, studio
+//   'pyramid' — uchli gumbaz (piramida) — mosque
+//   'corners' — kub o'zi yetarli, qirralar kesilgan taassurot — stadium
 // Qoida #17 — magic number'lar shu yerda markazlashgan.
+// C3.2 GURUH 1: house, mosque, stadium. Guruh 2-3 keyingi tahrirlarda qo'shiladi.
 const CITY_BLD_SHAPES = {
-  // house: standart kub — barcha koeffitsient 1.0, qo'shimcha element yo'q
-  house:   { widthMul: 1.0,  heightMul: 1.0,  cap: 'none' },
-  // mosque: ingichka + baland + ustida gumbaz blok
-  mosque:  { widthMul: 0.72, heightMul: 1.25, cap: 'dome' },
-  // stadium: keng + past + yapaloq (oval taassurot)
-  stadium: { widthMul: 1.35, heightMul: 0.5,  cap: 'none' },
+  // house: standart kub + qiya tom (eng tanish uy silüeti)
+  house:   { widthMul: 1.0,  heightMul: 0.85, cap: 'roof' },
+  // mosque: KENG asos + o'rta balandlik + uchli gumbaz (minora emas, masjid silüeti)
+  mosque:  { widthMul: 1.05, heightMul: 0.7,  cap: 'pyramid' },
+  // stadium: JUDA keng + JUDA past + yapaloq (oval stadion taassurot)
+  stadium: { widthMul: 1.4,  heightMul: 0.32, cap: 'corners' },
 };
 // Fallback shakl — noma'lum tur kelsa (eski data yoki xato) standart kub ishlatiladi.
 const CITY_BLD_SHAPE_DEFAULT = { widthMul: 1.0, heightMul: 1.0, cap: 'none' };
@@ -65,6 +71,58 @@ function cityCubeFaces(cx, cy, bw, bh, h) {
   };
 }
 
+// ── Cap (tepa qo'shimcha element) SVG'si ──
+// capType: 'roof' | 'pyramid' | 'corners' | 'none'
+// cx, cy: ASOSIY kub pastki markazi. bw/bh: asosiy kub asos yarim o'lchamlari.
+// topY: asosiy kub tepa yuzi balandligi (cy - h) — cap shu ustiga quriladi.
+// Qaytaradi: cap polygonlari (yuzlar bir xil city-bld-* klasslar bilan — oq clay).
+// Har cap turi izometrik proyeksiyada to'g'ri ko'rinishi uchun alohida hisoblanadi.
+function cityCapSVG(capType, cx, cy, bw, bh, topY) {
+  if (capType === 'roof') {
+    // Qiya tom: kub tepa rombi ustida "tizzali" tom (ridge).
+    // Ridge — old-orqa diagonali (tTop↔tBottom) bo'ylab, lekin TEPAGA ko'tarilgan.
+    // Izometrikda to'g'ri ko'rinishi uchun: ridge ikki uchi tTop va tBottom
+    //   nuqtalaridan vertikal ravishda ridgeH ga ko'tariladi.
+    const ridgeH = bh * 1.6;  // tom balandligi (asos yarim balandligiga bog'liq)
+    // Kub tepa romb cho'qqilari (topY balandlikda):
+    const tTop    = `${cx},${topY - bh}`;       // orqa cho'qqi
+    const tRight  = `${cx + bw},${topY}`;       // o'ng cho'qqi
+    const tBottom = `${cx},${topY + bh}`;       // old cho'qqi
+    const tLeft   = `${cx - bw},${topY}`;       // chap cho'qqi
+    // Ridge ikki uchi: tTop va tBottom ustidan ridgeH balandlikda.
+    // Ikkalasi ham o'z nuqtasidan TIK yuqoriga ko'tariladi → ridge old-orqa
+    //   yo'nalishida, izometrikda tabiiy qiya tom ko'rinadi.
+    const ridgeBack  = `${cx},${topY - bh - ridgeH}`;  // tTop ustida
+    const ridgeFront = `${cx},${topY + bh - ridgeH}`;  // tBottom ustida
+    // Tom 2 ko'rinadigan yuzi:
+    //   chap nishab: tLeft → tBottom → ridgeFront → ridgeBack → tTop → tLeft
+    //   (chap tomon to'liq trapetsiya — tLeft va tTop orqali)
+    const roofLeft  = `${tLeft} ${tTop} ${ridgeBack} ${ridgeFront} ${tBottom}`;
+    const roofRight = `${tBottom} ${ridgeFront} ${ridgeBack} ${tTop} ${tRight}`;
+    let s = `<polygon class="city-bld-left"  points="${roofLeft}"/>`;
+    s += `<polygon class="city-bld-right" points="${roofRight}"/>`;
+    return s;
+  }
+  if (capType === 'pyramid') {
+    // Uchli gumbaz: kub tepa rombidan markazga ko'tarilgan piramida (4 yuz, 2 ko'rinadi).
+    const pyrH = bh * 2.0;  // piramida balandligi
+    const tTop    = `${cx},${topY - bh}`;
+    const tRight  = `${cx + bw},${topY}`;
+    const tBottom = `${cx},${topY + bh}`;
+    const tLeft   = `${cx - bw},${topY}`;
+    const apex    = `${cx},${topY - pyrH}`;  // piramida cho'qqisi
+    // 2 ko'rinadigan yuz: chap (tLeft-tBottom-apex), o'ng (tBottom-tRight-apex)
+    const pyrLeft  = `${tLeft} ${tBottom} ${apex}`;
+    const pyrRight = `${tBottom} ${tRight} ${apex}`;
+    let s = `<polygon class="city-bld-left"  points="${pyrLeft}"/>`;
+    s += `<polygon class="city-bld-right" points="${pyrRight}"/>`;
+    return s;
+  }
+  // 'corners' va 'none' — qo'shimcha element yo'q (kub o'zi yetarli).
+  // stadium 'corners' — keng+past proporsiya o'zi oval taassurot beradi.
+  return '';
+}
+
 // ── Bitta bino SVG'si (izometrik kub, 3 yuz: tepa + chap + o'ng) ──
 // type: bino turi (config.py BUILDING_TYPES kaliti)
 // stage: 0-4 (cityBuildingStage natijasi)
@@ -87,17 +145,11 @@ function cityBuildingSVG(type, stage, cx, cy) {
   svg += `<polygon class="city-bld-top"   points="${faces.topFace}"/>`;
 
   // ── Tepa qo'shimcha element (cap) ──
-  // Faqat stage >= 2 (devorlar ko'tarilgandan keyin) ko'rinadi — qurilish mantiqiy.
-  if (shape.cap === 'dome' && stage >= 2) {
-    // Gumbaz: asosiy kub ustida kichik kub (mosque uchun).
-    // Kichik kub markazi: asosiy kub TEPA markazi (cy - h).
-    const domeBw = bw * 0.5;
-    const domeBh = bh * 0.5;
-    const domeH  = bh * 1.1;  // gumbaz balandligi asos balandligiga bog'liq
-    const domeFaces = cityCubeFaces(cx, cy - h, domeBw, domeBh, domeH);
-    svg += `<polygon class="city-bld-left"  points="${domeFaces.leftFace}"/>`;
-    svg += `<polygon class="city-bld-right" points="${domeFaces.rightFace}"/>`;
-    svg += `<polygon class="city-bld-top"   points="${domeFaces.topFace}"/>`;
+  // Faqat stage >= 2 (devorlar ko'tarilgandan keyin) ko'rinadi — qurilish mantiqiy
+  // (stage 0-1: poydevor/skelet — tom/gumbaz hali qo'yilmagan).
+  if (shape.cap !== 'none' && stage >= 2) {
+    const topY = cy - h;  // asosiy kub tepa yuzi balandligi — cap shu ustiga quriladi
+    svg += cityCapSVG(shape.cap, cx, cy, bw, bh, topY);
   }
 
   svg += `</g>`;
@@ -131,8 +183,10 @@ function renderCityBuildings(buildings) {
 }
 
 // ── Eslatma kelajakdagi bosqichlar uchun ──
-// PHASE C3.2 (hozir): 3 test bino — house/mosque/stadium. Yoqsa qolgan 7 tur qo'shiladi.
-// PHASE C3.2 davomi: library/school/park/cafe/bank/hospital/studio shakllari
+// PHASE C3.2 GURUH 1 (hozir): house (qiya tom) / mosque (uchli gumbaz) /
+//   stadium (keng+past oval). Yoqsa Guruh 2-3 qo'shiladi.
+// PHASE C3.2 GURUH 2: library/school/bank/hospital (jamoat binolari)
+// PHASE C3.2 GURUH 3: park/cafe/studio (kichik binolar)
 // PHASE C3.3: 5 dekoratsiya (tree/flower/car/bench/fountain) — alohida funksiya
 // PHASE C3.4: premium CSS polish (soyalar, 3D effekt finetune)
 // PHASE C5:   bino bosish — data-type/data-stage atributlari modal uchun tayyor
