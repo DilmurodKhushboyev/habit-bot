@@ -55,16 +55,19 @@ const CITY_BLD_HEIGHTS = [14, 34, 58, 84, 84];  // stage 0..4 balandlik
 // progress (0-66 kun) → cityBuildingStage() orqali stage'ga aylantiriladi.
 // Grid markazi 14-16 atrofida — auto-scroll shu yerni ko'rsatadi.
 // Joylashuv: har xil depth (x+y) — overlap aniq ko'rinishi uchun (chalkashlik yo'q).
-// C3.2 TEST: 3 ta bino turi — house (standart), mosque (ingichka+gumbaz),
-//   stadium (keng+yapaloq). Har biri turli stage'da — shakl + stage farqi ko'rinadi.
+// C3.2: 10 bino turidan namuna — har xil o'lcham profili + har xil stage ko'rinadi.
 const _cityDemoData = {
   buildings: [
-    { habit_id: "demo1", type: "house",   x: 13, y: 13, progress: 20 },  // stage 1, depth 26
-    { habit_id: "demo2", type: "mosque",  x: 16, y: 13, progress: 66 },  // stage 4, depth 29
-    { habit_id: "demo3", type: "stadium", x: 14, y: 16, progress: 48 },  // stage 3, depth 30
-    { habit_id: "demo4", type: "mosque",  x: 17, y: 15, progress: 33 },  // stage 2, depth 32
-    { habit_id: "demo5", type: "house",   x: 15, y: 18, progress: 66 },  // stage 4, depth 33
-    { habit_id: "demo6", type: "stadium", x: 12, y: 16, progress: 66 },  // stage 4, depth 28
+    { habit_id: "demo1",  type: "mosque",   x: 13, y: 13, progress: 66 }, // depth 26, monumental
+    { habit_id: "demo2",  type: "stadium",  x: 15, y: 12, progress: 66 }, // depth 27, keng+past
+    { habit_id: "demo3",  type: "house",    x: 14, y: 14, progress: 48 }, // depth 28, standart
+    { habit_id: "demo4",  type: "library",  x: 16, y: 13, progress: 66 }, // depth 29, jamoat
+    { habit_id: "demo5",  type: "park",     x: 14, y: 16, progress: 66 }, // depth 30, keng+past
+    { habit_id: "demo6",  type: "bank",     x: 17, y: 14, progress: 33 }, // depth 31, monumental
+    { habit_id: "demo7",  type: "cafe",     x: 15, y: 17, progress: 66 }, // depth 32, kichik
+    { habit_id: "demo8",  type: "school",   x: 18, y: 15, progress: 20 }, // depth 33, jamoat
+    { habit_id: "demo9",  type: "hospital", x: 16, y: 18, progress: 66 }, // depth 34, jamoat
+    { habit_id: "demo10", type: "studio",   x: 19, y: 16, progress: 5  }, // depth 35, standart
   ],
 };
 

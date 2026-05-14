@@ -6,10 +6,10 @@
 //     CITY_STAGE_THRESHOLDS, cityIsoX/cityIsoY — shu fayldan import qilinadi)
 //   - config.py BUILDING_TYPES (10 bino turi) va BUILDING_STAGE_THRESHOLDS bilan SINXRON
 //
-// VAZIFA: har bino turi o'ziga xos SHAKL + CAP elementi bilan farqlanadi (matn/emoji
-//   yo'q, oq clay estetikasi saqlanadi). Cap turlari: roof (qiya tom), pyramid (uchli
-//   gumbaz), corners (kub o'zi — keng/past proporsiya). C3.2 GURUH 1: house/mosque/stadium.
-//   Guruh 2-3: qolgan 7 tur (library/school/park/cafe/bank/hospital/studio).
+// VAZIFA: har bino turi BIR XIL toza kub uslubida — faqat O'LCHAM (widthMul/heightMul)
+//   bilan farqlanadi. Murakkab cap (gumbaz/tom) olib tashlandi — estetik bir butunlik
+//   + texnik soddalik + diqqat STAGE'da. Bino TURINI bilish C5 da modal orqali.
+//   cityCapSVG funksiyasi kodda saqlanadi (kelajakda qayta yoqish uchun).
 //
 // MUHIM (Qoida #24): bu fayl app-city.js dan AJRATILGAN — app-city.js 300 qatordan
 //   oshmasligi uchun. index.html da app-city.js dan KEYIN yuklanadi (konstantalar
@@ -17,24 +17,33 @@
 // ==============================================
 
 // ── BINO SHAKL KONFIGURATSIYASI ──
-// Har bino turi uchun: widthMul (asos kenglik koeffitsienti),
-//   heightMul (balandlik koeffitsienti), cap (tepa qo'shimcha element turi).
-// Qiymatlar app-city.js dagi CITY_BLD_BASE_W/H va CITY_BLD_HEIGHTS ga ko'paytiriladi.
-//   widthMul=1.0 → standart kenglik, heightMul=1.0 → standart balandlik.
-// cap turlari (cityCapSVG funksiyasida chiziladi):
-//   'none'    — qo'shimcha element yo'q (faqat kub)
-//   'roof'    — qiya tom (uchburchak prizma) — house, studio
-//   'pyramid' — uchli gumbaz (piramida) — mosque
-//   'corners' — kub o'zi yetarli, qirralar kesilgan taassurot — stadium
+// QAROR (C3.2): binolar BIR XIL toza kub uslubida — faqat O'LCHAM bilan farqlanadi.
+//   Murakkab cap (gumbaz/tom/xoch) OLIB TASHLANDI — sabab: (1) estetik bir butunlik
+//   (referens oq city kabi toza), (2) texnik soddalik (1 funksiya, kam xato),
+//   (3) foydalanuvchi diqqati STAGE/progress'da bo'lishi kerak (habit tracker mantig'i).
+//   Bino TURINI aniq bilish C5 da — bino bosilganda modal (nom, emoji, progress).
+//
+// Har bino turi uchun: widthMul (asos kenglik koeff.), heightMul (balandlik koeff.).
+//   Qiymatlar app-city.js dagi CITY_BLD_BASE_W/H va CITY_BLD_HEIGHTS ga ko'paytiriladi.
+//   widthMul=1.0 → standart, heightMul=1.0 → standart.
+// cap maydoni saqlanadi (hammasi 'none') — cityCapSVG funksiyasi kodda qoladi,
+//   kelajakda (masalan C8 polish) xohlansa qayta yoqish oson.
 // Qoida #17 — magic number'lar shu yerda markazlashgan.
-// C3.2 GURUH 1: house, mosque, stadium. Guruh 2-3 keyingi tahrirlarda qo'shiladi.
 const CITY_BLD_SHAPES = {
-  // house: standart kub + qiya tom (eng tanish uy silüeti)
-  house:   { widthMul: 1.0,  heightMul: 0.85, cap: 'roof' },
-  // mosque: KENG asos + o'rta balandlik + uchli gumbaz (minora emas, masjid silüeti)
-  mosque:  { widthMul: 1.05, heightMul: 0.7,  cap: 'pyramid' },
-  // stadium: JUDA keng + JUDA past + yapaloq (oval stadion taassurot)
-  stadium: { widthMul: 1.4,  heightMul: 0.32, cap: 'corners' },
+  // Monumental: baland + biroz ingichka
+  mosque:   { widthMul: 0.92, heightMul: 1.15, cap: 'none' },
+  bank:     { widthMul: 0.92, heightMul: 1.15, cap: 'none' },
+  // Keng + past: yer egallaydi
+  stadium:  { widthMul: 1.35, heightMul: 0.55, cap: 'none' },
+  park:     { widthMul: 1.30, heightMul: 0.45, cap: 'none' },
+  // Jamoat binosi: biroz keng + o'rta balandlik
+  library:  { widthMul: 1.12, heightMul: 0.9,  cap: 'none' },
+  school:   { widthMul: 1.12, heightMul: 0.9,  cap: 'none' },
+  hospital: { widthMul: 1.12, heightMul: 0.95, cap: 'none' },
+  // Standart kub
+  house:    { widthMul: 1.0,  heightMul: 1.0,  cap: 'none' },
+  cafe:     { widthMul: 0.9,  heightMul: 0.8,  cap: 'none' },
+  studio:   { widthMul: 1.0,  heightMul: 1.0,  cap: 'none' },
 };
 // Fallback shakl — noma'lum tur kelsa (eski data yoki xato) standart kub ishlatiladi.
 const CITY_BLD_SHAPE_DEFAULT = { widthMul: 1.0, heightMul: 1.0, cap: 'none' };
@@ -145,8 +154,10 @@ function cityBuildingSVG(type, stage, cx, cy) {
   svg += `<polygon class="city-bld-top"   points="${faces.topFace}"/>`;
 
   // ── Tepa qo'shimcha element (cap) ──
-  // Faqat stage >= 2 (devorlar ko'tarilgandan keyin) ko'rinadi — qurilish mantiqiy
-  // (stage 0-1: poydevor/skelet — tom/gumbaz hali qo'yilmagan).
+  // C3.2 QARORI: barcha bino 'none' — cap chizilmaydi (toza kub uslubi).
+  // Bu shart va cityCapSVG funksiyasi KODDA QOLADI — kelajakda (masalan C8 polish)
+  // biror bino turiga cap qo'shilsa, faqat CITY_BLD_SHAPES da cap qiymatini
+  // o'zgartirish kifoya (qolgan mantiq tayyor).
   if (shape.cap !== 'none' && stage >= 2) {
     const topY = cy - h;  // asosiy kub tepa yuzi balandligi — cap shu ustiga quriladi
     svg += cityCapSVG(shape.cap, cx, cy, bw, bh, topY);
@@ -183,10 +194,10 @@ function renderCityBuildings(buildings) {
 }
 
 // ── Eslatma kelajakdagi bosqichlar uchun ──
-// PHASE C3.2 GURUH 1 (hozir): house (qiya tom) / mosque (uchli gumbaz) /
-//   stadium (keng+past oval). Yoqsa Guruh 2-3 qo'shiladi.
-// PHASE C3.2 GURUH 2: library/school/bank/hospital (jamoat binolari)
-// PHASE C3.2 GURUH 3: park/cafe/studio (kichik binolar)
+// PHASE C3.2: ✅ 10 bino turi — bir xil toza kub, o'lcham bilan farqlanadi (cap yo'q)
 // PHASE C3.3: 5 dekoratsiya (tree/flower/car/bench/fountain) — alohida funksiya
 // PHASE C3.4: premium CSS polish (soyalar, 3D effekt finetune)
 // PHASE C5:   bino bosish — data-type/data-stage atributlari modal uchun tayyor
+//             (modal'da bino turi nomi, emoji, progress ko'rsatiladi)
+// Kelajak (ixtiyoriy): cityCapSVG kodda — biror bino turiga cap qaytarilsa,
+//   CITY_BLD_SHAPES da cap qiymatini o'zgartirish kifoya.
