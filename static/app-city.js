@@ -11,9 +11,10 @@
 // PHASE C2.1: 30×30 = 900 katak isometric grid (statik, scroll bilan).
 // PHASE C2.2/C2.3 (pan/zoom): YAGNI sababli o'tkazib yuborilgan.
 // PHASE C3.1: demo binolar (5 stage), monoxrom oq clay render uslubi.
-// PHASE C3.2: shakl-asosida bino turlari — bino mantiqi app-city-buildings.js ga
-//             ajratildi (Qoida #24 — fayl 300 qatordan oshmasligi uchun).
-//             API YO'Q (C4 da demo data → GET /api/city/<uid> bilan almashtiriladi).
+// PHASE C3.2: 10 bino turi — barchasi BIR XIL standart kub (o'lcham/shakl farqi yo'q),
+//             faqat stage bo'yicha balandlik o'zgaradi. Bino mantiqi
+//             app-city-buildings.js da (Qoida #24). Demo data — binolar orasida
+//             2 katak masofa. API YO'Q (C4 da GET /api/city/<uid> bilan almashtiriladi).
 // ==============================================
 
 // ── ISOMETRIC GRID KONSTANTLARI (Qoida #17 — magic number'larni markazlash) ──
@@ -54,20 +55,24 @@ const CITY_BLD_HEIGHTS = [14, 34, 58, 84, 84];  // stage 0..4 balandlik
 // Backend formatida: buildings massivi. Har bino: {habit_id, type, x, y, progress}.
 // progress (0-66 kun) → cityBuildingStage() orqali stage'ga aylantiriladi.
 // Grid markazi 14-16 atrofida — auto-scroll shu yerni ko'rsatadi.
-// Joylashuv: har xil depth (x+y) — overlap aniq ko'rinishi uchun (chalkashlik yo'q).
-// C3.2: 10 bino turidan namuna — har xil o'lcham profili + har xil stage ko'rinadi.
+//
+// JOYLASHUV QOIDASI: binolar orasida kamida 2 katak masofa — har bino aniq
+//   ko'rinadi, bir-birini to'smaydi. Bu C5 (bino siljitish) uchun ham asos:
+//   o'yinlarda bino atrofida bo'sh joy bo'lishi kerak. Hozir bu demo data'da
+//   qo'lda; backend find_empty_slot bu qoidani majburlashi — alohida bosqich.
+//
+// Binolar 3 katak qadam bilan joylashgan (x va y bo'yicha) — orasida 2 bo'sh katak.
+// Har xil stage — qurilish bosqichlari ko'rinadi.
 const _cityDemoData = {
   buildings: [
-    { habit_id: "demo1",  type: "mosque",   x: 13, y: 13, progress: 66 }, // depth 26, monumental
-    { habit_id: "demo2",  type: "stadium",  x: 15, y: 12, progress: 66 }, // depth 27, keng+past
-    { habit_id: "demo3",  type: "house",    x: 14, y: 14, progress: 48 }, // depth 28, standart
-    { habit_id: "demo4",  type: "library",  x: 16, y: 13, progress: 66 }, // depth 29, jamoat
-    { habit_id: "demo5",  type: "park",     x: 14, y: 16, progress: 66 }, // depth 30, keng+past
-    { habit_id: "demo6",  type: "bank",     x: 17, y: 14, progress: 33 }, // depth 31, monumental
-    { habit_id: "demo7",  type: "cafe",     x: 15, y: 17, progress: 66 }, // depth 32, kichik
-    { habit_id: "demo8",  type: "school",   x: 18, y: 15, progress: 20 }, // depth 33, jamoat
-    { habit_id: "demo9",  type: "hospital", x: 16, y: 18, progress: 66 }, // depth 34, jamoat
-    { habit_id: "demo10", type: "studio",   x: 19, y: 16, progress: 5  }, // depth 35, standart
+    { habit_id: "demo1", type: "mosque",  x: 12, y: 12, progress: 66 }, // stage 4
+    { habit_id: "demo2", type: "house",   x: 15, y: 12, progress: 48 }, // stage 3
+    { habit_id: "demo3", type: "library", x: 18, y: 12, progress: 33 }, // stage 2
+    { habit_id: "demo4", type: "school",  x: 12, y: 15, progress: 20 }, // stage 1
+    { habit_id: "demo5", type: "bank",    x: 15, y: 15, progress: 5  }, // stage 0
+    { habit_id: "demo6", type: "cafe",    x: 18, y: 15, progress: 66 }, // stage 4
+    { habit_id: "demo7", type: "park",    x: 12, y: 18, progress: 48 }, // stage 3
+    { habit_id: "demo8", type: "studio",  x: 15, y: 18, progress: 33 }, // stage 2
   ],
 };
 
