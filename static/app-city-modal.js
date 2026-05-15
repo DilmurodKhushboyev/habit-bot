@@ -136,12 +136,14 @@ function _renderCityModalBody(building) {
   const stageName = S('city', CITY_STAGE_NAME_KEYS[stage] || CITY_STAGE_NAME_KEYS[0]);
   const pct = Math.round(progress / CITY_BUILDING_DAYS * 100);
 
-  // 10 turli grid — joriy tur .selected klassi bilan belgilanadi
+  // 10 turli grid — joriy tur .selected klassi bilan belgilanadi.
+  // data-type — cityChangeType muvaffaqiyatdan keyin .selected ni ko'chirish uchun o'qiydi.
   let gridHtml = '';
   for (const t of CITY_BUILDING_TYPES) {
     const isCur = t.type === building.type;
     gridHtml += `
       <button class="city-type-btn${isCur ? ' selected' : ''}" type="button"
+              data-type="${t.type}"
               onclick="cityChangeType('${_cityEscHtml(building.habit_id)}','${t.type}')">
         <span class="city-type-emoji">${t.emoji}</span>
         <span class="city-type-name">${S('city', t.name)}</span>
@@ -183,23 +185,32 @@ function closeCityBuildingModal() {
 
 // ── Bino turini o'zgartirish (change_type) ──
 // POST /api/city/<uid>/change_type body {habit_id, building_type}.
-// Backend tayyor (flask_routes_city.py — progress saqlanadi, faqat tur o'zgaradi).
-// Muvaffaqiyatda: modal yopiladi + loadCity() qayta chaqiriladi (grid yangi
-// turdagi bino bilan re-render bo'ladi — _cityData ham yangilanadi).
+// Backend tayyor (flask_routes_city.py — javob: {ok, building_type, progress}).
+//
+// MUHIM (C5 FIX): barcha bino BIR XIL oq kub (C3.2 qarori) — turi o'zgarsa ham
+//   grid'dagi kub VIZUAL O'ZGARMAYDI (faqat data-type atributi). Shuning uchun
+//   foydalanuvchi o'zgarishni faqat MODAL ichida ko'radi. Yechim: muvaffaqiyatdan
+//   keyin modal'dagi .selected klassi yangi tugmaga ko'chiriladi (darhol ko'rinadi,
+//   showToast bor-yo'qligiga bog'liq emas). _cityData ham lokal yangilanadi.
 async function cityChangeType(habitId, newType) {
   if (_cityModalLock) return;  // change_type davom etyapti — ikkinchi bosish bekor
 
-  // Joriy tur tanlangan bo'lsa — o'zgartirishga hojat yo'q, faqat yopamiz
+  // Joriy bino _cityData keshidan topiladi
+  let building = null;
   if (_cityData && Array.isArray(_cityData.buildings)) {
     for (const b of _cityData.buildings) {
-      if (String(b.habit_id) === String(habitId) && b.type === newType) {
-        closeCityBuildingModal();
-        return;
-      }
+      if (String(b.habit_id) === String(habitId)) { building = b; break; }
     }
   }
+  // Joriy tur tanlangan bo'lsa — o'zgartirishga hojat yo'q (API ham chaqirilmaydi)
+  if (building && building.type === newType) return;
 
   _cityModalLock = true;
+  // Bosilgan tugmaga "kutilmoqda" holati (visual feedback — showToast'ga bog'liq emas)
+  const overlay = document.getElementById('city-bld-modal');
+  const grid = overlay ? overlay.querySelector('.city-type-grid') : null;
+  if (grid) grid.classList.add('city-type-grid-loading');
+
   try {
     const res = await apiFetch('city/' + userId + '/change_type', {
       method: 'POST',
@@ -207,16 +218,37 @@ async function cityChangeType(habitId, newType) {
       body: JSON.stringify({ habit_id: habitId, building_type: newType }),
     });
     if (!res || !res.ok) throw new Error('change_type_failed');
-    // Muvaffaqiyat — modal yopiladi, grid qayta yuklanadi (loadCity _cityData ni
-    //   ham yangilaydi, renderCityGrid yangi data-type bilan re-render qiladi)
-    closeCityBuildingModal();
+
+    // Muvaffaqiyat — backend javobidagi building_type ni ishonchli manba deb olamiz
+    const confirmedType = res.building_type || newType;
+    // 1) _cityData keshini lokal yangilash (qayta GET'siz ham to'g'ri qoladi)
+    if (building) building.type = confirmedType;
+    // 2) Modal'dagi .selected klassini yangi tugmaga ko'chirish — DARHOL ko'rinadi
+    if (grid) {
+      const btns = grid.querySelectorAll('.city-type-btn');
+      btns.forEach(function (btn) {
+        const isSel = btn.getAttribute('data-type') === confirmedType;
+        btn.classList.toggle('selected', isSel);
+      });
+    }
+    // 3) Toast (agar showToast global bo'lsa) — ikkilamchi feedback
     if (typeof showToast === 'function') showToast(S('city', 'type_changed'));
-    await loadCity();
+    // 4) Grid'ni qayta yuklash — data-type atributi yangilanadi (vizual bir xil
+    //    bo'lsa-da, keyingi bosishlar to'g'ri turdan boshlanadi). loadCity _cityData
+    //    ni ham qayta to'ldiradi — lekin biz allaqachon lokal yangiladik (yuqorida).
+    if (typeof loadCity === 'function') await loadCity();
   } catch (e) {
-    // Xato — modal ochiq qoladi, foydalanuvchi qayta urinishi mumkin
-    if (typeof showToast === 'function') showToast(S('msg', 'connection_error'), true);
+    // Xato — modal ochiq qoladi. showToast bor bo'lsa toast, bo'lmasa grid silkinadi.
+    if (typeof showToast === 'function') {
+      showToast(S('msg', 'connection_error'), true);
+    } else if (grid) {
+      // Fallback feedback: grid qisqa "silkinish" animatsiyasi (showToast yo'q bo'lsa)
+      grid.classList.add('city-type-grid-error');
+      setTimeout(function () { grid.classList.remove('city-type-grid-error'); }, 500);
+    }
   } finally {
     _cityModalLock = false;
+    if (grid) grid.classList.remove('city-type-grid-loading');
   }
 }
 

@@ -3431,3 +3431,20 @@ body.dark .city-bld-right { fill: #2A2A30; }
 body.dark .city-type-btn.selected {
   background: linear-gradient(135deg, rgba(76,175,125,.22), rgba(45,138,94,.14));
 }
+
+/* C5 FIX: change_type davom etayotganida grid "kutilmoqda" holati —
+   bosishlarni bloklaydi + yarim shaffof (showToast bor-yo'qligiga bog'liq emas) */
+.city-type-grid-loading {
+  pointer-events: none;
+  opacity: .55;
+  transition: opacity .15s ease;
+}
+/* C5 FIX: showToast global bo'lmasa — xato holatda grid qisqa silkinadi */
+.city-type-grid-error {
+  animation: cityGridShake .4s ease;
+}
+@keyframes cityGridShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
