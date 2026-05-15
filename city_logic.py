@@ -60,18 +60,21 @@ def _occupied_set(city):
             occupied.add((x, y))
     return occupied
 
-def find_empty_slot(udata):
+def find_empty_slot(udata, gap=True):
     """Markazga ENG YAQIN bo'sh katakni topadi → (x, y) tuple yoki None.
     None qaytarsa — shahar to'la.
 
-    MANTIQ (A varianti — markazga yig'ish): avval random katak tanlanardi,
-    natijada binolar 30x30 grid bo'ylab tarqoq joylashardi (foydalanuvchi
-    faqat 1-2 tasini ko'rardi). Endi markazdan (CITY_GRID_SIZE//2) boshlab
-    halqama-halqa (ring) tashqariga qarab birinchi bo'sh katak qidiriladi —
-    shahar markazda jipslashib, tashqariga "o'sib boradi" (Hay Day/SimCity hissi).
+    gap=True (default): topilgan katakning 8 qo'shnisi (yuqori/past/chap/o'ng
+       + 4 diagonal) ham band bo'lmasligi kerak — binolar orasida bo'sh joy
+       qoladi (Hay Day/SimCity hissi). Agar bunday katak topilmasa — gap=False
+       rejimida qayta qidiriladi (fallback, shahar siqilganda).
+    gap=False: har qanday bo'sh katak qabul qilinadi (qo'shni cheklovsiz).
 
-    Deterministik: bir xil shahar holatida har doim bir xil natija
-    (eski random xulqdan farqi — barqaror, oldindan aytib bo'ladigan joylashuv).
+    MANTIQ (markazga yig'ish): markazdan (CITY_GRID_SIZE//2) boshlab
+    halqama-halqa (ring) tashqariga qarab birinchi mos katak qidiriladi —
+    shahar markazda jipslashib, tashqariga "o'sib boradi".
+
+    Deterministik: bir xil shahar holatida har doim bir xil natija.
     """
     city = get_user_city(udata)
     occupied = _occupied_set(city)
@@ -82,13 +85,27 @@ def find_empty_slot(udata):
     cx = CITY_GRID_SIZE // 2  # markaz x (30 grid → 15)
     cy = CITY_GRID_SIZE // 2  # markaz y
 
-    # Markaz katagi bo'sh bo'lsa — darhol qaytaramiz (1-bino aynan markazga)
-    if (cx, cy) not in occupied:
-        return (cx, cy)
+    def _has_gap(x, y):
+        """8 qo'shni katak bo'shmi? (grid chetidagi yo'q-katak ham "bo'sh" deb hisoblanadi)"""
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                if dx == 0 and dy == 0:
+                    continue
+                nx, ny = x + dx, y + dy
+                # Grid tashqarisi — "bo'sh" (chetdagi binoga chap/yuqori xalaqit bermaydi)
+                if not (0 <= nx < CITY_GRID_SIZE and 0 <= ny < CITY_GRID_SIZE):
+                    continue
+                if (nx, ny) in occupied:
+                    return False
+        return True
 
-    # Markaz band — halqama-halqa tashqariga qarab qidiramiz.
+    # Markaz katagi bo'sh va (gap shart bo'lsa) qo'shnilar ham bo'sh bo'lsa — markazga
+    if (cx, cy) not in occupied:
+        if not gap or _has_gap(cx, cy):
+            return (cx, cy)
+
+    # Markaz band yoki gap shartiga mos kelmadi — halqama tashqariga qidiramiz.
     # radius=1,2,3,... har halqaning chekka kataklarini tekshiramiz.
-    # Maksimal radius: markazdan grid chetigacha bo'lgan eng katta masofa.
     max_radius = CITY_GRID_SIZE  # xavfsiz yuqori chegara (butun grid qamrab olinadi)
     for radius in range(1, max_radius + 1):
         ring = []
@@ -100,75 +117,108 @@ def find_empty_slot(udata):
         for y in range(cy - radius + 1, cy + radius):
             ring.append((cx - radius, y))
             ring.append((cx + radius, y))
-        # Halqadagi bo'sh va grid ichidagi birinchi katakni topamiz.
-        # sorted — deterministik tartib (radius teng kataklar orasida barqarorlik).
+        # Halqadagi mos katakni topamiz. sorted — deterministik tartib.
         for (x, y) in sorted(ring):
-            if 0 <= x < CITY_GRID_SIZE and 0 <= y < CITY_GRID_SIZE:
-                if (x, y) not in occupied:
-                    return (x, y)
+            if not (0 <= x < CITY_GRID_SIZE and 0 <= y < CITY_GRID_SIZE):
+                continue
+            if (x, y) in occupied:
+                continue
+            if gap and not _has_gap(x, y):
+                continue
+            return (x, y)
+
+    # gap=True rejimida hech narsa topilmadi — fallback: qattiq qoidasiz qaytadan
+    # (shahar siqilganda baribir bino joylashishi kerak).
+    if gap:
+        return find_empty_slot(udata, gap=False)
 
     return None  # mantiqan bu yerga yetib kelmaydi (occupied < total tekshirilgan)
 
 
+# Migration versiyasi — har "compact mantig'i" o'zgarganda OSHIRILADI.
+# `city.compact_version` < bu raqam bo'lsa, compact_buildings_to_center qayta ishlaydi.
+# v1: markazga yig'ish (oldingi version, marker `compacted=True` edi).
+# v2: gap qoidasi (binolar orasida bo'sh katak). Pinned binolar hurmat qilinadi.
+COMPACT_VERSION = 2
+
+
 def compact_buildings_to_center(udata):
-    """Eski tarqoq binolarni markazga yig'adi (bir martalik migration).
+    """Tarqoq yoki siqilgan binolarni markazga "gap" qoidasi bilan qayta yig'adi.
 
-    SABAB (Qoida #21): eski `find_empty_slot` 30×30 grid bo'ylab tasodifiy
-    katak tanlardi → binolar tarqoq joylashardi va foydalanuvchi faqat 1-2
-    tasini ko'rardi. Yangi `find_empty_slot` markazdan-tashqariga halqama
-    ishlaydi, lekin u faqat YANGI binolar uchun. Eski binolarni ham markazga
-    yig'ish uchun bir martalik migration kerak.
+    SABAB (Qoida #21):
+    - v1 migration random joylashuvni markazga yig'di, lekin binolar BIRGA yopishib
+      qolardi (orasida bo'sh joy yo'q).
+    - v2 migration: `find_empty_slot(gap=True)` — har bino atrofida 1 katak bo'sh
+      joy qoladi (Hay Day/SimCity hissi).
 
-    MANTIQ:
-    1) Barcha binolarni vaqtincha "olib qo'yamiz" (eski x,y unutiladi).
-    2) Eng katta progress'dan boshlab qayta joylashtiramiz — markazga eng
-       yaqin bo'sh katakdan boshlab (find_empty_slot mantig'i). Sabab:
-       muhimroq (oldinroq qurilgan) binolar markazga yaqin tursin.
-    3) `city["compacted"] = True` markeri — keyingi safar qayta ishlamaydi
-       (idempotent).
+    PINNED BINOLAR (long-press move uchun kelajak asos):
+    - `b["pinned"] = True` bo'lgan binolar TEGILMAYDI — foydalanuvchi qo'lda
+      ko'chirgan joy saqlanib qoladi (yangi safar sahifa ochilganda yoki kelgusi
+      migration'larda ham). Ular `occupied` set'iga ham qo'shiladi —
+      `find_empty_slot` ularga teginmaydi va atrofiga joylashtirmaydi (gap).
+    - Pinned bo'lmagan (default: hech bir bino) qayta joylashtiriladi.
 
-    Dekoratsiyalar TEGILMAYDI (Qoida #1 — faqat bino muammosi so'ralgan,
-    dekoratsiyalar hozir render ham qilinmaydi). Agar dekoratsiya binoning
-    eski koordinatasida bo'lsa, u joyida qoladi (kelajakda alohida hal qilinadi).
+    VERSIYALANGAN (idempotent + qayta migratsiyaga ochiq):
+    - `city.compact_version >= COMPACT_VERSION` bo'lsa — chiqib ketadi (ish yo'q).
+    - Mantiq o'zgarsa — COMPACT_VERSION oshiriladi → barcha user'larda bir marta
+      qayta ishlaydi.
 
-    Qaytaradi: True — migration bajarildi, False — kerak emas edi
-    (compacted=True yoki bino yo'q). Chaqiruvchi save_user'ni o'zi chaqiradi.
+    Dekoratsiyalar TEGILMAYDI (Qoida #1, hozircha render qilinmaydi).
+
+    Qaytaradi: True — migration bajarildi, False — kerak emas edi.
+    Chaqiruvchi save_user'ni o'zi chaqiradi.
     """
     city = get_user_city(udata)
-    # Allaqachon yig'ilgan bo'lsa — qayta ishlamaymiz (idempotent)
-    if city.get("compacted"):
+    # Versiya allaqachon yangi bo'lsa — ish yo'q (eski "compacted=True" markerini
+    # ham hurmat qilamiz: u v1 bilan teng. v2 ga o'tish uchun versiyani tekshiramiz.)
+    current_version = city.get("compact_version", 1 if city.get("compacted") else 0)
+    if current_version >= COMPACT_VERSION:
         return False
+
     buildings = city.get("buildings") or []
     if not buildings:
-        # Hech qanday bino yo'q — markerni qo'yamiz va chiqamiz (kelajakka qadar)
+        # Bino yo'q — versiyani yangilab chiqib ketamiz
+        city["compact_version"] = COMPACT_VERSION
+        # Eski marker — qoldirish zarari yo'q (allaqachon DB'da bo'lishi mumkin)
         city["compacted"] = True
         return False
 
-    # 1) Eski koordinatalarni "olib qo'yish" — `_occupied_set` endi
-    #    faqat dekoratsiyalardan iborat bo'ladi (binolar koordinatasi
-    #    o'chirilgani uchun _occupied_set ularni ko'rmaydi).
-    #    Sort: katta progress avval (markazga yaqin tursin), keyin habit_id
-    #    (deterministik tartib teng progress'lar uchun).
-    sorted_buildings = sorted(
-        buildings,
+    # Pinned va pinned bo'lmagan binolarni ajratamiz
+    pinned = [b for b in buildings if b.get("pinned")]
+    movable = [b for b in buildings if not b.get("pinned")]
+
+    if not movable:
+        # Hammasi pinned — hech narsa qilmaymiz, versiyani yangilaymiz
+        city["compact_version"] = COMPACT_VERSION
+        city["compacted"] = True
+        return False
+
+    # 1) Movable binolarning x,y ni tozalaymiz — `_occupied_set` ularni ko'rmaydi.
+    #    Pinned binolar va dekoratsiyalar `occupied` ichida qoladi → find_empty_slot
+    #    ularni hurmat qiladi (gap qoidasi ham ularga nisbatan ishlaydi).
+    #    Sort: katta progress avval (markazga yaqin tursin), keyin habit_id (deterministik).
+    movable_sorted = sorted(
+        movable,
         key=lambda b: (-(b.get("progress") or 0), str(b.get("habit_id", ""))),
     )
-    for b in sorted_buildings:
+    for b in movable_sorted:
         b.pop("x", None)
         b.pop("y", None)
 
-    # 2) Qayta joylashtirish: find_empty_slot markazdan-tashqariga ishlaydi
-    for b in sorted_buildings:
+    # 2) Qayta joylashtirish: find_empty_slot gap=True (default) → orasida bo'sh joy.
+    #    Topilmasa avtomatik gap=False fallback (find_empty_slot ichida).
+    for b in movable_sorted:
         slot = find_empty_slot(udata)
         if slot is None:
-            # Shahar to'la — qolgan binolar joysiz qoladi. Mantiqan bu yerga
-            # yetib kelmaydi (900 katak, max ~10 bino), lekin xavfsizlik uchun.
-            # Bunday holatda bino ma'lumotini buzmaymiz — keyingi safarga.
+            # Shahar to'la — qolgan binolar joysiz qoladi (mantiqan bu yerga yetib
+            # kelmaydi: 30×30=900 katak, max 10 bino). Bino ma'lumotini buzmaymiz.
+            city["compact_version"] = COMPACT_VERSION
             city["compacted"] = True
             return True
         b["x"], b["y"] = slot
 
-    city["compacted"] = True
+    city["compact_version"] = COMPACT_VERSION
+    city["compacted"] = True  # eski marker — qolaversin (eski kod o'qisa ham buzilmaydi)
     return True
 
 
@@ -420,6 +470,18 @@ def move_item(udata, item_id, new_x, new_y):
     Yangi pozitsiya band bo'lsa — False qaytariladi (frontend'da
     foydalanuvchi boshqa joy tanlashi kerak).
 
+    PINNED (foydalanuvchi qo'lda joylashtirgan): bino muvaffaqiyatli ko'chirilsa
+    `pinned=True` qo'yiladi. Bu kelajakdagi compact_buildings_to_center yoki
+    auto-rearrange mantiqlariga signal: bu joy foydalanuvchi tomonidan qasdan
+    qo'yilgan, tegmang. (Dekoratsiyalar uchun ham xuddi shu mantiq.)
+
+    ⚠️ KELAJAK BOSQICH ESLATMASI (long-press): bu funksiya `item_id` ni
+    `b.get("id")` orqali qidiradi, lekin frontend `data-habit-id` atributini
+    ishlatadi va boshqa endpoint'lar (change_type, delete_building_for_habit)
+    `habit_id` orqali topadi. Long-press frontend ulanishida bu nomuvofiqlikni
+    hal qilish kerak (id vs habit_id). Hozir mantiq buzilmaydi — chunki
+    move_item hech qayerdan chaqirilmaydi (long-press hali yo'q).
+
     Qaytaradi: True (success) / False (band yoki topilmadi / koord noto'g'ri).
     """
     if not _is_valid_coord(new_x, new_y):
@@ -444,7 +506,10 @@ def move_item(udata, item_id, new_x, new_y):
 
     cur_x, cur_y = target.get("x"), target.get("y")
     if cur_x == new_x and cur_y == new_y:
-        return True  # bir xil joy — hech nima qilmaymiz, success
+        # Bir xil joy — koord o'zgarmadi, lekin foydalanuvchi qasdan tegdi
+        # → pinned belgisi baribir qo'yiladi (compact tegmasligi uchun).
+        target["pinned"] = True
+        return True
 
     # Yangi joy band emasmi? (o'zining hozirgi joyi mustasno)
     occupied.discard((cur_x, cur_y))
@@ -453,6 +518,7 @@ def move_item(udata, item_id, new_x, new_y):
 
     target["x"] = int(new_x)
     target["y"] = int(new_y)
+    target["pinned"] = True  # foydalanuvchi qo'lda joylashtirdi — compact tegmasin
     return True
 
 # ============================================================
