@@ -3359,9 +3359,10 @@ body.dark .city-bld-right { fill: #2A2A30; }
    touch-action: none — drag faol bo'lganda native scroll bilan to'qnashmasin
    (lekin biz JS'da preventDefault qilamiz — bu CSS belt-and-suspenders) */
 .city-bld-pressing {
-  opacity: 0.92;
-  transform: translateY(-1px);
-  transition: opacity .15s ease, transform .15s ease;
+  /* SVG <g> ga transform qo'shish filter:drop-shadow bilan to'qnashib qaltirashga
+     olib keladi. Faqat opacity bilan "bosildi" his'i berisha yetarli. */
+  opacity: 0.85;
+  transition: opacity .15s ease;
 }
 .city-bld-dragging {
   opacity: 0.45;  /* eski joyi xira — drag rejimi belgisi */

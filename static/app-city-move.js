@@ -84,20 +84,23 @@ function _cityMoveGhost(state, clientX, clientY) {
 }
 
 // ── ClientX/Y → grid (gx, gy) katak ──
-// Iso teskarisi: gx = ix/80 + iy/40, gy = iy/40 - ix/80
-// MUHIM: cityIsoY rombning YUQORI cho'qqisini beradi, markaz cy+TILE_H/2 da.
-// Buni hisobga olib iy dan TILE_H/2 ni ayiramiz (markazga nisbatan teskari).
+// DOM hit-testing yondashuvi: matematik teskari iso formula chegara
+// kataklarda noaniqlik beradi (4 katak orasida tushib qoladi). SVG polygon
+// hit-testing orqali kursor ostidagi haqiqiy .city-tile elementni topamiz —
+// SVG romb shaklini aniq biladi va kataklar orasidagi chegarani to'g'ri ajratadi.
+// .city-tile har polygon'da data-x va data-y atributlari bor (app-city.js).
+// Ghost o'rtada tursa elementFromPoint ghost'ni qaytaradi — uni pointer-events:none
+// bilan o'tkazib yuboramiz (CSS allaqachon shunday). Bino o'zi ham pointer-events:none
+// (.city-bld-dragging klassi orqali) — drag paytida tile'lar "ko'rinadi".
 function _cityClientToGrid(state, clientX, clientY) {
-  const pt = state.svg.createSVGPoint();
-  pt.x = clientX; pt.y = clientY;
-  const ctm = state.svg.getScreenCTM();
-  if (!ctm) return null;
-  const svgPt = pt.matrixTransform(ctm.inverse());
-  const ix = svgPt.x;
-  const iy = svgPt.y - CITY_TILE_H / 2;  // romb markaziga moslash
-  const gx = Math.round(ix / (CITY_TILE_W / 2) / 2 + iy / (CITY_TILE_H / 2) / 2);
-  const gy = Math.round(iy / (CITY_TILE_H / 2) / 2 - ix / (CITY_TILE_W / 2) / 2);
-  if (gx < 0 || gx >= CITY_GRID_SIZE || gy < 0 || gy >= CITY_GRID_SIZE) return null;
+  const el = document.elementFromPoint(clientX, clientY);
+  if (!el) return null;
+  // Kursor ostida .city-tile bormi? (boshqa element bo'lsa — null)
+  const tile = el.closest && el.closest('.city-tile');
+  if (!tile) return null;
+  const gx = parseInt(tile.getAttribute('data-x'), 10);
+  const gy = parseInt(tile.getAttribute('data-y'), 10);
+  if (!Number.isFinite(gx) || !Number.isFinite(gy)) return null;
   return { x: gx, y: gy };
 }
 
@@ -113,14 +116,15 @@ function _cityUpdateHighlight(state, target) {
     state.highlightRect.setAttribute('points', '');
     return;
   }
-  // Nishon katakning 4 cho'qqisi — app-city.js render mantiqi bilan bir xil
+  // Nishon katakning 4 cho'qqisi — app-city.js render mantiqi bilan AYNAN BIR XIL:
+  // top=(cx,cy), right=(cx+W/2,cy+H/2), bottom=(cx,cy+H), left=(cx-W/2,cy+H/2)
   const cx = cityIsoX(target.x, target.y);
   const cy = cityIsoY(target.x, target.y);
   const points = [
-    `${cx + CITY_TILE_W / 2},${cy}`,                  // top
-    `${cx + CITY_TILE_W},${cy + CITY_TILE_H / 2}`,    // right
-    `${cx + CITY_TILE_W / 2},${cy + CITY_TILE_H}`,    // bottom
-    `${cx},${cy + CITY_TILE_H / 2}`,                  // left
+    `${cx},${cy}`,                                     // top
+    `${cx + CITY_TILE_W / 2},${cy + CITY_TILE_H / 2}`, // right
+    `${cx},${cy + CITY_TILE_H}`,                       // bottom
+    `${cx - CITY_TILE_W / 2},${cy + CITY_TILE_H / 2}`, // left
   ].join(' ');
   state.highlightRect.setAttribute('points', points);
   // Band katakka qo'ymoqchi bo'lsa qizil, bo'sh bo'lsa yashil
