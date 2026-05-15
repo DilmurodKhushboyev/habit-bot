@@ -3300,7 +3300,7 @@ body.dark .city-tile-b { fill: #232327; }
 /* Izometrik kub 3 yuzli: top (yorug') + left (o'rta soya) + right (quyuq soya).
    Rang yo'q — faqat oq + kulrang soya gradatsiyasi hajm yaratadi (referens: oq 3D city). */
 .city-bld {
-  pointer-events: auto;  /* C5: bino bosiladi → app-city-modal.js click handler */
+  pointer-events: auto;  /* bino bilan interaktivlik (long-press → ko'chirish) uchun */
   cursor: pointer;
   /* C3.4 polish: yumshoq soya — bino gridga "o'tirib" turadi, suzmaydi.
      drop-shadow butun <g> ga — 8 bino, performance muammosi yo'q. */
@@ -3348,103 +3348,4 @@ body.dark .city-bld-right { fill: #2A2A30; }
 .city-error-btn:active {
   box-shadow: var(--sh-in);
   transform: scale(0.94);
-}
-
-/* ── CITY BINO BOSISH MODALI — PHASE C5 (change_type) ──
-   .shop-modal-overlay patternini qayta ishlatadi (fade/scale), lekin ichki
-   layout city'ga xos: emoji + nom + stage + progress bar + 10 turli grid.
-   Prefiks .city-modal-* / .city-type-* — §11 konflikt oldini olish. */
-.city-modal-box {
-  width: 90%; max-width: 360px;
-  text-align: center;
-  padding: 24px 20px 20px;
-  position: relative;     /* ✕ tugma absolute joylashuvi uchun */
-}
-.city-modal-close {
-  position: absolute; top: 12px; right: 12px;
-  width: 32px; height: 32px; border-radius: 50%;
-  border: none; cursor: pointer;
-  background: var(--bg); box-shadow: var(--sh-out);
-  color: var(--sub); font-size: 15px; line-height: 1;
-  display: flex; align-items: center; justify-content: center;
-  transition: box-shadow .15s ease, transform .15s ease;
-}
-.city-modal-close:active { box-shadow: var(--sh-in); transform: scale(.94); }
-.city-modal-emoji { font-size: 44px; line-height: 1; margin-bottom: 6px; }
-.city-modal-title {
-  font-size: 18px; font-weight: 800; color: var(--text);
-  letter-spacing: -.2px; margin-bottom: 3px;
-}
-.city-modal-stage {
-  font-size: 12px; font-weight: 600; color: var(--accent);
-  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 16px;
-}
-/* Progress bar — today JARAYON bar stilida (inset track + yashil gradient fill) */
-.city-modal-progress { margin-bottom: 18px; }
-.city-modal-progress-row {
-  display: flex; justify-content: space-between; align-items: baseline;
-  margin-bottom: 7px;
-}
-.city-modal-progress-days { font-size: 13px; font-weight: 600; color: var(--text); }
-.city-modal-progress-pct  { font-size: 12px; font-weight: 700; color: var(--accent); }
-.city-modal-progress-track {
-  height: 9px; border-radius: 999px;
-  background: var(--bg); box-shadow: var(--sh-in);
-  overflow: hidden;
-}
-.city-modal-progress-fill {
-  height: 100%; border-radius: 999px;
-  background: linear-gradient(90deg, var(--accent2), #66C893);
-  transition: width .4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-/* Bo'lim sarlavhasi — "Bino turini o'zgartirish" */
-.city-modal-section-label {
-  font-size: 11px; font-weight: 700; color: var(--sub);
-  text-transform: uppercase; letter-spacing: .5px;
-  text-align: left; margin-bottom: 10px;
-}
-/* 10 turli grid — 4 ustun, kompakt neumorphic tugmalar */
-.city-type-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-.city-type-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 9px 4px; border: none; cursor: pointer;
-  border-radius: 12px;
-  background: var(--bg); box-shadow: var(--sh-out);
-  transition: box-shadow .12s ease, transform .12s ease;
-}
-.city-type-btn:active { box-shadow: var(--sh-in); transform: scale(.95); }
-.city-type-btn.selected {
-  box-shadow: var(--sh-in);
-  background: linear-gradient(135deg, rgba(76,175,125,.16), rgba(45,138,94,.10));
-}
-.city-type-emoji { font-size: 20px; line-height: 1; }
-.city-type-name {
-  font-size: 9px; font-weight: 600; color: var(--sub);
-  line-height: 1.15; text-align: center;
-}
-.city-type-btn.selected .city-type-name { color: var(--accent); font-weight: 700; }
-
-/* Dark mode — selected holat kontrastini saqlash */
-body.dark .city-type-btn.selected {
-  background: linear-gradient(135deg, rgba(76,175,125,.22), rgba(45,138,94,.14));
-}
-
-/* C5 FIX: change_type davom etayotganida grid "kutilmoqda" holati —
-   bosishlarni bloklaydi + yarim shaffof (showToast bor-yo'qligiga bog'liq emas) */
-.city-type-grid-loading {
-  pointer-events: none;
-  opacity: .55;
-  transition: opacity .15s ease;
-}
-/* C5 FIX: showToast global bo'lmasa — xato holatda grid qisqa silkinadi */
-.city-type-grid-error {
-  animation: cityGridShake .4s ease;
-}
-@keyframes cityGridShake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-6px); }
-  40%, 80% { transform: translateX(6px); }
 }
