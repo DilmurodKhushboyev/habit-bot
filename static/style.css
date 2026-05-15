@@ -3362,13 +3362,13 @@ body.dark .city-bld-right { fill: #2A2A30; }
 .city-bld-ring {
   pointer-events: none;
   fill: none;
-  stroke: var(--accent2);
+  stroke: #2196F3;  /* MOVIY — bosildi, lekin drag hali boshlanmadi */
   stroke-width: 2;
   /* CSS-level "nafas oluvchi" pulse — JS animatsiya kerak emas */
   animation: cityRingPulse 1.2s ease-in-out infinite;
 }
 .city-bld-ring[data-active="1"] {
-  stroke: var(--accent);
+  stroke: var(--accent);  /* YASHIL — drag faol, sudraysiz */
   stroke-width: 3;
   animation: none;  /* drag faol — barqaror, pulse yo'q */
 }

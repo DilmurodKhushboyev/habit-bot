@@ -201,23 +201,43 @@ function _cityCancelPress(state) {
 }
 
 // ── Drag tugatish — API chaqirig'i yoki bekor qilish ──
+// FLASH YECHIM (Qoida #21): ghost'ni darhol o'chirib loadCity kutmaymiz —
+// bu eski joyda flash beradi. O'rniga ghost'ni nishon katak markaziga snap
+// qilamiz va shunday qoldiramiz. Asl bino visibility:hidden da turaveradi.
+// API muvaffaqiyatda loadCity butun DOM ni almashtiradi — ghost va asl bino
+// bir vaqtda ketadi, yangi bino aniq joyda paydo bo'ladi → foydalanuvchi
+// uzluksiz harakat ko'radi (flash yo'q).
+// Xato holatida (occupied yoki API xato): ghost olib tashlanadi, asl bino
+// visibility'dan chiqariladi — bino eski joyiga "qaytadi", toast chiqadi.
 async function _cityFinishDrag(state) {
-  // Ghost, halqa va highlight'ni olib tashlash; asl binoni qaytarish
-  if (state.ghost && state.ghost.parentNode) state.ghost.parentNode.removeChild(state.ghost);
+  // Halqa va highlight'ni darhol olib tashlaymiz — drag tugadi
   if (state.ring && state.ring.parentNode) state.ring.parentNode.removeChild(state.ring);
   if (state.highlightRect && state.highlightRect.parentNode) state.highlightRect.parentNode.removeChild(state.highlightRect);
-  state.gridG.classList.remove('city-bld-hidden');
 
   const target = state.targetX != null ? { x: state.targetX, y: state.targetY } : null;
-  // Hech qaerga qo'yilmadi yoki band joy → bekor (eski joyda qoladi)
-  if (!target) return;
+
+  // Bekor qilish funksiyasi (rollback): ghost o'chadi, asl bino qaytadi
+  function _cancelMove() {
+    if (state.ghost && state.ghost.parentNode) state.ghost.parentNode.removeChild(state.ghost);
+    state.gridG.classList.remove('city-bld-hidden');
+  }
+
+  // Hech qaerga qo'yilmadi → bekor (eski joyda qoladi, toast yo'q)
+  if (!target) { _cancelMove(); return; }
+  // Band joy → bekor + toast
   if (_cityIsOccupied(target.x, target.y, state.habitId)) {
+    _cancelMove();
     if (typeof showToast === 'function') showToast(S('city', 'move_failed'), true);
     return;
   }
-  // Eski joy bilan bir xil → server'ga chiqmasdan ham success (Qoida #14: API'ga
-  // ortiqcha so'rov yubormaymiz). Lekin pinned belgisi qo'yilishi uchun chaqiramiz.
-  // Backend move_item bir xil koordda ham pinned=True qo'yadi (city_logic.py).
+
+  // Ghost'ni nishon katak markaziga snap qilamiz (transform=translate delta).
+  // Original bino (building.x, building.y) dan target (target.x, target.y) gacha
+  // bo'lgan iso delta'ni hisoblaymiz va ghost transform'ini shu delta'ga o'rnatamiz.
+  // Ghost shu yerda qoladi to loadCity tugamaguncha (yoki rollback) — flash yo'q.
+  const dx = cityIsoX(target.x, target.y) - cityIsoX(state.building.x, state.building.y);
+  const dy = cityIsoY(target.x, target.y) - cityIsoY(state.building.x, state.building.y);
+  state.ghost.setAttribute('transform', `translate(${dx},${dy})`);
 
   if (state.lock) return;
   state.lock = true;
@@ -228,19 +248,21 @@ async function _cityFinishDrag(state) {
       body: JSON.stringify({ item_id: state.habitId, x: target.x, y: target.y }),
     });
     if (!res || !res.ok) throw new Error('move_failed');
-    // Lokal keshni yangilash (qayta loadCity'siz darhol to'g'ri ko'rinadi)
+    // Lokal keshni yangilash (loadCity uchun zarur emas, lekin _cityIsOccupied
+    // keyingi drag uchun darhol yangi joyni bilsin)
     if (state.building) {
       state.building.x = target.x;
       state.building.y = target.y;
       state.building.pinned = true;
     }
     if (typeof showToast === 'function') showToast(S('city', 'moved'));
-    // Grid'ni qayta yuklash — eski (cur_x, cur_y) bo'shadi, yangi pozitsiya
-    // to'g'ri ko'rinadi (lokal _cityData allaqachon yangilangan, lekin DOM eski).
+    // loadCity butun DOM ni almashtiradi — ghost va hidden bino bir vaqtda
+    // ketadi, yangi bino aniq joyda paydo bo'ladi (flash yo'q).
     if (typeof loadCity === 'function') await loadCity();
   } catch (e) {
+    // API xato — rollback: ghost olib tashlanadi, asl bino qaytadi, toast
+    _cancelMove();
     if (typeof showToast === 'function') showToast(S('city', 'move_failed'), true);
-    // loadCity chaqirmaymiz — eski joy DOM'da saqlanib qoladi (bekor qilish hissi)
   } finally {
     state.lock = false;
   }
