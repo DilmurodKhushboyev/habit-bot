@@ -475,12 +475,8 @@ def move_item(udata, item_id, new_x, new_y):
     auto-rearrange mantiqlariga signal: bu joy foydalanuvchi tomonidan qasdan
     qo'yilgan, tegmang. (Dekoratsiyalar uchun ham xuddi shu mantiq.)
 
-    ⚠️ KELAJAK BOSQICH ESLATMASI (long-press): bu funksiya `item_id` ni
-    `b.get("id")` orqali qidiradi, lekin frontend `data-habit-id` atributini
-    ishlatadi va boshqa endpoint'lar (change_type, delete_building_for_habit)
-    `habit_id` orqali topadi. Long-press frontend ulanishida bu nomuvofiqlikni
-    hal qilish kerak (id vs habit_id). Hozir mantiq buzilmaydi — chunki
-    move_item hech qayerdan chaqirilmaydi (long-press hali yo'q).
+    ITEM_ID: binoda `habit_id` ni qidiradi (frontend `data-habit-id` atributi),
+    dekoratsiyada `id` ni qidiradi. Backend ikkala variantni ham qabul qiladi.
 
     Qaytaradi: True (success) / False (band yoki topilmadi / koord noto'g'ri).
     """
@@ -490,10 +486,12 @@ def move_item(udata, item_id, new_x, new_y):
     city = get_user_city(udata)
     occupied = _occupied_set(city)
 
-    # Hozirgi joyini topish
+    # Hozirgi joyini topish — binoda `habit_id`, dekoratsiyada `id` ishlatiladi
+    # (Qoida #11: frontend `data-habit-id` atributidan o'qiydi va shu qiymatni
+    # `item_id` sifatida yuboradi. Backend ikkalasini ham qidiradi.)
     target = None
     for b in city.get("buildings") or []:
-        if b.get("id") == item_id:
+        if b.get("habit_id") == item_id or b.get("id") == item_id:
             target = b
             break
     if target is None:
