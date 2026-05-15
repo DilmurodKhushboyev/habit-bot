@@ -61,8 +61,17 @@ def _occupied_set(city):
     return occupied
 
 def find_empty_slot(udata):
-    """Random bo'sh katak topadi → (x, y) tuple yoki None.
-    None qaytarsa — shahar to'la (400 dan oshib ketgan).
+    """Markazga ENG YAQIN bo'sh katakni topadi → (x, y) tuple yoki None.
+    None qaytarsa — shahar to'la.
+
+    MANTIQ (A varianti — markazga yig'ish): avval random katak tanlanardi,
+    natijada binolar 30x30 grid bo'ylab tarqoq joylashardi (foydalanuvchi
+    faqat 1-2 tasini ko'rardi). Endi markazdan (CITY_GRID_SIZE//2) boshlab
+    halqama-halqa (ring) tashqariga qarab birinchi bo'sh katak qidiriladi —
+    shahar markazda jipslashib, tashqariga "o'sib boradi" (Hay Day/SimCity hissi).
+
+    Deterministik: bir xil shahar holatida har doim bir xil natija
+    (eski random xulqdan farqi — barqaror, oldindan aytib bo'ladigan joylashuv).
     """
     city = get_user_city(udata)
     occupied = _occupied_set(city)
@@ -70,26 +79,98 @@ def find_empty_slot(udata):
     if len(occupied) >= total:
         return None  # to'la
 
-    # Performance optimizatsiya: agar shahar 80% to'la bo'lmasa —
-    # random urinishlar tezroq. Aks holda — barcha bo'sh kataklarni topib
-    # shulardan tanlaymiz.
-    if len(occupied) < total * 0.8:
-        for _ in range(30):
-            x = random.randint(0, CITY_GRID_SIZE - 1)
-            y = random.randint(0, CITY_GRID_SIZE - 1)
-            if (x, y) not in occupied:
-                return (x, y)
+    cx = CITY_GRID_SIZE // 2  # markaz x (30 grid → 15)
+    cy = CITY_GRID_SIZE // 2  # markaz y
 
-    # Fallback: barcha bo'sh kataklarni topib random tanlash
-    free_slots = [
-        (x, y)
-        for x in range(CITY_GRID_SIZE)
-        for y in range(CITY_GRID_SIZE)
-        if (x, y) not in occupied
-    ]
-    if not free_slots:
-        return None
-    return random.choice(free_slots)
+    # Markaz katagi bo'sh bo'lsa — darhol qaytaramiz (1-bino aynan markazga)
+    if (cx, cy) not in occupied:
+        return (cx, cy)
+
+    # Markaz band — halqama-halqa tashqariga qarab qidiramiz.
+    # radius=1,2,3,... har halqaning chekka kataklarini tekshiramiz.
+    # Maksimal radius: markazdan grid chetigacha bo'lgan eng katta masofa.
+    max_radius = CITY_GRID_SIZE  # xavfsiz yuqori chegara (butun grid qamrab olinadi)
+    for radius in range(1, max_radius + 1):
+        ring = []
+        # Halqaning yuqori va pastki qatorlari
+        for x in range(cx - radius, cx + radius + 1):
+            ring.append((x, cy - radius))
+            ring.append((x, cy + radius))
+        # Halqaning chap va o'ng ustunlari (burchaklarsiz — yuqorida qo'shilgan)
+        for y in range(cy - radius + 1, cy + radius):
+            ring.append((cx - radius, y))
+            ring.append((cx + radius, y))
+        # Halqadagi bo'sh va grid ichidagi birinchi katakni topamiz.
+        # sorted — deterministik tartib (radius teng kataklar orasida barqarorlik).
+        for (x, y) in sorted(ring):
+            if 0 <= x < CITY_GRID_SIZE and 0 <= y < CITY_GRID_SIZE:
+                if (x, y) not in occupied:
+                    return (x, y)
+
+    return None  # mantiqan bu yerga yetib kelmaydi (occupied < total tekshirilgan)
+
+
+def compact_buildings_to_center(udata):
+    """Eski tarqoq binolarni markazga yig'adi (bir martalik migration).
+
+    SABAB (Qoida #21): eski `find_empty_slot` 30×30 grid bo'ylab tasodifiy
+    katak tanlardi → binolar tarqoq joylashardi va foydalanuvchi faqat 1-2
+    tasini ko'rardi. Yangi `find_empty_slot` markazdan-tashqariga halqama
+    ishlaydi, lekin u faqat YANGI binolar uchun. Eski binolarni ham markazga
+    yig'ish uchun bir martalik migration kerak.
+
+    MANTIQ:
+    1) Barcha binolarni vaqtincha "olib qo'yamiz" (eski x,y unutiladi).
+    2) Eng katta progress'dan boshlab qayta joylashtiramiz — markazga eng
+       yaqin bo'sh katakdan boshlab (find_empty_slot mantig'i). Sabab:
+       muhimroq (oldinroq qurilgan) binolar markazga yaqin tursin.
+    3) `city["compacted"] = True` markeri — keyingi safar qayta ishlamaydi
+       (idempotent).
+
+    Dekoratsiyalar TEGILMAYDI (Qoida #1 — faqat bino muammosi so'ralgan,
+    dekoratsiyalar hozir render ham qilinmaydi). Agar dekoratsiya binoning
+    eski koordinatasida bo'lsa, u joyida qoladi (kelajakda alohida hal qilinadi).
+
+    Qaytaradi: True — migration bajarildi, False — kerak emas edi
+    (compacted=True yoki bino yo'q). Chaqiruvchi save_user'ni o'zi chaqiradi.
+    """
+    city = get_user_city(udata)
+    # Allaqachon yig'ilgan bo'lsa — qayta ishlamaymiz (idempotent)
+    if city.get("compacted"):
+        return False
+    buildings = city.get("buildings") or []
+    if not buildings:
+        # Hech qanday bino yo'q — markerni qo'yamiz va chiqamiz (kelajakka qadar)
+        city["compacted"] = True
+        return False
+
+    # 1) Eski koordinatalarni "olib qo'yish" — `_occupied_set` endi
+    #    faqat dekoratsiyalardan iborat bo'ladi (binolar koordinatasi
+    #    o'chirilgani uchun _occupied_set ularni ko'rmaydi).
+    #    Sort: katta progress avval (markazga yaqin tursin), keyin habit_id
+    #    (deterministik tartib teng progress'lar uchun).
+    sorted_buildings = sorted(
+        buildings,
+        key=lambda b: (-(b.get("progress") or 0), str(b.get("habit_id", ""))),
+    )
+    for b in sorted_buildings:
+        b.pop("x", None)
+        b.pop("y", None)
+
+    # 2) Qayta joylashtirish: find_empty_slot markazdan-tashqariga ishlaydi
+    for b in sorted_buildings:
+        slot = find_empty_slot(udata)
+        if slot is None:
+            # Shahar to'la — qolgan binolar joysiz qoladi. Mantiqan bu yerga
+            # yetib kelmaydi (900 katak, max ~10 bino), lekin xavfsizlik uchun.
+            # Bunday holatda bino ma'lumotini buzmaymiz — keyingi safarga.
+            city["compacted"] = True
+            return True
+        b["x"], b["y"] = slot
+
+    city["compacted"] = True
+    return True
+
 
 # ============================================================
 #  PROGRESS / STAGE

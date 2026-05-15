@@ -36,6 +36,7 @@ from city_logic import (
     create_building, change_building_type, delete_building_for_habit,
     place_decoration, delete_decoration, move_item,
     activate_insurance, get_building_stage,
+    compact_buildings_to_center,
 )
 from flask_helpers import require_auth
 
@@ -129,6 +130,16 @@ def register_city_routes(app):
         init_city_for_user(u)
         if not had_city:
             save_user(uid, u)
+
+        # Bir martalik migration: eski tarqoq binolarni markazga yig'ish.
+        # compact_buildings_to_center idempotent — `city.compacted=True` markeri
+        # qo'yiladi, keyingi GET'larda darhol chiqib ketadi. try/except — migration
+        # xato bo'lsa, asosiy GET buzilmasin (city ikkilamchi feature mantig'i).
+        try:
+            if compact_buildings_to_center(u):
+                save_user(uid, u)
+        except Exception as e:
+            print(f"[city] compact_buildings_to_center failed for {uid}: {e}")
 
         city = get_user_city(u)
 
