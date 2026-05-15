@@ -27,9 +27,8 @@
 // ==============================================
 
 // ── KONFIGURATSIYA ──
-const LONGPRESS_MS       = 600;   // bosish vaqti (ms) — 2s o'rniga 600ms (UX: Hay Day patterni, foydalanuvchi 2s kutmaydi)
+const LONGPRESS_MS       = 600;   // bosish vaqti (ms) — Hay Day patterni
 const LONGPRESS_MAX_MOVE = 10;    // scroll deb hisoblanish chegarasi (px) bosish boshlangan nuqtadan
-const DRAG_OPACITY       = 0.55;  // drag paytida BINO eski joyida shaffof
 
 // ── HOLAT (har renderCityGrid'da reset bo'ladi) ──
 let _moveState = null;
@@ -40,25 +39,57 @@ let _moveState = null;
 //   gridG,                    // bino <g> element (.city-bld) — original SVG
 //   startX, startY,           // touchstart pixel (clientX/Y)
 //   timerId,                  // setTimeout id (longpress)
-//   active: false,            // drag rejim faolmi (true → 2s o'tdi)
+//   active: false,            // drag rejim faolmi (true → 600ms o'tdi)
 //   targetX, targetY,         // hozirgi nishon katak (grid koord)
-//   ghost,                    // drag paytidagi "ghost" bino (vizual)
+//   ring,                     // bino atrofidagi halqa polygon (bosildi belgisi)
+//   ghost,                    // drag paytidagi "ghost" bino (vizual clone)
 //   highlightRect,            // drag paytida nishon katak ustidagi highlight
 //   lock: false,              // API so'rovi davom etyapti (double-tap himoya)
 // }
 
 // ── Ghost qatlami (drag paytida bino barmoq ortidan ergashadi) ──
-// Ghost = SVG <g> nusxa (original bino opacity DRAG_OPACITY ga tushadi).
-// Ghost svg root'iga qo'shiladi va matritsa orqali siljitadi.
+// Ghost = SVG <g> nusxa. Original bino visibility:hidden — ghost yagona ko'rinadi.
+// MUHIM (Qoida #21): asl <g> ga opacity/transform qo'shilMASIN — filter:drop-shadow
+// bilan to'qnashib qaltirash beradi (mobile WebView GPU compositor xatosi).
+// visibility:hidden transition bermaydi, darhol yashirinadi, qaltirashsiz.
 function _cityCreateGhost(state) {
-  // Original <g> ning clone'ini olamiz (3 polygon)
   const ghost = state.gridG.cloneNode(true);
   ghost.classList.add('city-bld-ghost');
   ghost.removeAttribute('data-habit-id');  // ghost interaktiv emas
-  // Original ga "ko'tarilgan" klassi qo'shiladi (xirashadi)
-  state.gridG.classList.add('city-bld-dragging');
+  state.gridG.classList.add('city-bld-hidden');  // asl bino yashirinadi
   state.svg.appendChild(ghost);  // SVG oxiri = eng ustki qatlam
   state.ghost = ghost;
+}
+
+// ── Halqa qatlami (bosildi/drag belgisi — alohida polygon, binoga teginmaydi) ──
+// Bino katagi atrofida romb shaklida halqa chiziladi. CSS:
+// - .city-bld-ring: ko'k, ingichka, pulse animatsiya (bosildi)
+// - .city-bld-ring[data-active="1"]: yashil, qalin, animatsiyasiz (drag faol)
+// Binoga teginmaydi → filter:drop-shadow qaltirash sababi yo'q (Qoida #21).
+function _cityCreateRing(state) {
+  const ring = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  ring.setAttribute('class', 'city-bld-ring');
+  const cx = cityIsoX(state.building.x, state.building.y);
+  const cy = cityIsoY(state.building.x, state.building.y);
+  // Romb cho'qqilari .city-tile bilan AYNAN BIR XIL (app-city.js render mantiqi)
+  const points = [
+    `${cx},${cy}`,                                     // top
+    `${cx + CITY_TILE_W / 2},${cy + CITY_TILE_H / 2}`, // right
+    `${cx},${cy + CITY_TILE_H}`,                       // bottom
+    `${cx - CITY_TILE_W / 2},${cy + CITY_TILE_H / 2}`, // left
+  ].join(' ');
+  ring.setAttribute('points', points);
+  // Tile qatlami ustiga, lekin bino ostiga joylashtiramiz (z-tartibi):
+  // SVG'da bu — birinchi .city-bld dan oldin insertBefore. Lekin oddiy yo'l:
+  // appendChild — eng ustga. Bino vizual jihatdan kub bo'lib halqa tashqarisida
+  // ko'rinadi (kub asosi tile bilan teng, halqa stroke esa tashqi chiziq).
+  state.svg.appendChild(ring);
+  state.ring = ring;
+}
+
+// ── Halqani drag faol holatga o'tkazish (ko'k → yashil, ingichka → qalin) ──
+function _cityActivateRing(state) {
+  if (state.ring) state.ring.setAttribute('data-active', '1');
 }
 
 // ── Ghost'ni clientX/Y bo'yicha joylashtirish ──
@@ -90,8 +121,8 @@ function _cityMoveGhost(state, clientX, clientY) {
 // SVG romb shaklini aniq biladi va kataklar orasidagi chegarani to'g'ri ajratadi.
 // .city-tile har polygon'da data-x va data-y atributlari bor (app-city.js).
 // Ghost o'rtada tursa elementFromPoint ghost'ni qaytaradi — uni pointer-events:none
-// bilan o'tkazib yuboramiz (CSS allaqachon shunday). Bino o'zi ham pointer-events:none
-// (.city-bld-dragging klassi orqali) — drag paytida tile'lar "ko'rinadi".
+// bilan o'tkazib yuboramiz (CSS allaqachon shunday). Asl bino visibility:hidden
+// (.city-bld-hidden klassi orqali) — drag paytida tile'lar "ko'rinadi".
 function _cityClientToGrid(state, clientX, clientY) {
   const el = document.elementFromPoint(clientX, clientY);
   if (!el) return null;
@@ -150,8 +181,9 @@ function _cityIsOccupied(x, y, ownHabitId) {
 function _cityActivateDrag(state) {
   state.active = true;
   state.timerId = null;
-  // Vizual: ghost yaratamiz, original xirashadi
+  // Vizual: ghost yaratiladi (asl bino visibility:hidden), halqa yashil/qalin holatga
   _cityCreateGhost(state);
+  _cityActivateRing(state);
   // Telegram haptic (mavjud pattern — app-core.js'da `light`, biz `medium` ishlatamiz)
   try {
     if (window.tg && window.tg.HapticFeedback) {
@@ -170,10 +202,11 @@ function _cityCancelPress(state) {
 
 // ── Drag tugatish — API chaqirig'i yoki bekor qilish ──
 async function _cityFinishDrag(state) {
-  // Ghost va highlight'ni olib tashlash
+  // Ghost, halqa va highlight'ni olib tashlash; asl binoni qaytarish
   if (state.ghost && state.ghost.parentNode) state.ghost.parentNode.removeChild(state.ghost);
+  if (state.ring && state.ring.parentNode) state.ring.parentNode.removeChild(state.ring);
   if (state.highlightRect && state.highlightRect.parentNode) state.highlightRect.parentNode.removeChild(state.highlightRect);
-  state.gridG.classList.remove('city-bld-dragging');
+  state.gridG.classList.remove('city-bld-hidden');
 
   const target = state.targetX != null ? { x: state.targetX, y: state.targetY } : null;
   // Hech qaerga qo'yilmadi yoki band joy → bekor (eski joyda qoladi)
@@ -241,11 +274,11 @@ function initCityMoveHandlers(container) {
       container, svg, habitId, building, gridG: g,
       startX: touch.clientX, startY: touch.clientY,
       active: false, targetX: null, targetY: null,
-      timerId: null, ghost: null, highlightRect: null,
+      timerId: null, ghost: null, ring: null, highlightRect: null,
       startSvgPt: null, lock: false,
     };
-    // Vizual: ozgina ko'tarilgan klass (bosish his'i)
-    g.classList.add('city-bld-pressing');
+    // Vizual: bino atrofida halqa (alohida polygon — binoga teginmaymiz, qaltirash yo'q)
+    _cityCreateRing(_moveState);
     // Long-press taymer
     _moveState.timerId = setTimeout(function () {
       if (_moveState) _cityActivateDrag(_moveState);
@@ -262,9 +295,11 @@ function initCityMoveHandlers(container) {
       const dx = touch.clientX - _moveState.startX;
       const dy = touch.clientY - _moveState.startY;
       if (Math.abs(dx) > LONGPRESS_MAX_MOVE || Math.abs(dy) > LONGPRESS_MAX_MOVE) {
-        // Foydalanuvchi scroll qilyapti — long-press bekor
+        // Foydalanuvchi scroll qilyapti — long-press bekor, halqa o'chadi
         _cityCancelPress(_moveState);
-        _moveState.gridG.classList.remove('city-bld-pressing');
+        if (_moveState.ring && _moveState.ring.parentNode) {
+          _moveState.ring.parentNode.removeChild(_moveState.ring);
+        }
         _moveState = null;
       }
       return;  // scroll'ga preventDefault qilmaymiz
@@ -287,11 +322,14 @@ function initCityMoveHandlers(container) {
   // touchend — barmoq olindi
   function onTouchEnd(e) {
     if (!_moveState) return;
-    _moveState.gridG.classList.remove('city-bld-pressing');
     if (_moveState.active) {
-      _cityFinishDrag(_moveState);
+      _cityFinishDrag(_moveState);  // ghost+ring+highlight+hidden klass — ichida tozalanadi
     } else {
       _cityCancelPress(_moveState);
+      // Drag hech faollashmadi — faqat halqani o'chiramiz (gridG ga klass qo'shilmagan)
+      if (_moveState.ring && _moveState.ring.parentNode) {
+        _moveState.ring.parentNode.removeChild(_moveState.ring);
+      }
     }
     _moveState = null;
   }
@@ -299,15 +337,18 @@ function initCityMoveHandlers(container) {
   // touchcancel — sistema gestureni uzdi (telefon qo'ng'irog'i va h.k.)
   function onTouchCancel(e) {
     if (!_moveState) return;
-    _moveState.gridG.classList.remove('city-bld-pressing');
     _cityCancelPress(_moveState);
-    if (_moveState.active && _moveState.ghost && _moveState.ghost.parentNode) {
+    // Hamma vizual elementlarni tozalash (drag faol bo'lsa ham, bo'lmasa ham)
+    if (_moveState.ring && _moveState.ring.parentNode) {
+      _moveState.ring.parentNode.removeChild(_moveState.ring);
+    }
+    if (_moveState.ghost && _moveState.ghost.parentNode) {
       _moveState.ghost.parentNode.removeChild(_moveState.ghost);
     }
     if (_moveState.highlightRect && _moveState.highlightRect.parentNode) {
       _moveState.highlightRect.parentNode.removeChild(_moveState.highlightRect);
     }
-    if (_moveState.gridG) _moveState.gridG.classList.remove('city-bld-dragging');
+    if (_moveState.gridG) _moveState.gridG.classList.remove('city-bld-hidden');
     _moveState = null;
   }
 

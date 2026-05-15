@@ -3351,23 +3351,33 @@ body.dark .city-bld-right { fill: #2A2A30; }
 }
 
 /* ── C5 LONG-PRESS DRAG & DROP — bino ko'chirish vizual holati ──
-   .city-bld-pressing: bosish boshlandi (0-600ms) — ozgina ko'tariladi
-   .city-bld-dragging: drag faol (600ms o'tdi) — eski joyi shaffof
-   .city-bld-ghost:    barmoq ortidan ergashayotgan ghost (clone bino)
-   .city-tile-highlight: nishon katak ustidagi yashil rang
-   .city-tile-invalid:   nishon band — qizil rang (qo'yib bo'lmaydi)
-   touch-action: none — drag faol bo'lganda native scroll bilan to'qnashmasin
-   (lekin biz JS'da preventDefault qilamiz — bu CSS belt-and-suspenders) */
-.city-bld-pressing {
-  /* SVG <g> ga transform qo'shish filter:drop-shadow bilan to'qnashib qaltirashga
-     olib keladi. Faqat opacity bilan "bosildi" his'i berisha yetarli. */
-  opacity: 0.85;
-  transition: opacity .15s ease;
-}
-.city-bld-dragging {
-  opacity: 0.45;  /* eski joyi xira — drag rejimi belgisi */
+   YONDOSH (Qoida #21): asl bino .city-bld <g> ga KLASS QO'SHILMAYDI — chunki
+   filter:drop-shadow ga ega <g> ga opacity/transform qo'shsa GPU compositor
+   qaltirash beradi (mobile WebView'da). O'rniga:
+   - .city-bld-ring: bino atrofida ALOHIDA polygon (halqa) — bosildi belgisi
+   - .city-bld-ring[data-active="1"]: drag faollashdi — yashil va qalin
+   - .city-bld-hidden: drag paytida asl bino visibility:hidden (ghost yagona)
+   - .city-bld-ghost: clone bino (barmoq ortidan ergashadi)
+   - .city-tile-highlight: nishon katak ostidagi yashil/qizil rang */
+.city-bld-ring {
   pointer-events: none;
-  transition: opacity .2s ease;
+  fill: none;
+  stroke: var(--accent2);
+  stroke-width: 2;
+  /* CSS-level "nafas oluvchi" pulse — JS animatsiya kerak emas */
+  animation: cityRingPulse 1.2s ease-in-out infinite;
+}
+.city-bld-ring[data-active="1"] {
+  stroke: var(--accent);
+  stroke-width: 3;
+  animation: none;  /* drag faol — barqaror, pulse yo'q */
+}
+@keyframes cityRingPulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1.0; }
+}
+.city-bld-hidden {
+  visibility: hidden;  /* opacity emas — transition yo'q, qaltirash yo'q */
 }
 .city-bld-ghost {
   pointer-events: none;
