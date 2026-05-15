@@ -201,14 +201,17 @@ function _cityCancelPress(state) {
 }
 
 // ── Drag tugatish — API chaqirig'i yoki bekor qilish ──
-// FLASH YECHIM (Qoida #21): ghost'ni darhol o'chirib loadCity kutmaymiz —
-// bu eski joyda flash beradi. O'rniga ghost'ni nishon katak markaziga snap
-// qilamiz va shunday qoldiramiz. Asl bino visibility:hidden da turaveradi.
-// API muvaffaqiyatda loadCity butun DOM ni almashtiradi — ghost va asl bino
-// bir vaqtda ketadi, yangi bino aniq joyda paydo bo'ladi → foydalanuvchi
-// uzluksiz harakat ko'radi (flash yo'q).
-// Xato holatida (occupied yoki API xato): ghost olib tashlanadi, asl bino
-// visibility'dan chiqariladi — bino eski joyiga "qaytadi", toast chiqadi.
+// FLASH + RE-RENDER YECHIMI (Qoida #21): loadCity butun grid'ni qayta yaratardi
+// — bu auto-scroll'ni qayta ishga tushirib sahifa siljishini va foydalanuvchi
+// barmog'i ostidagi <g> ni yo'qotardi (tez ketma-ket drag mumkin emas edi).
+// O'rniga DOM IN-PLACE yangilash:
+//   - Asl <g> ga transform="translate(dx,dy)" qo'shiladi (bepul SVG operation,
+//     barcha ichki polygon'lar avtomatik siljiydi)
+//   - Ghost olib tashlanadi, asl bino visibility'dan chiqariladi → yangi joyda ko'rinadi
+//   - Lokal _cityData yangilanadi → keyingi drag'lar to'g'ri data'ni ko'radi
+//   - loadCity CHAQIRILMAYDI → sahifa siljimaydi, DOM butunligicha qoladi
+// Z-order (painter's algorithm) keyingi loadCity'da (boshqa sabab bilan)
+// to'g'rilanadi — vaqtinchalik nomos joylashish ko'rinmaydi (binolar siyrak).
 async function _cityFinishDrag(state) {
   // Halqa va highlight'ni darhol olib tashlaymiz — drag tugadi
   if (state.ring && state.ring.parentNode) state.ring.parentNode.removeChild(state.ring);
@@ -231,10 +234,8 @@ async function _cityFinishDrag(state) {
     return;
   }
 
-  // Ghost'ni nishon katak markaziga snap qilamiz (transform=translate delta).
-  // Original bino (building.x, building.y) dan target (target.x, target.y) gacha
-  // bo'lgan iso delta'ni hisoblaymiz va ghost transform'ini shu delta'ga o'rnatamiz.
-  // Ghost shu yerda qoladi to loadCity tugamaguncha (yoki rollback) — flash yo'q.
+  // Ghost'ni nishon katak markaziga snap qilamiz (foydalanuvchi ko'rishi uchun).
+  // dx,dy — original (building.x, building.y) dan target (target.x, target.y) gacha iso delta.
   const dx = cityIsoX(target.x, target.y) - cityIsoX(state.building.x, state.building.y);
   const dy = cityIsoY(target.x, target.y) - cityIsoY(state.building.x, state.building.y);
   state.ghost.setAttribute('transform', `translate(${dx},${dy})`);
@@ -248,17 +249,21 @@ async function _cityFinishDrag(state) {
       body: JSON.stringify({ item_id: state.habitId, x: target.x, y: target.y }),
     });
     if (!res || !res.ok) throw new Error('move_failed');
-    // Lokal keshni yangilash (loadCity uchun zarur emas, lekin _cityIsOccupied
-    // keyingi drag uchun darhol yangi joyni bilsin)
+
+    // MUVAFFAQIYAT: DOM IN-PLACE yangilash (loadCity'siz):
+    // 1) Asl <g> ga transform qo'shamiz — barcha ichki polygon'lar yangi joyga siljiydi
+    state.gridG.setAttribute('transform', `translate(${dx},${dy})`);
+    // 2) Ghost'ni olib tashlaymiz
+    if (state.ghost && state.ghost.parentNode) state.ghost.parentNode.removeChild(state.ghost);
+    // 3) Asl bino visibility'dan chiqariladi — yangi joyda ko'rinadi
+    state.gridG.classList.remove('city-bld-hidden');
+    // 4) Lokal _cityData.buildings yangilash — keyingi drag/render uchun to'g'ri ma'lumot
     if (state.building) {
       state.building.x = target.x;
       state.building.y = target.y;
       state.building.pinned = true;
     }
     if (typeof showToast === 'function') showToast(S('city', 'moved'));
-    // loadCity butun DOM ni almashtiradi — ghost va hidden bino bir vaqtda
-    // ketadi, yangi bino aniq joyda paydo bo'ladi (flash yo'q).
-    if (typeof loadCity === 'function') await loadCity();
   } catch (e) {
     // API xato — rollback: ghost olib tashlanadi, asl bino qaytadi, toast
     _cancelMove();
