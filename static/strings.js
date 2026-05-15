@@ -6,7 +6,9 @@ const STRINGS = {
     city: {
       title:'Mening shaharim',
       coming_soon:'Tez orada...',
-      description:"Har bir tasdiqlangan odat shahringizda bino quradi. 66 kun — bir bino to'liq quriladi."
+      description:"Har bir tasdiqlangan odat shahringizda bino quradi. 66 kun — bir bino to'liq quriladi.",
+      moved:'\u2705 Bino ko\u2018chirildi',
+      move_failed:'Bu joyga qo\u2018yib bo\u2018lmadi'
     },
     profile: {
       ball:'Ball', streak:'Streak', done:'Bajarildi', rekord:'rekord',
@@ -413,7 +415,9 @@ const STRINGS = {
     city: {
       title:'Мой город',
       coming_soon:'Скоро...',
-      description:'Каждая подтверждённая привычка строит здание в вашем городе. 66 дней — здание полностью построено.'
+      description:'Каждая подтверждённая привычка строит здание в вашем городе. 66 дней — здание полностью построено.',
+      moved:'\u2705 Здание перемещено',
+      move_failed:'Сюда нельзя поставить'
     },
     profile: {
       ball:'Очки', streak:'Стрик', done:'Выполнено', rekord:'рекорд',
@@ -819,7 +823,9 @@ const STRINGS = {
     city: {
       title:'My City',
       coming_soon:'Coming soon...',
-      description:'Every confirmed habit builds a structure in your city. 66 days — one building fully constructed.'
+      description:'Every confirmed habit builds a structure in your city. 66 days — one building fully constructed.',
+      moved:'\u2705 Building moved',
+      move_failed:'Can\u2018t place here'
     },
     profile: {
       ball:'Points', streak:'Streak', done:'Done', rekord:'record',

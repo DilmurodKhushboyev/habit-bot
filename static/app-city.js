@@ -179,6 +179,9 @@ function renderCityGrid(container, cityData) {
   // C5: bino bilan interaktivlik (long-press → bino ko'chirish) — keyingi qadamda
   //   shu yerga handler ulanadi. .city-bld <g> da data-habit-id atributi tayyor
   //   turadi (app-city-buildings.js) — move_item API'ga habit_id yuborish uchun.
+  if (typeof initCityMoveHandlers === 'function') {
+    initCityMoveHandlers(container);
+  }
 }
 
 // ════════════════════════════════════════════════
@@ -197,9 +200,9 @@ function renderCityGrid(container, cityData) {
 // PHASE C3.3: 5 dekoratsiya — KEYINGA QOLDIRILGAN (professional SVG ikonkalar kerak)
 // PHASE C3.4: ✅ premium CSS polish (soyalar, 3D effekt)
 // PHASE C4:   ✅ loadCity() async — GET /api/city/<uid> (_cityDemoData o'chirildi) — SHU YERDA
-// PHASE C5:   ✅ find_empty_slot markazga yig'ish (backend) — yangi binolar
-//             markazda jipslashadi. Bino bosish modali — A varianti bilan
-//             OLIB TASHLANDI. Keyingi qadam: long-press (2s) → bino ko'chirish.
+// PHASE C5:   ✅ find_empty_slot markazga yig'ish (backend) + gap qoidasi.
+//             ✅ Long-press → bino ko'chirish (drag & drop) — app-city-move.js da.
+//             Bino bosish modali (change_type) — A varianti bilan olib tashlangan.
 // PHASE C6:   renderDecorationsShop() — dekoratsiya bozor modali (buy_decoration, buy_insurance)
 // PHASE C7:   tarjimalar strings.js'ga qo'shiladi (10 bino + 5 dekoratsiya nomlari, city.* kalitlar)
 // PHASE C8:   premium CSS polish (qo'shimcha — agar kerak bo'lsa)

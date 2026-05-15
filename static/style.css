@@ -3349,3 +3349,38 @@ body.dark .city-bld-right { fill: #2A2A30; }
   box-shadow: var(--sh-in);
   transform: scale(0.94);
 }
+
+/* ── C5 LONG-PRESS DRAG & DROP — bino ko'chirish vizual holati ──
+   .city-bld-pressing: bosish boshlandi (0-600ms) — ozgina ko'tariladi
+   .city-bld-dragging: drag faol (600ms o'tdi) — eski joyi shaffof
+   .city-bld-ghost:    barmoq ortidan ergashayotgan ghost (clone bino)
+   .city-tile-highlight: nishon katak ustidagi yashil rang
+   .city-tile-invalid:   nishon band — qizil rang (qo'yib bo'lmaydi)
+   touch-action: none — drag faol bo'lganda native scroll bilan to'qnashmasin
+   (lekin biz JS'da preventDefault qilamiz — bu CSS belt-and-suspenders) */
+.city-bld-pressing {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  transition: opacity .15s ease, transform .15s ease;
+}
+.city-bld-dragging {
+  opacity: 0.45;  /* eski joyi xira — drag rejimi belgisi */
+  pointer-events: none;
+  transition: opacity .2s ease;
+}
+.city-bld-ghost {
+  pointer-events: none;
+  filter: drop-shadow(4px 8px 12px rgba(40, 40, 50, 0.28));
+  transition: none;  /* darhol barmoq ortidan ergashsin, lag yo'q */
+}
+.city-tile-highlight {
+  pointer-events: none;
+  fill: rgba(76, 175, 125, 0.32);  /* yashil yarim shaffof — bo'sh joy */
+  stroke: var(--accent);
+  stroke-width: 2;
+  transition: fill .12s ease;
+}
+.city-tile-highlight.city-tile-invalid {
+  fill: rgba(220, 60, 60, 0.28);   /* qizil — band joy */
+  stroke: #DC4040;
+}
