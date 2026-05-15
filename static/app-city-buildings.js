@@ -55,16 +55,21 @@ function cityCubeFaces(cx, cy, bw, bh, h) {
 //   o'lchamga TA'SIR QILMAYDI. C5 modal shu atributdan turini o'qiydi).
 // stage: 0-4 (cityBuildingStage natijasi) — kub balandligini belgilaydi.
 // cx, cy: katak rombning MARKAZIY nuqtasi (cityIsoX/cityIsoY + romb markazi).
+// habitId: bino bog'liq odat id'si — C5 da bino bosilganda modal shu atributdan
+//   habit_id ni o'qiydi (qayta API chaqirmasdan, _cityData keshidan topadi).
+// progress: bino qurilish kuni (0-66) — C5 modal "kun / 66" ko'rsatish uchun.
 // Qaytaradi: <g> ichida 3 polygon (tepa/chap/o'ng yuz) — monoxrom oq clay.
 // Barcha bino BIR XIL o'lcham — faqat stage bo'yicha balandlik o'zgaradi.
-function cityBuildingSVG(type, stage, cx, cy) {
+function cityBuildingSVG(type, stage, cx, cy, habitId, progress) {
   const bw = CITY_BLD_BASE_W / 2;          // asos yarim kengligi (barcha bino bir xil)
   const bh = CITY_BLD_BASE_H / 2;          // asos yarim balandligi (barcha bino bir xil)
   const h  = CITY_BLD_HEIGHTS[stage];      // kub vertikal balandligi (stage bo'yicha)
 
   const faces = cityCubeFaces(cx, cy, bw, bh, h);
 
-  let svg = `<g class="city-bld" data-type="${type}" data-stage="${stage}">`;
+  // C5: data-habit-id + data-progress — bino bosilganda modal shu atributlardan
+  //   habit_id va progress ni o'qiydi (app-city-modal.js click handler).
+  let svg = `<g class="city-bld" data-type="${type}" data-stage="${stage}" data-habit-id="${habitId}" data-progress="${progress}">`;
   svg += `<polygon class="city-bld-left"  points="${faces.leftFace}"/>`;
   svg += `<polygon class="city-bld-right" points="${faces.rightFace}"/>`;
   svg += `<polygon class="city-bld-top"   points="${faces.topFace}"/>`;
@@ -93,7 +98,9 @@ function renderCityBuildings(buildings) {
     // markazga yetish uchun +CITY_TILE_H/2 (romb vertikal markazi).
     const cx = cityIsoX(b.x, b.y);
     const cy = cityIsoY(b.x, b.y) + CITY_TILE_H / 2;
-    html += cityBuildingSVG(b.type, stage, cx, cy);
+    // C5: b.habit_id va b.progress ham uzatiladi — data-habit-id/data-progress
+    //   atributlari orqali bino bosilganda modal'ga yetib boradi.
+    html += cityBuildingSVG(b.type, stage, cx, cy, b.habit_id, b.progress || 0);
   }
   return html;
 }
@@ -105,8 +112,8 @@ function renderCityBuildings(buildings) {
 //   natija abstrakt/bee'xshov chiqdi. Kelajakda professional SVG ikonkalar bilan
 //   qilinadi (kod bilan emas). Backend place_decoration/DECORATION_TYPES tayyor turadi.
 // PHASE C3.4: premium CSS polish (soyalar, 3D effekt finetune)
-// PHASE C5:   bino bosish — data-type/data-stage atributlari modal uchun tayyor
-//             (modal'da bino turi nomi, emoji, progress ko'rsatiladi)
+// PHASE C5:   ✅ bino bosish — data-type/data-stage/data-habit-id/data-progress
+//             atributlari modal uchun tayyor. Click handler + modal app-city-modal.js da.
 // BACKEND (alohida bosqich): find_empty_slot (city_logic.py) — yangi bino atrofida
 //   bittadan bo'sh katak qoldirish qoidasi. Hozir faqat band bo'lmagan katak topadi;
 //   "atrofi ham bo'sh" qoidasi keyin qo'shiladi (create_building + place_decoration

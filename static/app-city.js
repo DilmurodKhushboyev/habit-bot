@@ -175,6 +175,13 @@ function renderCityGrid(container, cityData) {
     wrap.scrollLeft = (wrap.scrollWidth  - wrap.clientWidth)  / 2;
     wrap.scrollTop  = (wrap.scrollHeight - wrap.clientHeight) / 2;
   });
+
+  // C5: bino bosish handlerini ulash — app-city-modal.js da aniqlangan.
+  // Har renderCityGrid yangi DOM yaratadi, shuning uchun har safar qayta ulanadi
+  // (delegated listener — eski DOM bilan birga yo'qoladi, leak yo'q).
+  if (typeof initCityBuildingClick === 'function') {
+    initCityBuildingClick(container);
+  }
 }
 
 // ════════════════════════════════════════════════
@@ -193,7 +200,8 @@ function renderCityGrid(container, cityData) {
 // PHASE C3.3: 5 dekoratsiya — KEYINGA QOLDIRILGAN (professional SVG ikonkalar kerak)
 // PHASE C3.4: ✅ premium CSS polish (soyalar, 3D effekt)
 // PHASE C4:   ✅ loadCity() async — GET /api/city/<uid> (_cityDemoData o'chirildi) — SHU YERDA
-// PHASE C5:   bino bosish modali (change_type) + bino ko'chirish (long-press)
+// PHASE C5:   ✅ bino bosish modali (change_type) — click handler + modal
+//             app-city-modal.js da (Qoida #24). renderCityGrid initCityBuildingClick chaqiradi.
 // PHASE C6:   renderDecorationsShop() — dekoratsiya bozor modali (buy_decoration, buy_insurance)
 // PHASE C7:   tarjimalar strings.js'ga qo'shiladi (10 bino + 5 dekoratsiya nomlari, city.* kalitlar)
 // PHASE C8:   premium CSS polish (qo'shimcha — agar kerak bo'lsa)
