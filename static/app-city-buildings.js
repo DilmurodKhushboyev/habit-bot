@@ -125,14 +125,14 @@ function cityLabelText(raw) {
 // habitId: bino bog'liq odat id'si — <g> ga data-habit-id atributi sifatida
 //   yoziladi. Bino bilan interaktivlik (long-press → bino ko'chirish) shu
 //   atributdan habit_id ni o'qib, move_item API'ga yuboradi.
-// habitName: odat nomi (foydalanuvchi yozgan, tarjima QILINMAYDI) — bino OSTIDA
+// habitName: odat nomi (foydalanuvchi yozgan, tarjima QILINMAYDI) — bino USTIDA
 //   <text> label sifatida ko'rsatiladi (C3.5c). Uzun bo'lsa qisqartiriladi.
 //
 // QATLAMLAR (C3.5a + C3.5b + C3.5c):
 //   1. SOLID kub — qurilgan qism (progress'ga mos UZLUKSIZ balandlikda)
 //   2. GLASS kub — qurilmagan qism (solid TEPASIDAN to'liq balandlikkacha).
 //      progress 66 ga yetganda glass chizilmaydi (bino to'liq qurilgan).
-//   3. LABEL — odat nomi, bino asosi ostida (<text>). <g> ICHIDA — bino
+//   3. LABEL — odat nomi, bino ustida (<text>). <g> ICHIDA — bino
 //      ko'chirilganda (drag) label ham birga harakatlanadi.
 //
 // data-stage atributi uchun cityBuildingStage() ham chaqiriladi (balandlikka
@@ -193,12 +193,15 @@ function cityBuildingSVG(type, progress, cx, cy, habitId, habitName) {
     }
   }
 
-  // 3. LABEL — odat nomi, bino ASOSI ostida (<text>).
-  // Asos rombning pastki cho'qqisi (cx, cy + bh) dan biroz pastda joylashadi.
+  // 3. LABEL — odat nomi, bino USTIDA (<text>) — C3.5c.
+  // Variant A: barcha label GLASS karkas cho'qqisi tepasida — bir xil tekislik
+  //   (binolar har xil balandlikda bo'lsa ham label tartibli, o'qilishi oson).
+  // Glass karkas cho'qqisi = asos romb tepa cho'qqisi (cy - bh) dan to'liq
+  //   balandlik (CITY_BLD_FULL_HEIGHT) yuqorida. Label undan yana 10px tepada.
   // text-anchor=middle — matn cx ga nisbatan markazlashadi.
   const label = cityLabelText(habitName);
   if (label) {
-    const labelY = cy + bh + 14;  // asos pastki cho'qqi + 14px bo'shliq
+    const labelY = cy - bh - CITY_BLD_FULL_HEIGHT - 10;  // glass cho'qqi + 10px tepada
     svg += `<text class="city-bld-label" x="${cx}" y="${labelY}" text-anchor="middle">${label}</text>`;
   }
 
@@ -229,7 +232,7 @@ function renderCityBuildings(buildings) {
     // C3.5b: cityBuildingSVG endi progress (kun soni) qabul qiladi — balandlik
     //   uzluksiz hisoblanadi. stage cityBuildingSVG ichida data-stage uchun
     //   hisoblanadi (bu yerda alohida chaqirish kerak emas).
-    // C3.5c: b.habit_name (API javobida) — bino ostidagi label.
+    // C3.5c: b.habit_name (API javobida) — bino ustidagi label.
     // b.habit_id ham uzatiladi — data-habit-id atributi orqali bino bilan
     //   interaktivlik (long-press ko'chirish) habit_id ni topadi.
     html += cityBuildingSVG(b.type, b.progress, cx, cy, b.habit_id, b.habit_name);
@@ -250,7 +253,7 @@ function renderCityBuildings(buildings) {
 //   progress'ga (0-66 kun) chiziqli bog'langan. cityBuildingHeight() funksiyasi.
 //   Har bajarilgan kun farq qiladi. cityBuildingStage() saqlangan — faqat
 //   data-stage atributi uchun (balandlikka ta'sir qilmaydi).
-// PHASE C3.5c: ✅ odat nomi label — bino ostida <text> (foydalanuvchi yozgan
+// PHASE C3.5c: ✅ odat nomi label — bino ustida <text> (foydalanuvchi yozgan
 //   nom, tarjima qilinmaydi; 12 belgidan uzun bo'lsa "…" bilan qisqartiriladi).
 //   Backend api_city_get javobiga habit_name qo'shilgan. style-city.css da
 //   .city-bld-label class. Label <g> ichida — drag paytida bino bilan ko'chadi.

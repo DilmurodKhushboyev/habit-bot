@@ -119,12 +119,19 @@ function renderCityGrid(container, cityData) {
   //   - Eng past: (x=29, y=29) → cy=1160, romb pastki: 1160 + 40 = 1200
   const halfW   = CITY_GRID_SIZE * (CITY_TILE_W / 2);      // 1200 — markazdan eng uzoq cx
   const halfH   = CITY_GRID_SIZE * CITY_TILE_H;            // 1200 — eng pastki cy
+  // C3.5c: bino USTIDAGI label uchun tepada qo'shimcha joy. Eng yuqori bino
+  //   (x=0,y=0) uchun label y ≈ cy - bh - FULL_HEIGHT - 10 ≈ -89 (manfiy).
+  //   Standart viewY=-40 da label kesilardi — CITY_LABEL_HEADROOM bilan
+  //   viewBox tepasi kengaytiriladi (bino tepa balandlik 84 + label + bo'shliq).
+  const CITY_LABEL_HEADROOM = 110;
   // Romb cho'qqilarini ham hisobga olib, padding qo'shamiz
   const fullW   = (halfW + CITY_TILE_W / 2) * 2 + CITY_PADDING * 2;  // (1200+40)*2 + 80 = 2560
-  const fullH   = halfH + CITY_TILE_H + CITY_PADDING * 2;            // 1200 + 40 + 80 = 1320
+  // fullH: pastki padding + grid + tepa padding + label uchun headroom
+  const fullH   = halfH + CITY_TILE_H + CITY_PADDING * 2 + CITY_LABEL_HEADROOM;  // 1430
   // viewBox markazlash: chap chetdagi rombning chap cho'qqisidan boshlanadi
   const viewX   = -(halfW + CITY_TILE_W / 2) - CITY_PADDING;  // -1280
-  const viewY   = -CITY_PADDING;                              // -40
+  // viewY: standart padding + label headroom (tepada label kesilmasligi uchun)
+  const viewY   = -CITY_PADDING - CITY_LABEL_HEADROOM;        // -150
 
   // Har bir katakni alohida <polygon> sifatida chizamiz.
   // Sabab: kelajakda C5 da har katakni alohida bosish/drop target qilish kerak,
