@@ -1,5 +1,5 @@
 /* ==============================================
-   style-city.css — Shahar sahifa stillari (PHASE C3.5: ajratilgan city CSS)
+   style-city.css — Shahar sahifa stillari (PHASE C3.5c: odat nomi label)
    ==============================================
 
    VAZIFA: shahar feature'ining BARCHA CSS'lari shu faylda. Avval style.css
@@ -16,6 +16,7 @@
      1. UMUMIY city CSS — grid, binolar, xato holati, drag&drop (C2.1–C5)
      2. GLASS wireframe CSS — qurilmagan qism (C3.5a) — .city-bld polygon
         selector'ni override qiladi (stroke: none)
+     3. BINO LABEL CSS — odat nomi <text> bino ostida (C3.5c)
 
    Bog'liqlik:
      - app-city.js (.city-canvas-wrap, .city-tile*, .city-error*)
@@ -222,3 +223,33 @@ body.dark .city-bld-glass-edge {
   stroke: #4A4A52;
   opacity: 0.7;
 }
+
+/* ════════════════════════════════════════════════
+   3-QISM: BINO LABEL (odat nomi) — PHASE C3.5c
+   ════════════════════════════════════════════════
+   Bino asosi ostidagi <text> — qaysi bino qaysi odatniki ekanini ko'rsatadi.
+   app-city-buildings.js cityBuildingSVG() <text class="city-bld-label"> chizadi. */
+
+/* ── Label matni — bino ostida, quyuq kulrang (fon ustida aniq o'qiladi) ── */
+.city-bld-label {
+  fill: #6A6A72;            /* quyuq kulrang — qora emas, yumshoqroq */
+  font-size: 11px;
+  font-weight: 600;
+  /* DM Sans — index.html da yuklangan asosiy shrift */
+  font-family: 'DM Sans', sans-serif;
+  pointer-events: none;     /* tap bino kub'ga tegsin, label'ga emas */
+  user-select: none;
+  -webkit-user-select: none;
+  /* Oq fon ustida o'qilishini kuchaytirish — yengil oq "halo" */
+  paint-order: stroke;
+  stroke: #FFFFFF;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+/* Dark mode — och kulrang matn, quyuq "halo" */
+body.dark .city-bld-label {
+  fill: #B0B0B8;
+  stroke: #1A1A1C;
+}
+
