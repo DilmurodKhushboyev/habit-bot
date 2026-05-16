@@ -143,12 +143,20 @@ def register_city_routes(app):
 
         city = get_user_city(u)
 
-        # Frontend uchun har bino'ga stage ni qo'shamiz (alohida hisoblamasin)
+        # Frontend uchun har bino'ga stage va habit_name qo'shamiz.
+        # habit_name: bino ustida label ko'rsatish uchun (qaysi bino qaysi
+        # odatniki). habit_id → name lug'ati u["habits"] dan tuziladi.
+        # Odat o'chirilgan bo'lsa (orfan bino) — bo'sh string.
+        habit_names = {
+            str(h.get("id")): h.get("name", "")
+            for h in u.get("habits", [])
+        }
         buildings = []
         for b in city.get("buildings", []):
             buildings.append({
                 **b,
                 "stage": get_building_stage(b.get("progress", 0)),
+                "habit_name": habit_names.get(str(b.get("habit_id")), ""),
             })
 
         return jsonify({
