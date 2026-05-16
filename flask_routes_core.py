@@ -512,6 +512,14 @@ def register_core_routes(app):
         habits = u.get("habits", [])
         habits.append(new_habit)
         u["habits"] = habits
+        # CITY: yangi odat uchun bo'sh bino (progress 0) — odat hali tasdiqlanmagan
+        # bo'lsa ham shaharda bo'sh shisha kub ko'rinadi (Qoida #10 — bot
+        # groups._save_new_habit bilan SINXRON). create_building idempotent.
+        try:
+            from city_logic import create_building
+            create_building(u, new_habit["id"])
+        except Exception as _ce:
+            print(f"[city] create_building xato (uid={uid}): {_ce}")
         save_user(uid, u)
         try:
             from scheduler import schedule_habit

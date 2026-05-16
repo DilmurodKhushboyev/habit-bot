@@ -70,6 +70,14 @@ def _save_new_habit(uid, u):
     u["state"]  = None
     u.pop("temp_habit", None)
     u.pop("temp_msg_id", None)
+    # CITY: yangi odat uchun bo'sh bino (progress 0) — odat hali tasdiqlanmagan
+    # bo'lsa ham shaharda bo'sh shisha kub ko'rinadi (Qoida #10 — WebApp
+    # flask_routes_core.api_habits_add bilan SINXRON). create_building idempotent.
+    try:
+        from city_logic import create_building
+        create_building(u, new_habit["id"])
+    except Exception as _ce:
+        print(f"[city] create_building xato (uid={uid}): {_ce}")
     save_user(uid, u)
 
     # Schedule: repeat odat uchun repeat_times, oddiy uchun time
