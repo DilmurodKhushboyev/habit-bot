@@ -55,8 +55,10 @@ const CITY_STAGE_THRESHOLDS = [13, 26, 39, 52, 66];
 // shahar "havodor" ko'rinadi va atrofni ko'rish osonroq (foydalanuvchi tanlovi).
 const CITY_BLD_BASE_W = 60;   // kub asos kengligi (px) — CITY_TILE_W=80 dan kichik
 const CITY_BLD_BASE_H = 30;   // kub asos balandligi (px) — CITY_TILE_H=40 dan kichik (2:1)
-// Stage bo'yicha kub balandligi (vertikal — px). Stage 0 past poydevor, 4 to'liq.
-const CITY_BLD_HEIGHTS = [14, 34, 58, 84, 84];  // stage 0..4 balandlik
+// C3.5b: CITY_BLD_HEIGHTS massivi (stage bo'yicha balandlik) OLIB TASHLANDI.
+// Endi bino balandligi UZLUKSIZ — progress (0-66 kun) ga chiziqli bog'langan.
+// Balandlik mantiqi app-city-buildings.js da: cityBuildingHeight() funksiyasi,
+// CITY_BLD_MIN_HEIGHT / CITY_BLD_FULL_HEIGHT / CITY_BLD_MAX_PROGRESS konstantalar.
 
 // ── API DATA (C4) ──
 // _cityDemoData O'CHIRILDI — endi haqiqiy GET /api/city/<uid> javobi ishlatiladi.

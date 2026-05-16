@@ -1,39 +1,68 @@
 // ==============================================
-// app-city-buildings.js — Shahar binolari (PHASE C3.5a: glass wireframe)
+// app-city-buildings.js — Shahar binolari (PHASE C3.5b: uzluksiz balandlik)
 // ==============================================
 // Bog'liqlik:
-//   - app-city.js (CITY_TILE_H, CITY_BLD_BASE_W/H, CITY_BLD_HEIGHTS,
-//     CITY_STAGE_THRESHOLDS, cityIsoX/cityIsoY — shu fayldan import qilinadi)
+//   - app-city.js (CITY_TILE_H, CITY_BLD_BASE_W/H, CITY_STAGE_THRESHOLDS,
+//     cityIsoX/cityIsoY — shu fayldan import qilinadi)
 //   - config.py BUILDING_TYPES (10 bino turi) va BUILDING_STAGE_THRESHOLDS bilan SINXRON
 //
 // VAZIFA: barcha bino BIR XIL standart kub — o'lcham/shakl farqi YO'Q.
 //   QAROR (C3.2): har odat 66 kunda shakllanadi. Agar binolar har xil bo'lsa,
 //   foydalanuvchi chalg'iydi. Bir xil bo'lsa — diqqat faqat QURILISH BOSQICHIGA
-//   (stage) qaratiladi: "odatimni qanchalik yaxshi quryapman?". Bu habit tracker
+//   qaratiladi: "odatimni qanchalik yaxshi quryapman?". Bu habit tracker
 //   mantig'iga mos. Bino TURI faqat data-type atributida saqlanadi. Bino bilan
 //   interaktivlik (long-press → ko'chirish) data-habit-id atributiga tayanadi.
 //   (Avvalgi CITY_BLD_SHAPES o'lcham tizimi va cityCapSVG cap tizimi — o'chirildi.
 //    Kerak bo'lsa git tarixida bor; "kerak bo'lar" deb o'lik kod saqlamaymiz.)
 //
 // PHASE C3.5a (glass wireframe): bino 2 qismdan iborat:
-//   1. SOLID qism (qurilgan) — stage balandligida, to'liq rangli kub
+//   1. SOLID qism (qurilgan) — to'liq rangli kub
 //   2. GLASS qism (qurilmagan) — to'liq balandlikkacha bo'sh joy, shaffof yuzlar +
 //      aniq qirra chiziqlari (shisha karkas). Foydalanuvchi "bino qaysi yo'nalishda
-//      o'sayotganini" ko'radi → motivatsion vizual. Stage 4 da glass YO'Q.
+//      o'sayotganini" ko'radi → motivatsion vizual.
+//
+// PHASE C3.5b (uzluksiz balandlik): solid qism balandligi STAGE'ga emas,
+//   PROGRESS'ga (kun soni 0-66) chiziqli bog'langan. Sabab: stage tizimida
+//   9-kun va 12-kun bir xil ko'rinardi (ikkalasi ham stage 0). Endi HAR kun
+//   farq qiladi — 1 ortiqcha bajarilgan kun ham seziladi. cityBuildingHeight()
+//   funksiyasi: progress 1 → CITY_BLD_MIN_HEIGHT (8px), progress 66 →
+//   CITY_BLD_FULL_HEIGHT (84px), oraliq — chiziqli interpolyatsiya.
+//   stage HALI ham hisoblanadi — faqat data-stage atributi uchun (kelajakda
+//   kerak bo'lishi mumkin; balandlikka TA'SIR QILMAYDI).
 //
 // MUHIM (Qoida #24): bu fayl app-city.js dan AJRATILGAN. index.html da
 //   app-city.js dan KEYIN yuklanadi (konstantalar avval e'lon qilinishi kerak).
 // ==============================================
 
-// ── To'liq qurilgan bino balandligi (Qoida #17 — magic number markazlash) ──
-// Glass qism solid qism tepasidan shu balandlikkacha cho'ziladi.
-// CITY_BLD_HEIGHTS[4] = 84 (app-city.js da) bilan AYNI QIYMAT — keyinroq
-// CITY_BLD_HEIGHTS o'zgarsa, bu ham xuddi shunday yangilanishi kerak (Qoida #11).
+// ── Bino balandlik konstantalari (Qoida #17 — magic number markazlash) ──
+// CITY_BLD_FULL_HEIGHT: progress 66 (to'liq shakllangan odat) dagi balandlik.
+//   Glass qism solid qism tepasidan shu balandlikkacha cho'ziladi.
+// CITY_BLD_MIN_HEIGHT: progress 1 (endigina boshlangan odat) dagi balandlik.
+//   0 emas — 1 kun bajargan foydalanuvchi ham kichik poydevor ko'rishi kerak.
+//   progress 0 (umuman bajarilmagan) — alohida holat, height 0 (pastda).
 const CITY_BLD_FULL_HEIGHT = 84;
+const CITY_BLD_MIN_HEIGHT  = 8;
+const CITY_BLD_MAX_PROGRESS = 66;   // to'liq shakllangan odat (config.py bilan SINXRON)
+
+// ── progress (kun) → solid kub balandligi (px) — UZLUKSIZ (C3.5b) ──
+// Chiziqli interpolyatsiya: progress 1 → MIN (8px), progress 66 → FULL (84px).
+// progress 0 → 0 (bino yo'q, faqat glass karkas ko'rinadi).
+// progress > 66 bo'lsa ham FULL bilan cheklanadi (xavfsizlik).
+function cityBuildingHeight(progress) {
+  const p = Math.max(0, Math.min(CITY_BLD_MAX_PROGRESS, progress || 0));
+  if (p <= 0) return 0;
+  // p=1 → MIN, p=66 → FULL. Oraliq chiziqli:
+  //   height = MIN + (p - 1) / (MAX - 1) * (FULL - MIN)
+  const ratio = (p - 1) / (CITY_BLD_MAX_PROGRESS - 1);
+  return CITY_BLD_MIN_HEIGHT + ratio * (CITY_BLD_FULL_HEIGHT - CITY_BLD_MIN_HEIGHT);
+}
 
 // ── progress (kun) → stage (0-4) ──
 // config.py BUILDING_STAGE_THRESHOLDS bilan SINXRON (Qoida #11).
 // progress <= 13 → stage 0, <= 26 → 1, <= 39 → 2, <= 52 → 3, qolgani → 4.
+// C3.5b: stage endi BALANDLIKKA TA'SIR QILMAYDI — faqat data-stage atributi
+//   uchun hisoblanadi (kelajakda kerak bo'lishi mumkin). Balandlik —
+//   cityBuildingHeight() (uzluksiz).
 function cityBuildingStage(progress) {
   const p = Math.max(0, Math.min(CITY_STAGE_THRESHOLDS[4], progress || 0));
   for (let s = 0; s < CITY_STAGE_THRESHOLDS.length; s++) {
@@ -65,22 +94,27 @@ function cityCubeFaces(cx, cy, bw, bh, h) {
 // ── Bitta bino SVG'si (izometrik kub, SOLID + GLASS qatlamlar) ──
 // type: bino turi (config.py BUILDING_TYPES kaliti — faqat data-type atributi uchun,
 //   o'lchamga TA'SIR QILMAYDI).
-// stage: 0-4 (cityBuildingStage natijasi) — solid kub balandligini belgilaydi.
+// progress: bajarilgan kun soni (0-66) — solid kub balandligini UZLUKSIZ belgilaydi
+//   (C3.5b: stage emas — progress; har kun farq qiladi).
 // cx, cy: katak rombning MARKAZIY nuqtasi (cityIsoX/cityIsoY + romb markazi).
 // habitId: bino bog'liq odat id'si — <g> ga data-habit-id atributi sifatida
 //   yoziladi. Bino bilan interaktivlik (long-press → bino ko'chirish) shu
 //   atributdan habit_id ni o'qib, move_item API'ga yuboradi.
 //
-// QATLAMLAR (C3.5a):
-//   1. SOLID kub — qurilgan qism (stage balandligida)
+// QATLAMLAR (C3.5a + C3.5b):
+//   1. SOLID kub — qurilgan qism (progress'ga mos UZLUKSIZ balandlikda)
 //   2. GLASS kub — qurilmagan qism (solid TEPASIDAN to'liq balandlikkacha).
-//      Stage 4 da glass chizilmaydi (bino to'liq qurilgan).
+//      progress 66 ga yetganda glass chizilmaydi (bino to'liq qurilgan).
 //
-// Qaytaradi: <g> ichida solid 3 polygon + (agar stage<4) glass 3 polygon + qirralar.
-function cityBuildingSVG(type, stage, cx, cy, habitId) {
+// data-stage atributi uchun cityBuildingStage() ham chaqiriladi (balandlikka
+//   ta'sir qilmaydi — faqat atribut; kelajakda kerak bo'lishi mumkin).
+//
+// Qaytaradi: <g> ichida solid 3 polygon + (agar progress<66) glass 3 polygon + qirralar.
+function cityBuildingSVG(type, progress, cx, cy, habitId) {
   const bw = CITY_BLD_BASE_W / 2;          // asos yarim kengligi (barcha bino bir xil)
   const bh = CITY_BLD_BASE_H / 2;          // asos yarim balandligi (barcha bino bir xil)
-  const hSolid = CITY_BLD_HEIGHTS[stage];  // solid kub balandligi
+  const hSolid = cityBuildingHeight(progress);  // solid kub balandligi (UZLUKSIZ — C3.5b)
+  const stage  = cityBuildingStage(progress);   // faqat data-stage atributi uchun
 
   // 1. SOLID kub (qurilgan qism) — pastdan hSolid balandlikgacha
   const solidFaces = cityCubeFaces(cx, cy, bw, bh, hSolid);
@@ -90,10 +124,11 @@ function cityBuildingSVG(type, stage, cx, cy, habitId) {
   svg += `<polygon class="city-bld-right" points="${solidFaces.rightFace}"/>`;
   svg += `<polygon class="city-bld-top"   points="${solidFaces.topFace}"/>`;
 
-  // 2. GLASS kub (qurilmagan qism) — faqat stage < 4 bo'lsa
+  // 2. GLASS kub (qurilmagan qism) — solid tepasidan to'liq balandlikkacha
   // Glass kub PASTKI markazi = solid kub TEPASI = (cx, cy - hSolid)
   // Glass kub balandligi = to'liq balandlik - solid balandlik
-  if (stage < 4) {
+  // hGlass <= 0 bo'lsa (progress 66 — to'liq qurilgan) glass chizilmaydi.
+  {
     const hGlass = CITY_BLD_FULL_HEIGHT - hSolid;  // qolgan balandlik
     if (hGlass > 0) {
       // Glass kub asosi solid tepasiga "yotqizilgan" — bh=0 (asos romb tekis chiziq)
@@ -149,32 +184,35 @@ function renderCityBuildings(buildings) {
   });
   let html = '';
   for (const b of sorted) {
-    const stage = cityBuildingStage(b.progress);
     // Katak rombning markaziy nuqtasi: cityIsoX/Y top cho'qqini beradi,
     // markazga yetish uchun +CITY_TILE_H/2 (romb vertikal markazi).
     const cx = cityIsoX(b.x, b.y);
     const cy = cityIsoY(b.x, b.y) + CITY_TILE_H / 2;
+    // C3.5b: cityBuildingSVG endi progress (kun soni) qabul qiladi — balandlik
+    //   uzluksiz hisoblanadi. stage cityBuildingSVG ichida data-stage uchun
+    //   hisoblanadi (bu yerda alohida chaqirish kerak emas).
     // b.habit_id ham uzatiladi — data-habit-id atributi orqali bino bilan
     //   interaktivlik (long-press ko'chirish) habit_id ni topadi.
-    html += cityBuildingSVG(b.type, stage, cx, cy, b.habit_id);
+    html += cityBuildingSVG(b.type, b.progress, cx, cy, b.habit_id);
   }
   return html;
 }
 
 // ── Eslatma kelajakdagi bosqichlar uchun ──
-// PHASE C3.2:  ✅ binolar — bir xil standart kub, faqat stage bo'yicha balandlik
+// PHASE C3.2:  ✅ binolar — bir xil standart kub
 // PHASE C3.3:  ⏭️ dekoratsiyalar — KEYINGA QOLDIRILDI. Sabab: kichik izometrik
 //   primitivlar bilan tanib bo'ladigan daraxt/mashina/favvora yasash qiyin,
 //   natija abstrakt/bee'xshov chiqdi. Kelajakda professional SVG ikonkalar bilan
 //   qilinadi (kod bilan emas). Backend place_decoration/DECORATION_TYPES tayyor turadi.
 // PHASE C3.4:  premium CSS polish (soyalar, 3D effekt finetune)
 // PHASE C3.5a: ✅ glass wireframe — qurilmagan qism shaffof yuz + qirra chiziq
-//   (motivatsion vizual: "binom qaysi balandlikka o'sayotganini ko'rib turaman").
-//   Stage 4 da glass yo'q. style.css ga yangi class kerak (.city-bld-glass-*,
-//   .city-bld-glass-edge) — Qoida #11 consistency.
-// PHASE C3.5b: ⏭️ bino ustida odat nomi (label) — habit_name manbasi aniqlangach
-//   alohida bosqich. Variant: backend api_city_get ga habit_name qo'shish YOKI
-//   frontend _habitsCache (agar mavjud bo'lsa) dan o'qish.
+//   (motivatsion vizual). style-city.css da .city-bld-glass-* class'lar.
+// PHASE C3.5b: ✅ uzluksiz balandlik — solid kub balandligi stage'ga emas,
+//   progress'ga (0-66 kun) chiziqli bog'langan. cityBuildingHeight() funksiyasi.
+//   Har bajarilgan kun farq qiladi. cityBuildingStage() saqlangan — faqat
+//   data-stage atributi uchun (balandlikka ta'sir qilmaydi).
+// PHASE C3.5c: ⏭️ bino ustida odat nomi (label) — backend api_city_get javobiga
+//   habit_name qo'shilgach (flask_routes_city.py). REJALASHTIRILGAN keyingi qadam.
 // PHASE C5:    ✅ data-habit-id atributi <g> da tayyor — bino bilan interaktivlik
 //              (long-press → bino ko'chirish) shu atributdan habit_id ni o'qiydi.
 //              Bino bosish modali (change_type) — A varianti bilan OLIB TASHLANDI.
