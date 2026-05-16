@@ -1705,6 +1705,11 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   z-index: 20;
   overflow: visible;
   background: none;
+  /* GPU qatlam izolyatsiyasi — sahifa innerHTML qayta yozilganda
+     (sahifadan-sahifaga o'tish) panel alohida composite layer'da
+     turadi va o'sha repaint'ga qo'shilmaydi → pirpirash yo'qoladi. */
+  transform: translateZ(0);
+  will-change: transform;
 }
 .nav-bg {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
