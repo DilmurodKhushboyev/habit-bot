@@ -295,19 +295,13 @@ function moveNavBall(targetEl, animate) {
   var startX = ball._lastX;
   var midX   = (startX + targetX) / 2;
 
-  // Animate notch sliding with ball
-  var startCx = startX + halfBall;
-  var endCx   = centerX;
-  var notchStart = performance.now();
-  var notchDur = 480;
-  function animateNotch(now) {
-    var t = Math.min((now - notchStart) / notchDur, 1);
-    var ease = 1 - Math.pow(1 - t, 3);
-    var cx = startCx + (endCx - startCx) * ease;
-    drawNavNotch(cx);
-    if (t < 1) requestAnimationFrame(animateNotch);
-  }
-  requestAnimationFrame(animateNotch);
+  // Notch (panel o'yig'i) BIR MARTA yangi pozitsiyaga chiziladi.
+  // Avval har kadrda (requestAnimationFrame) qayta chizilardi — bu
+  // .nav-bg SVG'ning drop-shadow filtrini har kadr qayta rasterizatsiya
+  // qilib, mobil WebView'da panelni ~0.5s pirpiratardi. Shar havoda
+  // sakrayotgan paytda (navBallJump ~520ms) o'yiq allaqachon tayyor —
+  // shar pastga tushganda aynan joyiga to'g'ri keladi.
+  drawNavNotch(centerX);
 
   ball.classList.remove('jumping');
   ball.style.setProperty('--ball-sx', startX + 'px');
