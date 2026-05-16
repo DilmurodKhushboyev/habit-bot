@@ -3196,17 +3196,11 @@ body.dark .rem1-section-title-collapsible:active {
   font-weight: 700;
   cursor: pointer;
   box-shadow: var(--sh-sm);
-  transition: box-shadow 0.15s ease, transform 0.15s ease, opacity 0.2s ease;
-  opacity: 0;
-  transform: translateY(8px);
+  /* Ko'rinish/animatsiyani faqat .fab-actions konteyner boshqaradi —
+     bu yerda alohida opacity/transform QO'YILMAYDI (ikki qatlamli
+     opacity ko'paytmasi pirpirashga olib kelardi). Faqat press effekti. */
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
-.fab-wrap.open .fab-action {
-  opacity: 1;
-  transform: translateY(0);
-}
-/* Stagger animatsiya — ikkinchi tugma biroz keyinroq paydo bo'ladi */
-.fab-wrap.open .fab-action:nth-child(1) { transition-delay: 0.04s; }
-.fab-wrap.open .fab-action:nth-child(2) { transition-delay: 0.10s; }
 
 .fab-action:active {
   transform: scale(0.97);
