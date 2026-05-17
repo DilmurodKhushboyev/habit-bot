@@ -279,7 +279,17 @@ function moveNavBall(targetEl, animate) {
   var srcIcon = targetEl.querySelector('.nav-icon');
   var srcLabel = targetEl.querySelector('.nav-label');
   if (srcIcon && ballIcon) {
-    ballIcon.innerHTML = srcIcon.innerHTML;
+    // DIQQAT: ikonka SVG'larida gradient id'lar bor (ni1, ni2, ni-city-top...).
+    // To'g'ridan-to'g'ri innerHTML ko'chirilsa — sahifada BIR XIL id ikki
+    // joyda paydo bo'ladi (asl tugma + nav-ball nusxasi). Dublikat id
+    // url(#...) referenslarini buzadi → SVG pirpiraydi/buziladi.
+    // Yechim: nusxadagi har bir id va url(#id) ga "-nb" suffiksi qo'shamiz.
+    var iconHtml = srcIcon.innerHTML.replace(
+      /\bid="([^"]+)"/g, 'id="$1-nb"'
+    ).replace(
+      /url\(#([^)]+)\)/g, 'url(#$1-nb)'
+    );
+    ballIcon.innerHTML = iconHtml;
   }
   if (srcLabel && ballLabel) {
     ballLabel.textContent = srcLabel.textContent;
