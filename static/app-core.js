@@ -260,6 +260,19 @@ function drawNavNotch(cx) {
     + ' L0,' + h + ' Z';
 
   svgPath.setAttribute('d', path);
+
+  // Kontur — faqat YUQORI chiziq (notch o'yig'i ko'rinishi uchun).
+  // Pastki/yon chiziqlar chizilmaydi (ular ekran chetida). Bu drop-shadow
+  // o'rnini bosadi — stroke rasterizatsiya qilinmaydi, pirpiramaydi.
+  var svgStroke = document.getElementById('nav-bg-stroke');
+  if (svgStroke) {
+    var topLine = 'M0,' + top
+      + ' L' + Math.max(0, nleft) + ',' + top
+      + ' C' + (nleft + r * 0.3) + ',' + top + ' ' + (nleft + r * 0.4) + ',' + (top + d) + ' ' + cx + ',' + (top + d)
+      + ' C' + (nright - r * 0.4) + ',' + (top + d) + ' ' + (nright - r * 0.3) + ',' + top + ' ' + Math.min(w, nright) + ',' + top
+      + ' L' + w + ',' + top;
+    svgStroke.setAttribute('d', topLine);
+  }
 }
 
 function moveNavBall(targetEl, animate) {
