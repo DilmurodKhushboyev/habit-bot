@@ -1705,14 +1705,6 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   z-index: 20;
   overflow: visible;
   background: none;
-  /* Panelni tashqi reflow'dan IZOLYATSIYA qilish.
-     Sahifa innerHTML qayta yozilganda body butunlay reflow bo'ladi —
-     contain: layout bu reflow'ni panel ichiga o'tkazmaydi.
-     DIQQAT: 'paint' QO'SHILMAYDI — u nav-ball (top:-30px, panel
-     tashqarisida turadi) ni kesib tashlardi. */
-  transform: translateZ(0);
-  contain: layout style;
-  isolation: isolate;
 }
 .nav-bg {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
