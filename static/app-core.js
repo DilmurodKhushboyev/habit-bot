@@ -392,12 +392,20 @@ function switchTab(tab, el) {
   // Nav ball
   var navTarget = el || document.getElementById('nav-' + tab);
   if (navTarget) moveNavBall(navTarget, true);
-  if (!loaded[tab]) loadTab(tab);
-  else if (tab === 'habits') { loaded.habits = false; loadTab('habits'); }
-  else if (tab === 'profile') { loaded.profile = false; loadTab('profile'); }
-  else if (tab === 'bozor') { loaded.bozor = false; loadTab('bozor'); }
-  else if (tab === 'city')    { loaded.city = false;    loadTab('city');    } // qaytganda markazga avtoscroll
-  else refreshHabitsJon();
+  // Sahifa yuklashni shar animatsiyasidan keyinga (~300ms) suramiz:
+  // loadTab innerHTML yozadi → layout reflow → bu shar navBallJump
+  // animatsiyasini uzib pirpiratardi. _tabLoading'ni DARHOL true qilamiz
+  // (kechikish oynasida takroriy bosish bloklansin), yuklash 300ms keyin.
+  _tabLoading = true;
+  setTimeout(function() {
+    _tabLoading = false; // loadTab o'zi qayta true qiladi
+    if (!loaded[tab]) loadTab(tab);
+    else if (tab === 'habits') { loaded.habits = false; loadTab('habits'); }
+    else if (tab === 'profile') { loaded.profile = false; loadTab('profile'); }
+    else if (tab === 'bozor') { loaded.bozor = false; loadTab('bozor'); }
+    else if (tab === 'city')    { loaded.city = false;    loadTab('city');    } // qaytganda markazga avtoscroll
+    else refreshHabitsJon();
+  }, 300);
 }
 
 function goBack() {
