@@ -279,16 +279,14 @@ function moveNavBall(targetEl, animate) {
   var srcIcon = targetEl.querySelector('.nav-icon');
   var srcLabel = targetEl.querySelector('.nav-label');
   if (srcIcon && ballIcon) {
-    // DIQQAT: ikonka SVG'larida gradient id'lar bor (ni1, ni2, ni-city-top...).
-    // To'g'ridan-to'g'ri innerHTML ko'chirilsa — sahifada BIR XIL id ikki
-    // joyda paydo bo'ladi (asl tugma + nav-ball nusxasi). Dublikat id
-    // url(#...) referenslarini buzadi → SVG pirpiraydi/buziladi.
-    // Yechim: nusxadagi har bir id va url(#id) ga "-nb" suffiksi qo'shamiz.
-    var iconHtml = srcIcon.innerHTML.replace(
-      /\bid="([^"]+)"/g, 'id="$1-nb"'
-    ).replace(
-      /url\(#([^)]+)\)/g, 'url(#$1-nb)'
-    );
+    // Ikonka SVG'larida rangli gradient bor (fill/stroke = url(#ni1)...).
+    // Nav-ball ichida ikonka OQ bo'lishi kerak. Avval CSS filter
+    // (brightness(0) invert(1)) ishlatilardi — lekin navBallJump
+    // animatsiyasi paytida filter har kadr qayta rasterizatsiya bo'lib
+    // sharni pirpiratardi. Yechim: gradient referenslarini to'g'ridan-
+    // to'g'ri #fff ga almashtiramiz → filter umuman kerak emas.
+    // Bonus: gradient ishlatilmagani uchun dublikat-id muammosi ham yo'q.
+    var iconHtml = srcIcon.innerHTML.replace(/url\(#[^)]+\)/g, '#fff');
     ballIcon.innerHTML = iconHtml;
   }
   if (srcLabel && ballLabel) {
