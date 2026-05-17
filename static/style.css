@@ -1705,11 +1705,16 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   z-index: 20;
   overflow: visible;
   background: none;
+  /* Panel yuqori qirrasidagi nozik soya. Avval .nav-bg SVG'da
+     filter: drop-shadow ishlatilardi — lekin drawNavNotch har sahifa
+     o'tishida SVG path'ni yangilaganda drop-shadow qayta rasterizatsiya
+     bo'lib panelni pirpiratardi (test bilan aniqlangan). box-shadow
+     rasterizatsiya talab qilmaydi → pirpirash yo'q. */
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.07);
 }
 .nav-bg {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   z-index: -1;
-  filter: drop-shadow(0 -4px 12px rgba(0,0,0,0.07));
 }
 .nav-item {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -1771,12 +1776,12 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   animation: navBallJump 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 @keyframes navBallJump {
-  0%   { transform: translate(var(--ball-sx), 0); }
-  15%  { transform: translate(var(--ball-sx), 4px); }
-  40%  { transform: translate(var(--ball-mid), -28px); }
-  65%  { transform: translate(var(--ball-ex), -3px); }
-  80%  { transform: translate(var(--ball-ex), 1px); }
-  100% { transform: translate(var(--ball-ex), 0); }
+  0%   { transform: translate(var(--ball-sx), 0) scale(1); }
+  15%  { transform: translate(var(--ball-sx), 4px) scale(1.08, 0.9); }
+  40%  { transform: translate(var(--ball-mid), -28px) scale(0.92, 1.1); }
+  65%  { transform: translate(var(--ball-ex), -3px) scale(1.04, 0.96); }
+  80%  { transform: translate(var(--ball-ex), 1px) scale(0.98, 1.02); }
+  100% { transform: translate(var(--ball-ex), 0) scale(1); }
 }
 /* ── NAV RIPPLE (toʻlqin) ── */
 .nav-ripple {
