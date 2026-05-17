@@ -326,8 +326,11 @@ function moveNavBall(targetEl, animate) {
     ball.style.transform = 'translate(' + targetX + 'px, 0)';
     ball._lastX = targetX;
     ball.removeEventListener('animationend', onEnd);
-    // Toʻlqin (ripple) effekti — shar tushganda panel jilvalanadi
-    spawnNavRipple(centerX);
+    // Ripple effekti O'CHIRILDI: har .nav-ripple elementi .bottom-nav
+    // ichiga appendChild qilinganda mobil WebView compositing'ni qayta
+    // hisoblab, panelni pirpiratardi (shar o'tgandan keyin 2 marta).
+    // spawnNavRipple funksiyasi tanasi quyida saqlanyapti — kelajakda
+    // alohida overlay konteyner bilan qayta tiklash mumkin.
   });
 
   ball._lastX = targetX;
