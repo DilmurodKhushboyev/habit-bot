@@ -1771,12 +1771,12 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   animation: navBallJump 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 @keyframes navBallJump {
-  0%   { transform: translate(var(--ball-sx), 0) scale(1); }
-  15%  { transform: translate(var(--ball-sx), 4px) scale(1.08, 0.9); }
-  40%  { transform: translate(var(--ball-mid), -28px) scale(0.92, 1.1); }
-  65%  { transform: translate(var(--ball-ex), -3px) scale(1.04, 0.96); }
-  80%  { transform: translate(var(--ball-ex), 1px) scale(0.98, 1.02); }
-  100% { transform: translate(var(--ball-ex), 0) scale(1); }
+  0%   { transform: translate(var(--ball-sx), 0); }
+  15%  { transform: translate(var(--ball-sx), 4px); }
+  40%  { transform: translate(var(--ball-mid), -28px); }
+  65%  { transform: translate(var(--ball-ex), -3px); }
+  80%  { transform: translate(var(--ball-ex), 1px); }
+  100% { transform: translate(var(--ball-ex), 0); }
 }
 /* ── NAV RIPPLE (toʻlqin) ── */
 .nav-ripple {
