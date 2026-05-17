@@ -275,25 +275,28 @@ function moveNavBall(targetEl, animate) {
   var targetX = tRect.left - navRect.left + tRect.width / 2 - halfBall;
   var centerX = tRect.left - navRect.left + tRect.width / 2;
 
-  // Clone active tab icon + label into ball
+  // Clone active tab icon + label into ball.
+  // DIQQAT: ballIcon.innerHTML = ... butun SVG'ni noldan quradi. Agar bu
+  // animatsiya BOSHIDA bajarilsa, shar bir kadr "ichi bo'sh" ko'rinib
+  // pirpiraydi. Shuning uchun:
+  //  - animate=false (birinchi yuklash): darhol almashtiramiz.
+  //  - animate=true (sahifa o'tishi): almashtirish 210ms keyinga —
+  //    shar navBallJump'ning ~40% (eng tepa nuqta) da, harakatda
+  //    bo'lganida — SVG qayta qurilishi ko'zga ko'rinmaydi.
   var srcIcon = targetEl.querySelector('.nav-icon');
   var srcLabel = targetEl.querySelector('.nav-label');
-  if (srcIcon && ballIcon) {
-    // Ikonka SVG'larida rangli gradient bor (fill/stroke = url(#ni1)...).
-    // Nav-ball ichida ikonka OQ bo'lishi kerak. Avval CSS filter
-    // (brightness(0) invert(1)) ishlatilardi — lekin navBallJump
-    // animatsiyasi paytida filter har kadr qayta rasterizatsiya bo'lib
-    // sharni pirpiratardi. Yechim: gradient referenslarini to'g'ridan-
-    // to'g'ri #fff ga almashtiramiz → filter umuman kerak emas.
-    // Bonus: gradient ishlatilmagani uchun dublikat-id muammosi ham yo'q.
-    var iconHtml = srcIcon.innerHTML.replace(/url\(#[^)]+\)/g, '#fff');
-    ballIcon.innerHTML = iconHtml;
-  }
-  if (srcLabel && ballLabel) {
-    ballLabel.textContent = srcLabel.textContent;
+  function applyBallContent() {
+    if (srcIcon && ballIcon) {
+      // Gradient referenslarini #fff ga almashtiramiz (filtersiz oq ikonka).
+      ballIcon.innerHTML = srcIcon.innerHTML.replace(/url\(#[^)]+\)/g, '#fff');
+    }
+    if (srcLabel && ballLabel) {
+      ballLabel.textContent = srcLabel.textContent;
+    }
   }
 
   if (!animate || ball._lastX === undefined) {
+    applyBallContent();
     ball.style.transform = 'translate(' + targetX + 'px, 0)';
     ball._lastX = targetX;
     drawNavNotch(centerX);
@@ -318,6 +321,10 @@ function moveNavBall(targetEl, animate) {
 
   void ball.offsetWidth;
   ball.classList.add('jumping');
+
+  // Ikonka/label'ni shar eng tepaga chiqqanida (navBallJump 40% ≈ 210ms)
+  // almashtiramiz — SVG qayta qurilishi harakat ichida ko'zga ko'rinmaydi.
+  setTimeout(applyBallContent, 210);
 
   ball.addEventListener('animationend', function onEnd() {
     ball.classList.remove('jumping');
