@@ -1759,7 +1759,15 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   width: 22px; height: 22px;
   display: flex; align-items: center; justify-content: center;
 }
-.nav-ball-icon svg { filter: brightness(0) invert(1); width: 22px; height: 22px; }
+.nav-ball-icon svg {
+  filter: brightness(0) invert(1);
+  width: 22px; height: 22px;
+  /* SVG'ni o'z GPU qatlamiga chiqarish — navBallJump animatsiyasi
+     paytida (shar har kadr transform qilinadi) filter har kadr qayta
+     rasterizatsiya bo'lib sharni pirpiratardi. translateZ(0) bilan
+     filter bir marta hisoblanadi, qatlam tayyor holda animatsiya qiladi. */
+  transform: translateZ(0);
+}
 .nav-ball-label {
   font-size: 7px; font-weight: 700; letter-spacing: 0.3px;
   color: #fff; line-height: 1; white-space: nowrap;
