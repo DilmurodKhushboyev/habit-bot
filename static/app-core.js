@@ -314,6 +314,11 @@ function moveNavBall(targetEl, animate) {
   // shar pastga tushganda aynan joyiga to'g'ri keladi.
   drawNavNotch(centerX);
 
+  // Joriy maqsadni ball ob'ektida saqlaymiz — animationend listener
+  // (doimiy, quyida bir marta o'rnatilgan) shu qiymatni o'qiydi.
+  ball._targetX = targetX;
+  ball._applyContent = applyBallContent;
+
   ball.classList.remove('jumping');
   ball.style.setProperty('--ball-sx', startX + 'px');
   ball.style.setProperty('--ball-mid', midX + 'px');
@@ -323,20 +328,27 @@ function moveNavBall(targetEl, animate) {
   ball.classList.add('jumping');
 
   // Ikonka/label'ni shar eng tepaga chiqqanida (navBallJump 40% ≈ 210ms)
-  // almashtiramiz — SVG qayta qurilishi harakat ichida ko'zga ko'rinmaydi.
-  setTimeout(applyBallContent, 210);
+  // almashtiramiz. Tez-tez bosishda eski timer'ni bekor qilamiz —
+  // aks holda eski applyBallContent ishlab noto'g'ri ikonka qo'yardi.
+  if (ball._iconTimer) clearTimeout(ball._iconTimer);
+  ball._iconTimer = setTimeout(function() {
+    if (ball._applyContent) ball._applyContent();
+  }, 210);
 
-  ball.addEventListener('animationend', function onEnd() {
-    ball.classList.remove('jumping');
-    ball.style.transform = 'translate(' + targetX + 'px, 0)';
-    ball._lastX = targetX;
-    ball.removeEventListener('animationend', onEnd);
-    // Ripple effekti O'CHIRILDI: har .nav-ripple elementi .bottom-nav
-    // ichiga appendChild qilinganda mobil WebView compositing'ni qayta
-    // hisoblab, panelni pirpiratardi (shar o'tgandan keyin 2 marta).
-    // spawnNavRipple funksiyasi tanasi quyida saqlanyapti — kelajakda
-    // alohida overlay konteyner bilan qayta tiklash mumkin.
-  });
+  // animationend listener BIR MARTA o'rnatiladi (har moveNavBall'da emas).
+  // Avval har chaqiruvda yangi listener qo'shilardi — animatsiya o'rtada
+  // uzilsa eski listener osilib qolardi (removeEventListener ishlamasdi),
+  // tez bosishda o'nlab osilgan listener noto'g'ri targetX bilan sharni
+  // qotirib qo'yardi. Doimiy listener ball._targetX'ni o'qiydi — har gal
+  // eng oxirgi to'g'ri qiymat.
+  if (!ball._endBound) {
+    ball._endBound = true;
+    ball.addEventListener('animationend', function() {
+      ball.classList.remove('jumping');
+      ball.style.transform = 'translate(' + ball._targetX + 'px, 0)';
+      ball._lastX = ball._targetX;
+    });
+  }
 
   ball._lastX = targetX;
 }
