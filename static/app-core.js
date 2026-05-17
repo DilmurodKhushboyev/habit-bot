@@ -404,20 +404,18 @@ function switchTab(tab, el) {
   // Nav ball
   var navTarget = el || document.getElementById('nav-' + tab);
   if (navTarget) moveNavBall(navTarget, true);
-  // Sahifa yuklashni shar animatsiyasidan keyinga (~300ms) suramiz:
-  // loadTab innerHTML yozadi → layout reflow → bu shar navBallJump
-  // animatsiyasini uzib pirpiratardi. _tabLoading'ni DARHOL true qilamiz
-  // (kechikish oynasida takroriy bosish bloklansin), yuklash 300ms keyin.
-  _tabLoading = true;
-  setTimeout(function() {
-    _tabLoading = false; // loadTab o'zi qayta true qiladi
-    if (!loaded[tab]) loadTab(tab);
-    else if (tab === 'habits') { loaded.habits = false; loadTab('habits'); }
-    else if (tab === 'profile') { loaded.profile = false; loadTab('profile'); }
-    else if (tab === 'bozor') { loaded.bozor = false; loadTab('bozor'); }
-    else if (tab === 'city')    { loaded.city = false;    loadTab('city');    } // qaytganda markazga avtoscroll
-    else refreshHabitsJon();
-  }, 300);
+  // Sahifa yuklash. (Avval bu blok 300ms setTimeout ichida edi —
+  // pirpirashni kamaytirish uchun — lekin pirpirash aslida nav-bg
+  // drop-shadow'dan edi va u alohida hal qilindi. 300ms kechikish esa
+  // shar qotishiga sabab bo'lardi: kechikish oynasida bosilgan tab
+  // if(_tabLoading)return bilan e'tiborsiz qolardi. Shuning uchun
+  // to'g'ridan-to'g'ri chaqiramiz.)
+  if (!loaded[tab]) loadTab(tab);
+  else if (tab === 'habits') { loaded.habits = false; loadTab('habits'); }
+  else if (tab === 'profile') { loaded.profile = false; loadTab('profile'); }
+  else if (tab === 'bozor') { loaded.bozor = false; loadTab('bozor'); }
+  else if (tab === 'city')    { loaded.city = false;    loadTab('city');    } // qaytganda markazga avtoscroll
+  else refreshHabitsJon();
 }
 
 function goBack() {
