@@ -302,7 +302,7 @@ async function checkin(hid, cardEl) {
       // Repeat odat oraliq progress — ko'tariluvchi "pop" ovozi
       playProgressSound(tc2, rc2);
     }
-    loaded.profile = false; loaded.rating = false; loaded.achievements = false; loaded.stats = false;
+    loaded.profile = false; loaded.achievements = false; loaded.stats = false;
     if (document.getElementById('page-stats')?.classList.contains('active')) { loadStats(); }
     // Bajarilgan odat pastga, bekor qilingan odat tepaga
     // (kartalar oraligʻidagina koʻchadi — eslatmalar blokiga oʻtib ketmaydi)
