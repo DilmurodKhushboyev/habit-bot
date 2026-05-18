@@ -518,6 +518,16 @@ def daily_reset():
                 except Exception:
                     pass
 
+        # ── Global streak: kecha faollik bo'lmasa — streak uziladi ──
+        # streak_last_date global streak uchun yuritiladi (checkin'da kuniga bir marta
+        # yangilanadi). Agar u kecha ham, bugun ham bo'lmasa — ketma-ketlik uzilgan.
+        if udata.get("streak", 0) > 0:
+            _sld = udata.get("streak_last_date", "")
+            if _sld != yesterday and _sld != today_str:
+                udata["streak"] = 0
+                udata["streak_last_date"] = ""
+                changed = True
+
         if changed:
             try:
                 update_data = {
@@ -526,6 +536,8 @@ def daily_reset():
                     "pending_shield": udata.get("pending_shield", {}),
                     "streak_shields": udata.get("streak_shields", 0),
                     "pet_cat_last_used_date": udata.get("pet_cat_last_used_date", ""),
+                    "streak":           udata.get("streak", 0),
+                    "streak_last_date": udata.get("streak_last_date", ""),
                 }
                 mongo_col.update_one({"_id": uid}, {"$set": update_data})
             except Exception:
