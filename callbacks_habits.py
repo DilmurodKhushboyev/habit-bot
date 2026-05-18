@@ -738,6 +738,22 @@ def handle_habits_callbacks(call, uid, cdata, u):
                         done_log = u.get("done_log", {})
                         done_log[today] = True
                         u["done_log"] = done_log
+                        # history yangilash (statistika/heatmap uchun)
+                        history = u.get("history", {})
+                        day_data = history.get(today, {})
+                        done_count_now = sum(1 for hh in u.get("habits", []) if hh.get("last_done") == today)
+                        hab_map = day_data.get("habits", {})
+                        hab_map[habit_id] = True
+                        day_data["done"]   = done_count_now
+                        day_data["total"]  = len(u.get("habits", []))
+                        day_data["habits"] = hab_map
+                        history[today] = day_data
+                        u["history"] = history
+                        # CITY: bino progress +1 (fully bajarildi) (PHASE A3)
+                        try:
+                            update_building_progress(u, habit_id, +1)
+                        except Exception as _ce:
+                            print(f"[city] update_building_progress +1 xato (uid={uid}): {_ce}")
                         save_user(uid, u)
                         try:
                             check_achievements_toplevel(uid, u)
@@ -819,6 +835,11 @@ def handle_habits_callbacks(call, uid, cdata, u):
                     if last_boost != today:
                         u["xp_booster_days"] = max(0, u["xp_booster_days"] - 1)
                         u["xp_booster_last_day"] = today
+                # CITY: bino progress +1 (simple done) (PHASE A3)
+                try:
+                    update_building_progress(u, habit_id, +1)
+                except Exception as _ce:
+                    print(f"[city] update_building_progress +1 xato (uid={uid}): {_ce}")
                 save_user(uid, u)
                 # Achievements tekshirish (top-level funksiya orqali)
                 try:
