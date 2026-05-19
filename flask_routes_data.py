@@ -294,10 +294,11 @@ def register_data_routes(app):
                 done_log.pop(today, None)
                 u["done_log"] = done_log
         # total_done yangilash (achievements uchun)
+        # _city_delta = +1 (fully done) / -1 (undo) / 0 (repeat partial — tegilmaydi)
         if found_h:
-            if is_done and found_h.get("last_done") == today:
+            if _city_delta == +1:
                 found_h["total_done"] = found_h.get("total_done", 0) + 1
-            elif not is_done:
+            elif _city_delta == -1:
                 found_h["total_done"] = max(0, found_h.get("total_done", 0) - 1)
         # XP booster kunini kamaytirish (kuniga bir marta)
         if u.get("xp_booster_days", 0) > 0:
