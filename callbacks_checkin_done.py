@@ -48,6 +48,8 @@ def handle_done_callbacks(call, uid, cdata, u):
                     if done_today_count >= rep_count:
                         # To'liq bajarildi
                         h["streak"] = h.get("streak", 0) + 1 if h.get("last_done") == yesterday else 1
+                        if h["streak"] > h.get("best_streak", 0):
+                            h["best_streak"] = h["streak"]
                         h["last_done"] = today
                         h["total_done"] = h.get("total_done", 0) + 1
                         if u.get("streak_last_date") != today:
@@ -83,6 +85,11 @@ def handle_done_callbacks(call, uid, cdata, u):
                         day_data["habits"] = hab_map
                         history[today] = day_data
                         u["history"] = history
+                        # XP booster kunini kamaytirish (kuniga bir marta)
+                        if u.get("xp_booster_days", 0) > 0:
+                            if u.get("xp_booster_last_day", "") != today:
+                                u["xp_booster_days"] = max(0, u["xp_booster_days"] - 1)
+                                u["xp_booster_last_day"] = today
                         # CITY: bino progress +1 (fully bajarildi) (PHASE A3)
                         try:
                             update_building_progress(u, habit_id, +1)
