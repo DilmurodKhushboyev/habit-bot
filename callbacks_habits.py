@@ -17,7 +17,6 @@ from city_logic import update_building_progress, delete_building_for_habit
 from helpers import T, get_lang, today_uz5
 from texts import LANGS
 from motivation import MOTIVATSIYA
-from groups import _save_new_habit
 from scheduler import schedule_habit, unschedule_habit_today, _send_auto_delete
 from achievements import check_achievements_toplevel
 from bot_setup import (bot, send_main_menu, send_message_colored,
@@ -45,77 +44,6 @@ def _check_streak_milestone(uid: int, streak: int) -> None:
 
 def handle_habits_callbacks(call, uid, cdata, u):
     """Odat callback larini qayta ishlaydi. True = handled."""
-
-    if cdata == "menu_add":
-        # ── VAQTINCHA O'CHIRILGAN: Odat limiti tekshiruvi ──
-        # Bot mukammal darajaga yetgandan keyin qayta yoqiladi.
-        # if len(u.get("habits", [])) >= 15:
-        #     bot.answer_callback_query(call.id)
-        #     sent_limit = bot.send_message(
-        #         uid,
-        #         T(uid, "limit"),
-        #         parse_mode="Markdown"
-        #     )
-        #     def del_limit(chat_id, msg_id):
-        #         time.sleep(3)
-        #         try: bot.delete_message(chat_id, msg_id)
-        #         except: pass
-        #     threading.Thread(target=del_limit, args=(uid, sent_limit.message_id), daemon=True).start()
-        #     send_main_menu(uid)
-        #     return True
-        bot.answer_callback_query(call.id)
-        try: bot.delete_message(uid, call.message.message_id)
-        except Exception: pass
-        # Odat turini tanlash
-        kb_type = InlineKeyboardMarkup()
-        kb_type.row(
-            InlineKeyboardButton(T(uid, "btn_type_simple"),  callback_data="habit_type_simple"),
-            InlineKeyboardButton(T(uid, "btn_type_repeat"),  callback_data="habit_type_repeat")
-        )
-        kb_type.add(cBtn(T(uid, "btn_cancel"), "cancel", "danger"))
-        sent = bot.send_message(
-            uid,
-            T(uid, "habit_type_choose"),
-            parse_mode="Markdown", reply_markup=kb_type
-        )
-        u["temp_msg_id"] = sent.message_id
-        save_user(uid, u)
-        return True
-
-    if cdata == "habit_type_simple":
-        bot.answer_callback_query(call.id)
-        try: bot.delete_message(uid, call.message.message_id)
-        except Exception: pass
-        u["state"] = "waiting_habit_name"
-        u["temp_habit"] = {"type": "simple"}
-        cancel_kb = InlineKeyboardMarkup()
-        cancel_kb.add(cBtn(T(uid, "btn_cancel"), "cancel", "danger"))
-        sent = bot.send_message(uid, T(uid, "ask_habit_name"), parse_mode="Markdown", reply_markup=cancel_kb)
-        u["temp_msg_id"] = sent.message_id
-        save_user(uid, u)
-        return True
-
-    if cdata == "habit_type_repeat":
-        bot.answer_callback_query(call.id)
-        try: bot.delete_message(uid, call.message.message_id)
-        except Exception: pass
-        # Avval necha marta takrorlanishi so'ralinsin
-        u["temp_habit"] = {"type": "repeat"}
-        u["state"] = "waiting_repeat_count"
-        save_user(uid, u)
-        cancel_kb = InlineKeyboardMarkup()
-        cancel_kb.add(cBtn(T(uid, "btn_cancel"), "cancel", "danger"))
-        sent = bot.send_message(
-            uid,
-            T(uid, "ask_repeat_count"),
-            parse_mode="Markdown", reply_markup=cancel_kb
-        )
-        u["temp_msg_id"] = sent.message_id
-        save_user(uid, u)
-        return True
-
-
-
 
     if cdata == "cancel":
         u["state"] = None
@@ -249,46 +177,6 @@ def handle_habits_callbacks(call, uid, cdata, u):
             )
         except Exception:
             pass
-        return True
-
-    if cdata == "habit_no_time":
-        bot.answer_callback_query(call.id)
-        try: bot.delete_message(uid, call.message.message_id)
-        except: pass
-        u["temp_habit"]["time"] = "vaqtsiz"
-        u.pop("temp_msg_id", None)
-        save_user(uid, u)
-        _save_new_habit(uid, u)
-        return True
-
-    # ── Repeat odat: qo'shimcha vaqt qo'shish ──
-    if cdata == "repeat_add_more":
-        bot.answer_callback_query(call.id)
-        try: bot.delete_message(uid, call.message.message_id)
-        except: pass
-        collected = u.get("temp_habit", {}).get("times_collected", [])
-        u["state"] = "waiting_habit_time"
-        save_user(uid, u)
-        cancel_kb = InlineKeyboardMarkup()
-        cancel_kb.add(cBtn(T(uid, "btn_cancel"), "cancel", "danger"))
-        rep_count = u.get("temp_habit", {}).get("repeat_count", len(collected) + 1)
-        sent = bot.send_message(
-            uid,
-            T(uid, "ask_repeat_next_time", current=len(collected)+1, total=rep_count),
-            parse_mode="Markdown", reply_markup=cancel_kb
-        )
-        u["temp_msg_id"] = sent.message_id
-        save_user(uid, u)
-        return True
-
-    # ── Repeat odat: yakunlash ──
-    if cdata == "repeat_done":
-        bot.answer_callback_query(call.id)
-        try: bot.delete_message(uid, call.message.message_id)
-        except: pass
-        u.pop("temp_msg_id", None)
-        save_user(uid, u)
-        _save_new_habit(uid, u)
         return True
 
     if cdata.startswith("main_page_"):

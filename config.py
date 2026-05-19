@@ -119,6 +119,12 @@ REMINDER_JOB_PREFIX      = "reminder_"    # schedule job tag prefix (SYSTEM_JOB_
 REMINDER_MAX_TEXT_LEN    = 200            # Eslatma matnining maksimal uzunligi (profil bio bilan bir xil)
 
 # ============================================================
+#  ODATLAR
+# ============================================================
+HABIT_LIMIT = 15                          # Bir foydalanuvchi yarata oladigan maksimal odat soni
+                                          # (freemium qo'shilganda FREE/PREM ga ajratiladi)
+
+# ============================================================
 #  CITY (SHAHAR) — gamification 2.0
 #  Foydalanuvchi har odat tasdiqlasa → bino qurilishi davom etadi.
 #  66 kun = bino to'liq quriladi (odat shakllanishi ilmiy chegarasi).
