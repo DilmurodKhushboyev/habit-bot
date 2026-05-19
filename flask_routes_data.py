@@ -8,8 +8,8 @@ import time
 from datetime import datetime, date, timedelta, timezone
 from flask import jsonify, request
 
-from config import SHOP_BONUS_EFFECTS
 from database import load_user, save_user, load_all_users, load_group, save_group, add_points_history
+from points_logic import apply_item_bonuses, apply_pet_dog_bonus
 from city_logic import update_building_progress
 from helpers import T, get_lang, get_rank, today_uz5
 from texts import LANGS
@@ -30,59 +30,12 @@ def register_data_routes(app):
     }
 
     def _apply_item_bonuses(u, base_points):
-        """
-        Faol badge va car mahsulotlari asosida ball bonusini qoʻllaydi.
-        Stack qilinadi: badge + car foizlari qoʻshiladi (masalan, 12% + 8% = 20%).
-        Faqat `points_percent` turidagi mahsulotlar ishlatiladi.
-        Agar round natijasida bonus yoʻqolsa, majburiy +1 ball qoʻshiladi
-        (foydalanuvchi har doim badge foydasini koʻrsin).
-        """
-        total_percent = 0
-        for field in ("active_badge", "active_car"):
-            item_id = u.get(field, "")
-            effect = SHOP_BONUS_EFFECTS.get(item_id)
-            if effect and effect.get("type") == "points_percent":
-                total_percent += effect.get("value", 0)
-        if total_percent <= 0:
-            return base_points
-        # B variant: majburiy minimum +1 kafolat
-        boosted = round(base_points * (1 + total_percent / 100))
-        return max(boosted, base_points + 1)
+        # Ko'chirildi: points_logic.apply_item_bonuses (audit #5)
+        return apply_item_bonuses(u, base_points)
 
     def _apply_pet_dog_bonus(u, today, is_undo=False):
-        """
-        pet_dog faol bo'lsa — kunlik BIRINCHI checkin'ga +N ball qo'shimcha.
-        N qiymati: SHOP_BONUS_EFFECTS["pet_dog"]["value"] (config dan).
-        is_undo=False: DONE holati — agar bugun bonus berilmagan bo'lsa, beriladi.
-        is_undo=True:  UNDO holati — agar bugun bonus berilgan bo'lsa, qaytariladi.
-        Returns: qo'llanilgan bonus miqdori (0 agar qo'llanmasa).
-        """
-        if u.get("active_pet", "") != "pet_dog":
-            return 0
-        effect = SHOP_BONUS_EFFECTS.get("pet_dog")
-        if not effect or effect.get("type") != "daily_bonus":
-            return 0
-        bonus_value = effect.get("value", 0)
-        if bonus_value <= 0:
-            return 0
-        last_bonus_date = u.get("pet_dog_last_bonus_date", "")
-        if is_undo:
-            # UNDO: agar bugun bonus berilgan bo'lsa, qaytarish
-            if last_bonus_date == today:
-                _old_pts = u.get("points", 0)
-                u["points"] = max(0, _old_pts - bonus_value)
-                add_points_history(u, u["points"] - _old_pts, today)
-                u["pet_dog_last_bonus_date"] = ""
-                return bonus_value
-            return 0
-        else:
-            # DONE: agar bugun birinchi marta bo'lsa, bonus berish
-            if last_bonus_date != today:
-                u["points"] = u.get("points", 0) + bonus_value
-                add_points_history(u, bonus_value, today)
-                u["pet_dog_last_bonus_date"] = today
-                return bonus_value
-            return 0
+        # Ko'chirildi: points_logic.apply_pet_dog_bonus (audit #5)
+        return apply_pet_dog_bonus(u, today, is_undo=is_undo)
 
     @app.route("/api/today/<int:uid>")
     @require_auth
