@@ -88,7 +88,7 @@ const STRINGS = {
       rem_edit_btn:'Tahrirlash',
       rem_del_menu:'O\'chirish',
       rem_edit_coming_soon:'⏳ Tez orada qo\'shiladi',
-      limit_reached:'⚠️ Maksimal limitga yetdingiz!',
+      limit_reached:'⚠️ Maksimal limitga yetdingiz! (15 ta odat)',
       section_title:'ODATLAR',
       tap_hint:'Odatni tasdiqlash uchun ustiga bosing!',
       empty:"Hali odat qo'shilmagan",
@@ -507,6 +507,7 @@ const STRINGS = {
       progress_label:'ПРОГРЕСС',
       readonly_msg:'Отмечать можно только сегодняшние привычки',
       back_to_today:'К сегодняшнему дню',
+      limit_reached:'⚠️ Достигнут максимум! (15 привычек)',
     },
     achievements: {
       title:'Мои достижения',
@@ -915,6 +916,7 @@ const STRINGS = {
       progress_label:'PROGRESS',
       readonly_msg:'Only today\'s habits can be marked',
       back_to_today:'Back to today',
+      limit_reached:'⚠️ Limit reached! (15 habits)',
     },
     achievements: {
       title:'My Achievements',

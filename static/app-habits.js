@@ -338,7 +338,13 @@ async function saveHabit() {
         body: JSON.stringify({name, icon, time: timeFinal, type: isRepeat ? 'repeat' : 'simple', repeat_count: repeatCount, repeat_times: isRepeat ? timesArr : []})
       });
       const rj = await res.json().catch(() => ({}));
-      if (!res.ok || rj.ok === false) { showToast('❌ ' + (rj.error || S('msg','error_label')), true); return; }
+      if (!res.ok || rj.ok === false) {
+        const _emsg = rj.error === 'habit_limit'
+          ? S('today','limit_reached')
+          : (rj.error || S('msg','error_label'));
+        showToast('❌ ' + _emsg, true);
+        return;
+      }
       showToast('✅ Qoʼshildi!');
     }
     // Foydalanuvchi qaysi sahifada turganini DOMdan o'qib, kerakli yangilashni chaqiramiz
