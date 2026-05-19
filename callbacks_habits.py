@@ -12,6 +12,7 @@ from datetime import date, datetime, timedelta, timezone
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from database import load_user, save_user, load_group, save_group, add_points_history
+from points_logic import apply_item_bonuses, apply_pet_dog_bonus
 from city_logic import update_building_progress, delete_building_for_habit
 from helpers import T, get_lang, today_uz5
 from texts import LANGS
@@ -401,11 +402,15 @@ def handle_habits_callbacks(call, uid, cdata, u):
                             _undo_base = 10
                         if u.get("xp_booster_days", 0) > 0:
                             _undo_base = round(_undo_base * 1.1)
+                        _undo_base = apply_item_bonuses(u, _undo_base)
                         _old_pts = u.get("points", 0)
                         u["points"] = max(0, _old_pts - _undo_base)
                         add_points_history(u, u["points"] - _old_pts, today)
                         # Global streak: faqat bugun boshqa odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in u.get("habits", []) if hh["id"] != habit_id)
+                        # pet_dog kunlik bonusini qaytarish (boshqa odat qolmagan bo'lsa)
+                        if not _still_done:
+                            apply_pet_dog_bonus(u, today, is_undo=True)
                         if not _still_done and u.get("streak_last_date") == today:
                             u["streak"] = max(0, u.get("streak", 0) - 1)
                             u["streak_last_date"] = ""
@@ -454,8 +459,11 @@ def handle_habits_callbacks(call, uid, cdata, u):
                                 _base = 10
                             if u.get("xp_booster_days", 0) > 0:
                                 _base = round(_base * 1.1)
+                            _base = apply_item_bonuses(u, _base)
                             u["points"] = u.get("points", 0) + _base
                             add_points_history(u, _base, today)
+                            # pet_dog kunlik birinchi checkin bonusi (faqat bir marta)
+                            apply_pet_dog_bonus(u, today, is_undo=False)
                             # Global streak: kuniga bir marta oshsin
                             if u.get("streak_last_date") != today:
                                 u["streak"] = u.get("streak", 0) + 1
@@ -549,11 +557,15 @@ def handle_habits_callbacks(call, uid, cdata, u):
                             _undo_base = 10
                         if u.get("xp_booster_days", 0) > 0:
                             _undo_base = round(_undo_base * 1.1)
+                        _undo_base = apply_item_bonuses(u, _undo_base)
                         _old_pts = u.get("points", 0)
                         u["points"] = max(0, _old_pts - _undo_base)
                         add_points_history(u, u["points"] - _old_pts, today)
                         # Global streak: faqat bugun boshqa odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in u.get("habits", []) if hh["id"] != habit_id)
+                        # pet_dog kunlik bonusini qaytarish (boshqa odat qolmagan bo'lsa)
+                        if not _still_done:
+                            apply_pet_dog_bonus(u, today, is_undo=True)
                         if not _still_done and u.get("streak_last_date") == today:
                             u["streak"] = max(0, u.get("streak", 0) - 1)
                             u["streak_last_date"] = ""
@@ -601,8 +613,11 @@ def handle_habits_callbacks(call, uid, cdata, u):
                             _base = 10
                         if u.get("xp_booster_days", 0) > 0:
                             _base = round(_base * 1.1)
+                        _base = apply_item_bonuses(u, _base)
                         u["points"] = u.get("points", 0) + _base
                         add_points_history(u, _base, today)
+                        # pet_dog kunlik birinchi checkin bonusi (faqat bir marta)
+                        apply_pet_dog_bonus(u, today, is_undo=False)
                         # Global streak: kuniga bir marta oshsin
                         if u.get("streak_last_date") != today:
                             u["streak"] = u.get("streak", 0) + 1
@@ -733,8 +748,11 @@ def handle_habits_callbacks(call, uid, cdata, u):
                             _base = 10
                         if u.get("xp_booster_days", 0) > 0:
                             _base = round(_base * 1.1)
+                        _base = apply_item_bonuses(u, _base)
                         u["points"] = u.get("points", 0) + _base
                         add_points_history(u, _base, today)
+                        # pet_dog kunlik birinchi checkin bonusi (faqat bir marta)
+                        apply_pet_dog_bonus(u, today, is_undo=False)
                         done_log = u.get("done_log", {})
                         done_log[today] = True
                         u["done_log"] = done_log
@@ -810,8 +828,11 @@ def handle_habits_callbacks(call, uid, cdata, u):
                     _base = 10
                 if u.get("xp_booster_days", 0) > 0:
                     _base = round(_base * 1.1)
+                _base = apply_item_bonuses(u, _base)
                 u["points"]     = u.get("points", 0) + _base
                 add_points_history(u, _base, today)
+                # pet_dog kunlik birinchi checkin bonusi (faqat bir marta)
+                apply_pet_dog_bonus(u, today, is_undo=False)
                 # done_log: kunlik bajarilgan kunlarni saqlash
                 done_log = u.get("done_log", {})
                 done_log[today] = True
