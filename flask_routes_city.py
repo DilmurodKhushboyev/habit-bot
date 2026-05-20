@@ -37,6 +37,7 @@ from city_logic import (
     place_decoration, delete_decoration, move_item,
     activate_insurance, get_building_stage,
     compact_buildings_to_center, backfill_buildings_from_habits,
+    cleanup_orphan_buildings,
 )
 from flask_helpers import require_auth
 
@@ -151,6 +152,18 @@ def register_city_routes(app):
                 save_user(uid, u)
         except Exception as e:
             print(f"[city] backfill_buildings_from_habits failed for {uid}: {e}")
+
+        # Cleanup: orfan binolarni (mavjud bo'lmagan odatlarga bog'langan) o'chirish.
+        # Odat o'chirilganda ba'zan delete_building_for_habit chaqirilmagan
+        # (masalan WebApp orqali) → shaharda bo'sh label'li binolar qoladi.
+        # Idempotent — keyingi GET'larda orfan yo'q bo'lsa hech narsa qilmaydi.
+        # Backfill'dan KEYIN: avval mavjud odatlar uchun bino yaratamiz, keyin
+        # mavjud bo'lmagan odatlarning binolarini tozalaymiz (tartib mantiqi).
+        try:
+            if cleanup_orphan_buildings(u) > 0:
+                save_user(uid, u)
+        except Exception as e:
+            print(f"[city] cleanup_orphan_buildings failed for {uid}: {e}")
 
         city = get_user_city(u)
 
