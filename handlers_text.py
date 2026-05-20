@@ -869,7 +869,35 @@ def handle_successful_payment(msg):
         save_user(uid, u)
         bot.send_message(uid, msg_text, parse_mode="Markdown")
     except Exception as e:
-        print(f"[stars] successful_payment xatosi: {e}")
+        # Xato yuz berdi — foydalanuvchi pul to'lagan, lekin mukofot berilmadi.
+        # Foydalanuvchini xabardor qilish + adminga avtomatik bildirishnoma.
+        print(f"[stars] successful_payment xatosi: {e}, charge_id={charge_id}, uid={uid}")
+        # 1) Foydalanuvchiga 3 tilli xabar + "Admin bilan bog'lanish" tugma
+        try:
+            err_kb = InlineKeyboardMarkup()
+            err_kb.add(InlineKeyboardButton(
+                T(uid, "stars_error_btn_contact"),
+                url=f"tg://user?id={ADMIN_ID}"
+            ))
+            bot.send_message(uid, T(uid, "stars_error_user_msg"),
+                             parse_mode="Markdown", reply_markup=err_kb)
+        except Exception:
+            pass
+        # 2) Adminga avtomatik bildirishnoma — qo'lda hal qilish uchun
+        try:
+            bot.send_message(
+                ADMIN_ID,
+                f"🚨 *Stars to'lov xatosi*\n\n"
+                f"User ID: `{uid}`\n"
+                f"Charge ID: `{charge_id}`\n"
+                f"Payload: `{payload}`\n"
+                f"Xato: `{e}`\n\n"
+                f"Foydalanuvchi pul to'lagan, lekin mukofotni olmagan. "
+                f"Qo'lda mukofot bering yoki refund qiling.",
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
 
 
 
