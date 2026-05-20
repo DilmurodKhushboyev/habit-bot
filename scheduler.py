@@ -538,6 +538,7 @@ def daily_reset():
                     "pet_cat_last_used_date": udata.get("pet_cat_last_used_date", ""),
                     "streak":           udata.get("streak", 0),
                     "streak_last_date": udata.get("streak_last_date", ""),
+                    "city":             udata.get("city", {}),
                 }
                 mongo_col.update_one({"_id": uid}, {"$set": update_data})
             except Exception:
