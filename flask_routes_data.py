@@ -464,8 +464,19 @@ def register_data_routes(app):
             # done_7: history mavjud bo'lsa undan, yo'qsa streak dan taxminan
             done_7  = done_7_hist  if done_7_hist  > 0 else min(streak_val, 7)
             done_30 = done_30_hist if done_30_hist > 0 else min(total_done_saved, 30)
-            # done_all: total_done field eng ishonchli
-            done_all = total_done_saved if total_done_saved > 0 else done_30_hist
+            # done_all: max(total_done, history_count_all) — Qoida #10/#11 (city sinxron).
+            # MUAMMO: Repeat odatlar (Suv ichish 1/2 va h.k.) qisman tasdiqlanganda
+            # `total_done` o'sib qolmaydi — faqat to'liq kun yopilganda yangilanadi.
+            # Lekin foydalanuvchi har tasdiqlashni "JAMI" da ko'rishi kerak (haqiqiy mehnat).
+            # YECHIM: butun history dan habit_id tasdiqlangan barcha kunlarni hisoblab,
+            # total_done bilan max ni olamiz. Bu shahar `effective_done` bilan to'g'ridan-
+            # to'g'ri mos keladi (city_logic.py `backfill_buildings_from_habits` va
+            # `resync_building_progress` aynan shu formula ishlatadi).
+            history_count_all = sum(
+                1 for day_data in history.values()
+                if day_data.get("habits", {}).get(h["id"])
+            )
+            done_all = max(total_done_saved, history_count_all)
             # week_dots: history bo'sh bo'lsa last_done asosida bugungi katakni to'ldirish
             if not any(week_dots) and h.get("last_done") == today:
                 week_dots[-1] = True

@@ -37,7 +37,7 @@ from city_logic import (
     place_decoration, delete_decoration, move_item,
     activate_insurance, get_building_stage,
     compact_buildings_to_center, backfill_buildings_from_habits,
-    cleanup_orphan_buildings,
+    cleanup_orphan_buildings, resync_building_progress,
 )
 from flask_helpers import require_auth
 
@@ -154,6 +154,20 @@ def register_city_routes(app):
                 save_user(uid, u)
         except Exception as e:
             print(f"[city] backfill_buildings_from_habits failed for {uid}: {e}")
+
+        # Resync: mavjud binolarning progress'ini effective_done bilan sinxronlash.
+        # Repeat odatlar qisman tasdiqlanganda (1/3, 2/3) `update_building_progress`
+        # chaqirilmaydi, lekin history ma'lumotlari yangilanadi → bino balandligi va
+        # statistika "JAMI" orasida nomuvofiqlik paydo bo'ladi. Resync max(total_done,
+        # history_count) ni hisoblab, faqat progress'ni KO'TARADI (past tushirmaydi).
+        # Idempotent — keyingi GET'larda progress yetarli bo'lsa hech narsa qilmaydi.
+        try:
+            _updated = resync_building_progress(u)
+            if _updated > 0:
+                print(f"[city] resync: {_updated} buildings progress updated for uid={uid}")
+                save_user(uid, u)
+        except Exception as e:
+            print(f"[city] resync_building_progress failed for {uid}: {e}")
 
         # Cleanup: orfan binolarni (mavjud bo'lmagan odatlarga bog'langan) o'chirish.
         # Odat o'chirilganda ba'zan delete_building_for_habit chaqirilmagan
