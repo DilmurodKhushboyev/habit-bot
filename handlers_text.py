@@ -858,9 +858,9 @@ def handle_successful_payment(msg):
             else:
                 msg_text = "🎁 Sovga qutisi ochildi!"
         else:
-            # Noma'lum Stars mahsulot — xato holati (bo'lmasligi kerak)
-            print(f"[stars] Noma'lum item_id: {item_id}, uid={uid}")
-            return
+            # Noma'lum Stars mahsulot — xato holati (bo'lmasligi kerak).
+            # raise → mavjud except blok ushlaydi va foydalanuvchi+adminga xabar yuboradi.
+            raise ValueError(f"Noma'lum Stars item_id: {item_id}")
         u["inventory"] = inventory
         # Idempotency: ushbu charge_id'ni ro'yxatga qo'shamiz — kelajakda takror kelsa rad etiladi
         if charge_id:
