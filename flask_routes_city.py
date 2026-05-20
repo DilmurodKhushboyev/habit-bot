@@ -148,7 +148,9 @@ def register_city_routes(app):
         # bino allaqachon bor odatlarga tegmaydi. try/except: backfill xato bo'lsa
         # asosiy GET buzilmasin (compact bilan bir xil pattern).
         try:
-            if backfill_buildings_from_habits(u) > 0:
+            _created = backfill_buildings_from_habits(u)
+            if _created > 0:
+                print(f"[city] backfill: {_created} buildings created for uid={uid}")
                 save_user(uid, u)
         except Exception as e:
             print(f"[city] backfill_buildings_from_habits failed for {uid}: {e}")
@@ -160,7 +162,9 @@ def register_city_routes(app):
         # Backfill'dan KEYIN: avval mavjud odatlar uchun bino yaratamiz, keyin
         # mavjud bo'lmagan odatlarning binolarini tozalaymiz (tartib mantiqi).
         try:
-            if cleanup_orphan_buildings(u) > 0:
+            _removed = cleanup_orphan_buildings(u)
+            if _removed > 0:
+                print(f"[city] cleanup: {_removed} orphan buildings removed for uid={uid}")
                 save_user(uid, u)
         except Exception as e:
             print(f"[city] cleanup_orphan_buildings failed for {uid}: {e}")
