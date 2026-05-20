@@ -383,20 +383,17 @@ def backfill_buildings_from_habits(udata):
         backfill ham xuddi shu mantiqni eski odatlarga qo'llaydi (sinxronlik)
 
     Effective_done hisoblash (Qoida #10/#11 — statistika bilan sinxron):
-      - total_done > 0 → uni ishlatadi (simple odat uchun ishonchli manba)
-      - total_done = 0 → history dan hisoblaydi (repeat odat uchun — qisman
-        tasdiqlangan kunlar ham hisoblanadi). Statistika `api_stats`
-        (flask_routes_data.py) bilan bir xil mantiq: `done_all = total_done
-        if > 0 else done_30_hist`. Backfill butun history'ni hisoblaydi
-        (faqat oxirgi 30 kun emas) — eng to'liq qiymat uchun.
+      - effective_done = max(total_done, history_count)
+      - total_done: DB'dagi rasmiy hisob (faqat to'liq kun yopilganda o'sadi)
+      - history_count: history dan habit_id tasdiqlangan barcha kunlar
+      - max: ikkala manbadan eng yuqori qiymat (eng adolatli ko'rsatkich)
 
-    Nima uchun bunday murakkab mantiq:
-      - Repeat odatlar (1/3, 2/3 va h.k.) `total_done`'ni faqat 3/3 to'liq
-        kunda yangilaydi (README §488)
-      - Lekin statistika `history` dan har kungi tasdiqlashni hisoblaydi
-      - Backfill statistika bilan mos kelishi kerak — aks holda foydalanuvchi
-        shahardagi bino balandligi va "JAMI" qiymati orasidagi farqdan
-        chalkashadi
+    Nima uchun max (shartli emas):
+      - Repeat odatlar (Suv ichish 1/2, Uyqu 1/3): qisman tasdiqlanganda
+        `total_done` o'smaydi, lekin `history` har tasdiqlashni hisoblaydi
+      - Simple odatlar: `total_done` va `history` mos keladi
+      - Eski user (history yo'q): `total_done` ishlatiladi
+      - Statistika `api_stats` bilan to'g'ridan-to'g'ri mos kelishi uchun
 
     IDEMPOTENT:
       - Bino allaqachon bor → tegilmaydi (mavjud progress saqlanadi)
@@ -447,19 +444,20 @@ def backfill_buildings_from_habits(udata):
         # shu mantiqni eski odatlarga qo'llashi kerak (sinxronlik).
         total_done = int(h.get("total_done", 0) or 0)
 
-        # Statistika bilan sinxron hisoblash (Qoida #10):
-        # - total_done > 0 → uni ishlatamiz (eng ishonchli, simple odat uchun)
-        # - total_done = 0 → history'dan hisoblaymiz (repeat odat uchun, qisman
-        #   tasdiqlangan kunlar ham hisoblanadi — masalan Uyqu 1/3 ni 1 deb)
-        if total_done > 0:
-            effective_done = total_done
-        else:
-            # History dan habit_id tasdiqlangan barcha kunlarni hisoblash.
-            # day_data["habits"][habit_id] truthy bo'lsa — shu kun tasdiqlangan.
-            effective_done = sum(
-                1 for day_data in history.values()
-                if day_data.get("habits", {}).get(habit_id_str)
-            )
+        # Statistika bilan sinxron hisoblash (Qoida #10/#11):
+        # MUAMMO: Repeat odatlar (Suv ichish 1/2 va h.k.) qisman tasdiqlanganda
+        # `total_done` o'sib qolmaydi — faqat to'liq kun yopilganda yangilanadi.
+        # Lekin foydalanuvchi har tasdiqlashni shahar va statistikada ko'rishi kerak.
+        # YECHIM: max(total_done, history_count) — ikkala manbadan eng yuqori qiymat.
+        # - Simple odat (Dasturlash): total_done=34, history=34 → max=34
+        # - Repeat odat (Suv ichish): total_done=2, history=26 → max=26
+        # - Eski user (history bo'sh): total_done=12, history=0 → max=12
+        # - Yangi user: total_done=0, history=0 → max=0 (bo'sh poydevor)
+        history_count = sum(
+            1 for day_data in history.values()
+            if day_data.get("habits", {}).get(habit_id_str)
+        )
+        effective_done = max(total_done, history_count)
 
         # Bino yaratish (random tip, random bo'sh katak — create_building o'zi tanlaydi)
         new_building = create_building(udata, habit_id_str)
@@ -478,6 +476,89 @@ def backfill_buildings_from_habits(udata):
         created += 1
 
     return created
+
+def resync_building_progress(udata):
+    """Mavjud binolarning progress qiymatini effective_done bilan sinxronlaydi.
+
+    SABAB (Qoida #21):
+    Foydalanuvchi qisman tasdiqlash qilganda (repeat odat 1/3, 2/3 va h.k.)
+    `update_building_progress` chaqirilmaydi — chunki `total_done` o'sib qolmaydi
+    va checkin logikasi `delta=0` deb qaror qiladi. Lekin statistika `history`
+    asosida har tasdiqlashni hisoblaydi. Natija: bino past balandlikda qoladi,
+    statistikada esa balandroq raqam — chalkashlik.
+
+    Bu funksiya har mavjud bino uchun:
+      - Mos habit'ni topadi
+      - effective_done = max(total_done, history_count) hisoblaydi
+      - Agar bino progress < effective_done bo'lsa → progress'ni yangilaydi
+        (faqat KO'TARILADI, hech qachon tushirilmaydi — chunki bu sinxron
+        qilish, regress emas)
+
+    NIMA UCHUN faqat ko'tarish (ikki yo'l emas):
+      - Insurance, daily_reset va boshqa qoidalar bilan to'qnashmaslik uchun
+      - Foydalanuvchi mehnatini past ko'rsatish — yomon UX (haqiqiy progress
+        yo'qotilmasligi kerak)
+      - Asl `update_building_progress` -1 ni o'z mantig'i bilan ushlaydi —
+        bu yerda yana takrorlash keraksiz
+
+    IDEMPOTENT:
+      - progress allaqachon yetarli baland → tegmaydi
+      - habit_id bo'lmagan bino → tegmaydi (cleanup vazifasi)
+      - Habit yo'q bino → tegmaydi (cleanup vazifasi)
+
+    Qaytaradi:
+      Yangilangan binolar soni (int). 0 = hech narsa o'zgarmadi.
+      Chaqiruvchi save_user'ni o'zi chaqiradi (faqat updated > 0 bo'lsa).
+    """
+    city = get_user_city(udata)
+    buildings = city.get("buildings") or []
+    if not buildings:
+        return 0
+
+    habits = udata.get("habits") or []
+    if not habits:
+        return 0
+
+    # Habit ID → habit obyekti mapping (tezkor o'qish)
+    habit_by_id = {
+        str(h.get("id")): h
+        for h in habits
+        if h.get("id") is not None
+    }
+
+    history = udata.get("history") or {}
+    updated = 0
+    today_str = _today_uz5_str()
+
+    for b in buildings:
+        habit_id = b.get("habit_id")
+        if habit_id is None:
+            continue
+        habit_id_str = str(habit_id)
+
+        h = habit_by_id.get(habit_id_str)
+        if h is None:
+            # Orfan bino — cleanup_orphan_buildings vazifasi, tegmaymiz
+            continue
+
+        # effective_done hisoblash (backfill bilan bir xil mantiq — Qoida #11)
+        total_done = int(h.get("total_done", 0) or 0)
+        history_count = sum(
+            1 for day_data in history.values()
+            if day_data.get("habits", {}).get(habit_id_str)
+        )
+        effective_done = max(total_done, history_count)
+
+        # Faqat ko'tarish — past tushirmaymiz
+        target_progress = max(0, min(BUILDING_DAYS, effective_done))
+        current_progress = int(b.get("progress", 0) or 0)
+
+        if target_progress > current_progress:
+            b["progress"] = target_progress
+            b["last_updated"] = today_str
+            updated += 1
+
+    return updated
 
 def cleanup_orphan_buildings(udata):
     """Mavjud bo'lmagan odatlarga bog'langan "orfan" binolarni o'chiradi.
