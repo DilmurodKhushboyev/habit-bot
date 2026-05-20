@@ -404,6 +404,13 @@ def backfill_buildings_from_habits(udata):
         if b.get("habit_id") is not None
     }
 
+    # VAQTINCHALIK DEBUG (tashxisdan keyin olib tashlanadi):
+    # Habit IDʼlar va building habit_idʼlar setlarini koʻrsatadi — tip nomuvofiqligi yoki
+    # boshqa muammolarni aniqlash uchun.
+    _habit_ids_dbg = [(h.get("id"), type(h.get("id")).__name__, int(h.get("total_done", 0) or 0)) for h in habits]
+    print(f"[city][DEBUG backfill] habits ({len(habits)}): {_habit_ids_dbg}")
+    print(f"[city][DEBUG backfill] existing_habit_ids ({len(existing_habit_ids)}): {existing_habit_ids}")
+
     created = 0
     for h in habits:
         habit_id = h.get("id")
@@ -486,6 +493,12 @@ def cleanup_orphan_buildings(udata):
         for h in habits
         if h.get("id") is not None
     }
+
+    # VAQTINCHALIK DEBUG (tashxisdan keyin olib tashlanadi):
+    # Buildings va valid_habit_ids ni koʻrsatadi — mos kelmaydigan binolarni topish uchun.
+    _buildings_dbg = [(b.get("habit_id"), type(b.get("habit_id")).__name__) for b in buildings]
+    print(f"[city][DEBUG cleanup] buildings ({len(buildings)}): {_buildings_dbg}")
+    print(f"[city][DEBUG cleanup] valid_habit_ids ({len(valid_habit_ids)}): {valid_habit_ids}")
 
     # Orfan emas binolarni qoldiramiz
     new_list = []
