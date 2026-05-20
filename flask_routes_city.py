@@ -36,7 +36,7 @@ from city_logic import (
     create_building, change_building_type, delete_building_for_habit,
     place_decoration, delete_decoration, move_item,
     activate_insurance, get_building_stage,
-    compact_buildings_to_center,
+    compact_buildings_to_center, backfill_buildings_from_habits,
 )
 from flask_helpers import require_auth
 
@@ -140,6 +140,17 @@ def register_city_routes(app):
                 save_user(uid, u)
         except Exception as e:
             print(f"[city] compact_buildings_to_center failed for {uid}: {e}")
+
+        # Backfill: deploy'gacha tasdiqlangan odatlar uchun retroaktiv bino yaratish.
+        # Eski user'da habits bor lekin bino yo'q (city feature keyin qo'shilgan) —
+        # habit["total_done"] qiymatlariga qarab binolar yaratiladi. Idempotent —
+        # bino allaqachon bor odatlarga tegmaydi. try/except: backfill xato bo'lsa
+        # asosiy GET buzilmasin (compact bilan bir xil pattern).
+        try:
+            if backfill_buildings_from_habits(u) > 0:
+                save_user(uid, u)
+        except Exception as e:
+            print(f"[city] backfill_buildings_from_habits failed for {uid}: {e}")
 
         city = get_user_city(u)
 
