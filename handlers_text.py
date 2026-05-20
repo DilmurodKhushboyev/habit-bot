@@ -821,9 +821,17 @@ def handle_successful_payment(msg):
     """Stars to'lovi muvaffaqiyatli — itemni berish"""
     uid = msg.from_user.id
     payload = msg.successful_payment.invoice_payload  # "stars_gift_box" formatida
+    charge_id = msg.successful_payment.telegram_payment_charge_id  # Telegram unikal to'lov ID
     try:
         item_id = payload.replace("stars_", "", 1)
         u = load_user(uid)
+        # Idempotency check: Telegram ba'zan "successful_payment" event'ini 2 marta yuborishi
+        # mumkin (network retry, webhook duplicate). Mukofotni FAQAT BIR MARTA berishimiz uchun
+        # har bir charge_id'ni saqlab boramiz va takror kelganda rad etamiz.
+        stars_payments = u.get("stars_payments", [])
+        if charge_id and charge_id in stars_payments:
+            print(f"[stars] Duplicate event rad etildi: charge_id={charge_id}, uid={uid}")
+            return
         raw_inv = u.get("inventory", {})
         if isinstance(raw_inv, list):
             inventory = {i: 1 for i in raw_inv}
@@ -854,6 +862,10 @@ def handle_successful_payment(msg):
             print(f"[stars] Noma'lum item_id: {item_id}, uid={uid}")
             return
         u["inventory"] = inventory
+        # Idempotency: ushbu charge_id'ni ro'yxatga qo'shamiz — kelajakda takror kelsa rad etiladi
+        if charge_id:
+            stars_payments.append(charge_id)
+            u["stars_payments"] = stars_payments
         save_user(uid, u)
         bot.send_message(uid, msg_text, parse_mode="Markdown")
     except Exception as e:
