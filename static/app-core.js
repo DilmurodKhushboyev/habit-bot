@@ -37,7 +37,7 @@ let   userId   = user.id || 0;
 const API      = window.location.origin + '/api';
 
 // ── STATE ──
-let loaded = { today: false, profile: false, habits: false, stats: false, achievements: false, reminders: false, my_reminders: false, bozor: false };
+let loaded = { today: false, profile: false, habits: false, stats: false, achievements: false, reminders: false, my_reminders: false, bozor: false, city: false };
 let data   = {};
 
 // ── HEADER BALL SINXRON YANGILASH ──
@@ -275,17 +275,28 @@ function moveNavBall(targetEl, animate) {
   var targetX = tRect.left - navRect.left + tRect.width / 2 - halfBall;
   var centerX = tRect.left - navRect.left + tRect.width / 2;
 
-  // Clone active tab icon + label into ball
+  // Clone active tab icon + label into ball.
+  // DIQQAT: ballIcon.innerHTML = ... butun SVG'ni noldan quradi. Agar bu
+  // animatsiya BOSHIDA bajarilsa, shar bir kadr "ichi bo'sh" ko'rinib
+  // pirpiraydi. Shuning uchun:
+  //  - animate=false (birinchi yuklash): darhol almashtiramiz.
+  //  - animate=true (sahifa o'tishi): almashtirish 210ms keyinga —
+  //    shar navBallJump'ning ~40% (eng tepa nuqta) da, harakatda
+  //    bo'lganida — SVG qayta qurilishi ko'zga ko'rinmaydi.
   var srcIcon = targetEl.querySelector('.nav-icon');
   var srcLabel = targetEl.querySelector('.nav-label');
-  if (srcIcon && ballIcon) {
-    ballIcon.innerHTML = srcIcon.innerHTML;
-  }
-  if (srcLabel && ballLabel) {
-    ballLabel.textContent = srcLabel.textContent;
+  function applyBallContent() {
+    if (srcIcon && ballIcon) {
+      // Gradient referenslarini #fff ga almashtiramiz (filtersiz oq ikonka).
+      ballIcon.innerHTML = srcIcon.innerHTML.replace(/url\(#[^)]+\)/g, '#fff');
+    }
+    if (srcLabel && ballLabel) {
+      ballLabel.textContent = srcLabel.textContent;
+    }
   }
 
   if (!animate || ball._lastX === undefined) {
+    applyBallContent();
     ball.style.transform = 'translate(' + targetX + 'px, 0)';
     ball._lastX = targetX;
     drawNavNotch(centerX);
@@ -295,19 +306,18 @@ function moveNavBall(targetEl, animate) {
   var startX = ball._lastX;
   var midX   = (startX + targetX) / 2;
 
-  // Animate notch sliding with ball
-  var startCx = startX + halfBall;
-  var endCx   = centerX;
-  var notchStart = performance.now();
-  var notchDur = 480;
-  function animateNotch(now) {
-    var t = Math.min((now - notchStart) / notchDur, 1);
-    var ease = 1 - Math.pow(1 - t, 3);
-    var cx = startCx + (endCx - startCx) * ease;
-    drawNavNotch(cx);
-    if (t < 1) requestAnimationFrame(animateNotch);
-  }
-  requestAnimationFrame(animateNotch);
+  // Notch (panel o'yig'i) BIR MARTA yangi pozitsiyaga chiziladi.
+  // Avval har kadrda (requestAnimationFrame) qayta chizilardi — bu
+  // .nav-bg SVG'ning drop-shadow filtrini har kadr qayta rasterizatsiya
+  // qilib, mobil WebView'da panelni ~0.5s pirpiratardi. Shar havoda
+  // sakrayotgan paytda (navBallJump ~520ms) o'yiq allaqachon tayyor —
+  // shar pastga tushganda aynan joyiga to'g'ri keladi.
+  drawNavNotch(centerX);
+
+  // Joriy maqsadni ball ob'ektida saqlaymiz — animationend listener
+  // (doimiy, quyida bir marta o'rnatilgan) shu qiymatni o'qiydi.
+  ball._targetX = targetX;
+  ball._applyContent = applyBallContent;
 
   ball.classList.remove('jumping');
   ball.style.setProperty('--ball-sx', startX + 'px');
@@ -317,14 +327,28 @@ function moveNavBall(targetEl, animate) {
   void ball.offsetWidth;
   ball.classList.add('jumping');
 
-  ball.addEventListener('animationend', function onEnd() {
-    ball.classList.remove('jumping');
-    ball.style.transform = 'translate(' + targetX + 'px, 0)';
-    ball._lastX = targetX;
-    ball.removeEventListener('animationend', onEnd);
-    // Toʻlqin (ripple) effekti — shar tushganda panel jilvalanadi
-    spawnNavRipple(centerX);
-  });
+  // Ikonka/label'ni shar eng tepaga chiqqanida (navBallJump 40% ≈ 210ms)
+  // almashtiramiz. Tez-tez bosishda eski timer'ni bekor qilamiz —
+  // aks holda eski applyBallContent ishlab noto'g'ri ikonka qo'yardi.
+  if (ball._iconTimer) clearTimeout(ball._iconTimer);
+  ball._iconTimer = setTimeout(function() {
+    if (ball._applyContent) ball._applyContent();
+  }, 210);
+
+  // animationend listener BIR MARTA o'rnatiladi (har moveNavBall'da emas).
+  // Avval har chaqiruvda yangi listener qo'shilardi — animatsiya o'rtada
+  // uzilsa eski listener osilib qolardi (removeEventListener ishlamasdi),
+  // tez bosishda o'nlab osilgan listener noto'g'ri targetX bilan sharni
+  // qotirib qo'yardi. Doimiy listener ball._targetX'ni o'qiydi — har gal
+  // eng oxirgi to'g'ri qiymat.
+  if (!ball._endBound) {
+    ball._endBound = true;
+    ball.addEventListener('animationend', function() {
+      ball.classList.remove('jumping');
+      ball.style.transform = 'translate(' + ball._targetX + 'px, 0)';
+      ball._lastX = ball._targetX;
+    });
+  }
 
   ball._lastX = targetX;
 }
@@ -380,10 +404,18 @@ function switchTab(tab, el) {
   // Nav ball
   var navTarget = el || document.getElementById('nav-' + tab);
   if (navTarget) moveNavBall(navTarget, true);
+  // Sahifa yuklash. (Avval bu blok 300ms setTimeout ichida edi —
+  // pirpirashni kamaytirish uchun — lekin pirpirash aslida nav-bg
+  // drop-shadow'dan edi va u alohida hal qilindi. 300ms kechikish esa
+  // shar qotishiga sabab bo'lardi: kechikish oynasida bosilgan tab
+  // if(_tabLoading)return bilan e'tiborsiz qolardi. Shuning uchun
+  // to'g'ridan-to'g'ri chaqiramiz.)
   if (!loaded[tab]) loadTab(tab);
   else if (tab === 'habits') { loaded.habits = false; loadTab('habits'); }
   else if (tab === 'profile') { loaded.profile = false; loadTab('profile'); }
   else if (tab === 'bozor') { loaded.bozor = false; loadTab('bozor'); }
+  else if (tab === 'city')    { loaded.city = false;    loadTab('city');    } // qaytganda markazga avtoscroll
+  else if (tab === 'stats') { loaded.stats = false; loadTab('stats'); } // reyting ball/streak doimo yangi bo'lsin
   else refreshHabitsJon();
 }
 
@@ -402,6 +434,7 @@ async function loadTab(tab) {
     if (tab === 'my_reminders') await loadMyReminders();
     if (tab === 'profile')      await loadProfile();
     if (tab === 'habits')       await loadStatsPage();
+    if (tab === 'city')         await loadCity();
     if (tab === 'bozor') {
       await loadShop();
     }

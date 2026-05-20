@@ -8,8 +8,9 @@ import time
 from datetime import datetime, date, timedelta, timezone
 from flask import jsonify, request
 
-from config import SHOP_BONUS_EFFECTS
 from database import load_user, save_user, load_all_users, load_group, save_group, add_points_history
+from points_logic import apply_item_bonuses, apply_pet_dog_bonus
+from city_logic import update_building_progress
 from helpers import T, get_lang, get_rank, today_uz5
 from texts import LANGS
 from motivation import MOTIVATSIYA
@@ -29,59 +30,12 @@ def register_data_routes(app):
     }
 
     def _apply_item_bonuses(u, base_points):
-        """
-        Faol badge va car mahsulotlari asosida ball bonusini qoʻllaydi.
-        Stack qilinadi: badge + car foizlari qoʻshiladi (masalan, 12% + 8% = 20%).
-        Faqat `points_percent` turidagi mahsulotlar ishlatiladi.
-        Agar round natijasida bonus yoʻqolsa, majburiy +1 ball qoʻshiladi
-        (foydalanuvchi har doim badge foydasini koʻrsin).
-        """
-        total_percent = 0
-        for field in ("active_badge", "active_car"):
-            item_id = u.get(field, "")
-            effect = SHOP_BONUS_EFFECTS.get(item_id)
-            if effect and effect.get("type") == "points_percent":
-                total_percent += effect.get("value", 0)
-        if total_percent <= 0:
-            return base_points
-        # B variant: majburiy minimum +1 kafolat
-        boosted = round(base_points * (1 + total_percent / 100))
-        return max(boosted, base_points + 1)
+        # Ko'chirildi: points_logic.apply_item_bonuses (audit #5)
+        return apply_item_bonuses(u, base_points)
 
     def _apply_pet_dog_bonus(u, today, is_undo=False):
-        """
-        pet_dog faol bo'lsa — kunlik BIRINCHI checkin'ga +N ball qo'shimcha.
-        N qiymati: SHOP_BONUS_EFFECTS["pet_dog"]["value"] (config dan).
-        is_undo=False: DONE holati — agar bugun bonus berilmagan bo'lsa, beriladi.
-        is_undo=True:  UNDO holati — agar bugun bonus berilgan bo'lsa, qaytariladi.
-        Returns: qo'llanilgan bonus miqdori (0 agar qo'llanmasa).
-        """
-        if u.get("active_pet", "") != "pet_dog":
-            return 0
-        effect = SHOP_BONUS_EFFECTS.get("pet_dog")
-        if not effect or effect.get("type") != "daily_bonus":
-            return 0
-        bonus_value = effect.get("value", 0)
-        if bonus_value <= 0:
-            return 0
-        last_bonus_date = u.get("pet_dog_last_bonus_date", "")
-        if is_undo:
-            # UNDO: agar bugun bonus berilgan bo'lsa, qaytarish
-            if last_bonus_date == today:
-                _old_pts = u.get("points", 0)
-                u["points"] = max(0, _old_pts - bonus_value)
-                add_points_history(u, u["points"] - _old_pts, today)
-                u["pet_dog_last_bonus_date"] = ""
-                return bonus_value
-            return 0
-        else:
-            # DONE: agar bugun birinchi marta bo'lsa, bonus berish
-            if last_bonus_date != today:
-                u["points"] = u.get("points", 0) + bonus_value
-                add_points_history(u, bonus_value, today)
-                u["pet_dog_last_bonus_date"] = today
-                return bonus_value
-            return 0
+        # Ko'chirildi: points_logic.apply_pet_dog_bonus (audit #5)
+        return apply_pet_dog_bonus(u, today, is_undo=is_undo)
 
     @app.route("/api/today/<int:uid>")
     @require_auth
@@ -174,6 +128,9 @@ def register_data_routes(app):
         today = today_uz5()
         habits = u.get("habits", [])
         points_before = u.get("points", 0)
+        # CITY: bino progress delta — har holatda hisoblanadi va oxirida yagona joyga
+        # qo'llaniladi. +1 = fully done (simple yoki repeat full), -1 = undo, 0 = partial repeat.
+        _city_delta = 0
         found_h = None
         for h in habits:
             if h["id"] == hid:
@@ -187,6 +144,7 @@ def register_data_routes(app):
                     if done >= rep_count:
                         # Allaqachon to'liq bajarilgan — bekor qilish (0 ga tushirish)
                         done = 0
+                        _city_delta = -1   # CITY: fully bekor qilindi — bino regress (PHASE A3)
                         h["last_done"] = None
                         h["last_done_at"] = None
                         h["streak"] = max(0, h.get("streak", 0) - 1)
@@ -212,6 +170,7 @@ def register_data_routes(app):
                     else:
                         done += 1
                         if done >= rep_count:
+                            _city_delta = +1   # CITY: fully bajarildi — bino progress (PHASE A3)
                             h["last_done"] = today
                             h["last_done_at"] = time.time()
                             h["streak"] = h.get("streak", 0) + 1
@@ -242,6 +201,7 @@ def register_data_routes(app):
                     today_count = done
                 else:
                     if h.get("last_done") == today:
+                        _city_delta = -1   # CITY: simple undo — bino regress (PHASE A3)
                         h["last_done"] = None
                         h["last_done_at"] = None
                         h["streak"] = max(0, h.get("streak", 0) - 1)
@@ -269,6 +229,7 @@ def register_data_routes(app):
                         from datetime import timezone, timedelta as _td
                         _tz = timezone(_td(hours=5))
                         _yesterday = (datetime.now(_tz) - _td(days=1)).strftime("%Y-%m-%d")
+                        _city_delta = +1   # CITY: simple done — bino progress (PHASE A3)
                         h["streak"] = h.get("streak", 0) + 1 if h.get("last_done") == _yesterday else 1
                         if h["streak"] > h.get("best_streak", 0):
                             h["best_streak"] = h["streak"]
@@ -333,10 +294,11 @@ def register_data_routes(app):
                 done_log.pop(today, None)
                 u["done_log"] = done_log
         # total_done yangilash (achievements uchun)
+        # _city_delta = +1 (fully done) / -1 (undo) / 0 (repeat partial — tegilmaydi)
         if found_h:
-            if is_done and found_h.get("last_done") == today:
+            if _city_delta == +1:
                 found_h["total_done"] = found_h.get("total_done", 0) + 1
-            elif not is_done:
+            elif _city_delta == -1:
                 found_h["total_done"] = max(0, found_h.get("total_done", 0) - 1)
         # XP booster kunini kamaytirish (kuniga bir marta)
         if u.get("xp_booster_days", 0) > 0:
@@ -344,6 +306,12 @@ def register_data_routes(app):
             if last_boost != today:
                 u["xp_booster_days"] = max(0, u["xp_booster_days"] - 1)
                 u["xp_booster_last_day"] = today
+        # CITY: bino progress yangilash (delta hisoblangan: +1/-1/0) (PHASE A3)
+        if _city_delta != 0 and found_h:
+            try:
+                update_building_progress(u, hid, _city_delta)
+            except Exception as _ce:
+                print(f"[city] update_building_progress {_city_delta:+d} xato (uid={uid}): {_ce}")
         save_user(uid, u)
         if not found_h:
             return jsonify({"ok": False, "error": "Odat topilmadi"})

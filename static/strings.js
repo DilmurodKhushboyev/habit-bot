@@ -2,7 +2,14 @@ let selectedLang = null;
 let currentLang = localStorage.getItem('sh_lang') || 'uz';
 const STRINGS = {
   uz: {
-    nav: { today:'Odatlar', stats:'Reyting', habits:'Statistika', bozor:'Bozor', profile:'Profil' },
+    nav: { today:'Odatlar', stats:'Reyting', habits:'Statistika', city:'Shahar', bozor:'Bozor', profile:'Profil' },
+    city: {
+      title:'Mening shaharim',
+      coming_soon:'Tez orada...',
+      description:"Har bir tasdiqlangan odat shahringizda bino quradi. 66 kun — bir bino to'liq quriladi.",
+      moved:'\u2705 Bino ko\u2018chirildi',
+      move_failed:'Bu joyga qo\u2018yib bo\u2018lmadi'
+    },
     profile: {
       ball:'Ball', streak:'Streak', done:'Bajarildi', rekord:'rekord',
       done_label:'Bajarildi', not_done:'Bajarilmadi', kun:'kun',
@@ -81,7 +88,7 @@ const STRINGS = {
       rem_edit_btn:'Tahrirlash',
       rem_del_menu:'O\'chirish',
       rem_edit_coming_soon:'⏳ Tez orada qo\'shiladi',
-      limit_reached:'⚠️ Maksimal limitga yetdingiz!',
+      limit_reached:'⚠️ Maksimal limitga yetdingiz! (15 ta odat)',
       section_title:'ODATLAR',
       tap_hint:'Odatni tasdiqlash uchun ustiga bosing!',
       empty:"Hali odat qo'shilmagan",
@@ -404,7 +411,14 @@ const STRINGS = {
     },
   },
   ru: {
-    nav: { today:'Привычки', stats:'Рейтинг', habits:'Статистика', bozor:'Магазин', profile:'Профиль' },
+    nav: { today:'Привычки', stats:'Рейтинг', habits:'Статистика', city:'Город', bozor:'Магазин', profile:'Профиль' },
+    city: {
+      title:'Мой город',
+      coming_soon:'Скоро...',
+      description:'Каждая подтверждённая привычка строит здание в вашем городе. 66 дней — здание полностью построено.',
+      moved:'\u2705 Здание перемещено',
+      move_failed:'Сюда нельзя поставить'
+    },
     profile: {
       ball:'Очки', streak:'Стрик', done:'Выполнено', rekord:'рекорд',
       done_label:'Выполнено', not_done:'Не выполнено', kun:'дней',
@@ -493,6 +507,7 @@ const STRINGS = {
       progress_label:'ПРОГРЕСС',
       readonly_msg:'Отмечать можно только сегодняшние привычки',
       back_to_today:'К сегодняшнему дню',
+      limit_reached:'⚠️ Достигнут максимум! (15 привычек)',
     },
     achievements: {
       title:'Мои достижения',
@@ -805,7 +820,14 @@ const STRINGS = {
     },
   },
   en: {
-    nav: { today:'Habits', stats:'Ranking', habits:'Statistics', bozor:'Store', profile:'Profile' },
+    nav: { today:'Habits', stats:'Ranking', habits:'Statistics', city:'City', bozor:'Store', profile:'Profile' },
+    city: {
+      title:'My City',
+      coming_soon:'Coming soon...',
+      description:'Every confirmed habit builds a structure in your city. 66 days — one building fully constructed.',
+      moved:'\u2705 Building moved',
+      move_failed:'Can\u2018t place here'
+    },
     profile: {
       ball:'Points', streak:'Streak', done:'Done', rekord:'record',
       done_label:'Done', not_done:'Not done', kun:'days',
@@ -894,6 +916,7 @@ const STRINGS = {
       progress_label:'PROGRESS',
       readonly_msg:'Only today\'s habits can be marked',
       back_to_today:'Back to today',
+      limit_reached:'⚠️ Limit reached! (15 habits)',
     },
     achievements: {
       title:'My Achievements',

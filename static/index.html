@@ -9,9 +9,10 @@
 <title>Super Habits</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=584">
-<script src="strings.js?v=554"></script>
-<script src="app-core.js?v=552"></script>
+<link rel="stylesheet" href="style.css?v=615">
+<link rel="stylesheet" href="style-city.css?v=7">
+<script src="strings.js?v=562"></script>
+<script src="app-core.js?v=568"></script>
 </head>
 <body>
 
@@ -91,6 +92,13 @@
 <!-- BUGUN -->
 <div class="page active" id="page-today">
   <div id="today-content">
+    <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
+  </div>
+</div>
+
+<!-- SHAHAR -->
+<div class="page" id="page-city">
+  <div id="city-content">
     <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
   </div>
 </div>
@@ -236,7 +244,7 @@
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav" id="bottom-nav">
-  <svg class="nav-bg" id="nav-bg" preserveAspectRatio="none"><path id="nav-bg-path" fill="var(--bg)"/></svg>
+  <svg class="nav-bg" id="nav-bg" preserveAspectRatio="none"><path id="nav-bg-path" fill="var(--surface)"/></svg>
   <div class="nav-ball" id="nav-ball"><div class="nav-ball-icon" id="nav-ball-icon"></div><span class="nav-ball-label" id="nav-ball-label"></span></div>
   <button class="nav-item active" id="nav-today" onclick="switchTab('today', this)">
     <span class="nav-icon">
@@ -264,6 +272,39 @@
     </span>
     <span class="nav-label">Reyting</span>
   </button>
+  <button class="nav-item" id="nav-city" onclick="switchTab('city', this)">
+    <span class="nav-icon">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
+        <defs>
+          <linearGradient id="ni-city-top" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6BCB9C"/>
+            <stop offset="100%" stop-color="#4CAF7D"/>
+          </linearGradient>
+          <linearGradient id="ni-city-left" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3D9669"/>
+            <stop offset="100%" stop-color="#2D8A5E"/>
+          </linearGradient>
+          <linearGradient id="ni-city-right" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2E7A52"/>
+            <stop offset="100%" stop-color="#1F5C3D"/>
+          </linearGradient>
+        </defs>
+        <!-- Chap kichik bino -->
+        <path d="M2 16 L6 14 L10 16 L6 18 Z" fill="url(#ni-city-top)"/>
+        <path d="M2 16 L2 20 L6 22 L6 18 Z" fill="url(#ni-city-left)"/>
+        <path d="M10 16 L10 20 L6 22 L6 18 Z" fill="url(#ni-city-right)"/>
+        <!-- Markaziy baland bino -->
+        <path d="M9 10 L13 8 L17 10 L13 12 Z" fill="url(#ni-city-top)"/>
+        <path d="M9 10 L9 19 L13 21 L13 12 Z" fill="url(#ni-city-left)"/>
+        <path d="M17 10 L17 19 L13 21 L13 12 Z" fill="url(#ni-city-right)"/>
+        <!-- O'ng o'rta bino -->
+        <path d="M16 14 L20 12 L24 14 L20 16 Z" fill="url(#ni-city-top)"/>
+        <path d="M16 14 L16 19 L20 21 L20 16 Z" fill="url(#ni-city-left)"/>
+        <path d="M24 14 L24 19 L20 21 L20 16 Z" fill="url(#ni-city-right)"/>
+      </svg>
+    </span>
+    <span class="nav-label">Shahar</span>
+  </button>
   <button class="nav-item" id="nav-habits" onclick="switchTab('habits', this)" type="button">
     <span class="nav-icon">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -286,16 +327,6 @@
     </span>
     <span class="nav-label">Bozor</span>
   </button>
-  <button class="nav-item" id="nav-profile" onclick="switchTab('profile', this)">
-    <span class="nav-icon">
-      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
-        <defs><linearGradient id="ni5" x1="0" y1="0" x2="26" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5B8DEF"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs>
-        <circle cx="13" cy="9" r="4.5" fill="url(#ni5)"/>
-        <path d="M4 22C4 17.582 8.029 14 13 14C17.971 14 22 17.582 22 22" stroke="url(#ni5)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-      </svg>
-    </span>
-    <span class="nav-label">Profil</span>
-  </button>
 </nav>
 
 <!-- Badge popup -->
@@ -307,11 +338,14 @@
   </div>
 </div>
 
-<script src="app-pages.js?v=565"></script>
-<script src="app-stats.js?v=553"></script>
-<script src="app-profile.js?v=549"></script>
-<script src="app-habits.js?v=558"></script>
-<script src="app-social.js?v=552"></script>
-<script src="app-reminders.js?v=558"></script>
+<script src="app-pages.js?v=569"></script>
+<script src="app-stats.js?v=557"></script>
+<script src="app-profile.js?v=553"></script>
+<script src="app-habits.js?v=562"></script>
+<script src="app-social.js?v=557"></script>
+<script src="app-reminders.js?v=562"></script>
+<script src="app-city.js?v=24"></script>
+<script src="app-city-buildings.js?v=14"></script>
+<script src="app-city-move.js?v=9"></script>
 </body>
 </html>

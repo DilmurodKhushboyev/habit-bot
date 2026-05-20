@@ -117,3 +117,68 @@ SHOP_BONUS_EFFECTS = {
 REMINDER_COMPLETE_POINTS = 2              # Eslatma bajarilganda beriladigan ball
 REMINDER_JOB_PREFIX      = "reminder_"    # schedule job tag prefix (SYSTEM_JOB_TAGS bilan konflikt yo'q)
 REMINDER_MAX_TEXT_LEN    = 200            # Eslatma matnining maksimal uzunligi (profil bio bilan bir xil)
+
+# ============================================================
+#  ODATLAR
+# ============================================================
+HABIT_LIMIT = 15                          # Bir foydalanuvchi yarata oladigan maksimal odat soni
+                                          # (freemium qo'shilganda FREE/PREM ga ajratiladi)
+
+# ============================================================
+#  CITY (SHAHAR) — gamification 2.0
+#  Foydalanuvchi har odat tasdiqlasa → bino qurilishi davom etadi.
+#  66 kun = bino to'liq quriladi (odat shakllanishi ilmiy chegarasi).
+#  Grid 30x30 = 900 katak (PHASE C2.1 da 20→30 ga kengaytirildi).
+# ============================================================
+CITY_GRID_SIZE   = 30                  # 30x30 = 900 katak
+BUILDING_DAYS    = 66                  # odat shakllanish kunlari (max progress)
+CITY_VERSION     = 1                   # schema versiyasi (kelajakdagi migratsiyalar uchun)
+
+# Bino turlari (10 ta) — har biri emoji + tarjima kaliti
+# name_key keyinchalik texts.py LANGS dict'iga 3 tilga qo'shiladi (Qoida #22)
+BUILDING_TYPES = {
+    "stadium":   {"emoji": "🏟️", "name_key": "city_bld_stadium"},
+    "library":   {"emoji": "📚", "name_key": "city_bld_library"},
+    "mosque":    {"emoji": "🕌", "name_key": "city_bld_mosque"},
+    "school":    {"emoji": "🎓", "name_key": "city_bld_school"},
+    "park":      {"emoji": "🌳", "name_key": "city_bld_park"},
+    "cafe":      {"emoji": "☕", "name_key": "city_bld_cafe"},
+    "bank":      {"emoji": "🏦", "name_key": "city_bld_bank"},
+    "hospital":  {"emoji": "🏥", "name_key": "city_bld_hospital"},
+    "studio":    {"emoji": "🎨", "name_key": "city_bld_studio"},
+    "house":     {"emoji": "🏠", "name_key": "city_bld_house"},
+}
+
+# Progress → Stage (5 ta vizual bosqich)
+# get_building_stage(progress) shu chegaralarni ishlatadi (city_logic.py)
+# Stage 0: foundation (asos)        — 0-13 kun (0-20%)
+# Stage 1: skeleton (skelet)        — 14-26 kun (21-40%)
+# Stage 2: walls (devorlar)         — 27-39 kun (41-60%)
+# Stage 3: roof (tom + derazalar)   — 40-52 kun (61-80%)
+# Stage 4: complete (to'liq)        — 53-66 kun (81-100%)
+BUILDING_STAGE_THRESHOLDS = [13, 26, 39, 52, 66]   # max progress shu yerdan oshmasligi kerak
+
+# Dekoratsiya turlari (bozordan sotib olinadi, odatdan emas)
+# Birinchi versiyada 5 ta — kelajakda kengayadi
+DECORATION_TYPES = {
+    "tree":        {"emoji": "🌳", "name_key": "city_dec_tree"},
+    "flower":      {"emoji": "🌸", "name_key": "city_dec_flower"},
+    "car":         {"emoji": "🚗", "name_key": "city_dec_car"},
+    "bench":       {"emoji": "🪑", "name_key": "city_dec_bench"},
+    "fountain":    {"emoji": "⛲", "name_key": "city_dec_fountain"},
+}
+
+# Dekoratsiya narxlari (ball bilan, bozorda) — alohida dict
+# (asosiy SHOP_PRICES bilan aralashtirmaymiz, chunki ular boshqa toifa)
+SHOP_DECORATION_PRICES = {
+    "tree":     30,
+    "flower":   20,
+    "car":      80,
+    "bench":    40,
+    "fountain": 120,
+}
+
+# Construction Insurance — premium feature (Qoida #5 javob: HA, kelajakka)
+# Faol bo'lsa: kun o'tkazilsa progress -1 bo'lmaydi (saqlanadi)
+INSURANCE_PRICE       = 200            # ball
+INSURANCE_DURATION    = 30             # kun (1 oy)

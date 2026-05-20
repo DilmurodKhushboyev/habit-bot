@@ -30,7 +30,7 @@ from bot_setup import (bot, send_main_menu, main_menu, main_menu_dict,
 from menus import (check_subscription, send_sub_required, send_menu2,
                    admin_menu)
 
-from groups import _save_new_habit, _save_new_group, _save_group_habit
+from groups import _save_new_group, _save_group_habit
 from scheduler import schedule_habit
 
 @bot.message_handler(func=lambda m: not (m.text and m.text.startswith("/")), content_types=["text", "photo", "document", "video", "audio", "voice", "sticker", "animation"])
@@ -188,126 +188,6 @@ def handle_text(msg):
                 try: bot.delete_message(cid, mid)
                 except: pass
             threading.Thread(target=_del_err, args=(uid, sent_err.message_id), daemon=True).start()
-        return
-
-    # ── Takrorlanuvchi odat - necha marta so'rash ──
-    if state == "waiting_repeat_count":
-        import re as _re2
-        count_text = text.strip()
-        try: bot.delete_message(uid, msg.message_id)
-        except: pass
-        try:
-            count = int(count_text)
-            if count < 1 or count > 20:
-                raise ValueError
-        except:
-            bot.send_message(uid, T(uid, "err_wrong_count"), parse_mode="Markdown")
-            return
-        old_msg_id = u.pop("temp_msg_id", None)
-        if old_msg_id:
-            try: bot.delete_message(uid, old_msg_id)
-            except: pass
-        if not u.get("temp_habit"):
-            u["state"] = None
-            save_user(uid, u)
-            send_main_menu(uid)
-            return
-        u["temp_habit"]["repeat_count"] = count
-        u["state"] = "waiting_habit_name"
-        save_user(uid, u)
-        cancel_kb = InlineKeyboardMarkup()
-        cancel_kb.add(cBtn(T(uid, "btn_cancel"), "cancel", "danger"))
-        sent = bot.send_message(uid, T(uid, "ask_habit_name"), parse_mode="Markdown", reply_markup=cancel_kb)
-        u["temp_msg_id"] = sent.message_id
-        save_user(uid, u)
-        return
-
-    # ── Odat nomi ──
-    if state == "waiting_habit_name":
-        # temp_habit yo'q bo'lsa — xavfsiz holda asosiy menyuga qaytish
-        if not u.get("temp_habit"):
-            u["state"] = None
-            save_user(uid, u)
-            send_main_menu(uid)
-            return
-        habit_name = text.strip()
-        if not habit_name:
-            return
-        old_msg_id = u.pop("temp_msg_id", None)
-        try: bot.delete_message(uid, msg.message_id)
-        except: pass
-        if old_msg_id:
-            try: bot.delete_message(uid, old_msg_id)
-            except: pass
-        u["temp_habit"]["name"] = habit_name
-        hab_type = u["temp_habit"].get("type", "simple")
-        u["state"] = "waiting_habit_time"
-        save_user(uid, u)
-        cancel_kb = InlineKeyboardMarkup()
-        cancel_kb.add(InlineKeyboardButton(T(uid, "btn_no_time"), callback_data="habit_no_time"))
-        cancel_kb.add(cBtn(T(uid, "btn_cancel"), "cancel", "danger"))
-        if hab_type == "repeat":
-            rep_count = u["temp_habit"].get("repeat_count", 1)
-            prompt = T(uid, "ask_repeat_first_time", name=habit_name, count=rep_count)
-        else:
-            prompt = T(uid, "ask_habit_time", name=habit_name)
-        sent = bot.send_message(uid, prompt, parse_mode="Markdown", reply_markup=cancel_kb)
-        u["temp_msg_id"] = sent.message_id
-        save_user(uid, u)
-        return
-
-    # ── Odat vaqti (oddiy yoki repeat birinchi vaqt) ──
-    if state == "waiting_habit_time":
-        time_text = text.strip()
-        if not re.match(r'^\d{1,2}:\d{2}$', time_text):
-            bot.send_message(uid, T(uid, "err_time_format"), parse_mode="Markdown")
-            return
-        try:
-            hh, mm = time_text.split(":")
-            if not (0 <= int(hh) <= 23 and 0 <= int(mm) <= 59):
-                raise ValueError
-            time_text = f"{int(hh):02d}:{int(mm):02d}"
-        except:
-            bot.send_message(uid, T(uid, "err_time_value"), parse_mode="Markdown")
-            return
-        old_msg_id = u.pop("temp_msg_id", None)
-        try: bot.delete_message(uid, msg.message_id)
-        except: pass
-        if old_msg_id:
-            try: bot.delete_message(uid, old_msg_id)
-            except: pass
-
-        hab_type = u.get("temp_habit", {}).get("type", "simple")
-        if hab_type == "repeat":
-            # temp_habit yo'q bo'lsa xavfsiz fallback
-            if not u.get("temp_habit"):
-                u["state"] = None
-                save_user(uid, u)
-                send_main_menu(uid)
-                return
-            collected = u["temp_habit"].get("times_collected", [])
-            collected.append(time_text)
-            u["temp_habit"]["times_collected"] = collected
-            rep_count = u["temp_habit"].get("repeat_count", len(collected))
-            if len(collected) < rep_count:
-                # Yana vaqt kerak
-                save_user(uid, u)
-                cancel_kb = InlineKeyboardMarkup()
-                cancel_kb.add(cBtn(T(uid, "btn_cancel"), "cancel", "danger"))
-                sent = bot.send_message(
-                    uid,
-                    T(uid, "ask_repeat_next_time", current=len(collected)+1, total=rep_count),
-                    parse_mode="Markdown", reply_markup=cancel_kb
-                )
-                u["temp_msg_id"] = sent.message_id
-                save_user(uid, u)
-            else:
-                # Barcha vaqtlar to'plandi - saqlash
-                save_user(uid, u)
-                _save_new_habit(uid, u)
-        else:
-            u["temp_habit"]["time"] = time_text
-            _save_new_habit(uid, u)
         return
 
     # ── Odat vaqtini tahrirlash (sozlamalar) ──

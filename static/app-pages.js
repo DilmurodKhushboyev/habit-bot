@@ -302,7 +302,7 @@ async function checkin(hid, cardEl) {
       // Repeat odat oraliq progress — ko'tariluvchi "pop" ovozi
       playProgressSound(tc2, rc2);
     }
-    loaded.profile = false; loaded.rating = false; loaded.achievements = false; loaded.stats = false;
+    loaded.profile = false; loaded.achievements = false; loaded.stats = false;
     if (document.getElementById('page-stats')?.classList.contains('active')) { loadStats(); }
     // Bajarilgan odat pastga, bekor qilingan odat tepaga
     // (kartalar oraligʻidagina koʻchadi — eslatmalar blokiga oʻtib ketmaydi)
@@ -355,39 +355,6 @@ function showTodayToast(msg, err = false) {
   t.textContent = msg;
   t.className = 'toast show' + (err ? ' err' : '');
   setTimeout(() => { t.className = 'toast'; }, 2500);
-}
-
-// v469: Bayram emoji (🎉) SVG — NASA yashil palitra, today-hero yuqori-o'ng burchakda
-// Faqat barcha odatlar bajarilganda (100%) ko'rinadi, pop + float animatsiyalar bilan
-function _partySvg() {
-  return '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">'
-    + '<defs>'
-    +   '<linearGradient id="pbCone" x1="4" y1="28" x2="18" y2="14" gradientUnits="userSpaceOnUse">'
-    +     '<stop offset="0%" stop-color="#2D8A5E"/>'
-    +     '<stop offset="100%" stop-color="#4CAF7D"/>'
-    +   '</linearGradient>'
-    +   '<linearGradient id="pbLight" x1="4" y1="28" x2="16" y2="16" gradientUnits="userSpaceOnUse">'
-    +     '<stop offset="0%" stop-color="#7DC29A"/>'
-    +     '<stop offset="100%" stop-color="#A8D9BE"/>'
-    +   '</linearGradient>'
-    + '</defs>'
-    // Party popper konus (cone) — chapdan pastga qaragan
-    + '<path d="M4 28L14 6L22 14L4 28Z" fill="url(#pbCone)"/>'
-    // Konus ichidagi och-yashil yorug'lik qismi
-    + '<path d="M4 28L11 12L17 18L4 28Z" fill="url(#pbLight)" opacity="0.65"/>'
-    // Atrofga tarqalayotgan zarrachalar (yashil nuqtalar va yulduzchalar)
-    + '<circle cx="24" cy="6" r="1.8" fill="#4CAF7D"/>'
-    + '<circle cx="28" cy="11" r="1.3" fill="#7DC29A"/>'
-    + '<circle cx="20" cy="4" r="1.1" fill="#2D8A5E"/>'
-    + '<circle cx="26" cy="18" r="1.2" fill="#4CAF7D"/>'
-    + '<circle cx="29" cy="22" r="1" fill="#A8D9BE"/>'
-    // Chiziq-zarrachalar (party popper'dan otilayotgan simlar)
-    + '<path d="M22 10L25 7" stroke="#4CAF7D" stroke-width="1.6" stroke-linecap="round"/>'
-    + '<path d="M25 13L29 14" stroke="#7DC29A" stroke-width="1.4" stroke-linecap="round"/>'
-    + '<path d="M23 17L27 16" stroke="#2D8A5E" stroke-width="1.4" stroke-linecap="round"/>'
-    // Yulduzcha (sparkle) aksent
-    + '<path d="M22 4L22.6 5.4L24 6L22.6 6.6L22 8L21.4 6.6L20 6L21.4 5.4L22 4Z" fill="#A8D9BE"/>'
-    + '</svg>';
 }
 
 // v468: Bayram konfettisi — barcha odatlar bajarilganda otiladi
@@ -538,11 +505,6 @@ function setRepeat(hid, val) {
   if (body) body.style.pointerEvents = 'auto';
 }
 
-function clearTime(hid) {
-  const inp = document.getElementById('time-' + hid);
-  if (inp) inp.value = '';
-}
-
 function addTime(hid) {
   const list = document.getElementById('times-list-' + hid);
   if (!list) return;
@@ -577,10 +539,8 @@ function removeTime(hid, idx) {
 
 async function saveReminder(hid) {
   const tog    = document.getElementById('tog-' + hid);
-  const timeEl = document.getElementById('time-' + hid);
   const saveBtn= document.getElementById('rsave-' + hid);
   const enabled = tog ? tog.checked : true;
-  const time    = timeEl ? timeEl.value : '';
   const repeat  = ['daily','weekdays','weekends'].find(r => {
     const btn = document.getElementById(`rep-${hid}-${r}`);
     return btn && btn.classList.contains('active');
@@ -621,7 +581,7 @@ async function saveReminder(hid) {
         saveBtn.disabled = false;
       }, 2000);
     }
-    showRemToast(enabled && time ? S('msg','rem_set_on').replace('{time}', time) : S('msg','rem_set_off'));
+    showRemToast(enabled && firstTime ? S('msg','rem_set_on').replace('{time}', firstTime) : S('msg','rem_set_off'));
     loaded.habits = false;
   } catch(e) {
     if (saveBtn) { saveBtn.textContent = S('profile','save'); saveBtn.disabled = false; }

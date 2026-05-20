@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime, date, timedelta, timezone
 from flask import jsonify, request
 
-from config import mongo_db, mongo_col, SHOP_PRICES
+from config import mongo_db, mongo_col, SHOP_PRICES, HABIT_LIMIT
 from database import (load_user, save_user, load_all_users, load_group,
                       save_group, delete_group,
                       add_points_history, get_points_in_period,
@@ -491,10 +491,9 @@ def register_core_routes(app):
             time_ = repeat_times[0]
             repeat_count = max(repeat_count, len(repeat_times))
         u = load_user(uid)
-        # ── VAQTINCHA O'CHIRILGAN: Odat limiti tekshiruvi ──
-        # Bot mukammal darajaga yetgandan keyin qayta yoqiladi.
-        # if len(u.get("habits", [])) >= 15:
-        #     return jsonify({"ok": False, "error": "Odatlar soni 15 tadan oshmasin"}), 400
+        # ── Odat limiti tekshiruvi (config.HABIT_LIMIT) ──
+        if len(u.get("habits", [])) >= HABIT_LIMIT:
+            return jsonify({"ok": False, "error": "habit_limit"}), 400
         new_habit = {
             "id":           str(uuid.uuid4())[:8],
             "name":         name,
@@ -512,6 +511,14 @@ def register_core_routes(app):
         habits = u.get("habits", [])
         habits.append(new_habit)
         u["habits"] = habits
+        # CITY: yangi odat uchun bo'sh bino (progress 0) — odat hali tasdiqlanmagan
+        # bo'lsa ham shaharda bo'sh shisha kub ko'rinadi (Qoida #10 — bot
+        # groups._save_new_habit bilan SINXRON). create_building idempotent.
+        try:
+            from city_logic import create_building
+            create_building(u, new_habit["id"])
+        except Exception as _ce:
+            print(f"[city] create_building xato (uid={uid}): {_ce}")
         save_user(uid, u)
         try:
             from scheduler import schedule_habit
