@@ -595,6 +595,15 @@ def register_core_routes(app):
         if len(new_habits) == len(habits):
             return jsonify({"ok": False, "error": "Topilmadi"}), 404
         u["habits"] = new_habits
+        # CITY: habit bilan bog'liq binoni ham o'chirish (Qoida #10 — bot/WebApp sinxron).
+        # Bot `callbacks_habits.py` `confirm_delete_*` da xuddi shunday chaqiriladi.
+        # Lazy import — circular import oldini olish (mavjud `create_building` pattern bilan mos).
+        # try/except: city xato bo'lsa asosiy odat o'chirish buzilmasin (city ikkilamchi feature).
+        try:
+            from city_logic import delete_building_for_habit
+            delete_building_for_habit(u, hid)
+        except Exception as _ce:
+            print(f"[city] delete_building_for_habit xato (uid={uid}): {_ce}")
         save_user(uid, u)
         try:
             from scheduler import unschedule_habit_today
