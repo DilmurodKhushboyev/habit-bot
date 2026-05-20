@@ -438,6 +438,75 @@ def backfill_buildings_from_habits(udata):
 
     return created
 
+def cleanup_orphan_buildings(udata):
+    """Mavjud bo'lmagan odatlarga bog'langan "orfan" binolarni o'chiradi.
+
+    SABAB (Qoida #21):
+    Foydalanuvchi odatni o'chirganda bino ham o'chirilishi kerak edi
+    (`delete_building_for_habit` orqali), lekin ba'zi joylarda bu chaqiriq
+    yetishmagan (masalan WebApp orqali odat o'chirilganda). Natijada
+    shaharda "orfan" binolar qoladi — habit_id mavjud bo'lmagan odatga
+    ishora qiladi va frontend nom label'ini bo'sh ko'rsatadi, lekin
+    bino o'zi qoladi.
+
+    Bu funksiya har bir bino uchun:
+      - habit_id ni hozirgi habits ro'yxatiga solishtiradi
+      - Agar mos odat YO'Q bo'lsa → binoni o'chiradi
+
+    NIMA UCHUN avtomatik o'chirish (label saqlash o'rniga):
+      - Foydalanuvchi odatni qasdan o'chirgan (xato emas)
+      - Bo'sh label'li bino UX uchun chalkash ("bu nima binosi edi?")
+      - Joy bo'shaydi → boshqa odatlar uchun ishlatish mumkin
+
+    IDEMPOTENT:
+      - Habit'i bor binolarga tegmaydi
+      - Buildings bo'sh bo'lsa hech narsa qilmaydi
+      - Keyingi chaqiriqlarda orfan yo'q → hech narsa o'zgartirmaydi
+
+    DEKORATSIYALAR TEGILMAYDI:
+      - Ular habit'ga bog'liq emas (bozordan sotib olingan, mustaqil)
+
+    PINNED FLAGI TEGILMAYDI:
+      - Pinned (foydalanuvchi qo'lda joylashtirgan) — chunki habit yo'q
+        bo'lsa, pinned ham mantiqsiz. Orfan = orfan, pinned bo'lsa ham o'chiriladi.
+
+    Qaytaradi:
+      O'chirilgan binolar soni (int). 0 = orfan topilmadi.
+      Chaqiruvchi save_user'ni o'zi chaqiradi (faqat removed > 0 bo'lsa).
+    """
+    city = get_user_city(udata)
+    buildings = city.get("buildings") or []
+    if not buildings:
+        return 0
+
+    # Joriy odat ID'larini setga yig'ib olamiz (tezkor tekshiruv uchun)
+    habits = udata.get("habits") or []
+    valid_habit_ids = {
+        str(h.get("id"))
+        for h in habits
+        if h.get("id") is not None
+    }
+
+    # Orfan emas binolarni qoldiramiz
+    new_list = []
+    removed = 0
+    for b in buildings:
+        habit_id = b.get("habit_id")
+        if habit_id is None:
+            # habit_id'siz bino mantiqsiz — orfan deb hisoblaymiz
+            removed += 1
+            continue
+        if str(habit_id) not in valid_habit_ids:
+            # Mos odat yo'q — orfan
+            removed += 1
+            continue
+        new_list.append(b)
+
+    if removed > 0:
+        city["buildings"] = new_list
+
+    return removed
+
 def change_building_type(udata, habit_id, new_type):
     """Bino turini o'zgartiradi (foydalanuvchi shahar sahifasidan).
     Progress saqlanadi — faqat vizual ko'rinish o'zgaradi.
