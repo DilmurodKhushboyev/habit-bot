@@ -362,6 +362,82 @@ def update_building_progress(udata, habit_id, delta):
     target["last_updated"] = _today_uz5_str()
     return target
 
+def backfill_buildings_from_habits(udata):
+    """Eski tasdiqlangan odatlar uchun retroaktiv bino yaratadi.
+
+    SABAB (Qoida #21):
+    City feature deploy qilingach, foydalanuvchining mavjud odatlari uchun
+    binolar avtomatik yaratilmagan — `update_building_progress` faqat YANGI
+    checkin (delta > 0) bo'lganda bino yaratadi. Natijada deploy'dan oldin
+    tasdiqlangan kunlar shaharda ko'rinmaydi (shahar bo'sh ko'rinadi).
+
+    Bu funksiya har bir odat uchun:
+      - Shu habit_id uchun bino bormi tekshiradi
+      - Yo'q bo'lsa va total_done > 0 bo'lsa → bino yaratadi va
+        progress = min(total_done, BUILDING_DAYS) qiymati bilan to'ldiradi
+
+    Nima uchun total_done (streak emas):
+      - total_done = jami tasdiqlangan kunlar (uziluvchan emas)
+      - streak = joriy ketma-ket kunlar (bir kun qoldirilsa 0 ga tushadi,
+        lekin haqiqiy mehnat saqlanadi)
+      - Bino balandligi haqiqiy mehnatga mos kelishi kerak
+
+    IDEMPOTENT:
+      - Bino allaqachon bor → tegilmaydi (mavjud progress saqlanadi)
+      - total_done = 0 → bino yaratilmaydi (hech narsa tasdiqlanmagan)
+      - Habit ro'yxati bo'sh → hech narsa qilmaydi
+      - Keyingi chaqiriqlarda hech narsa o'zgartirmaydi (xavfsiz)
+
+    Qaytaradi:
+      Yaratilgan binolar soni (int). 0 = hech narsa qo'shilmadi.
+      Chaqiruvchi save_user'ni o'zi chaqiradi (faqat created > 0 bo'lsa).
+    """
+    habits = udata.get("habits") or []
+    if not habits:
+        return 0
+
+    city = get_user_city(udata)
+    # Mavjud bino habit_id larini setga yig'ib olamiz (tezkor tekshiruv uchun)
+    existing_habit_ids = {
+        str(b.get("habit_id"))
+        for b in (city.get("buildings") or [])
+        if b.get("habit_id") is not None
+    }
+
+    created = 0
+    for h in habits:
+        habit_id = h.get("id")
+        if habit_id is None:
+            continue
+        habit_id_str = str(habit_id)
+
+        # Allaqachon bino bor → tegmaymiz (idempotent)
+        if habit_id_str in existing_habit_ids:
+            continue
+
+        # total_done > 0 bo'lganda bino yaratamiz (haqiqiy mehnat bor)
+        total_done = int(h.get("total_done", 0) or 0)
+        if total_done <= 0:
+            continue
+
+        # Bino yaratish (random tip, random bo'sh katak — create_building o'zi tanlaydi)
+        new_building = create_building(udata, habit_id_str)
+        if new_building is None:
+            # Shahar to'la — qolgan odatlarni o'tkazib yuboramiz
+            break
+
+        # Progress'ni total_done ga sozlaymiz (clamp 0..BUILDING_DAYS)
+        progress = max(0, min(BUILDING_DAYS, total_done))
+        new_building["progress"] = progress
+        new_building["last_updated"] = _today_uz5_str()
+
+        # Yangi yaratilgan habit_id ni set'ga qo'shamiz (xavfsizlik uchun,
+        # garchi habits ro'yxatida takror bo'lmasligi kerak)
+        existing_habit_ids.add(habit_id_str)
+        created += 1
+
+    return created
+
 def change_building_type(udata, habit_id, new_type):
     """Bino turini o'zgartiradi (foydalanuvchi shahar sahifasidan).
     Progress saqlanadi — faqat vizual ko'rinish o'zgaradi.
