@@ -373,18 +373,33 @@ def backfill_buildings_from_habits(udata):
 
     Bu funksiya har bir odat uchun:
       - Shu habit_id uchun bino bormi tekshiradi
-      - Yo'q bo'lsa va total_done > 0 bo'lsa → bino yaratadi va
-        progress = min(total_done, BUILDING_DAYS) qiymati bilan to'ldiradi
+      - Yo'q bo'lsa → bino yaratadi va progress = min(effective_done, BUILDING_DAYS)
+        qiymati bilan to'ldiradi (effective_done=0 bo'lsa progress=0 — bo'sh poydevor)
 
-    Nima uchun total_done (streak emas):
-      - total_done = jami tasdiqlangan kunlar (uziluvchan emas)
-      - streak = joriy ketma-ket kunlar (bir kun qoldirilsa 0 ga tushadi,
-        lekin haqiqiy mehnat saqlanadi)
-      - Bino balandligi haqiqiy mehnatga mos kelishi kerak
+    Variant B mantig'i (README §314):
+      - Har bir odat uchun bino yaratiladi, hatto hech qachon tasdiqlanmagan bo'lsa ham
+      - "Odat tasdiqlanmagan bo'lsa ham bo'sh bino (progress 0) ko'rinadi"
+      - Yangi odat qo'shilganda `api_habits_add` `create_building` chaqiradi —
+        backfill ham xuddi shu mantiqni eski odatlarga qo'llaydi (sinxronlik)
+
+    Effective_done hisoblash (Qoida #10/#11 — statistika bilan sinxron):
+      - total_done > 0 → uni ishlatadi (simple odat uchun ishonchli manba)
+      - total_done = 0 → history dan hisoblaydi (repeat odat uchun — qisman
+        tasdiqlangan kunlar ham hisoblanadi). Statistika `api_stats`
+        (flask_routes_data.py) bilan bir xil mantiq: `done_all = total_done
+        if > 0 else done_30_hist`. Backfill butun history'ni hisoblaydi
+        (faqat oxirgi 30 kun emas) — eng to'liq qiymat uchun.
+
+    Nima uchun bunday murakkab mantiq:
+      - Repeat odatlar (1/3, 2/3 va h.k.) `total_done`'ni faqat 3/3 to'liq
+        kunda yangilaydi (README §488)
+      - Lekin statistika `history` dan har kungi tasdiqlashni hisoblaydi
+      - Backfill statistika bilan mos kelishi kerak — aks holda foydalanuvchi
+        shahardagi bino balandligi va "JAMI" qiymati orasidagi farqdan
+        chalkashadi
 
     IDEMPOTENT:
       - Bino allaqachon bor → tegilmaydi (mavjud progress saqlanadi)
-      - total_done = 0 → bino yaratilmaydi (hech narsa tasdiqlanmagan)
       - Habit ro'yxati bo'sh → hech narsa qilmaydi
       - Keyingi chaqiriqlarda hech narsa o'zgartirmaydi (xavfsiz)
 
@@ -404,12 +419,14 @@ def backfill_buildings_from_habits(udata):
         if b.get("habit_id") is not None
     }
 
-    # VAQTINCHALIK DEBUG (tashxisdan keyin olib tashlanadi):
-    # Habit IDʼlar va building habit_idʼlar setlarini koʻrsatadi — tip nomuvofiqligi yoki
-    # boshqa muammolarni aniqlash uchun.
-    _habit_ids_dbg = [(h.get("id"), type(h.get("id")).__name__, int(h.get("total_done", 0) or 0)) for h in habits]
-    print(f"[city][DEBUG backfill] habits ({len(habits)}): {_habit_ids_dbg}")
-    print(f"[city][DEBUG backfill] existing_habit_ids ({len(existing_habit_ids)}): {existing_habit_ids}")
+    # History dan hisoblash uchun bir marta olamiz (har odat uchun qaytarmaslik).
+    # SABAB (Qoida #11 — consistency): statistika `api_stats` (flask_routes_data.py)
+    # `done_all = total_done if > 0 else done_30_hist` mantig'ini ishlatadi —
+    # repeat odatlar uchun `total_done=0` bo'lsa ham history dan haqiqiy
+    # tasdiqlangan kunlar hisoblanadi. Backfill ham xuddi shu mantiqni
+    # ishlatishi kerak — aks holda bino balandligi statistika "JAMI" qiymati
+    # bilan mos kelmaydi (foydalanuvchi chalkash).
+    history = udata.get("history") or {}
 
     created = 0
     for h in habits:
@@ -422,10 +439,27 @@ def backfill_buildings_from_habits(udata):
         if habit_id_str in existing_habit_ids:
             continue
 
-        # total_done > 0 bo'lganda bino yaratamiz (haqiqiy mehnat bor)
+        # Variant B: shartisiz — har bir odat uchun bino yaratamiz.
+        # effective_done=0 bo'lsa progress=0 (bo'sh poydevor) ko'rinadi.
+        # SABAB (Qoida #21): README §314 — "odat tasdiqlanmagan bo'lsa ham
+        # bo'sh bino (progress 0) ko'rinadi". Yangi odat qo'shilganda
+        # `api_habits_add` `create_building` chaqiradi — backfill ham xuddi
+        # shu mantiqni eski odatlarga qo'llashi kerak (sinxronlik).
         total_done = int(h.get("total_done", 0) or 0)
-        if total_done <= 0:
-            continue
+
+        # Statistika bilan sinxron hisoblash (Qoida #10):
+        # - total_done > 0 → uni ishlatamiz (eng ishonchli, simple odat uchun)
+        # - total_done = 0 → history'dan hisoblaymiz (repeat odat uchun, qisman
+        #   tasdiqlangan kunlar ham hisoblanadi — masalan Uyqu 1/3 ni 1 deb)
+        if total_done > 0:
+            effective_done = total_done
+        else:
+            # History dan habit_id tasdiqlangan barcha kunlarni hisoblash.
+            # day_data["habits"][habit_id] truthy bo'lsa — shu kun tasdiqlangan.
+            effective_done = sum(
+                1 for day_data in history.values()
+                if day_data.get("habits", {}).get(habit_id_str)
+            )
 
         # Bino yaratish (random tip, random bo'sh katak — create_building o'zi tanlaydi)
         new_building = create_building(udata, habit_id_str)
@@ -433,8 +467,8 @@ def backfill_buildings_from_habits(udata):
             # Shahar to'la — qolgan odatlarni o'tkazib yuboramiz
             break
 
-        # Progress'ni total_done ga sozlaymiz (clamp 0..BUILDING_DAYS)
-        progress = max(0, min(BUILDING_DAYS, total_done))
+        # Progress'ni effective_done ga sozlaymiz (clamp 0..BUILDING_DAYS)
+        progress = max(0, min(BUILDING_DAYS, effective_done))
         new_building["progress"] = progress
         new_building["last_updated"] = _today_uz5_str()
 
@@ -493,12 +527,6 @@ def cleanup_orphan_buildings(udata):
         for h in habits
         if h.get("id") is not None
     }
-
-    # VAQTINCHALIK DEBUG (tashxisdan keyin olib tashlanadi):
-    # Buildings va valid_habit_ids ni koʻrsatadi — mos kelmaydigan binolarni topish uchun.
-    _buildings_dbg = [(b.get("habit_id"), type(b.get("habit_id")).__name__) for b in buildings]
-    print(f"[city][DEBUG cleanup] buildings ({len(buildings)}): {_buildings_dbg}")
-    print(f"[city][DEBUG cleanup] valid_habit_ids ({len(valid_habit_ids)}): {valid_habit_ids}")
 
     # Orfan emas binolarni qoldiramiz
     new_list = []
