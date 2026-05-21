@@ -466,35 +466,8 @@ def handle_text(msg):
         threading.Thread(target=del_ok_transfer, args=(uid, sent_ok.message_id), daemon=True).start()
         return
 
-    # ── Bozor: ballarni ayirish ──
-    if state == "bozor_waiting_subtract":
-        try: bot.delete_message(uid, msg.message_id)
-        except: pass
-        old_msg_id = u.pop("temp_msg_id", None)
-        if old_msg_id:
-            try: bot.delete_message(uid, old_msg_id)
-            except: pass
-        try:
-            amount = int(text.strip())
-            if amount <= 0:
-                raise ValueError
-        except ValueError:
-            bot.send_message(uid, T(uid, "err_positive_num"), parse_mode="Markdown")
-            return
-        my_points = u.get("points", 0)
-        deducted  = min(amount, my_points)
-        u["points"] = my_points - deducted
-        add_points_history(u, -deducted)
-        u["state"]  = None
-        save_user(uid, u)
-        sent_ok = bot.send_message(uid, T(uid, "ok_self_deduct", amount=deducted, points=u['points']), parse_mode="Markdown")
-        def del_ok_subtract(chat_id, mid):
-            time.sleep(3)
-            try: bot.delete_message(chat_id, mid)
-            except: pass
-            send_main_menu(chat_id)
-        threading.Thread(target=del_ok_subtract, args=(uid, sent_ok.message_id), daemon=True).start()
-        return
+    # ── Bozor: ballarni ayirish (olib tashlangan — audit #7) ──
+    # `bozor_subtract` feature'i olib tashlandi. Bu state endi ishga tushmaydi.
 
     # ── Admin: foydalanuvchiga ball berish — ID ──
     if state == "admin_waiting_points_id" and uid == ADMIN_ID:
@@ -821,9 +794,17 @@ def handle_successful_payment(msg):
     """Stars to'lovi muvaffaqiyatli — itemni berish"""
     uid = msg.from_user.id
     payload = msg.successful_payment.invoice_payload  # "stars_gift_box" formatida
+    charge_id = msg.successful_payment.telegram_payment_charge_id  # Telegram unikal to'lov ID
     try:
         item_id = payload.replace("stars_", "", 1)
         u = load_user(uid)
+        # Idempotency check: Telegram ba'zan "successful_payment" event'ini 2 marta yuborishi
+        # mumkin (network retry, webhook duplicate). Mukofotni FAQAT BIR MARTA berishimiz uchun
+        # har bir charge_id'ni saqlab boramiz va takror kelganda rad etamiz.
+        stars_payments = u.get("stars_payments", [])
+        if charge_id and charge_id in stars_payments:
+            print(f"[stars] Duplicate event rad etildi: charge_id={charge_id}, uid={uid}")
+            return
         raw_inv = u.get("inventory", {})
         if isinstance(raw_inv, list):
             inventory = {i: 1 for i in raw_inv}
@@ -850,14 +831,46 @@ def handle_successful_payment(msg):
             else:
                 msg_text = "🎁 Sovga qutisi ochildi!"
         else:
-            # Noma'lum Stars mahsulot — xato holati (bo'lmasligi kerak)
-            print(f"[stars] Noma'lum item_id: {item_id}, uid={uid}")
-            return
+            # Noma'lum Stars mahsulot — xato holati (bo'lmasligi kerak).
+            # raise → mavjud except blok ushlaydi va foydalanuvchi+adminga xabar yuboradi.
+            raise ValueError(f"Noma'lum Stars item_id: {item_id}")
         u["inventory"] = inventory
+        # Idempotency: ushbu charge_id'ni ro'yxatga qo'shamiz — kelajakda takror kelsa rad etiladi
+        if charge_id:
+            stars_payments.append(charge_id)
+            u["stars_payments"] = stars_payments
         save_user(uid, u)
         bot.send_message(uid, msg_text, parse_mode="Markdown")
     except Exception as e:
-        print(f"[stars] successful_payment xatosi: {e}")
+        # Xato yuz berdi — foydalanuvchi pul to'lagan, lekin mukofot berilmadi.
+        # Foydalanuvchini xabardor qilish + adminga avtomatik bildirishnoma.
+        print(f"[stars] successful_payment xatosi: {e}, charge_id={charge_id}, uid={uid}")
+        # 1) Foydalanuvchiga 3 tilli xabar + "Admin bilan bog'lanish" tugma
+        try:
+            err_kb = InlineKeyboardMarkup()
+            err_kb.add(InlineKeyboardButton(
+                T(uid, "stars_error_btn_contact"),
+                url=f"tg://user?id={ADMIN_ID}"
+            ))
+            bot.send_message(uid, T(uid, "stars_error_user_msg"),
+                             parse_mode="Markdown", reply_markup=err_kb)
+        except Exception:
+            pass
+        # 2) Adminga avtomatik bildirishnoma — qo'lda hal qilish uchun
+        try:
+            bot.send_message(
+                ADMIN_ID,
+                f"🚨 *Stars to'lov xatosi*\n\n"
+                f"User ID: `{uid}`\n"
+                f"Charge ID: `{charge_id}`\n"
+                f"Payload: `{payload}`\n"
+                f"Xato: `{e}`\n\n"
+                f"Foydalanuvchi pul to'lagan, lekin mukofotni olmagan. "
+                f"Qo'lda mukofot bering yoki refund qiling.",
+                parse_mode="Markdown"
+            )
+        except Exception:
+            pass
 
 
 
