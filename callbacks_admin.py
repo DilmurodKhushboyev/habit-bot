@@ -146,28 +146,42 @@ def handle_admin_callbacks(call, uid, cdata, u):
         bot.answer_callback_query(call.id)
         try: bot.delete_message(uid, call.message.message_id)
         except Exception: pass
-        users      = load_all_users(force=True)
-        sent_count = 0
-        failed     = 0
-        update_text = "*Bot 🆕 yangilandi. /start ni bosib yoki yuborib siz ham yangilang!*"
-        for target_uid in users:
-            if int(target_uid) == ADMIN_ID:
-                continue
+        # Darhol "yuborilmoqda" xabari — botni bloklamaslik uchun loop background threadda
+        try:
+            bot.send_message(uid, "📤 Yuborilmoqda... (bir necha soniya kutib turing)")
+        except Exception:
+            pass
+
+        def _do_notify_broadcast():
+            """Background thread: barcha foydalanuvchilarga xabar yuborish.
+            Bot asosiy thread'i bloklanmasin uchun ajratilgan (audit #6)."""
+            users      = load_all_users(force=True)
+            sent_count = 0
+            failed     = 0
+            update_text = "*Bot 🆕 yangilandi. /start ni bosib yoki yuborib siz ham yangilang!*"
+            for target_uid in users:
+                if int(target_uid) == ADMIN_ID:
+                    continue
+                try:
+                    bot.send_message(int(target_uid), update_text, parse_mode="Markdown")
+                    sent_count += 1
+                except Exception:
+                    failed += 1
+            result = f"✅ Yangilanish xabari {sent_count} ta foydalanuvchiga yuborildi."
+            if failed:
+                result += f"\n❌ {failed} ta foydalanuvchiga yetmadi."
             try:
-                bot.send_message(int(target_uid), update_text, parse_mode="Markdown")
-                sent_count += 1
-            except Exception:
-                failed += 1
-        result = f"✅ Yangilanish xabari {sent_count} ta foydalanuvchiga yuborildi."
-        if failed:
-            result += f"\n❌ {failed} ta foydalanuvchiga yetmadi."
-        sent_res = bot.send_message(uid, result)
-        def del_res(chat_id, mid):
-            time.sleep(5)
-            try: bot.delete_message(chat_id, mid)
-            except: pass
-        threading.Thread(target=del_res, args=(uid, sent_res.message_id), daemon=True).start()
-        bot.send_message(uid, "🛠 *Admin panel | Maxfiy va muhim qism*", parse_mode="Markdown", reply_markup=admin_menu())
+                sent_res = bot.send_message(ADMIN_ID, result)
+                def del_res(chat_id, mid):
+                    time.sleep(5)
+                    try: bot.delete_message(chat_id, mid)
+                    except: pass
+                threading.Thread(target=del_res, args=(ADMIN_ID, sent_res.message_id), daemon=True).start()
+                bot.send_message(ADMIN_ID, "🛠 *Admin panel | Maxfiy va muhim qism*", parse_mode="Markdown", reply_markup=admin_menu())
+            except Exception as e:
+                print(f"[admin_notify] result xabari yuborishda xato: {e}")
+
+        threading.Thread(target=_do_notify_broadcast, daemon=True).start()
         return True
 
     if cdata == "admin_give_points":
