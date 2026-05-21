@@ -466,35 +466,8 @@ def handle_text(msg):
         threading.Thread(target=del_ok_transfer, args=(uid, sent_ok.message_id), daemon=True).start()
         return
 
-    # ── Bozor: ballarni ayirish ──
-    if state == "bozor_waiting_subtract":
-        try: bot.delete_message(uid, msg.message_id)
-        except: pass
-        old_msg_id = u.pop("temp_msg_id", None)
-        if old_msg_id:
-            try: bot.delete_message(uid, old_msg_id)
-            except: pass
-        try:
-            amount = int(text.strip())
-            if amount <= 0:
-                raise ValueError
-        except ValueError:
-            bot.send_message(uid, T(uid, "err_positive_num"), parse_mode="Markdown")
-            return
-        my_points = u.get("points", 0)
-        deducted  = min(amount, my_points)
-        u["points"] = my_points - deducted
-        add_points_history(u, -deducted)
-        u["state"]  = None
-        save_user(uid, u)
-        sent_ok = bot.send_message(uid, T(uid, "ok_self_deduct", amount=deducted, points=u['points']), parse_mode="Markdown")
-        def del_ok_subtract(chat_id, mid):
-            time.sleep(3)
-            try: bot.delete_message(chat_id, mid)
-            except: pass
-            send_main_menu(chat_id)
-        threading.Thread(target=del_ok_subtract, args=(uid, sent_ok.message_id), daemon=True).start()
-        return
+    # ── Bozor: ballarni ayirish (olib tashlangan — audit #7) ──
+    # `bozor_subtract` feature'i olib tashlandi. Bu state endi ishga tushmaydi.
 
     # ── Admin: foydalanuvchiga ball berish — ID ──
     if state == "admin_waiting_points_id" and uid == ADMIN_ID:

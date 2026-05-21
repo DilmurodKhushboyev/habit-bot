@@ -46,7 +46,6 @@ def handle_shop_callbacks(call, uid, cdata, u):
             [{"text": T(uid, "bozor_btn_referral"),     "callback_data": "bozor_referral",      "style": "primary"}],
             [{"text": T(uid, "bozor_btn_transfer"),     "callback_data": "bozor_transfer"}],
             [{"text": T(uid, "bozor_btn_reset"),        "callback_data": "bozor_reset_confirm", "style": "danger"}],
-            [{"text": T(uid, "bozor_btn_subtract"),     "callback_data": "bozor_subtract"}],
             [{"text": T(uid, "btn_home"),               "callback_data": "menu_main",           "style": "primary"}],
         ]}
         sent = send_message_colored(uid, bozor_text, bozor_kb)
@@ -56,7 +55,6 @@ def handle_shop_callbacks(call, uid, cdata, u):
             kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_referral"), callback_data="bozor_referral"))
             kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_transfer"), callback_data="bozor_transfer"))
             kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_reset"),    callback_data="bozor_reset_confirm"))
-            kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_subtract"), callback_data="bozor_subtract"))
             kb_b.add(cBtn(T(uid, "btn_home"), "menu_main", "primary"))
             sent = bot.send_message(uid, bozor_text, parse_mode="Markdown", reply_markup=kb_b)
         u["main_msg_id"] = sent.message_id
@@ -154,30 +152,6 @@ def handle_shop_callbacks(call, uid, cdata, u):
         save_user(uid, u)
         return True
 
-    if cdata == "bozor_edit":
-        bot.answer_callback_query(call.id)
-        try: bot.delete_message(uid, call.message.message_id)
-        except Exception: pass
-        balls = u.get("points", 0)
-        kb_edit = InlineKeyboardMarkup()
-        kb_edit.add(InlineKeyboardButton(
-            T(uid, "bozor_btn_reset"), callback_data="bozor_reset_confirm"
-        ))
-        kb_edit.add(InlineKeyboardButton(
-            T(uid, "bozor_edit_sub_btn"), callback_data="bozor_subtract"
-        ))
-        kb_edit.row(
-            cBtn(T(uid, "bozor_btn_back"), "menu_bozor", "primary"),
-            cBtn(T(uid, "btn_home"), "menu_main", "primary")
-        )
-        sent = bot.send_message(
-            uid, T(uid, "bozor_edit_title").format(points=balls),
-            parse_mode="Markdown", reply_markup=kb_edit
-        )
-        u["main_msg_id"] = sent.message_id
-        save_user(uid, u)
-        return True
-
     if cdata == "bozor_reset_confirm":
         bot.answer_callback_query(call.id)
         try: bot.delete_message(uid, call.message.message_id)
@@ -199,7 +173,11 @@ def handle_shop_callbacks(call, uid, cdata, u):
         bot.answer_callback_query(call.id)
         try: bot.delete_message(uid, call.message.message_id)
         except Exception: pass
+        old_points = u.get("points", 0)
         u["points"] = 0
+        # Period-filtered rating uchun reset hodisasini points_history ga yozish
+        if old_points > 0:
+            add_points_history(u, -old_points)
         save_user(uid, u)
         sent_ok = bot.send_message(uid, T(uid, "ok_points_reset"), parse_mode="Markdown")
         def del_reset_ok(chat_id, mid):
@@ -221,7 +199,6 @@ def handle_shop_callbacks(call, uid, cdata, u):
         kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_referral"), callback_data="bozor_referral"))
         kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_transfer"), callback_data="bozor_transfer"))
         kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_reset"),    callback_data="bozor_reset_confirm"))
-        kb_b.add(InlineKeyboardButton(T(uid, "bozor_btn_subtract"), callback_data="bozor_subtract"))
         kb_b.add(cBtn(T(uid, "btn_home"), "menu_main", "primary"))
         sent2 = bot.send_message(
             uid, bozor_text, parse_mode="Markdown", reply_markup=kb_b
@@ -232,17 +209,9 @@ def handle_shop_callbacks(call, uid, cdata, u):
         return True
 
     if cdata == "bozor_subtract":
+        # Olib tashlangan (audit #7): foydalanuvchi o'ziga ball ayira olmaydi.
+        # Reset (bozor_reset_confirm) saqlanib qoladi — to'liq 0 ga tushirish uchun.
         bot.answer_callback_query(call.id)
-        try: bot.delete_message(uid, call.message.message_id)
-        except Exception: pass
-        u["state"] = "bozor_waiting_subtract"
-        sent = bot.send_message(
-            uid,
-            T(uid, "bozor_sub_ask").format(points=u.get("points", 0)),
-            parse_mode="Markdown", reply_markup=_bozor_back_row(uid)
-        )
-        u["temp_msg_id"] = sent.message_id
-        save_user(uid, u)
         return True
 
 
