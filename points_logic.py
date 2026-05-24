@@ -57,7 +57,10 @@ def apply_pet_dog_bonus(u, today, is_undo=False):
         if last_bonus_date == today:
             _old_pts = u.get("points", 0)
             u["points"] = max(0, _old_pts - bonus_value)
-            add_points_history(u, u["points"] - _old_pts, today)
+            # Audit #8: history doim -bonus_value (done branch +bonus_value bilan
+            # symmetric). Real points clamp himoya alohida — history audit yozuvi
+            # to'liq saqlanadi (edge case: reset orasida undo bo'lsa ham).
+            add_points_history(u, -bonus_value, today)
             u["pet_dog_last_bonus_date"] = ""
             return bonus_value
         return 0
