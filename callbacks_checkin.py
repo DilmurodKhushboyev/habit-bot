@@ -83,7 +83,10 @@ def handle_checkin_callbacks(call, uid, cdata, u):
                         _undo_base = apply_item_bonuses(u, _undo_base)
                         _old_pts = u.get("points", 0)
                         u["points"] = max(0, _old_pts - _undo_base)
-                        add_points_history(u, u["points"] - _old_pts, today)
+                        # Audit #9: -_undo_base (done branch +_base bilan symmetric).
+                        # Eski `u["points"] - _old_pts` clamp tufayli noto'g'ri delta beradi
+                        # (audit #8 Muammo A bilan bir xil pattern — points_logic.py).
+                        add_points_history(u, -_undo_base, today)
                         # Global streak: faqat bugun boshqa odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in u.get("habits", []) if hh["id"] != habit_id)
                         # pet_dog kunlik bonusini qaytarish (boshqa odat qolmagan bo'lsa)
@@ -238,7 +241,10 @@ def handle_checkin_callbacks(call, uid, cdata, u):
                         _undo_base = apply_item_bonuses(u, _undo_base)
                         _old_pts = u.get("points", 0)
                         u["points"] = max(0, _old_pts - _undo_base)
-                        add_points_history(u, u["points"] - _old_pts, today)
+                        # Audit #9: -_undo_base (done branch +_base bilan symmetric).
+                        # Eski `u["points"] - _old_pts` clamp tufayli noto'g'ri delta beradi
+                        # (audit #8 Muammo A bilan bir xil pattern — points_logic.py).
+                        add_points_history(u, -_undo_base, today)
                         # Global streak: faqat bugun boshqa odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in u.get("habits", []) if hh["id"] != habit_id)
                         # pet_dog kunlik bonusini qaytarish (boshqa odat qolmagan bo'lsa)
