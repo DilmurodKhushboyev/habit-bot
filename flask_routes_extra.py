@@ -193,6 +193,13 @@ def register_extra_routes(app):
         price = SHOP_PRICES.get(item_id, 0)
         if not price and item_id != "gift_box":
             return jsonify({"ok": False, "error": "Noma'lum mahsulot"})
+        # Audit #10: Stars mahsulotlari bu endpoint orqali sotib olinmaydi.
+        # Frontend pay_type="stars" manipulyatsiyasidan qat'i nazar — Stars
+        # narxi mavjud mahsulotlar faqat /stars_invoice → Telegram to'lov
+        # orqali olinadi (handlers_text.handle_successful_payment idempotent).
+        # gift_box uchun pastdagi `if item_id == "gift_box"` erta return alohida ushlaydi.
+        if item_id in SHOP_STARS_PRICES and item_id != "gift_box":
+            return jsonify({"ok": False, "error": "Bu mahsulot faqat Telegram Stars bilan sotib olinadi"})
         # ── Race condition himoyasi: per-user lock ──
         _lock = _get_shop_lock(uid)
         if not _lock.acquire(timeout=3):
