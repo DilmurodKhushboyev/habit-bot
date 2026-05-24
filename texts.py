@@ -138,6 +138,7 @@ LANGS = {
         "stars_desc_gift_box": "Tasodifiy mukofot: 100/200/500 ball, streak himoyasi yoki XP Booster",
         "stars_error_user_msg": "⚠️ *To'lov qabul qilindi, ammo mukofotni berishda texnik xato yuz berdi.*\n\nIltimos, admin bilan bog'laning — yordam beramiz.",
         "stars_error_btn_contact": "💬 Admin bilan bog'lanish",
+        "stars_only_item": "Bu mahsulot faqat Telegram Stars bilan sotib olinadi",
         "streak_milestone":  "🔥 *Tabriklaymiz!*\n\n*{days} kunlik streak!*\n\nSiz ajoyib yoʻldasiz — davom eting! 💪",
         # ── Shield (streak himoyasi) — bitta umumiy xabar barcha xavfli odatlarga ──
         "shield_risk_title":      "⚠️ *Streakingiz xavf ostida!*",
@@ -299,6 +300,7 @@ LANGS = {
         "stars_desc_gift_box": "Random reward: 100/200/500 points, streak shield or XP Booster",
         "stars_error_user_msg": "⚠️ *Payment received, but a technical error occurred while issuing the reward.*\n\nPlease contact the admin — we'll help you.",
         "stars_error_btn_contact": "💬 Contact admin",
+        "stars_only_item": "This item can only be purchased with Telegram Stars",
         "streak_milestone":  "🔥 *Congrats!*\n\n*{days}-day streak!*\n\nYou're on a great path — keep going! 💪",
         # ── Shield (streak protection) — one combined message for all at-risk habits ──
         "shield_risk_title":      "⚠️ *Your streaks are at risk!*",
@@ -460,6 +462,7 @@ LANGS = {
         "stars_desc_gift_box": "Случайная награда: 100/200/500 очков, защита стрика или XP Бустер",
         "stars_error_user_msg": "⚠️ *Оплата принята, но при выдаче награды произошла техническая ошибка.*\n\nПожалуйста, свяжитесь с администратором — мы поможем.",
         "stars_error_btn_contact": "💬 Связаться с админом",
+        "stars_only_item": "Этот товар можно купить только за Telegram Stars",
         "streak_milestone":  "🔥 *Поздравляем!*\n\n*Streak {days} дней!*\n\nВы на отличном пути — продолжайте! 💪",
         # ── Shield (защита стрика) — одно общее сообщение для всех привычек под угрозой ──
         "shield_risk_title":      "⚠️ *Ваш стрик под угрозой!*",
