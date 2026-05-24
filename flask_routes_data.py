@@ -330,7 +330,7 @@ def register_data_routes(app):
             sent_list = u.get("streak_milestones_sent", [])
             if new_global_streak not in sent_list:
                 u["points"] = u.get("points", 0) + ms["bonus"]
-                add_points_history(u, ms["bonus"])
+                add_points_history(u, ms["bonus"], today)
                 sent_list.append(new_global_streak)
                 u["streak_milestones_sent"] = sent_list
                 save_user(uid, u)
