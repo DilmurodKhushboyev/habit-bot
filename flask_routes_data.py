@@ -158,7 +158,10 @@ def register_data_routes(app):
                         _undo_base = _apply_item_bonuses(u, _undo_base)
                         _old_pts = u.get("points", 0)
                         u["points"] = max(0, _old_pts - _undo_base)
-                        add_points_history(u, u["points"] - _old_pts, today)
+                        # Audit #9: -_undo_base (done branch +_base bilan symmetric).
+                        # Eski `u["points"] - _old_pts` clamp tufayli noto'g'ri delta beradi
+                        # (audit #8 Muammo A bilan bir xil pattern — points_logic.py).
+                        add_points_history(u, -_undo_base, today)
                         # pet_dog kunlik bonusini qaytarish (agar bugun berilgan bo'lsa)
                         # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
@@ -215,7 +218,10 @@ def register_data_routes(app):
                         _undo_base = _apply_item_bonuses(u, _undo_base)
                         _old_pts = u.get("points", 0)
                         u["points"] = max(0, _old_pts - _undo_base)
-                        add_points_history(u, u["points"] - _old_pts, today)
+                        # Audit #9: -_undo_base (done branch +_base bilan symmetric).
+                        # Eski `u["points"] - _old_pts` clamp tufayli noto'g'ri delta beradi
+                        # (audit #8 Muammo A bilan bir xil pattern — points_logic.py).
+                        add_points_history(u, -_undo_base, today)
                         # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
                         _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
                         # pet_dog kunlik bonusini qaytarish (agar bugun boshqa odat qolmagan bo'lsa)
