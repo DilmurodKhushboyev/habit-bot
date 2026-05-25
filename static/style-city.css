@@ -49,11 +49,11 @@
   touch-action: pan-x pan-y;
   /* Pull-to-refresh va bouncing'ni shu konteyner ichida saqlash */
   overscroll-behavior: contain;
-  background: #7AAA40;      /* light mode: Clash of Clans toʻq yashil chekka — oʻyin maydoni bilan kontrast */
+  background: #F0F0F2;      /* light mode: yumshoq kulrang fon — oq kataklar ajralishi uchun (qogʻoz daftar effekti) */
   transition: background .25s ease;
 }
 body.dark .city-canvas-wrap {
-  background: #2A3A1F;      /* dark mode: oʻrmon kechasi — toʻq yashil */
+  background: #1A1A1C;      /* dark mode: chuqur kulrang fon */
 }
 /* SVG kanvas */
 .city-canvas {
@@ -63,21 +63,21 @@ body.dark .city-canvas-wrap {
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-/* Romb katak — Clash of Clans yashil oʻyin maydoni (yumshoq chegara, tabiiy) */
+/* Romb katak — uniform oq "qogʻoz daftar" (shaxmat YOʻQ, faqat chiziqlar ajratadi) */
 .city-tile {
-  stroke: #94C158;          /* light mode chiziq — fon bilan yaqin (deyarli koʻrinmas) */
-  stroke-width: 0.5;        /* yupqa chiziq — Clash hissi */
-  /* shape-rendering olib tashlandi — anti-alias yoqilgan, yumshoq chegara */
+  stroke: #EAEAEE;          /* nozik kulrang chiziq — faqat katak chegarasi koʻrinsin */
+  stroke-width: 0.5;        /* yupqa chiziq — qogʻoz daftar hissi */
+  /* shape-rendering yoʻq — anti-alias yumshoq chegara */
 }
-.city-tile-a { fill: #A4D55C; }  /* juft kataklar — yorqin tabiiy yashil */
-.city-tile-b { fill: #92C84A; }  /* toq kataklar — toʻqroq (10% farq, sezilarli) */
+.city-tile-a { fill: #FFFFFF; }  /* barcha kataklar — toza oq */
+.city-tile-b { fill: #FFFFFF; }  /* tile-b ham oq — uniform maydon, shaxmat YOʻQ */
 
-/* Dark mode — oʻrmon kechasi palitra (toʻq yashil) */
+/* Dark mode — uniform toʻq kulrang (shaxmat YOʻQ) */
 body.dark .city-tile {
-  stroke: #243018;
+  stroke: #2C2C30;
 }
-body.dark .city-tile-a { fill: #3D5226; }
-body.dark .city-tile-b { fill: #34471F; }
+body.dark .city-tile-a { fill: #28282C; }
+body.dark .city-tile-b { fill: #28282C; }
 
 /* ── CITY BINOLAR — PHASE C3.1 (monoxrom oq clay render) ── */
 /* Izometrik kub 3 yuzli: top (yorug') + left (o'rta soya) + right (quyuq soya).
