@@ -49,11 +49,11 @@
   touch-action: pan-x pan-y;
   /* Pull-to-refresh va bouncing'ni shu konteyner ichida saqlash */
   overscroll-behavior: contain;
-  background: #F0F0F2;      /* light mode: asfalt-oq "yer" (Rasm 5 stili) */
+  background: var(--bg);    /* light mode: header va nav bilan BIR XIL fon — vizual uzluksizlik (DRY) */
   transition: background .25s ease;
 }
 body.dark .city-canvas-wrap {
-  background: #1A1A1C;      /* dark mode: chuqur kulrang */
+  background: var(--bg);    /* dark mode: header va nav bilan BIR XIL fon (DRY) */
 }
 /* SVG kanvas */
 .city-canvas {
@@ -63,21 +63,21 @@ body.dark .city-canvas-wrap {
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-/* Romb katak — premium minimalist (oq palitra, yengil checkerboard) */
+/* Romb katak — 3D suzuvchi kub (chiziq YOʻQ, polygon shrink bilan gap+soya hissi) */
 .city-tile {
-  stroke: #E0E0E5;          /* light mode chiziq — yumshoq kulrang */
-  stroke-width: 1;
-  shape-rendering: crispEdges;  /* aniq chiziq, anti-alias yo'q */
+  stroke: none;             /* chiziq yoʻq — polygon shrink (app-city.js) gap yaratadi, gap'da fon ko'rinadi */
+  /* stroke-width yoʻq — kerak emas */
+  /* shape-rendering yoʻq — anti-alias yumshoq chegara */
 }
-.city-tile-a { fill: #FFFFFF; }  /* juft kataklar — toza oq (yorug') */
-.city-tile-b { fill: #F5F5F7; }  /* toq kataklar — ozgina kulrang (soyada) */
+.city-tile-a { fill: #FFFFFF; }  /* barcha kataklar — toʻliq oq (fon toʻq, kublar koʻtariladi) */
+.city-tile-b { fill: #FFFFFF; }  /* tile-b ham toʻliq oq — uniform premium 3D kublar */
 
-/* Dark mode — chuqur kulrang palitra */
+/* Dark mode — uniform toʻq kulrang kublar (stroke yoʻq, gap bilan ajralib turadi) */
 body.dark .city-tile {
-  stroke: #2C2C30;
+  stroke: none;
 }
-body.dark .city-tile-a { fill: #28282C; }
-body.dark .city-tile-b { fill: #232327; }
+body.dark .city-tile-a { fill: var(--surface); }  /* neumorphism kartalar bilan bir xil rang */
+body.dark .city-tile-b { fill: var(--surface); }
 
 /* ── CITY BINOLAR — PHASE C3.1 (monoxrom oq clay render) ── */
 /* Izometrik kub 3 yuzli: top (yorug') + left (o'rta soya) + right (quyuq soya).

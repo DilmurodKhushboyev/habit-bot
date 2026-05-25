@@ -32,6 +32,14 @@ const CITY_TILE_W    = 80;        // Romb kenglik (px)
 const CITY_TILE_H    = 40;        // Romb balandlik (px) — 2:1 nisbat
 const CITY_PADDING   = 40;        // SVG ichida atrof bo'shliq
 
+// ── Katak shrink faktori (3D suzuvchi kub effekti) ──
+// Har polygon vertex'i markazga shu factor bilan tortiladi → polygon'lar orasida
+// tabiiy gap paydo bo'ladi → fon (canvas-wrap) gap'da ko'rinadi → "kublar suzayotgan"
+// hissi. Qoida #17: hardcode emas, markazlashtirilgan konstanta.
+// 0.92 = har vertex 8% ichkariga, ~3px gap (CITY_TILE_W=80 da). Bu Stripe/Linear
+// premium minimalist 3D shahar referensiga mos (chiziq EMAS, gap+soya).
+const CITY_TILE_SHRINK = 0.92;
+
 // ── Isometric koordinata transformatsiyasi ──
 // Standart isometric formula: (x, y) grid → ekrandagi (sx, sy) pozitsiya
 //   sx = (x - y) * (TILE_W / 2)
@@ -141,15 +149,23 @@ function renderCityGrid(container, cityData) {
     for (let x = 0; x < CITY_GRID_SIZE; x++) {
       const cx = cityIsoX(x, y);
       const cy = cityIsoY(x, y);
-      // Romb 4 cho'qqi: top, right, bottom, left
+      // Romb markazi: top (cx,cy) va bottom (cx, cy+H) oʻrtasi → (cx, cy + H/2)
+      // Har vertex'ni markazga CITY_TILE_SHRINK bilan tortamiz:
+      //   newVertex = center + (oldVertex - center) * SHRINK
+      // Natija: polygon biroz kichkina, qoʻshni polygon bilan orasida gap (~3px).
+      const mx = cx;
+      const my = cy + CITY_TILE_H / 2;
+      const dx = (CITY_TILE_W / 2) * CITY_TILE_SHRINK;
+      const dy = (CITY_TILE_H / 2) * CITY_TILE_SHRINK;
+      // Romb 4 cho'qqi (shrinklangan): top, right, bottom, left
       const points = [
-        `${cx},${cy}`,                                    // top
-        `${cx + CITY_TILE_W / 2},${cy + CITY_TILE_H / 2}`, // right
-        `${cx},${cy + CITY_TILE_H}`,                       // bottom
-        `${cx - CITY_TILE_W / 2},${cy + CITY_TILE_H / 2}`, // left
+        `${mx},${my - dy}`,         // top    (markazdan yuqoriga)
+        `${mx + dx},${my}`,         // right  (markazdan o'ngga)
+        `${mx},${my + dy}`,         // bottom (markazdan pastga)
+        `${mx - dx},${my}`,         // left   (markazdan chapga)
       ].join(' ');
-      // Checkerboard pattern: (x+y) juft → light, toq → slightly darker
-      // Bu Forest stilidagi yengil naqsh — ko'z chizmaydi, lekin grid yaqqol ko'rinadi
+      // Checkerboard parity saqlangan (data-attribute uchun, fill bir xil oq)
+      // shaxmat YOʻQ — CSS da tile-a va tile-b bir xil rang (#FFFFFF)
       const parity = (x + y) % 2 === 0 ? 'a' : 'b';
       tilesHtml += `<polygon class="city-tile city-tile-${parity}" data-x="${x}" data-y="${y}" points="${points}"/>`;
     }
