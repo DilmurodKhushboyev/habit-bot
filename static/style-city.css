@@ -49,11 +49,11 @@
   touch-action: pan-x pan-y;
   /* Pull-to-refresh va bouncing'ni shu konteyner ichida saqlash */
   overscroll-behavior: contain;
-  background: #F0F0F2;      /* light mode: asfalt-oq "yer" (Rasm 5 stili) */
+  background: #86B850;      /* light mode: Clash of Clans yashil "tashqi oʻt" — toʻq fon */
   transition: background .25s ease;
 }
 body.dark .city-canvas-wrap {
-  background: #1A1A1C;      /* dark mode: chuqur kulrang */
+  background: #2A3A1F;      /* dark mode: oʻrmon kechasi — toʻq yashil */
 }
 /* SVG kanvas */
 .city-canvas {
@@ -63,21 +63,21 @@ body.dark .city-canvas-wrap {
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-/* Romb katak — premium minimalist (oq palitra, yengil checkerboard) */
+/* Romb katak — Clash of Clans yashil oʻyin maydoni (nozik checkerboard) */
 .city-tile {
-  stroke: #E0E0E5;          /* light mode chiziq — yumshoq kulrang */
+  stroke: #7AAB48;          /* light mode chiziq — yumshoq yashil toʻr (deyarli koʻrinmas) */
   stroke-width: 1;
   shape-rendering: crispEdges;  /* aniq chiziq, anti-alias yo'q */
 }
-.city-tile-a { fill: #FFFFFF; }  /* juft kataklar — toza oq (yorug') */
-.city-tile-b { fill: #F5F5F7; }  /* toq kataklar — ozgina kulrang (soyada) */
+.city-tile-a { fill: #A8D26A; }  /* juft kataklar — ochroq yashil oʻt (yorug') */
+.city-tile-b { fill: #9EC85E; }  /* toq kataklar — biroz toʻqroq yashil (soyada) */
 
-/* Dark mode — chuqur kulrang palitra */
+/* Dark mode — oʻrmon kechasi palitra (toʻq yashil) */
 body.dark .city-tile {
-  stroke: #2C2C30;
+  stroke: #243018;
 }
-body.dark .city-tile-a { fill: #28282C; }
-body.dark .city-tile-b { fill: #232327; }
+body.dark .city-tile-a { fill: #3D5226; }
+body.dark .city-tile-b { fill: #34471F; }
 
 /* ── CITY BINOLAR — PHASE C3.1 (monoxrom oq clay render) ── */
 /* Izometrik kub 3 yuzli: top (yorug') + left (o'rta soya) + right (quyuq soya).
