@@ -68,6 +68,147 @@ const CITY_BLD_BASE_H = 30;   // kub asos balandligi (px) — CITY_TILE_H=40 dan
 // Balandlik mantiqi app-city-buildings.js da: cityBuildingHeight() funksiyasi,
 // CITY_BLD_MIN_HEIGHT / CITY_BLD_FULL_HEIGHT / CITY_BLD_MAX_PROGRESS konstantalar.
 
+// ── ZOOM KONSTANTLARI (Qoida #17 — magic number'larni markazlash) ──
+// CSS transform: scale(_cityZoom) .city-canvas SVG ga qo'llanadi.
+// viewBox o'zgarmaydi — auto-scroll markazlash mantig'i va elementFromPoint
+// (drag hit-testing, app-city-move.js) buzilmasin.
+const CITY_ZOOM_MIN     = 0.6;
+const CITY_ZOOM_MAX     = 1.6;
+const CITY_ZOOM_STEP    = 0.1;
+const CITY_ZOOM_DEFAULT = 1.0;
+// Pinch sezgirligi: 2-barmoq orasidagi masofa qancha o'zgarsa zoom o'zgaradi.
+// Tugmalar diskret (0.1 qadam), pinch esa uzluksiz — boshlang'ich masofaga nisbat
+// olinadi (startDist / curDist), boshlang'ich zoom bilan ko'paytiriladi.
+const CITY_PINCH_MIN_DIST = 30;  // px — kichikroq pinch e'tiborga olinmaydi (shovqin)
+
+// Global state — tab almashtirilganda zoom darajasi saqlanadi (loadCity qayta
+// chaqirilsa ham foydalanuvchining tanlovi yo'qolmasin). applyCityZoom har
+// renderCityGrid oxirida chaqiriladi — DOM yangidan yaratilsa ham zoom qaytadi.
+let _cityZoom = CITY_ZOOM_DEFAULT;
+
+// Pinch holati — touchstart paytida 2 barmoq tegsa boshlanadi, touchend da tozalanadi
+let _cityPinchState = null;
+
+// ── Zoom darajasini DOM ga qo'llash + tugmalar disabled holatini boshqarish ──
+// .city-canvas (SVG) ga transform: scale(_cityZoom). transform-origin: center
+// CSS da. Min/max chegaraga yetilganda tegishli tugma disabled bo'ladi (vizual
+// va funksional — pointer-events:none CSS da).
+function applyCityZoom() {
+  const svg = document.querySelector('.city-canvas');
+  if (svg) svg.style.transform = 'scale(' + _cityZoom.toFixed(3) + ')';
+  // Tugmalar disabled holati (chegara yetildi → tegishli tugma o'chadi)
+  const btnIn  = document.getElementById('city-zoom-in');
+  const btnOut = document.getElementById('city-zoom-out');
+  if (btnIn) {
+    if (_cityZoom >= CITY_ZOOM_MAX - 1e-6) btnIn.setAttribute('aria-disabled', 'true');
+    else btnIn.removeAttribute('aria-disabled');
+  }
+  if (btnOut) {
+    if (_cityZoom <= CITY_ZOOM_MIN + 1e-6) btnOut.setAttribute('aria-disabled', 'true');
+    else btnOut.removeAttribute('aria-disabled');
+  }
+  // Tugmalar aria-label tarjimasi (S() har til o'zgarganda yangi qiymat beradi)
+  if (typeof S === 'function') {
+    if (btnIn)  btnIn.setAttribute('aria-label',  S('city', 'zoom_in'));
+    if (btnOut) btnOut.setAttribute('aria-label', S('city', 'zoom_out'));
+  }
+}
+
+// ── Tugma onclick'lari (index.html dan chaqiriladi) ──
+// Haptic light — Telegram WebApp da mavjud (mavjud pattern, masalan
+// app-city-move.js da medium ishlatilgan).
+function cityZoomIn() {
+  if (_cityZoom >= CITY_ZOOM_MAX - 1e-6) return;
+  _cityZoom = Math.min(CITY_ZOOM_MAX, _cityZoom + CITY_ZOOM_STEP);
+  applyCityZoom();
+  try {
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    }
+  } catch (e) { /* haptic ixtiyoriy — xato butun zoom'ni buzmasin */ }
+}
+function cityZoomOut() {
+  if (_cityZoom <= CITY_ZOOM_MIN + 1e-6) return;
+  _cityZoom = Math.max(CITY_ZOOM_MIN, _cityZoom - CITY_ZOOM_STEP);
+  applyCityZoom();
+  try {
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    }
+  } catch (e) { /* haptic ixtiyoriy */ }
+}
+
+// ── Pinch-zoom (2 barmoq) — capture rejimida, app-city-move.js dan oldin ──
+// MUHIM (Qoida #09 — ta'sir doirasi):
+//   app-city-move.js .city-canvas ga touchstart handler ulagan (long-press drag).
+//   Pinch handler .city-canvas-wrap ga CAPTURE rejimida ulanadi — bubbling'dan
+//   AVVAL ishlaydi. 2 barmoq tegsa:
+//     1) Agar drag boshlanmagan bo'lsa: stopPropagation() — drag handler
+//        umuman chaqirilmaydi
+//     2) Agar drag allaqachon faollashgan bo'lsa (1 barmoq long-press → 2-barmoq):
+//        dispatchEvent('touchcancel') orqali drag bekor qilinadi (move.js onTouchCancel),
+//        keyin pinch boshlanadi
+// Bu yondashuv app-city-move.js ga TEGMASLIKka imkon beradi (Qoida #02).
+function _initCityPinch(container) {
+  if (!container) return;
+  const wrap = container.querySelector('.city-canvas-wrap');
+  const svg  = container.querySelector('.city-canvas');
+  if (!wrap || !svg) return;
+
+  function _pinchDist(t1, t2) {
+    const dx = t2.clientX - t1.clientX;
+    const dy = t2.clientY - t1.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function onPinchStart(e) {
+    if (!e.touches || e.touches.length !== 2) return;
+    const dist = _pinchDist(e.touches[0], e.touches[1]);
+    if (dist < CITY_PINCH_MIN_DIST) return;  // juda yaqin — shovqin
+    // Agar app-city-move.js da drag faol bo'lsa (long-press 600ms o'tgan) — bekor qilamiz
+    try {
+      svg.dispatchEvent(new TouchEvent('touchcancel', { bubbles: true, cancelable: true }));
+    } catch (err) { /* eski browserlar TouchEvent constructor'ni qo'llab-quvvatlamasligi mumkin */ }
+    e.stopPropagation();  // app-city-move.js touchstart chaqirilmasin
+    _cityPinchState = {
+      startDist: dist,
+      startZoom: _cityZoom,
+    };
+  }
+
+  function onPinchMove(e) {
+    if (!_cityPinchState) return;
+    if (!e.touches || e.touches.length !== 2) return;
+    e.preventDefault();   // sahifa scroll/bouncing'ini to'xtatish
+    e.stopPropagation();
+    const dist = _pinchDist(e.touches[0], e.touches[1]);
+    const ratio = dist / _cityPinchState.startDist;
+    let newZoom = _cityPinchState.startZoom * ratio;
+    // Min/max chegaralar
+    if (newZoom < CITY_ZOOM_MIN) newZoom = CITY_ZOOM_MIN;
+    if (newZoom > CITY_ZOOM_MAX) newZoom = CITY_ZOOM_MAX;
+    _cityZoom = newZoom;
+    applyCityZoom();
+  }
+
+  function onPinchEnd(e) {
+    if (!_cityPinchState) return;
+    // Pinch tugadi (barcha barmoqlar olindi yoki 1 ga tushdi)
+    if (!e.touches || e.touches.length < 2) {
+      _cityPinchState = null;
+    }
+  }
+
+  // Capture rejimi (true) — bubbling'dan oldin parent'da ushlash.
+  // app-city-move.js .city-canvas ga ulangan — capture parent'da bubbling'dan
+  // oldin ishlaydi → biz birinchi navbatda 2 barmoqni ushlab olamiz.
+  // passive: false — preventDefault ishlasin (pinch paytida sahifa scroll'ini to'xtatish).
+  wrap.addEventListener('touchstart',  onPinchStart, { passive: false, capture: true });
+  wrap.addEventListener('touchmove',   onPinchMove,  { passive: false, capture: true });
+  wrap.addEventListener('touchend',    onPinchEnd,   { passive: true,  capture: true });
+  wrap.addEventListener('touchcancel', onPinchEnd,   { passive: true,  capture: true });
+}
+
 // ── API DATA (C4) ──
 // _cityDemoData O'CHIRILDI — endi haqiqiy GET /api/city/<uid> javobi ishlatiladi.
 // API javob formati (flask_routes_city.py api_city_get):
@@ -207,6 +348,13 @@ function renderCityGrid(container, cityData) {
   if (typeof initCityMoveHandlers === 'function') {
     initCityMoveHandlers(container);
   }
+
+  // ZOOM (yangi): pinch handler'larni ulash + saqlangan zoom darajasini qaytarish.
+  // _initCityPinch CAPTURE rejimida ulanadi → app-city-move.js touchstart'idan
+  // OLDIN ishlaydi (2 barmoq bo'lsa, drag handler chaqirilmaydi — Qoida #09).
+  // applyCityZoom — _cityZoom global state (boshqa tab'dan qaytganda saqlangan).
+  _initCityPinch(container);
+  applyCityZoom();
 }
 
 // ════════════════════════════════════════════════
@@ -219,7 +367,10 @@ function renderCityGrid(container, cityData) {
 // yerdagi konstantalarga (CITY_TILE_H, CITY_BLD_*, cityIsoX/Y) bog'liq.
 
 // ── Eslatma kelajakdagi bosqichlar uchun ──
-// PHASE C2.2/C2.3: touch pan/zoom — YAGNI sababli o'tkazib yuborilgan
+// PHASE C2.2: touch pan — .city-canvas-wrap overflow:auto + touch-action:pan-x pan-y
+//             orqali browser native scroll bilan amalga oshirilgan (alohida kod yo'q)
+// PHASE C2.3: ✅ zoom (+/- tugmalar + pinch) — SHU YERDA, CSS transform: scale()
+//             .city-canvas ga. Oraliq: 0.6x — 1.6x, qadam: 0.1x
 // PHASE C3.1: ✅ demo binolar (5 stage, oq clay render)
 // PHASE C3.2: ✅ shakl-asosida bino turlari (app-city-buildings.js)
 // PHASE C3.3: 5 dekoratsiya — KEYINGA QOLDIRILGAN (professional SVG ikonkalar kerak)
