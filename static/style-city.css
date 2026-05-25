@@ -49,11 +49,35 @@
   touch-action: pan-x pan-y;
   /* Pull-to-refresh va bouncing'ni shu konteyner ichida saqlash */
   overscroll-behavior: contain;
-  background: var(--bg);    /* light mode: header va nav bilan BIR XIL fon — vizual uzluksizlik (DRY) */
+  /* PROFESSIONAL FON (yangi — C2.3+ polish):
+     2 qatlamli background — premium minimalist atrof hissi.
+     1) radial-gradient — markazdan chetga vignette (shahar markazda turgandek)
+     2) linear-gradient — yuqori-oq dan pastki nozik pastel yashilga (gorizont)
+     3) var(--bg) fallback — gradient render bo'lmasa hali ham to'g'ri ko'rinadi.
+     Ranglar mavjud --accent (#4CAF7D) palitrasidan, lekin juda susaytirilgan
+     (rgba alpha bilan) — minimalizmni buzmaydi, faqat "yer" hissi beradi.
+     scroll bilan harakat QILMAYDI — fon position:fixed konteynerga ulangan,
+     grid esa SVG bo'lib ichkarida harakat qiladi (vizual to'g'ri natija). */
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 45%,
+                    rgba(255, 255, 255, 0) 0%,
+                    rgba(76, 175, 125, 0.04) 60%,
+                    rgba(76, 175, 125, 0.10) 100%),
+    linear-gradient(180deg, #FFFFFF 0%, #F5F8F5 100%);
+  background-color: var(--bg);   /* fallback — eski browserlar uchun */
   transition: background .25s ease;
 }
 body.dark .city-canvas-wrap {
-  background: var(--bg);    /* dark mode: header va nav bilan BIR XIL fon (DRY) */
+  /* Dark mode: gorizont hissi — yuqori toq, pastida biroz toqroq.
+     Vignette ham mavjud, lekin yorug'lik o'rniga "tiniq markaz" effekti
+     (chetlari biroz qoraytirilgan — diqqatni shaharga jamlaydi). */
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 45%,
+                    rgba(0, 0, 0, 0) 0%,
+                    rgba(0, 0, 0, 0.10) 60%,
+                    rgba(0, 0, 0, 0.22) 100%),
+    linear-gradient(180deg, #131418 0%, #0E0F12 100%);
+  background-color: var(--bg);   /* fallback */
 }
 /* SVG kanvas */
 .city-canvas {
