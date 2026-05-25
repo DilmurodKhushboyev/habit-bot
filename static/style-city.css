@@ -49,11 +49,11 @@
   touch-action: pan-x pan-y;
   /* Pull-to-refresh va bouncing'ni shu konteyner ichida saqlash */
   overscroll-behavior: contain;
-  background: #DEE4ED;      /* light mode: koʻkimtir-kulrang fon (cool-tone) — kublardan ~12% toʻq, 3D ko'tarilish hissi */
+  background: var(--bg);    /* light mode: header va nav bilan BIR XIL fon — vizual uzluksizlik (DRY) */
   transition: background .25s ease;
 }
 body.dark .city-canvas-wrap {
-  background: #0F1116;      /* dark mode: chuqurroq koʻkimtir kech — kublardan toʻq, 3D kontrast */
+  background: var(--bg);    /* dark mode: header va nav bilan BIR XIL fon (DRY) */
 }
 /* SVG kanvas */
 .city-canvas {
@@ -76,8 +76,8 @@ body.dark .city-canvas-wrap {
 body.dark .city-tile {
   stroke: none;
 }
-body.dark .city-tile-a { fill: #2C2E38; }
-body.dark .city-tile-b { fill: #2C2E38; }
+body.dark .city-tile-a { fill: var(--surface); }  /* neumorphism kartalar bilan bir xil rang */
+body.dark .city-tile-b { fill: var(--surface); }
 
 /* ── CITY BINOLAR — PHASE C3.1 (monoxrom oq clay render) ── */
 /* Izometrik kub 3 yuzli: top (yorug') + left (o'rta soya) + right (quyuq soya).
