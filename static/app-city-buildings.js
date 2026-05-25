@@ -15,11 +15,14 @@
 //   (Avvalgi CITY_BLD_SHAPES o'lcham tizimi va cityCapSVG cap tizimi — o'chirildi.
 //    Kerak bo'lsa git tarixida bor; "kerak bo'lar" deb o'lik kod saqlamaymiz.)
 //
-// PHASE C3.5a (glass wireframe): bino 2 qismdan iborat:
+// PHASE C3.5a (glass — qurilmagan qism vizualizatsiyasi): bino 2 qismdan iborat:
 //   1. SOLID qism (qurilgan) — to'liq rangli kub
-//   2. GLASS qism (qurilmagan) — to'liq balandlikkacha bo'sh joy, shaffof yuzlar +
-//      aniq qirra chiziqlari (shisha karkas). Foydalanuvchi "bino qaysi yo'nalishda
-//      o'sayotganini" ko'radi → motivatsion vizual.
+//   2. GLASS qism (qurilmagan) — to'liq balandlikkacha bo'sh joy, solid bino
+//      yuzlari bilan AYNI rang, lekin yarim shaffof (CSS fill-opacity 0.5).
+//      Foydalanuvchi "binom kelajakda qanday ko'rinishini" yarim ko'radi →
+//      motivatsion vizual. (Avval wireframe qirra chiziqlar bor edi — binolar
+//      yaqin turganda chiziqlar bir-biriga aralashib shovqin yaratardi.
+//      C3.5d da olib tashlandi, yuzlarning o'zi 50% xira qilindi.)
 //
 // PHASE C3.5b (uzluksiz balandlik): solid qism balandligi STAGE'ga emas,
 //   PROGRESS'ga (kun soni 0-66) chiziqli bog'langan. Sabab: stage tizimida
@@ -164,32 +167,14 @@ function cityBuildingSVG(type, progress, cx, cy, habitId, habitName) {
       // bo'lmasligi uchun solid bilan AYNI bw/bh ishlatamiz. Glass kub PASTKI
       // markazi (cx, cy - hSolid) — solid tepa romb markazi.
       const glassFaces = cityCubeFaces(cx, cy - hSolid, bw, bh, hGlass);
-      // Glass yuzlar (shaffof rangli) — orqa qirralar ko'rinib turishi uchun
+      // Glass yuzlar (C3.5d): solid bino YUZLARI bilan AYNI rang, yarim shaffof
+      //   (fill-opacity 0.5 — CSS da). Wireframe qirra chiziqlar OLIB TASHLANDI —
+      //   binolar yaqin turganda chiziqlar bir-biriga aralashib vizual shovqin
+      //   yaratardi. Endi glass kub xuddi solid kub "kelajakdagi koʻrinishidek"
+      //   yarim ko'rinadi — toza, motivatsion vizual.
       svg += `<polygon class="city-bld-glass-left"  points="${glassFaces.leftFace}"/>`;
       svg += `<polygon class="city-bld-glass-right" points="${glassFaces.rightFace}"/>`;
       svg += `<polygon class="city-bld-glass-top"   points="${glassFaces.topFace}"/>`;
-      // Glass kub qirra chiziqlari (wireframe) — bino rangida, aniq ko'rinadi.
-      // 8 ta qirra: 4 ta tepa romb + 4 ta vertikal (asosdan tepaga).
-      // Asos qirralarini chizmaymiz — solid kub tepasi bilan ustma-ust tushadi.
-      const gx = cx, gy = cy - hSolid;  // glass pastki markaz
-      const gTop    = `${gx},${gy - bh - hGlass}`;
-      const gTopR   = `${gx + bw},${gy - hGlass}`;
-      const gTopB   = `${gx},${gy + bh - hGlass}`;
-      const gTopL   = `${gx - bw},${gy - hGlass}`;
-      const gBaseT  = `${gx},${gy - bh}`;
-      const gBaseR  = `${gx + bw},${gy}`;
-      const gBaseB  = `${gx},${gy + bh}`;
-      const gBaseL  = `${gx - bw},${gy}`;
-      // 4 tepa romb qirrasi
-      svg += `<line class="city-bld-glass-edge" x1="${gTop.split(',')[0]}" y1="${gTop.split(',')[1]}" x2="${gTopR.split(',')[0]}" y2="${gTopR.split(',')[1]}"/>`;
-      svg += `<line class="city-bld-glass-edge" x1="${gTopR.split(',')[0]}" y1="${gTopR.split(',')[1]}" x2="${gTopB.split(',')[0]}" y2="${gTopB.split(',')[1]}"/>`;
-      svg += `<line class="city-bld-glass-edge" x1="${gTopB.split(',')[0]}" y1="${gTopB.split(',')[1]}" x2="${gTopL.split(',')[0]}" y2="${gTopL.split(',')[1]}"/>`;
-      svg += `<line class="city-bld-glass-edge" x1="${gTopL.split(',')[0]}" y1="${gTopL.split(',')[1]}" x2="${gTop.split(',')[0]}" y2="${gTop.split(',')[1]}"/>`;
-      // 4 vertikal qirra (asos → tepa)
-      svg += `<line class="city-bld-glass-edge" x1="${gBaseT.split(',')[0]}" y1="${gBaseT.split(',')[1]}" x2="${gTop.split(',')[0]}" y2="${gTop.split(',')[1]}"/>`;
-      svg += `<line class="city-bld-glass-edge" x1="${gBaseR.split(',')[0]}" y1="${gBaseR.split(',')[1]}" x2="${gTopR.split(',')[0]}" y2="${gTopR.split(',')[1]}"/>`;
-      svg += `<line class="city-bld-glass-edge" x1="${gBaseB.split(',')[0]}" y1="${gBaseB.split(',')[1]}" x2="${gTopB.split(',')[0]}" y2="${gTopB.split(',')[1]}"/>`;
-      svg += `<line class="city-bld-glass-edge" x1="${gBaseL.split(',')[0]}" y1="${gBaseL.split(',')[1]}" x2="${gTopL.split(',')[0]}" y2="${gTopL.split(',')[1]}"/>`;
     }
   }
 
@@ -247,8 +232,12 @@ function renderCityBuildings(buildings) {
 //   natija abstrakt/bee'xshov chiqdi. Kelajakda professional SVG ikonkalar bilan
 //   qilinadi (kod bilan emas). Backend place_decoration/DECORATION_TYPES tayyor turadi.
 // PHASE C3.4:  premium CSS polish (soyalar, 3D effekt finetune)
-// PHASE C3.5a: ✅ glass wireframe — qurilmagan qism shaffof yuz + qirra chiziq
-//   (motivatsion vizual). style-city.css da .city-bld-glass-* class'lar.
+// PHASE C3.5a: ✅ glass — qurilmagan qism shaffof yuz (motivatsion vizual).
+//   style-city.css da .city-bld-glass-* class'lar.
+// PHASE C3.5d: ✅ wireframe qirra chiziqlar OLIB TASHLANDI — binolar yaqin
+//   turganda 8 ta chiziq har bino tepasida vizual shovqin yaratardi. Endi
+//   glass yuzlar solid yuzlar bilan AYNI rangda, fill-opacity 0.5 — toza
+//   "yarim shaffof bino" effekti. .city-bld-glass-edge CSS klassi olib tashlandi.
 // PHASE C3.5b: ✅ uzluksiz balandlik — solid kub balandligi stage'ga emas,
 //   progress'ga (0-66 kun) chiziqli bog'langan. cityBuildingHeight() funksiyasi.
 //   Har bajarilgan kun farq qiladi. cityBuildingStage() saqlangan — faqat
