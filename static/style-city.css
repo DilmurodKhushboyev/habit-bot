@@ -49,11 +49,11 @@
   touch-action: pan-x pan-y;
   /* Pull-to-refresh va bouncing'ni shu konteyner ichida saqlash */
   overscroll-behavior: contain;
-  background: #F0F0F2;      /* light mode: yumshoq kulrang fon — oq kataklar ajralishi uchun (qogʻoz daftar effekti) */
+  background: #E8E8EC;      /* light mode: yumshoq kulrang fon — kublar orasidagi gap'da "soya" hissi yaratadi */
   transition: background .25s ease;
 }
 body.dark .city-canvas-wrap {
-  background: #1A1A1C;      /* dark mode: chuqur kulrang fon */
+  background: #161618;      /* dark mode: chuqur kulrang — kublar orasidagi gap'da soya */
 }
 /* SVG kanvas */
 .city-canvas {
@@ -63,18 +63,18 @@ body.dark .city-canvas-wrap {
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-/* Romb katak — uniform oq "qogʻoz daftar" (shaxmat YOʻQ, faqat chiziqlar ajratadi) */
+/* Romb katak — 3D suzuvchi kub (chiziq YOʻQ, polygon shrink bilan gap+soya hissi) */
 .city-tile {
-  stroke: #EAEAEE;          /* nozik kulrang chiziq — faqat katak chegarasi koʻrinsin */
-  stroke-width: 0.5;        /* yupqa chiziq — qogʻoz daftar hissi */
+  stroke: none;             /* chiziq yoʻq — polygon shrink (app-city.js) gap yaratadi, gap'da fon ko'rinadi */
+  /* stroke-width yoʻq — kerak emas */
   /* shape-rendering yoʻq — anti-alias yumshoq chegara */
 }
-.city-tile-a { fill: #FFFFFF; }  /* barcha kataklar — toza oq */
-.city-tile-b { fill: #FFFFFF; }  /* tile-b ham oq — uniform maydon, shaxmat YOʻQ */
+.city-tile-a { fill: #FFFFFF; }  /* barcha kataklar — toza oq kublar */
+.city-tile-b { fill: #FFFFFF; }  /* tile-b ham oq — uniform 3D kublar */
 
-/* Dark mode — uniform toʻq kulrang (shaxmat YOʻQ) */
+/* Dark mode — uniform toʻq kulrang kublar (stroke yoʻq, gap bilan ajralib turadi) */
 body.dark .city-tile {
-  stroke: #2C2C30;
+  stroke: none;
 }
 body.dark .city-tile-a { fill: #28282C; }
 body.dark .city-tile-b { fill: #28282C; }
