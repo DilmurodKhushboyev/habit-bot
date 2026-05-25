@@ -230,3 +230,77 @@ body.dark .city-bld-label {
   stroke: #1A1A1C;
 }
 
+/* ════════════════════════════════════════════════
+   4-QISM: ZOOM CONTROLS — +/- tugmalar (yangi)
+   ════════════════════════════════════════════════
+   Vazifa: shahar grid'ini yaqinlashtirish/uzoqlashtirish (0.6x — 1.6x).
+   Joylashuv: o'ng past burchak, bottom-nav ustida (Google Maps/Hay Day patterni).
+   Mantiq: app-city.js da — CSS transform: scale() .city-canvas ga qo'llanadi.
+
+   QARORLAR (Qoida #21):
+   - position: fixed — scroll bilan birga harakatlanmasin, har doim ko'rinib tursin
+   - z-index: bottom-nav (z-index ~100) ostida emas, lekin modallar (~999) ostida
+   - bottom: 96px + safe-bottom — bottom-nav (72px) + 24px gap (foydalanuvchi
+     barmog'iga qulay, ehtiyot zona)
+   - right: 16px — ekran chetidan toza chegara (DM Sans intervaliga mos)
+   - Neumorphic: var(--sh-out) tashqi soya, bosilganda var(--sh-in) ichki soya
+     (mavjud .city-error-btn patternini takrorlash — vizual izchillik)
+   - 44×44px — Apple HIG touch target minimum (44pt) */
+
+.city-zoom-controls {
+  position: fixed;
+  right: 16px;
+  bottom: calc(96px + var(--tg-safe-bottom, 0px));
+  z-index: 50;                   /* bottom-nav ostida, lekin sahifa ustida */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;                      /* ikki tugma orasida bo'shliq */
+  pointer-events: auto;
+}
+
+.city-zoom-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: var(--card);
+  color: var(--accent);
+  box-shadow: var(--sh-out);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: box-shadow 0.15s ease, transform 0.12s ease, opacity 0.18s ease;
+}
+
+.city-zoom-btn:active {
+  box-shadow: var(--sh-in);
+  transform: scale(0.92);
+}
+
+/* Disabled holat — min/max chegaraga yetilganda ko'rinish */
+.city-zoom-btn[disabled],
+.city-zoom-btn[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;          /* bosilmasin, lekin tugma ko'rinib tursin */
+}
+
+/* SVG ichidagi belgilar (+ va -) uchun aniq markazlash */
+.city-zoom-btn svg {
+  display: block;
+}
+
+/* .city-canvas (SVG) ga transform smooth bo'lishi uchun */
+.city-canvas {
+  transform-origin: center center;
+  transition: transform 0.18s ease;
+  will-change: transform;        /* GPU compositing — mobil silliq zoom */
+}
+
