@@ -49,11 +49,11 @@
   touch-action: pan-x pan-y;
   /* Pull-to-refresh va bouncing'ni shu konteyner ichida saqlash */
   overscroll-behavior: contain;
-  background: #E8E8EC;      /* light mode: yumshoq kulrang fon — kublar orasidagi gap'da "soya" hissi yaratadi */
+  background: #EDF0F5;      /* light mode: och koʻkimtir-oq fon (cool-tone) — referens premium 3D hissi */
   transition: background .25s ease;
 }
 body.dark .city-canvas-wrap {
-  background: #161618;      /* dark mode: chuqur kulrang — kublar orasidagi gap'da soya */
+  background: #15171C;      /* dark mode: koʻkimtir kechki tus (cool-tone) */
 }
 /* SVG kanvas */
 .city-canvas {
@@ -69,15 +69,15 @@ body.dark .city-canvas-wrap {
   /* stroke-width yoʻq — kerak emas */
   /* shape-rendering yoʻq — anti-alias yumshoq chegara */
 }
-.city-tile-a { fill: #FFFFFF; }  /* barcha kataklar — toza oq kublar */
-.city-tile-b { fill: #FFFFFF; }  /* tile-b ham oq — uniform 3D kublar */
+.city-tile-a { fill: #FCFDFE; }  /* barcha kataklar — porcelain (sovuq oq, biroz koʻkimtir) */
+.city-tile-b { fill: #FCFDFE; }  /* tile-b ham bir xil — uniform premium 3D kublar */
 
 /* Dark mode — uniform toʻq kulrang kublar (stroke yoʻq, gap bilan ajralib turadi) */
 body.dark .city-tile {
   stroke: none;
 }
-body.dark .city-tile-a { fill: #28282C; }
-body.dark .city-tile-b { fill: #28282C; }
+body.dark .city-tile-a { fill: #262830; }
+body.dark .city-tile-b { fill: #262830; }
 
 /* ── CITY BINOLAR — PHASE C3.1 (monoxrom oq clay render) ── */
 /* Izometrik kub 3 yuzli: top (yorug') + left (o'rta soya) + right (quyuq soya).
