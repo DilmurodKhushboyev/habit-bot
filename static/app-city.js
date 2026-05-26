@@ -107,10 +107,16 @@ function applyCityZoom() {
     if (_cityZoom <= CITY_ZOOM_MIN + 1e-6) btnOut.setAttribute('aria-disabled', 'true');
     else btnOut.removeAttribute('aria-disabled');
   }
+  // Indikator matnini yangilash — joriy zoom darajasi % da (masalan "120%").
+  // Math.round — pinch paytida silliq raqamlar ("100% → 105% → 112%"...),
+  // .toFixed emas (chunki "112.3%" shovqinli). textContent — XSS xavfsiz.
+  const reset = document.getElementById('city-zoom-reset');
+  if (reset) reset.textContent = Math.round(_cityZoom * 100) + '%';
   // Tugmalar aria-label tarjimasi (S() har til o'zgarganda yangi qiymat beradi)
   if (typeof S === 'function') {
     if (btnIn)  btnIn.setAttribute('aria-label',  S('city', 'zoom_in'));
     if (btnOut) btnOut.setAttribute('aria-label', S('city', 'zoom_out'));
+    if (reset)  reset.setAttribute('aria-label',  S('city', 'zoom_reset'));
   }
 }
 
@@ -130,6 +136,22 @@ function cityZoomIn() {
 function cityZoomOut() {
   if (_cityZoom <= CITY_ZOOM_MIN + 1e-6) return;
   _cityZoom = Math.max(CITY_ZOOM_MIN, _cityZoom - CITY_ZOOM_STEP);
+  applyCityZoom();
+  try {
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    }
+  } catch (e) { /* haptic ixtiyoriy */ }
+}
+
+// ── Zoom reset (indikator tugmasi onclick'i) ──
+// Foydalanuvchi 1 bosish bilan asl holatga (1.0x) qaytsin — pinch chalkash holatdan
+// qutulish uchun (masalan, 147% da qolib ketdi, "qanday qaytaman?" muammosi).
+// CSS .city-canvas da `transition: transform 0.18s ease` borligi sababli — silliq
+// animatsiya bilan qaytadi (tugma → 1.0 sakrash YOK, smooth).
+function cityZoomReset() {
+  if (Math.abs(_cityZoom - CITY_ZOOM_DEFAULT) < 1e-6) return;  // allaqachon 1.0x da
+  _cityZoom = CITY_ZOOM_DEFAULT;
   applyCityZoom();
   try {
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {

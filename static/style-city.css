@@ -297,6 +297,39 @@ body.dark .city-bld-label {
   display: block;
 }
 
+/* ── Zoom indikatori / reset tugmasi (+ va − orasida) ──
+   Joriy zoom darajasini % da ko'rsatadi (masalan "120%"). Bosilsa — 1.0x ga reset.
+   Kapsula shakl (matn sig'ishi uchun), tugmalar bilan bir uslubda lekin kichikroq.
+   Qoida #21 (sabab): foydalanuvchi pinch paytida zoom darajasini bilmasligini hal
+   qiladi + chalkash holatdan chiqish uchun bir bosish bilan asl holatga qaytarish. */
+.city-zoom-reset {
+  width: 44px;
+  height: 28px;                  /* tugmalardan past — vizual ierarxiya (asosiy emas) */
+  border-radius: 14px;           /* kapsula */
+  border: none;
+  cursor: pointer;
+  background: var(--card);
+  color: var(--sub);             /* kulrang matn — yordamchi indikator, asosiy emas */
+  box-shadow: var(--sh-out);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'DM Mono', 'DM Sans', monospace;  /* monospace — raqam o'zgarsa "sakramaydi" */
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: box-shadow 0.15s ease, transform 0.12s ease, color 0.18s ease;
+}
+
+.city-zoom-reset:active {
+  box-shadow: var(--sh-in);
+  transform: scale(0.92);
+  color: var(--accent);          /* bosilganda yashilga o'zgaradi — "amal qildim" feedback */
+}
+
 /* .city-canvas (SVG) ga transform smooth bo'lishi uchun */
 .city-canvas {
   transform-origin: center center;
