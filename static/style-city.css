@@ -19,11 +19,12 @@
      3. BINO LABEL CSS — odat nomi <text> bino ostida (C3.5c)
 
    Bog'liqlik:
-     - app-city.js (.city-canvas-wrap, .city-tile*, .city-error*)
+     - app-city.js (.city-canvas-wrap, .city-tile*)
      - app-city-buildings.js (.city-bld*, glass class'lar)
      - app-city-move.js (.city-bld-ring, .city-bld-ghost, .city-tile-highlight)
      - style.css (:root CSS o'zgaruvchilar — --accent, --card, --sub,
-       --sh-out, --sh-in, --tg-safe-* — global, shu yerda ham ishlaydi)
+       --sh-out, --sh-in, --tg-safe-* — global, shu yerda ham ishlaydi;
+       .empty-state-error* — xato holati endi shu yerda markazlashgan)
    ============================================== */
 
 /* ════════════════════════════════════════════════
@@ -108,30 +109,11 @@ body.dark .city-bld-top   { fill: #3C3C42; }
 body.dark .city-bld-left  { fill: #313137; }
 body.dark .city-bld-right { fill: #2A2A30; }
 
-/* ── City xato holati (C4) — GET /api/city/<uid> ishlamasa ──
-   Soxta demo data ko'rsatilmaydi (chalkash UX), o'rniga aniq xato + qayta urinish.
-   .loading bilan bir xil vertikal markazlash patterni, neumorphic ↻ tugma. */
-.city-error {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 80px 24px; gap: 14px; color: var(--sub);
-  text-align: center;
-}
-.city-error-icon { font-size: 40px; opacity: 0.7; }
-.city-error-msg { font-size: 14px; font-weight: 500; max-width: 260px; }
-.city-error-btn {
-  margin-top: 4px;
-  width: 48px; height: 48px; border-radius: 50%;
-  border: none; cursor: pointer;
-  background: var(--card); color: var(--accent);
-  box-shadow: var(--sh-out);
-  font-size: 22px; line-height: 1;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
-}
-.city-error-btn:active {
-  box-shadow: var(--sh-in);
-  transform: scale(0.94);
-}
+/* ── City xato holati ──
+   AVVAL bu yerda .city-error* bloklari edi (C4). Audit: umumiy
+   .empty-state-error* ga ko'chirildi (style.css), barcha sahifalar bir xil
+   uslubdan foydalanishi uchun (Qoida #17 markazlashtirish).
+   renderCityError() endi app-core.js renderErrorState() ni chaqiradi. */
 
 /* ── C5 LONG-PRESS DRAG & DROP — bino ko'chirish vizual holati ──
    YONDOSH (Qoida #21): asl bino .city-bld <g> ga KLASS QO'SHILMAYDI — chunki
@@ -244,7 +226,7 @@ body.dark .city-bld-label {
      barmog'iga qulay, ehtiyot zona)
    - right: 16px — ekran chetidan toza chegara (DM Sans intervaliga mos)
    - Neumorphic: var(--sh-out) tashqi soya, bosilganda var(--sh-in) ichki soya
-     (mavjud .city-error-btn patternini takrorlash — vizual izchillik)
+     (mavjud .empty-state-error-btn patternini takrorlash — vizual izchillik)
    - 44×44px — Apple HIG touch target minimum (44pt) */
 
 .city-zoom-controls {
