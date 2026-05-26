@@ -306,6 +306,11 @@ def create_building(udata, habit_id, building_type=None, x=None, y=None):
         "progress": 0,
         "started_at": today,
         "last_updated": today,
+        # C12 (yangi): "bugun bajarildi" ko'rsatkichi uchun field.
+        # Faqat update_building_progress(delta>0) chaqirilganda yangilanadi.
+        # None = hali tasdiqlanmagan (yangi bino — bo'sh poydevor). api_city_get
+        # bu field'ni "done_today" ga aylantiradi: last_done_date == today_str.
+        "last_done_date": None,
     }
 
     if not isinstance(city.get("buildings"), list):
@@ -360,6 +365,12 @@ def update_building_progress(udata, habit_id, delta):
     new_progress = max(0, min(BUILDING_DAYS, cur + int(delta)))
     target["progress"] = new_progress
     target["last_updated"] = _today_uz5_str()
+    # C12 (yangi): "bugun bajarildi" indikatori uchun.
+    # FAQAT positive checkin (delta > 0) — foydalanuvchi haqiqatan ham odat
+    # bajardi. Scheduler -1 (delta < 0) tegmaydi — kechagi tasdiqlash ma'lumoti
+    # buzilmasin. Bu field api_city_get da done_today: bool ga aylantiriladi.
+    if int(delta) > 0:
+        target["last_done_date"] = _today_uz5_str()
     return target
 
 def backfill_buildings_from_habits(udata):

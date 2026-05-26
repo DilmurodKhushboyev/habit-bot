@@ -30,7 +30,7 @@ from config import (
 )
 from database import (
     load_user, save_user, init_city_for_user,
-    get_user_city, add_points_history,
+    get_user_city, add_points_history, _today_uz5_str,
 )
 from city_logic import (
     create_building, change_building_type, delete_building_for_habit,
@@ -189,16 +189,23 @@ def register_city_routes(app):
         # habit_name: bino ustida label ko'rsatish uchun (qaysi bino qaysi
         # odatniki). habit_id → name lug'ati u["habits"] dan tuziladi.
         # Odat o'chirilgan bo'lsa (orfan bino) — bo'sh string.
+        # C12 (yangi): done_today — "bugun bajarildi" indikatori (bino tagida ✓).
+        # last_done_date faqat update_building_progress(delta>0) da yangilanadi —
+        # Qoida #11 (consistency): backend mantiqi to'g'ri bo'lsa, bu taqqoslash
+        # ham to'g'ri. Eski binolarda last_done_date yo'q (None) — False qaytaradi
+        # (xato emas, faqat "hali bajarilmagan" deb ko'rinadi).
         habit_names = {
             str(h.get("id")): h.get("name", "")
             for h in u.get("habits", [])
         }
+        today_str = _today_uz5_str()
         buildings = []
         for b in city.get("buildings", []):
             buildings.append({
                 **b,
                 "stage": get_building_stage(b.get("progress", 0)),
                 "habit_name": habit_names.get(str(b.get("habit_id")), ""),
+                "done_today": bool(b.get("last_done_date") == today_str),
             })
 
         return jsonify({
