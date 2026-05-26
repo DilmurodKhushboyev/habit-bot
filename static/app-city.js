@@ -374,12 +374,10 @@ function _showCityTooltip(gridG, building) {
   const progress = Math.max(0, Math.min(66, building.progress || 0));
   const percent  = Math.round((progress / 66) * 100);
   const name     = building.habit_name || '';
-  const doneToday = !!building.done_today;  // C12 — backend qaytaradigan flag
 
   // Tarjima kalitlari (S funksiya — strings.js)
   const kunWord    = (typeof S === 'function') ? S('city', 'kun_dan') : 'kun';
   const tayyorWord = (typeof S === 'function') ? S('city', 'tayyor') : 'tayyor';
-  const doneWord   = (typeof S === 'function') ? S('city', 'done_today') : 'Bugun bajarildi';
 
   // XSS himoya — name foydalanuvchi yozgan matn (xavfli HTML bo'lishi mumkin)
   const safeName = String(name)
@@ -387,10 +385,7 @@ function _showCityTooltip(gridG, building) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-  // Tooltip DOM yaratish (C12: bugun bajarilgan bo'lsa qo'shimcha qator)
-  const doneRow = doneToday
-    ? `<div class="city-bld-tooltip-done">✓ ${doneWord}</div>`
-    : '';
+  // Tooltip DOM yaratish
   const el = document.createElement('div');
   el.className = 'city-bld-tooltip';
   el.innerHTML = `
@@ -399,7 +394,6 @@ function _showCityTooltip(gridG, building) {
       <div class="city-bld-tooltip-bar-fill" style="width:${percent}%"></div>
     </div>
     <div class="city-bld-tooltip-stats">${progress} / 66 ${kunWord}  ·  ${percent}% ${tayyorWord}</div>
-    ${doneRow}
   `;
 
   // Joylashuv: bino tepasida, markazlashtirilgan. Avval body'ga qo'shamiz

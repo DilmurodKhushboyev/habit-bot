@@ -14,8 +14,7 @@ const STRINGS = {
       zoom_reset:'Asl holatga qaytarish',
       kun_dan:'kun',
       tayyor:'tayyor',
-      recenter:'Markazga qaytish',
-      done_today:'Bugun bajarildi'
+      recenter:'Markazga qaytish'
     },
     profile: {
       ball:'Ball', streak:'Streak', done:'Bajarildi', rekord:'rekord',
@@ -430,8 +429,7 @@ const STRINGS = {
       zoom_reset:'Сбросить масштаб',
       kun_dan:'дн.',
       tayyor:'готово',
-      recenter:'К центру',
-      done_today:'Сегодня выполнено'
+      recenter:'К центру'
     },
     profile: {
       ball:'Очки', streak:'Стрик', done:'Выполнено', rekord:'рекорд',
@@ -846,8 +844,7 @@ const STRINGS = {
       zoom_reset:'Reset zoom',
       kun_dan:'days',
       tayyor:'complete',
-      recenter:'Recenter',
-      done_today:'Done today'
+      recenter:'Recenter'
     },
     profile: {
       ball:'Points', streak:'Streak', done:'Done', rekord:'record',
