@@ -89,6 +89,45 @@ let _cityZoom = CITY_ZOOM_DEFAULT;
 // Pinch holati — touchstart paytida 2 barmoq tegsa boshlanadi, touchend da tozalanadi
 let _cityPinchState = null;
 
+// ── BINO ANIMATSIYA KONSTANTALARI (yangi — Qoida #17) ──
+// Bino yangi qo'shilganda CSS @keyframes orqali pastdan ko'tariladi.
+// CSS animation davomiyligi 500ms — shundan keyin .city-bld--new klassi olib
+// tashlanadi (DOM toza saqlanadi). Spring kurva CSS da (cubic-bezier oxirida sakrab).
+// localStorage kalit: shahar har foydalanuvchi uchun bir xil device'da bir xil joyda.
+const CITY_BLD_ANIM_DURATION   = 500;  // ms — CSS @keyframes davomiyligi bilan SINXRON
+const CITY_SEEN_BUILDINGS_KEY  = 'city_seen_buildings';  // localStorage kaliti
+
+// ── "Yangi bino" aniqlash (localStorage bilan) ──
+// renderCityBuildings (app-city-buildings.js) chaqirilishidan AVVAL — qaysi
+// habit_id lar yangi ekanini aniqlaymiz. Render paytida har bino uchun klass
+// qo'shiladi. Animatsiya tugagach (CITY_BLD_ANIM_DURATION ms), habit_id ro'yxatga
+// qo'shiladi — keyingi safar tab ochilganda animatsiya YO'Q (Qoida: animatsiya
+// faqat 1-marta, har tab almashtirishda emas).
+// Qaytaradi: Set — bilan tezroq tekshirish (.has, O(1))
+function _getCitySeenBuildings() {
+  try {
+    const raw = localStorage.getItem(CITY_SEEN_BUILDINGS_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch (e) {
+    // localStorage o'chirilgan/buzilgan — bo'sh Set qaytaramiz (xavfsiz fallback)
+    return new Set();
+  }
+}
+
+// Bir habit_id ni "ko'rilgan" deb belgilash (animatsiya tugagach chaqiriladi).
+// Set ni Array ga aylantirib JSON saqlaymiz (5MB limit — minglab habit_id lar
+// uchun yetarli, har biri taxminan 25 belgi).
+function _markBuildingSeen(habitId) {
+  try {
+    const seen = _getCitySeenBuildings();
+    if (seen.has(habitId)) return;  // allaqachon bor — qayta yozish shart emas
+    seen.add(habitId);
+    localStorage.setItem(CITY_SEEN_BUILDINGS_KEY, JSON.stringify(Array.from(seen)));
+  } catch (e) { /* quota/disabled — jim o'tkazib yuboramiz */ }
+}
+
 // ── Zoom darajasini DOM ga qo'llash + tugmalar disabled holatini boshqarish ──
 // .city-canvas (SVG) ga transform: scale(_cityZoom). transform-origin: center
 // CSS da. Min/max chegaraga yetilganda tegishli tugma disabled bo'ladi (vizual
@@ -339,6 +378,23 @@ function renderCityGrid(container, cityData) {
   // bo'sh bo'lsa — bo'sh string (yangi user, hali bino yo'q → faqat grid).
   const apiBuildings = (cityData && Array.isArray(cityData.buildings))
     ? cityData.buildings : [];
+
+  // ── Yangi binolarni aniqlash (animatsiya uchun) ──
+  // localStorage'dagi "ko'rilgan binolar" ro'yxati bilan solishtirish. ICHida
+  // bo'lmagan har bir habit_id YANGI hisoblanadi → renderCityBuildings()
+  // .city-bld--new klassini qo'shadi → CSS @keyframes pastdan ko'tariladi.
+  // window._cityNewBuildingIds — global (app-city-buildings.js bir xil scope'da
+  // ishlamaydi, har fayl alohida yuklanadi — window orqali ulashish — Qoida #13).
+  // _markBuildingSeen() animatsiya tugagach (setTimeout pastda) chaqiriladi.
+  const seenSet = _getCitySeenBuildings();
+  const newIds = new Set();
+  for (const b of apiBuildings) {
+    if (b && b.habit_id != null && !seenSet.has(b.habit_id)) {
+      newIds.add(b.habit_id);
+    }
+  }
+  window._cityNewBuildingIds = newIds;  // renderCityBuildings shu yerdan o'qiydi
+
   const buildingsHtml = renderCityBuildings(apiBuildings);
 
   container.innerHTML = `
@@ -377,6 +433,22 @@ function renderCityGrid(container, cityData) {
   // applyCityZoom — _cityZoom global state (boshqa tab'dan qaytganda saqlangan).
   _initCityPinch(container);
   applyCityZoom();
+
+  // ── Yangi bino animatsiyasi tugagach: "ko'rilgan" deb belgilash + klassni
+  //    DOM'dan olib tashlash. Sabab: agar klass qolib ketsa, transform: scale()
+  //    qiymati `.city-bld--new { animation }` bilan kelajakda boshqa transform'larni
+  //    (drag paytida ghost yoki hover effekti) buzishi mumkin. Animatsiya tugagach
+  //    klass kerak emas — toza DOM. (Qoida #11 — tozalaydigan joy ishlayaptimi.)
+  if (newIds.size > 0) {
+    setTimeout(() => {
+      for (const id of newIds) {
+        _markBuildingSeen(id);
+        // DOM'dan klassni olib tashlash (agar bino hali ham SVG'da bo'lsa)
+        const el = document.querySelector(`.city-bld[data-habit-id="${id}"]`);
+        if (el) el.classList.remove('city-bld--new');
+      }
+    }, CITY_BLD_ANIM_DURATION + 50);  // +50ms — animatsiya to'liq tugaganiga ishonch
+  }
 }
 
 // ════════════════════════════════════════════════

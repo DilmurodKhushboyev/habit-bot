@@ -337,3 +337,40 @@ body.dark .city-bld-label {
   will-change: transform;        /* GPU compositing — mobil silliq zoom */
 }
 
+/* ════════════════════════════════════════════════
+   5-QISM: YANGI BINO ANIMATSIYASI (C3.5e — yangi)
+   ════════════════════════════════════════════════
+   Vazifa: yangi bino paydo bo'lganda chiroyli vizual moment (dopamin mukofoti).
+   Foydalanuvchi odat qo'shdi → tasdiqladi → shaharga keldi → bino pastdan
+   spring effekti bilan ko'tariladi.
+
+   QARORLAR (Qoida #21):
+   - Faqat YANGI binolar uchun (.city-bld--new klassi app-city-buildings.js da
+     window._cityNewBuildingIds Set asosida qo'shiladi). Eski binolar — klasssiz,
+     darhol joyida (har tab almashinishida animatsiya YO'Q — Qoida: 1 marta only).
+   - transform-origin: center bottom — bino PASTKI markaziga nisbatan scale
+     (yer ostidan ko'tarilish illuziyasi). Default "center center" bo'lsa, bino
+     joyida kichrayib-kattalashib qolardi — tabiiy emas.
+   - cubic-bezier(.34,1.56,.64,1) — spring kurva. Oxirida 6% sakrab keyin
+     tinchlanadi (iOS Apple stili). Hay Day, Monument Valley, Linear app
+     barchasi shu kurvani ishlatadi.
+   - animation-fill-mode: backwards — animatsiya boshlanmasidan oldin (delay
+     paytida) ham boshlang'ich holatda turadi (yumshoq kirish).
+   - .city-bld svg <g> elementi — transform GPU compositing'ga uchaydi
+     (will-change kerak EMAS — animatsiya 500ms ichida tugaydi, ortiqcha xotira). */
+
+@keyframes cityBldRise {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.city-bld--new {
+  animation: cityBldRise 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transform-origin: center bottom;
+}

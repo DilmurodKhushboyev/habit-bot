@@ -151,7 +151,14 @@ function cityBuildingSVG(type, progress, cx, cy, habitId, habitName) {
   // 1. SOLID kub (qurilgan qism) — pastdan hSolid balandlikgacha
   const solidFaces = cityCubeFaces(cx, cy, bw, bh, hSolid);
 
-  let svg = `<g class="city-bld" data-type="${type}" data-stage="${stage}" data-habit-id="${habitId}">`;
+  // "Yangi bino" animatsiya klassi (app-city.js da localStorage solishtirish bilan
+  // aniqlanadi va window._cityNewBuildingIds Set'iga yoziladi). Yangi bo'lsa
+  // .city-bld--new qo'shiladi → CSS @keyframes pastdan ko'tariladi.
+  // Eski binolar (allaqachon ko'rilgan) — klasssiz → darhol joyida (animation YO'Q).
+  const isNew = (window._cityNewBuildingIds && window._cityNewBuildingIds.has(habitId));
+  const newClass = isNew ? ' city-bld--new' : '';
+
+  let svg = `<g class="city-bld${newClass}" data-type="${type}" data-stage="${stage}" data-habit-id="${habitId}">`;
   svg += `<polygon class="city-bld-left"  points="${solidFaces.leftFace}"/>`;
   svg += `<polygon class="city-bld-right" points="${solidFaces.rightFace}"/>`;
   svg += `<polygon class="city-bld-top"   points="${solidFaces.topFace}"/>`;
