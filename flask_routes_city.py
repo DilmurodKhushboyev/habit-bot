@@ -30,7 +30,7 @@ from config import (
 )
 from database import (
     load_user, save_user, init_city_for_user,
-    get_user_city, add_points_history, _today_uz5_str,
+    get_user_city, add_points_history,
 )
 from city_logic import (
     create_building, change_building_type, delete_building_for_habit,
@@ -189,25 +189,16 @@ def register_city_routes(app):
         # habit_name: bino ustida label ko'rsatish uchun (qaysi bino qaysi
         # odatniki). habit_id → name lug'ati u["habits"] dan tuziladi.
         # Odat o'chirilgan bo'lsa (orfan bino) — bo'sh string.
-        # C12 (yangilangan): done_today — "bugun bajarildi" indikatori (bino tagida ✓).
-        # MANBAI: history[today]["habits"][habit_id] truthy bo'lsa true.
-        # Bitta haqiqat manbai (Qoida #11) — habit checkin/undo doim history'ni
-        # yangilaydi, demak undo bilan ham darhol sinxron. Oldingi yondashuv
-        # (city.buildings[].last_done_date) undo'da yangilanmagani bug edi.
         habit_names = {
             str(h.get("id")): h.get("name", "")
             for h in u.get("habits", [])
         }
-        today_str = _today_uz5_str()
-        today_habits = (u.get("history") or {}).get(today_str, {}).get("habits", {})
         buildings = []
         for b in city.get("buildings", []):
-            habit_id_str = str(b.get("habit_id"))
             buildings.append({
                 **b,
                 "stage": get_building_stage(b.get("progress", 0)),
-                "habit_name": habit_names.get(habit_id_str, ""),
-                "done_today": bool(today_habits.get(habit_id_str)),
+                "habit_name": habit_names.get(str(b.get("habit_id")), ""),
             })
 
         return jsonify({
