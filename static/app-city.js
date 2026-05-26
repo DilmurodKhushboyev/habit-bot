@@ -166,6 +166,8 @@ function cityZoomIn() {
   if (_cityZoom >= CITY_ZOOM_MAX - 1e-6) return;
   _cityZoom = Math.min(CITY_ZOOM_MAX, _cityZoom + CITY_ZOOM_STEP);
   applyCityZoom();
+  // Tooltip ochiq bo'lsa yopiladi (zoom paytida bino ekranda joyini o'zgartiradi)
+  if (typeof _hideCityTooltip === 'function' && _cityActiveTooltip) _hideCityTooltip();
   try {
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
@@ -176,6 +178,7 @@ function cityZoomOut() {
   if (_cityZoom <= CITY_ZOOM_MIN + 1e-6) return;
   _cityZoom = Math.max(CITY_ZOOM_MIN, _cityZoom - CITY_ZOOM_STEP);
   applyCityZoom();
+  if (typeof _hideCityTooltip === 'function' && _cityActiveTooltip) _hideCityTooltip();
   try {
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
@@ -192,6 +195,7 @@ function cityZoomReset() {
   if (Math.abs(_cityZoom - CITY_ZOOM_DEFAULT) < 1e-6) return;  // allaqachon 1.0x da
   _cityZoom = CITY_ZOOM_DEFAULT;
   applyCityZoom();
+  if (typeof _hideCityTooltip === 'function' && _cityActiveTooltip) _hideCityTooltip();
   try {
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
@@ -226,6 +230,8 @@ function _initCityPinch(container) {
     if (!e.touches || e.touches.length !== 2) return;
     const dist = _pinchDist(e.touches[0], e.touches[1]);
     if (dist < CITY_PINCH_MIN_DIST) return;  // juda yaqin — shovqin
+    // Tooltip ochiq bo'lsa yopiladi (pinch paytida bino joyini o'zgartiradi)
+    if (typeof _hideCityTooltip === 'function' && _cityActiveTooltip) _hideCityTooltip();
     // Agar app-city-move.js da drag faol bo'lsa (long-press 600ms o'tgan) — bekor qilamiz
     try {
       svg.dispatchEvent(new TouchEvent('touchcancel', { bubbles: true, cancelable: true }));
@@ -268,6 +274,183 @@ function _initCityPinch(container) {
   wrap.addEventListener('touchmove',   onPinchMove,  { passive: false, capture: true });
   wrap.addEventListener('touchend',    onPinchEnd,   { passive: true,  capture: true });
   wrap.addEventListener('touchcancel', onPinchEnd,   { passive: true,  capture: true });
+}
+
+// ── BINO TAP → INFO TOOLTIP (C6 — yangi) ──
+// Foydalanuvchi binoga qisqa tap qilsa — kichik tooltip ochiladi (nom, progress,
+// foiz). DRAG bilan to'qnashuv yo'q — sabab: browser drag paytida (touchmove
+// preventDefault chaqiriladi app-city-move.js da) `click` event'ni emit qilmaydi.
+// Demak `click` da tooltip ochish DRAG holatida ishlamaydi — avtomatik xavfsiz
+// (Qoida #09 — mavjud handlerga tegmaymiz).
+//
+// Tooltip — HTML overlay (SVG <text> emas), position:fixed → zoom transform
+// ta'sir qilmaydi, har doim bir o'lchamda turadi.
+// Yopilish: boshqa joyga click | 4s timeout | yangi bino tap.
+
+const CITY_TOOLTIP_TIMEOUT = 4000;  // ms — avtomatik yopilish
+let _cityActiveTooltip = null;      // {el, habitId, timerId, gridG}
+
+// Tooltip yopish (har joydan chaqirilishi mumkin — toza universal)
+function _hideCityTooltip() {
+  if (!_cityActiveTooltip) return;
+  const t = _cityActiveTooltip;
+  _cityActiveTooltip = null;  // darhol holatdan o'chiramiz (ikki marta chaqirilmasin)
+  if (t.timerId) clearTimeout(t.timerId);
+  if (t.gridG) t.gridG.classList.remove('city-bld--selected');
+  if (t.el && t.el.parentNode) {
+    // CSS hide animatsiya (150ms) → keyin DOM dan olib tashlash
+    t.el.classList.add('city-bld-tooltip--hiding');
+    setTimeout(() => {
+      if (t.el && t.el.parentNode) t.el.parentNode.removeChild(t.el);
+    }, 160);
+  }
+}
+
+// Tooltip ko'rsatish — gridG (SVG <g>) va building (api ma'lumotidan)
+function _showCityTooltip(gridG, building) {
+  // Avval mavjud tooltip yopiladi (yangi bino bosildi)
+  _hideCityTooltip();
+
+  // Ekran koordinata: binoning SVG ichidagi joyini clientRect'ga aylantiramiz.
+  // getBoundingClientRect() <g> ning oxirgi vizual chegarasini qaytaradi
+  // (zoom transform ham hisobga olinadi — natija to'g'ri ekran piksellari).
+  const rect = gridG.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;  // bino vizual jihatdan yo'q
+
+  // Progress hisoblash (defensiv — null/undefined himoyasi)
+  const progress = Math.max(0, Math.min(66, building.progress || 0));
+  const percent  = Math.round((progress / 66) * 100);
+  const name     = building.habit_name || '';
+
+  // Tarjima kalitlari (S funksiya — strings.js)
+  const kunWord    = (typeof S === 'function') ? S('city', 'kun_dan') : 'kun';
+  const tayyorWord = (typeof S === 'function') ? S('city', 'tayyor') : 'tayyor';
+
+  // XSS himoya — name foydalanuvchi yozgan matn (xavfli HTML bo'lishi mumkin)
+  const safeName = String(name)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Tooltip DOM yaratish
+  const el = document.createElement('div');
+  el.className = 'city-bld-tooltip';
+  el.innerHTML = `
+    <div class="city-bld-tooltip-title">${safeName}</div>
+    <div class="city-bld-tooltip-bar">
+      <div class="city-bld-tooltip-bar-fill" style="width:${percent}%"></div>
+    </div>
+    <div class="city-bld-tooltip-stats">${progress} / 66 ${kunWord}  ·  ${percent}% ${tayyorWord}</div>
+  `;
+
+  // Joylashuv: bino tepasida, markazlashtirilgan. Avval body'ga qo'shamiz
+  // (offsetWidth/Height olish uchun), keyin pozitsiya beramiz.
+  document.body.appendChild(el);
+  const tw = el.offsetWidth;
+  const th = el.offsetHeight;
+
+  // Bino tepa-markaz koordinatasi
+  const buildingCenterX = rect.left + rect.width / 2;
+  const buildingTopY    = rect.top;
+
+  // Tooltip joylashuvi: bino tepasidan 14px yuqorida (uchburchak uchun bo'sh joy)
+  let left = buildingCenterX - tw / 2;
+  let top  = buildingTopY - th - 14;
+
+  // Ekran chegarasi himoyasi (chetdan 8px chekinish)
+  const margin = 8;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  if (left < margin) left = margin;
+  if (left + tw > vw - margin) left = vw - tw - margin;
+  // Agar yuqorida joy yo'q bo'lsa (top < safe-area) — binoning PASTIDA ko'rsatamiz
+  if (top < 70) {  // header taxminan 70px — undan ostida bo'lmasin
+    top = rect.bottom + 14;
+  }
+
+  el.style.left = left + 'px';
+  el.style.top  = top + 'px';
+
+  // Bino "tanlangan" vizual holati
+  gridG.classList.add('city-bld--selected');
+
+  // Avtomatik yopilish (4s)
+  const timerId = setTimeout(_hideCityTooltip, CITY_TOOLTIP_TIMEOUT);
+
+  // Holat saqlash
+  _cityActiveTooltip = {
+    el,
+    habitId: building.habit_id,
+    timerId,
+    gridG,
+  };
+
+  // Haptic — selection feedback (yengil)
+  try {
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.selectionChanged();
+    }
+  } catch (e) { /* ixtiyoriy */ }
+}
+
+// Tap handler ulash — renderCityGrid oxirida chaqiriladi
+function _initCityTap(container) {
+  if (!container) return;
+  const svg = container.querySelector('.city-canvas');
+  if (!svg) return;
+
+  // click event — browser drag paytida emit qilmaydi (touchmove preventDefault
+  // tufayli) → drag bilan to'qnashuv tabiiy ravishda yo'q (Qoida #09).
+  svg.addEventListener('click', function (e) {
+    const g = e.target.closest('.city-bld');
+    if (!g) {
+      // Bino tashqarisida click — agar tooltip ochiq bo'lsa, yopamiz
+      if (_cityActiveTooltip) _hideCityTooltip();
+      return;
+    }
+    const habitId = g.getAttribute('data-habit-id');
+    if (!habitId) return;
+
+    // Bir xil binoni qayta tap — tooltip yopiladi (toggle xulq — UX standart)
+    if (_cityActiveTooltip && String(_cityActiveTooltip.habitId) === String(habitId)) {
+      _hideCityTooltip();
+      return;
+    }
+
+    // _cityData keshidan bino ma'lumotini topish (app-city-move.js bilan bir xil pattern)
+    let building = null;
+    if (_cityData && Array.isArray(_cityData.buildings)) {
+      for (const b of _cityData.buildings) {
+        if (String(b.habit_id) === String(habitId)) { building = b; break; }
+      }
+    }
+    if (!building) return;
+    _showCityTooltip(g, building);
+  });
+
+  // Boshqa joylarda click → tooltip yopilsin (document level — body bosish)
+  // Faqat 1 marta document'ga ulaymiz (har renderCityGrid emas — leak xavfi)
+  if (!window._cityTooltipOutsideHandlerInstalled) {
+    document.addEventListener('click', function (e) {
+      if (!_cityActiveTooltip) return;
+      // Agar click .city-canvas ichida bo'lsa — yuqoridagi svg handler hal qiladi
+      // (toggle yoki yangi bino). Bu yerda faqat tashqaridagi click'lar uchun.
+      if (e.target.closest('.city-canvas')) return;
+      // Tooltip ustidagi click'da ham yopamiz (pointer-events:none allaqachon,
+      // lekin defensiv tekshiruv)
+      if (e.target.closest('.city-bld-tooltip')) return;
+      _hideCityTooltip();
+    }, true);  // capture — boshqa handlerlar oldin
+    window._cityTooltipOutsideHandlerInstalled = true;
+  }
+
+  // Scroll yoki zoom paytida tooltip yopiladi (bino joyi ekranda o'zgaradi)
+  const wrap = container.querySelector('.city-canvas-wrap');
+  if (wrap) {
+    wrap.addEventListener('scroll', function () {
+      if (_cityActiveTooltip) _hideCityTooltip();
+    }, { passive: true });
+  }
 }
 
 // ── API DATA (C4) ──
@@ -433,6 +616,10 @@ function renderCityGrid(container, cityData) {
   // applyCityZoom — _cityZoom global state (boshqa tab'dan qaytganda saqlangan).
   _initCityPinch(container);
   applyCityZoom();
+
+  // TAP TOOLTIP (yangi C6): bino qisqa bosilsa info pop-up. Drag va pinch bilan
+  // to'qnashuv yo'q — browser drag/pinch paytida click event'ni emit qilmaydi.
+  _initCityTap(container);
 
   // ── Yangi bino animatsiyasi tugagach: "ko'rilgan" deb belgilash + klassni
   //    DOM'dan olib tashlash. Sabab: agar klass qolib ketsa, transform: scale()
