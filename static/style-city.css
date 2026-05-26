@@ -337,3 +337,214 @@ body.dark .city-bld-label {
   will-change: transform;        /* GPU compositing — mobil silliq zoom */
 }
 
+/* ════════════════════════════════════════════════
+   5-QISM: YANGI BINO ANIMATSIYASI (C3.5e — yangi)
+   ════════════════════════════════════════════════
+   Vazifa: yangi bino paydo bo'lganda chiroyli vizual moment (dopamin mukofoti).
+   Foydalanuvchi odat qo'shdi → tasdiqladi → shaharga keldi → bino pastdan
+   spring effekti bilan ko'tariladi.
+
+   QARORLAR (Qoida #21):
+   - Faqat YANGI binolar uchun (.city-bld--new klassi app-city-buildings.js da
+     window._cityNewBuildingIds Set asosida qo'shiladi). Eski binolar — klasssiz,
+     darhol joyida (har tab almashinishida animatsiya YO'Q — Qoida: 1 marta only).
+   - transform-origin: center bottom — bino PASTKI markaziga nisbatan scale
+     (yer ostidan ko'tarilish illuziyasi). Default "center center" bo'lsa, bino
+     joyida kichrayib-kattalashib qolardi — tabiiy emas.
+   - cubic-bezier(.34,1.56,.64,1) — spring kurva. Oxirida 6% sakrab keyin
+     tinchlanadi (iOS Apple stili). Hay Day, Monument Valley, Linear app
+     barchasi shu kurvani ishlatadi.
+   - animation-fill-mode: backwards — animatsiya boshlanmasidan oldin (delay
+     paytida) ham boshlang'ich holatda turadi (yumshoq kirish).
+   - .city-bld svg <g> elementi — transform GPU compositing'ga uchaydi
+     (will-change kerak EMAS — animatsiya 500ms ichida tugaydi, ortiqcha xotira). */
+
+@keyframes cityBldRise {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.city-bld--new {
+  animation: cityBldRise 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transform-origin: center bottom;
+}
+/* ════════════════════════════════════════════════
+   6-QISM: BINO INFO TOOLTIP (C6 — yangi)
+   ════════════════════════════════════════════════
+   Vazifa: bino tap (qisqa bosish) → tooltip pop up. Foydalanuvchi binoning
+   joriy progress'ini ko'radi (nom, X/66 kun, foiz, progress bar).
+
+   QARORLAR (Qoida #21):
+   - HTML overlay (SVG ichida emas) — sabab: <text> SVG'da matn responsive
+     emas (rasm masshtab bilan kattalashadi/kichrayadi). HTML — neumorphic
+     fon, smooth radius, mavjud CSS o'zgaruvchilar (--card, --sh-out).
+   - position: fixed — scroll va zoom transform ta'sir qilmasin (tooltip har
+     doim bir o'lchamda turadi, foydalanuvchi binoning hozirgi ekran joyiga
+     qarab ko'radi).
+   - z-index: 60 — bottom-nav (~100) ostida, lekin zoom controls (50) ustida.
+   - transform-origin: bottom center — pastdan ko'tarilish (bino tepasidan
+     chiqyaptidek vizual hissi).
+   - pointer-events: none — tooltip o'zi tap'ni ushlamasin (boshqa joyga tap
+     yopilishi uchun). Faqat ".city-bld-tooltip-close" tugma pointer-events
+     bor (lekin biz X tugma qo'ymaymiz — auto-yopilish + boshqa joyga tap).
+   - Animatsiya: 200ms ease-out (bino animatsiyasi 500ms dan tezroq — boshqa
+     UI element, vizual ravishda kichikroq harakat). */
+
+.city-bld-tooltip {
+  position: fixed;
+  z-index: 60;
+  background: var(--card);
+  border-radius: 14px;
+  box-shadow: var(--sh-out);
+  padding: 12px 16px;
+  min-width: 160px;
+  max-width: 240px;
+  pointer-events: none;          /* tap o'tib boshqa joyga tushsin */
+  animation: cityTooltipShow 200ms ease-out both;
+  /* Yo'naltirgich uchburchak (poyga) — :after orqali chiziladi (joylashuvga qarab) */
+}
+
+/* Animatsiya transform-origin: tooltip qaysi tomondan binoga ulanganiga qarab.
+   Bu animatsiya tooltip "binodan o'sib chiqayotgandek" tabiiy ko'rinadi. */
+.city-bld-tooltip[data-placement="top"]    { transform-origin: bottom center; }
+.city-bld-tooltip[data-placement="bottom"] { transform-origin: top center; }
+.city-bld-tooltip[data-placement="left"]   { transform-origin: right center; }
+.city-bld-tooltip[data-placement="right"]  { transform-origin: left center; }
+
+@keyframes cityTooltipShow {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.92); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Yopilish animatsiyasi (JS bilan klass qo'shilganda) */
+.city-bld-tooltip.city-bld-tooltip--hiding {
+  animation: cityTooltipHide 150ms ease-in both;
+}
+@keyframes cityTooltipHide {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(4px) scale(0.96); }
+}
+
+/* ── Uchburchak (yo'naltirgich) — har 4 ta placement uchun ──
+   QARORLAR (Qoida #21):
+   - Bitta umumiy ::after bazasi, keyin har data-placement uchun pozitsiya overrride
+   - 45° rotate qilingan kvadrat — uchburchak ko'rinadi (tg.svg yoki clip-path
+     o'rniga sodda transform — eski browserlarda ham ishlaydi)
+   - box-shadow — faqat ko'rinadigan tomonda (binoga qaragan tomonda emas),
+     aks holda uchburchak ichida ikkilangan soya bo'lib ko'rinadi
+   - 12×12px o'lcham — barmoq tegmaydi, vizual jihatdan "kichik strelka" */
+.city-bld-tooltip::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--card);
+}
+
+/* TOP (default) — tooltip BINO USTIDA, uchburchak PASTDA, binoga ↓ ko'rsatadi.
+   --arrow-x: JS hisoblaydi (bino markazi X - tooltip chap X). Clamp qilingan
+   tooltip uchun uchburchak bino markaziga ergashadi. Fallback 50% — markaz. */
+.city-bld-tooltip[data-placement="top"]::after {
+  bottom: -6px;
+  left: var(--arrow-x, 50%);
+  transform: translateX(-50%) rotate(45deg);
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* BOTTOM — tooltip BINO PASTIDA, uchburchak YUQORIDA, binoga ↑ ko'rsatadi */
+.city-bld-tooltip[data-placement="bottom"]::after {
+  top: -6px;
+  left: var(--arrow-x, 50%);
+  transform: translateX(-50%) rotate(45deg);
+  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* LEFT — tooltip BINO CHAPIDA, uchburchak O'NGDA, binoga → ko'rsatadi.
+   --arrow-y: JS hisoblaydi (bino markazi Y - tooltip yuqori Y). */
+.city-bld-tooltip[data-placement="left"]::after {
+  right: -6px;
+  top: var(--arrow-y, 50%);
+  transform: translateY(-50%) rotate(45deg);
+  box-shadow: 2px -2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* RIGHT — tooltip BINO O'NGIDA, uchburchak CHAPDA, binoga ← ko'rsatadi */
+.city-bld-tooltip[data-placement="right"]::after {
+  left: -6px;
+  top: var(--arrow-y, 50%);
+  transform: translateY(-50%) rotate(45deg);
+  box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.city-bld-tooltip-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+  /* Uzun nomlar ham to'liq ko'rinishi (qisqartirilmasin — tooltip max-width tutadi) */
+  word-break: break-word;
+}
+
+.city-bld-tooltip-bar {
+  height: 4px;
+  background: var(--bg);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.city-bld-tooltip-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  /* JS dinamik width: ${percent}% — progress bar oqimda yangilanadi */
+  transition: width 0.3s ease;
+}
+
+.city-bld-tooltip-stats {
+  font-size: 12px;
+  color: var(--sub);
+  font-family: 'DM Mono', 'DM Sans', monospace;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Bino "tanlangan" (tooltip ochiq) — biroz yorqinroq ko'rinsin */
+.city-bld--selected .city-bld-top,
+.city-bld--selected .city-bld-left,
+.city-bld--selected .city-bld-right {
+  filter: brightness(1.06);
+  transition: filter 0.18s ease;
+}
+/* ════════════════════════════════════════════════
+   7-QISM: MARKAZGA QAYTISH TUGMASI (C7 — yangi)
+   ════════════════════════════════════════════════
+   Vazifa: bitta bosish bilan zoom 1.0x ga + scroll markazga. Foydalanuvchi
+   pinch/scroll bilan adashib ketsa, "bosh sahifa"ga qaytadi (Google Maps,
+   Hay Day patterni).
+
+   QARORLAR (Qoida #21):
+   - Alohida konteyner (.city-recenter-controls) — zoom guruhidan vizual
+     ajralib turadi (funksiya farqi: zoom emas, balki to'liq reset).
+   - Joylashuv: zoom guruhi USTIDA (gap bilan), bottom-nav ustida.
+     Sabab: zoom tugmalar tez-tez ishlatiladi (asosiy), recenter — ehtiyot
+     uchun (kamroq). Ergonomika: tez-tez ishlatiladigan tugma barmoqqa
+     yaqinroq (pastroq).
+   - .city-zoom-btn klassini qayta ishlatamiz (DRY) — bir xil neumorphic
+     uslub, foydalanuvchi UI'ni darhol tushunadi. */
+
+.city-recenter-controls {
+  position: fixed;
+  right: 16px;
+  /* Zoom guruhi taxminan 128px balandlik (44+8+28+8+44) + bottom-nav 96px + gap 12px */
+  bottom: calc(96px + 128px + 16px + var(--tg-safe-bottom, 0px));
+  z-index: 50;
+  pointer-events: auto;
+}

@@ -10,8 +10,8 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=615">
-<link rel="stylesheet" href="style-city.css?v=19">
-<script src="strings.js?v=564"></script>
+<link rel="stylesheet" href="style-city.css?v=23">
+<script src="strings.js?v=566"></script>
 <script src="app-core.js?v=568"></script>
 </head>
 <body>
@@ -104,6 +104,20 @@
   <!-- Zoom controls — #city-content TASHQARISIDA, chunki loadCity() har safar
        #city-content.innerHTML ni qayta yozadi va tugmalarni o'chirib yuborardi.
        app-city.js: cityZoomIn/cityZoomOut handler'lari + pinch-zoom mantiqi. -->
+  <!-- Markazga qaytish tugmasi (yangi C7) — zoom controls USTIDA.
+       Bitta bosish bilan zoom 1.0x + scroll grid markaziga. app-city.js: cityRecenter() -->
+  <div class="city-recenter-controls" id="city-recenter-controls">
+    <button class="city-zoom-btn" id="city-recenter" type="button"
+            onclick="cityRecenter()" aria-label="Recenter">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <!-- Crosshair/target ikonkasi — universal "markazga qaytish" simboli
+             (Google Maps, Apple Maps, Uber). 4 ta chiziq + markazda nuqta. -->
+        <circle cx="12" cy="12" r="3" fill="currentColor"/>
+        <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/>
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
   <div class="city-zoom-controls" id="city-zoom-controls">
     <button class="city-zoom-btn" id="city-zoom-in" type="button"
             onclick="cityZoomIn()" aria-label="Zoom in">
@@ -363,8 +377,8 @@
 <script src="app-habits.js?v=562"></script>
 <script src="app-social.js?v=557"></script>
 <script src="app-reminders.js?v=562"></script>
-<script src="app-city.js?v=27"></script>
-<script src="app-city-buildings.js?v=15"></script>
+<script src="app-city.js?v=31"></script>
+<script src="app-city-buildings.js?v=16"></script>
 <script src="app-city-move.js?v=9"></script>
 </body>
 </html>

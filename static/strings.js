@@ -11,7 +11,10 @@ const STRINGS = {
       move_failed:'Bu joyga qo\u2018yib bo\u2018lmadi',
       zoom_in:'Yaqinlashtirish',
       zoom_out:'Uzoqlashtirish',
-      zoom_reset:'Asl holatga qaytarish'
+      zoom_reset:'Asl holatga qaytarish',
+      kun_dan:'kun',
+      tayyor:'tayyor',
+      recenter:'Markazga qaytish'
     },
     profile: {
       ball:'Ball', streak:'Streak', done:'Bajarildi', rekord:'rekord',
@@ -423,7 +426,10 @@ const STRINGS = {
       move_failed:'Сюда нельзя поставить',
       zoom_in:'Приблизить',
       zoom_out:'Отдалить',
-      zoom_reset:'Сбросить масштаб'
+      zoom_reset:'Сбросить масштаб',
+      kun_dan:'дн.',
+      tayyor:'готово',
+      recenter:'К центру'
     },
     profile: {
       ball:'Очки', streak:'Стрик', done:'Выполнено', rekord:'рекорд',
@@ -835,7 +841,10 @@ const STRINGS = {
       move_failed:'Can\u2018t place here',
       zoom_in:'Zoom in',
       zoom_out:'Zoom out',
-      zoom_reset:'Reset zoom'
+      zoom_reset:'Reset zoom',
+      kun_dan:'days',
+      tayyor:'complete',
+      recenter:'Recenter'
     },
     profile: {
       ball:'Points', streak:'Streak', done:'Done', rekord:'record',
