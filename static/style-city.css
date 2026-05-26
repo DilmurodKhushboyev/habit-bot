@@ -548,3 +548,47 @@ body.dark .city-bld-label {
   z-index: 50;
   pointer-events: auto;
 }
+/* ════════════════════════════════════════════════
+   8-QISM: "BUGUN BAJARILDI" KO'RSATKICHI (C12 — yangi)
+   ════════════════════════════════════════════════
+   Vazifa: bugun tasdiqlangan binolar tagida kichik yashil aylanada oq ✓.
+   Foydalanuvchi shaharga qaragandayoq biladi: "bugun qaysi odatlarimni
+   bajardim, qaysilarini esdan chiqardim". Habit tracker'lar (Streaks,
+   Habitica) standart UX patterni.
+
+   QARORLAR (Qoida #21):
+   - SVG <g> ichida render (CSS HTML overlay emas) — har bino o'z izometrik
+     joyiga ega, SVG <g> transform bilan zoom va drag bilan birga harakat
+     qiladi. CSS HTML overlay esa har bino uchun alohida pozitsiya hisoblash
+     kerak edi (mavjud SVG mantig'iga zid).
+   - .city-bld-done-mark — yashil to'la aylana (var(--accent) #4CAF7D), ichida
+     oq tick ✓. Soya yo'q — kichik element, halqa ortiqcha shovqin.
+   - Animatsiya yo'q (hozircha) — har shahar ochilishida ✓ "sakrash"
+     foydalanuvchi uchun bezovta bo'lardi. Kelajakda yangi tasdiqlash
+     paytida bir martalik pop animation qo'shish mumkin (alohida sessiya). */
+
+.city-bld-done-circle {
+  fill: var(--accent);  /* yashil #4CAF7D — brand rang */
+}
+
+.city-bld-done-check {
+  fill: none;
+  stroke: #FFFFFF;       /* oq tick — yashil aylanada kontrast */
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Dark mode'da yashil biroz to'qroq fondga to'g'ri kelishi uchun */
+body.dark .city-bld-done-circle {
+  fill: #3F9D6E;  /* var(--accent) ning biroz toqroq varianti */
+}
+
+/* Tooltip ichida "Bugun bajarildi" qatori (C12 — yangi, ixtiyoriy ko'rsatuv) */
+.city-bld-tooltip-done {
+  font-size: 12px;
+  color: var(--accent);          /* yashil — pozitiv feedback */
+  font-weight: 600;
+  margin-top: 6px;
+  line-height: 1.3;
+}

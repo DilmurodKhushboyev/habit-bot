@@ -142,7 +142,7 @@ function cityLabelText(raw) {
 //   ta'sir qilmaydi — faqat atribut; kelajakda kerak bo'lishi mumkin).
 //
 // Qaytaradi: <g> ichida solid 3 polygon + (agar progress<66) glass + label <text>.
-function cityBuildingSVG(type, progress, cx, cy, habitId, habitName) {
+function cityBuildingSVG(type, progress, cx, cy, habitId, habitName, doneToday) {
   const bw = CITY_BLD_BASE_W / 2;          // asos yarim kengligi (barcha bino bir xil)
   const bh = CITY_BLD_BASE_H / 2;          // asos yarim balandligi (barcha bino bir xil)
   const hSolid = cityBuildingHeight(progress);  // solid kub balandligi (UZLUKSIZ — C3.5b)
@@ -197,6 +197,26 @@ function cityBuildingSVG(type, progress, cx, cy, habitId, habitName) {
     svg += `<text class="city-bld-label" x="${cx}" y="${labelY}" text-anchor="middle">${label}</text>`;
   }
 
+  // 4. "BUGUN BAJARILDI" KO'RSATKICHI (C12 — yangi)
+  // Bino tagidagi rombning eng pastki cho'qqisida (cx, cy + bh) — yashil aylana
+  // ichida oq ✓. doneToday=true bo'lsa chiziladi (backend last_done_date == bugun).
+  // Pozitsiya: aylana markazi rombning pastki cho'qqisidan biroz pastroqda
+  // (cy + bh + 8) — bino bilan kesishmaslik uchun. Radius 7px — kichik, vizual
+  // indikator (interaktiv emas, faqat ko'rsatkich).
+  if (doneToday) {
+    const markCx = cx;
+    const markCy = cy + bh + 8;
+    const r = 7;
+    // Aylana
+    svg += `<circle class="city-bld-done-circle" cx="${markCx}" cy="${markCy}" r="${r}"/>`;
+    // Tick ✓ — 3 nuqtadan iborat egri chiziq (pastdan o'ngga, keyin o'ng-yuqoriga)
+    // Aylana markaziga nisbatan: chap-yuqori (-3.5, -0.5) → pastki (-0.8, 2.2) → o'ng-yuqori (3.2, -2.4)
+    const p1 = `${markCx - 3.5},${markCy - 0.5}`;
+    const p2 = `${markCx - 0.8},${markCy + 2.2}`;
+    const p3 = `${markCx + 3.2},${markCy - 2.4}`;
+    svg += `<polyline class="city-bld-done-check" points="${p1} ${p2} ${p3}"/>`;
+  }
+
   svg += `</g>`;
   return svg;
 }
@@ -227,7 +247,9 @@ function renderCityBuildings(buildings) {
     // C3.5c: b.habit_name (API javobida) — bino ustidagi label.
     // b.habit_id ham uzatiladi — data-habit-id atributi orqali bino bilan
     //   interaktivlik (long-press ko'chirish) habit_id ni topadi.
-    html += cityBuildingSVG(b.type, b.progress, cx, cy, b.habit_id, b.habit_name);
+    // C12: b.done_today (API javobida) — backend last_done_date == bugun bo'lsa
+    //   true. Bino tagida yashil aylanada oq ✓ chiziladi (cityBuildingSVG ichida).
+    html += cityBuildingSVG(b.type, b.progress, cx, cy, b.habit_id, b.habit_name, b.done_today);
   }
   return html;
 }
