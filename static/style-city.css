@@ -447,10 +447,12 @@ body.dark .city-bld-label {
   background: var(--card);
 }
 
-/* TOP (default) — tooltip BINO USTIDA, uchburchak PASTDA, binoga ↓ ko'rsatadi */
+/* TOP (default) — tooltip BINO USTIDA, uchburchak PASTDA, binoga ↓ ko'rsatadi.
+   --arrow-x: JS hisoblaydi (bino markazi X - tooltip chap X). Clamp qilingan
+   tooltip uchun uchburchak bino markaziga ergashadi. Fallback 50% — markaz. */
 .city-bld-tooltip[data-placement="top"]::after {
   bottom: -6px;
-  left: 50%;
+  left: var(--arrow-x, 50%);
   transform: translateX(-50%) rotate(45deg);
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.06);
 }
@@ -458,15 +460,16 @@ body.dark .city-bld-label {
 /* BOTTOM — tooltip BINO PASTIDA, uchburchak YUQORIDA, binoga ↑ ko'rsatadi */
 .city-bld-tooltip[data-placement="bottom"]::after {
   top: -6px;
-  left: 50%;
+  left: var(--arrow-x, 50%);
   transform: translateX(-50%) rotate(45deg);
   box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.06);
 }
 
-/* LEFT — tooltip BINO CHAPIDA, uchburchak O'NGDA, binoga → ko'rsatadi */
+/* LEFT — tooltip BINO CHAPIDA, uchburchak O'NGDA, binoga → ko'rsatadi.
+   --arrow-y: JS hisoblaydi (bino markazi Y - tooltip yuqori Y). */
 .city-bld-tooltip[data-placement="left"]::after {
   right: -6px;
-  top: 50%;
+  top: var(--arrow-y, 50%);
   transform: translateY(-50%) rotate(45deg);
   box-shadow: 2px -2px 4px rgba(0, 0, 0, 0.06);
 }
@@ -474,7 +477,7 @@ body.dark .city-bld-label {
 /* RIGHT — tooltip BINO O'NGIDA, uchburchak CHAPDA, binoga ← ko'rsatadi */
 .city-bld-tooltip[data-placement="right"]::after {
   left: -6px;
-  top: 50%;
+  top: var(--arrow-y, 50%);
   transform: translateY(-50%) rotate(45deg);
   box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.06);
 }
@@ -519,4 +522,29 @@ body.dark .city-bld-label {
 .city-bld--selected .city-bld-right {
   filter: brightness(1.06);
   transition: filter 0.18s ease;
+}
+/* ════════════════════════════════════════════════
+   7-QISM: MARKAZGA QAYTISH TUGMASI (C7 — yangi)
+   ════════════════════════════════════════════════
+   Vazifa: bitta bosish bilan zoom 1.0x ga + scroll markazga. Foydalanuvchi
+   pinch/scroll bilan adashib ketsa, "bosh sahifa"ga qaytadi (Google Maps,
+   Hay Day patterni).
+
+   QARORLAR (Qoida #21):
+   - Alohida konteyner (.city-recenter-controls) — zoom guruhidan vizual
+     ajralib turadi (funksiya farqi: zoom emas, balki to'liq reset).
+   - Joylashuv: zoom guruhi USTIDA (gap bilan), bottom-nav ustida.
+     Sabab: zoom tugmalar tez-tez ishlatiladi (asosiy), recenter — ehtiyot
+     uchun (kamroq). Ergonomika: tez-tez ishlatiladigan tugma barmoqqa
+     yaqinroq (pastroq).
+   - .city-zoom-btn klassini qayta ishlatamiz (DRY) — bir xil neumorphic
+     uslub, foydalanuvchi UI'ni darhol tushunadi. */
+
+.city-recenter-controls {
+  position: fixed;
+  right: 16px;
+  /* Zoom guruhi taxminan 128px balandlik (44+8+28+8+44) + bottom-nav 96px + gap 12px */
+  bottom: calc(96px + 128px + 16px + var(--tg-safe-bottom, 0px));
+  z-index: 50;
+  pointer-events: auto;
 }

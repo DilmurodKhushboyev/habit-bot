@@ -156,6 +156,9 @@ function applyCityZoom() {
     if (btnIn)  btnIn.setAttribute('aria-label',  S('city', 'zoom_in'));
     if (btnOut) btnOut.setAttribute('aria-label', S('city', 'zoom_out'));
     if (reset)  reset.setAttribute('aria-label',  S('city', 'zoom_reset'));
+    // C7: Recenter tugma ham shu yerda — applyCityZoom har til o'zgarganda chaqiriladi
+    const recenter = document.getElementById('city-recenter');
+    if (recenter) recenter.setAttribute('aria-label', S('city', 'recenter'));
   }
 }
 
@@ -196,6 +199,56 @@ function cityZoomReset() {
   _cityZoom = CITY_ZOOM_DEFAULT;
   applyCityZoom();
   if (typeof _hideCityTooltip === 'function' && _cityActiveTooltip) _hideCityTooltip();
+  try {
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    }
+  } catch (e) { /* haptic ixtiyoriy */ }
+}
+
+// ── Markazga qaytish (C7 — yangi) ──
+// Foydalanuvchi pinch/scroll bilan adashganda — bitta bosish bilan "bosh sahifa"ga:
+//   1. Zoom 1.0x ga qaytadi (CSS transform smooth animatsiya — .city-canvas
+//      transition: transform 0.18s ease bor)
+//   2. Scroll grid markaziga keladi (renderCityGrid'dagi auto-center mantig'i bilan AYNAN
+//      bir xil hisob — Qoida #11 izchillik: wrap.scrollWidth/2)
+//   3. Tooltip ochiq bo'lsa yopiladi (bino joyini o'zgartirdi)
+//   4. Haptic light feedback (boshqa tugmalardek)
+//
+// SMOOTH SCROLL: scrollTo({behavior: 'smooth'}) — browser native, GPU compositing.
+// iOS Safari 15.4+ va Telegram WebView qo'llab-quvvatlaydi. Eski browser'larda
+// darhol siljitadi (graceful degradation — funksiya baribir ishlaydi).
+function cityRecenter() {
+  // Tooltip yopish (zoom va scroll o'zgaradi)
+  if (typeof _hideCityTooltip === 'function' && _cityActiveTooltip) _hideCityTooltip();
+
+  // 1. Zoom 1.0x ga qaytish (agar boshqacha bo'lsa)
+  if (Math.abs(_cityZoom - CITY_ZOOM_DEFAULT) >= 1e-6) {
+    _cityZoom = CITY_ZOOM_DEFAULT;
+    applyCityZoom();
+  }
+
+  // 2. Scroll markazga (smooth)
+  // .city-canvas-wrap querySelector orqali — har render uchun yangi DOM bo'lishi mumkin,
+  // saqlangan ssilka eskirgan bo'lishi mumkin (Qoida #13 — shared state ehtiyot).
+  const wrap = document.querySelector('.city-canvas-wrap');
+  if (wrap) {
+    // scrollTo native smooth — try/catch chunki eski browser'larda behavior bo'lmasa
+    // throw qiladi (xato butun funksiyani buzmasin)
+    try {
+      wrap.scrollTo({
+        left: (wrap.scrollWidth  - wrap.clientWidth)  / 2,
+        top:  (wrap.scrollHeight - wrap.clientHeight) / 2,
+        behavior: 'smooth',
+      });
+    } catch (e) {
+      // Fallback: oddiy assignment (darhol siljiydi, lekin ishlaydi)
+      wrap.scrollLeft = (wrap.scrollWidth  - wrap.clientWidth)  / 2;
+      wrap.scrollTop  = (wrap.scrollHeight - wrap.clientHeight) / 2;
+    }
+  }
+
+  // 3. Haptic feedback
   try {
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
