@@ -596,17 +596,12 @@ async function loadCity() {
 // ── Xato holati renderi (C4) ──
 // API ishlamasa — soxta demo data KO'RSATILMAYDI (chalkash UX: "mening
 // shahrimda nega bu binolar?"). O'rniga aniq xato + "Qayta urinish" tugma.
-// Tarjima: S('msg','connection_error') — strings.js da mavjud 3 tilli kalit
-// (city.* kalitlari C7 da qo'shiladi — handoff rejasi).
+// Audit: avval lokal .city-error* CSS ishlatardi, hozir umumiy
+// renderErrorState helper'ga ko'chirildi (app-core.js, Qoida #17 markazlashtirish).
+// Barcha sahifalar bir xil xato uslubidan foydalanadi.
 function renderCityError(container) {
-  const msg = S('msg', 'connection_error');
-  container.innerHTML = `
-    <div class="city-error">
-      <div class="city-error-icon">📡</div>
-      <div class="city-error-msg">${msg}</div>
-      <button class="city-error-btn" onclick="loadCity()">↻</button>
-    </div>
-  `;
+  // container.id — etalon container; loadCity() — qayta urinish funksiyasi
+  renderErrorState(container.id, () => loadCity());
 }
 
 // ── Statik isometric grid renderi (C2.1) + binolar (C4: API data) ──

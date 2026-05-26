@@ -464,6 +464,30 @@ async function apiFetch(endpoint, options = {}) {
   }
 }
 
+// ── XATO HOLATI RENDERI (umumiy helper) ──
+// Markaziy helper — har sahifa loader (loadToday, loadRating, loadShop, ...)
+// xato ushlasa shu funksiyani chaqiradi. Vizual etalon: app-city.js renderCityError
+// (📡 ikonka + "Serverga ulanib bo'lmadi" matni + neumorphik ↻ tugma).
+// Sabab: avval har sahifa o'z .empty-state + SVG + matn kombinatsiyasini takrorlardi,
+// xato holati izchil emas edi. Endi bitta funksiya — yagona dizayn.
+// Tarjima: S('msg','connection_error') — strings.js da uz/ru/en 3 tilda mavjud.
+// retryFn — opsional, qayta yuklash funksiyasi. innerHTML ichidagi onclick
+// faqat global nomlarni ko'radi → window[fnName] da saqlanadi (overwrite OK).
+function renderErrorState(containerId, retryFn) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const msg = S('msg', 'connection_error');
+  const fnName = '_retryErr_' + containerId.replace(/-/g, '_');
+  window[fnName] = retryFn;
+  container.innerHTML = `
+    <div class="empty-state-error">
+      <div class="empty-state-error-icon">📡</div>
+      <div class="empty-state-error-msg">${msg}</div>
+      <button class="empty-state-error-btn" onclick="${fnName}()">↻</button>
+    </div>
+  `;
+}
+
 // ── PROGRESS RING SVG ──
 function ringHTML(percent, size = 80) {
   const r = (size - 12) / 2;

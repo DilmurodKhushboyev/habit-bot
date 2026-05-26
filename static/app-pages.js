@@ -21,13 +21,10 @@ async function loadToday(dateStr = null) {
     // Onboarding: data kelgandan keyin tekshiramiz
     maybeShowOnboard(d);
   } catch(e) {
-    document.getElementById('today-content').innerHTML =
-      `<div class="empty-state">
-        <div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>
-        <div>${S('msg','data_error')}</div>
-        <small style="color:var(--sub);margin-top:8px;display:block">${e}</small>
-        <button onclick="loaded.today=false;loadToday()" style="margin-top:14px;padding:10px 20px;border-radius:12px;border:none;background:var(--bg);box-shadow:var(--sh-sm);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--text)">${S('today','retry')}</button>
-      </div>`;
+    // Audit: avval lokal .empty-state + SVG kombinatsiyasi edi, hozir umumiy
+    // renderErrorState helper'ga ko'chirildi (app-core.js, Qoida #17).
+    // Barcha sahifalar bir xil xato uslubidan foydalanadi: 📡 + matn + ↻ tugma.
+    renderErrorState('today-content', () => { loaded.today = false; loadToday(); });
   }
 }
 
@@ -402,8 +399,7 @@ async function loadReminders() {
     data.reminders = d.habits || [];
     renderReminders(d.habits || []);
   } catch(e) {
-    document.getElementById('reminders-content').innerHTML =
-      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>${S('msg','data_error')}.</div>`;
+    renderErrorState('reminders-content', () => loadReminders());
   }
 }
 
@@ -606,8 +602,7 @@ async function loadAchievements() {
     data.achievements = d;
     renderAchievements(d, achFilter);
   } catch(e) {
-    document.getElementById('achievements-content').innerHTML =
-      `<div class="empty-state"><div class="icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="svgWarn" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F6C93E"/><stop offset="100%" stop-color="#E07040"/></linearGradient></defs><path d="M12 3L2 21h20L12 3z" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 10v5M12 17.5v.5" stroke="url(#svgWarn)" stroke-width="2" stroke-linecap="round"/></svg></div>${S('msg','data_error')}.</div>`;
+    renderErrorState('achievements-content', () => loadAchievements());
   }
 }
 

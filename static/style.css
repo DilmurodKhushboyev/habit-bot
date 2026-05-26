@@ -217,6 +217,32 @@ body.page-profile-active .page-title { display: block; }
 }
 .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
 
+/* ── XATO HOLATI (umumiy) — app-core.js renderErrorState ──
+   Vizual etalon: shahar sahifasi (avval .city-error*). Internet uzilganda
+   barcha sahifalar shu uslubda renderlanadi. Markazlashtirilgan blok:
+   📡 ikonka + matn + neumorphik ↻ tugma. */
+.empty-state-error {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 80px 24px; gap: 14px; color: var(--sub);
+  text-align: center;
+}
+.empty-state-error-icon { font-size: 40px; opacity: 0.7; }
+.empty-state-error-msg  { font-size: 14px; font-weight: 500; max-width: 260px; }
+.empty-state-error-btn {
+  margin-top: 4px;
+  width: 48px; height: 48px; border-radius: 50%;
+  border: none; cursor: pointer;
+  background: var(--card); color: var(--accent);
+  box-shadow: var(--sh-out);
+  font-size: 22px; line-height: 1;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.empty-state-error-btn:active {
+  box-shadow: var(--sh-in);
+  transform: scale(0.94);
+}
+
 /* ── REYTING ── */
 .legend {
   display: flex; gap: 14px; margin-bottom: 14px; flex-wrap: wrap;
