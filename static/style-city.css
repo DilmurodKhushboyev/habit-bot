@@ -406,10 +406,16 @@ body.dark .city-bld-label {
   min-width: 160px;
   max-width: 240px;
   pointer-events: none;          /* tap o'tib boshqa joyga tushsin */
-  transform-origin: bottom center;
   animation: cityTooltipShow 200ms ease-out both;
-  /* Yo'naltirgich uchburchak (poyga) — :after orqali pastda chiziladi */
+  /* Yo'naltirgich uchburchak (poyga) — :after orqali chiziladi (joylashuvga qarab) */
 }
+
+/* Animatsiya transform-origin: tooltip qaysi tomondan binoga ulanganiga qarab.
+   Bu animatsiya tooltip "binodan o'sib chiqayotgandek" tabiiy ko'rinadi. */
+.city-bld-tooltip[data-placement="top"]    { transform-origin: bottom center; }
+.city-bld-tooltip[data-placement="bottom"] { transform-origin: top center; }
+.city-bld-tooltip[data-placement="left"]   { transform-origin: right center; }
+.city-bld-tooltip[data-placement="right"]  { transform-origin: left center; }
 
 @keyframes cityTooltipShow {
   0%   { opacity: 0; transform: translateY(8px) scale(0.92); }
@@ -425,18 +431,52 @@ body.dark .city-bld-label {
   100% { opacity: 0; transform: translateY(4px) scale(0.96); }
 }
 
-/* Pastda kichik uchburchak (bino tomon ko'rsatadi) */
+/* ── Uchburchak (yo'naltirgich) — har 4 ta placement uchun ──
+   QARORLAR (Qoida #21):
+   - Bitta umumiy ::after bazasi, keyin har data-placement uchun pozitsiya overrride
+   - 45° rotate qilingan kvadrat — uchburchak ko'rinadi (tg.svg yoki clip-path
+     o'rniga sodda transform — eski browserlarda ham ishlaydi)
+   - box-shadow — faqat ko'rinadigan tomonda (binoga qaragan tomonda emas),
+     aks holda uchburchak ichida ikkilangan soya bo'lib ko'rinadi
+   - 12×12px o'lcham — barmoq tegmaydi, vizual jihatdan "kichik strelka" */
 .city-bld-tooltip::after {
   content: '';
   position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%) rotate(45deg);
   width: 12px;
   height: 12px;
   background: var(--card);
-  /* Soya faqat pastki o'ng — uchburchakning ko'rinadigan qismi */
+}
+
+/* TOP (default) — tooltip BINO USTIDA, uchburchak PASTDA, binoga ↓ ko'rsatadi */
+.city-bld-tooltip[data-placement="top"]::after {
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* BOTTOM — tooltip BINO PASTIDA, uchburchak YUQORIDA, binoga ↑ ko'rsatadi */
+.city-bld-tooltip[data-placement="bottom"]::after {
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* LEFT — tooltip BINO CHAPIDA, uchburchak O'NGDA, binoga → ko'rsatadi */
+.city-bld-tooltip[data-placement="left"]::after {
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  box-shadow: 2px -2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* RIGHT — tooltip BINO O'NGIDA, uchburchak CHAPDA, binoga ← ko'rsatadi */
+.city-bld-tooltip[data-placement="right"]::after {
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .city-bld-tooltip-title {

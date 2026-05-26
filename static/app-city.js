@@ -349,25 +349,80 @@ function _showCityTooltip(gridG, building) {
   const tw = el.offsetWidth;
   const th = el.offsetHeight;
 
-  // Bino tepa-markaz koordinatasi
-  const buildingCenterX = rect.left + rect.width / 2;
-  const buildingTopY    = rect.top;
-
-  // Tooltip joylashuvi: bino tepasidan 14px yuqorida (uchburchak uchun bo'sh joy)
-  let left = buildingCenterX - tw / 2;
-  let top  = buildingTopY - th - 14;
-
-  // Ekran chegarasi himoyasi (chetdan 8px chekinish)
-  const margin = 8;
+  // ── 4 TOMONLAMA JOYLASHUV (Qoida #21) ──
+  // Tooltip bino atrofida 4 ta variantdan birini tanlaydi:
+  //   1. TOP    — bino tepasida (default, eng yaxshi UX — yuqoriga qaraydi)
+  //   2. BOTTOM — bino pastida (tepada joy yo'q bo'lsa)
+  //   3. RIGHT  — bino o'ngida (yuqori/past ham yo'q bo'lsa)
+  //   4. LEFT   — bino chapida (faqat o'ngda joy yo'q bo'lsa)
+  // Har holatda uchburchak (::after) binoga ko'rsatadi — CSS data-placement
+  // atributiga qarab to'g'ri tomonga joylashadi.
+  //
+  // GAP — bino bilan tooltip orasidagi bo'shliq (uchburchak uchun 14px yetadi).
+  const GAP = 14;
+  const margin = 8;  // ekran chetidan chekinish
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  if (left < margin) left = margin;
-  if (left + tw > vw - margin) left = vw - tw - margin;
-  // Agar yuqorida joy yo'q bo'lsa (top < safe-area) — binoning PASTIDA ko'rsatamiz
-  if (top < 70) {  // header taxminan 70px — undan ostida bo'lmasin
-    top = rect.bottom + 14;
+  const HEADER_SAFE = 70;  // yuqorida header taxminan 70px — ostida bo'lmasin
+  const FOOTER_SAFE = 80;  // pastda bottom-nav + safe-area
+
+  // Bino markazlari (clientRect koordinatlari)
+  const bcx = rect.left + rect.width / 2;   // bino markazi X
+  const bcy = rect.top  + rect.height / 2;  // bino markazi Y
+
+  // Har variant uchun: tooltip joylashuvi va u sig'adi-yo'qligini tekshiramiz.
+  // Sig'di = ekrandan tashqari chiqmaydi (margin'ni hisobga olib).
+  function _fitsTop() {
+    return (rect.top - th - GAP) >= HEADER_SAFE;
+  }
+  function _fitsBottom() {
+    return (rect.bottom + th + GAP) <= (vh - FOOTER_SAFE);
+  }
+  function _fitsRight() {
+    return (rect.right + tw + GAP) <= (vw - margin);
+  }
+  function _fitsLeft() {
+    return (rect.left - tw - GAP) >= margin;
   }
 
+  let placement, left, top;
+  if (_fitsTop()) {
+    placement = 'top';
+    left = bcx - tw / 2;
+    top  = rect.top - th - GAP;
+  } else if (_fitsBottom()) {
+    placement = 'bottom';
+    left = bcx - tw / 2;
+    top  = rect.bottom + GAP;
+  } else if (_fitsRight()) {
+    placement = 'right';
+    left = rect.right + GAP;
+    top  = bcy - th / 2;
+  } else if (_fitsLeft()) {
+    placement = 'left';
+    left = rect.left - tw - GAP;
+    top  = bcy - th / 2;
+  } else {
+    // Hech qaerga sig'maydi (juda kichik ekran yoki katta tooltip) — top fallback,
+    // ekran chegarasi clamp bilan to'g'rilanadi (vizual nomos, lekin ko'rinadi)
+    placement = 'top';
+    left = bcx - tw / 2;
+    top  = rect.top - th - GAP;
+  }
+
+  // Ekran chegarasi himoyasi (clamp — chetdan margin chekinish)
+  // Yuqori/past joylashuvda — gorizontal clamp (uchburchak bino markazidan
+  // ozgina chetga siljishi mumkin, lekin tooltip ekranda ko'rinadi)
+  // Chap/o'ng joylashuvda — vertikal clamp
+  if (placement === 'top' || placement === 'bottom') {
+    if (left < margin) left = margin;
+    if (left + tw > vw - margin) left = vw - tw - margin;
+  } else {
+    if (top < HEADER_SAFE) top = HEADER_SAFE;
+    if (top + th > vh - FOOTER_SAFE) top = vh - FOOTER_SAFE - th;
+  }
+
+  el.setAttribute('data-placement', placement);  // CSS uchburchakni shu atributga qarab joylashtiradi
   el.style.left = left + 'px';
   el.style.top  = top + 'px';
 
