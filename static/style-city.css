@@ -548,3 +548,197 @@ body.dark .city-bld-label {
   z-index: 50;
   pointer-events: auto;
 }
+
+/* ════════════════════════════════════════════════
+   8-QISM: SHAHAR NOMI HEADER + MODAL (C8 — yangi)
+   ════════════════════════════════════════════════
+   Vazifa: yuqori-chap burchakda tahrirlanadigan shahar nomi.
+   Foydalanuvchi bosadi → modal ochiladi → nom yozadi → saqlanadi.
+
+   QARORLAR (Qoida #21):
+   - position: fixed — header sahifa scroll qilinsa ham ko'rinib turadi
+   - top: header (greeting blok) ostida — taxminan 70-80px (greeting balandligi)
+   - left: 16px — ekran chetidan toza chegara (zoom controls right: 16px bilan simmetrik)
+   - .city-zoom-btn neumorfik uslubini takrorlaymiz (DRY — vizual izchillik):
+     box-shadow: var(--sh-out), background: var(--card), bosilganda var(--sh-in)
+   - Kapsula shakli (border-radius: 22px) — nom matni va edit ikonkasi sig'ishi uchun
+   - max-width — uzun nomlarda ellipsis (ekran chetidan o'tib ketmaslik)
+   - Placeholder (.is-empty) — kursiv, yarim shaffof matn ("Shahringizni nomlang!")
+   - z-index: 50 — zoom controls bilan bir xil (modallar 999 ostida)
+*/
+
+.city-name-header {
+  position: fixed;
+  top: calc(80px + var(--tg-safe-top, 0px));  /* greeting blok ostida */
+  left: 16px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  max-width: calc(100vw - 120px);              /* o'ng tomonda joy qoldirish */
+  padding: 0 16px;
+  border: none;
+  border-radius: 22px;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: var(--sh-out);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: box-shadow 0.15s ease, transform 0.12s ease;
+}
+
+.city-name-header:active {
+  box-shadow: var(--sh-in);
+  transform: scale(0.96);
+}
+
+/* Edit pen ikonkasi — accent rang (yashil) — "tahrirlash mumkin" signali */
+.city-name-header svg {
+  flex-shrink: 0;
+  color: var(--accent);
+  display: block;
+}
+
+/* Matn — uzun nom bo'lsa ellipsis */
+.city-name-header .city-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Placeholder holati ("Shahringizni nomlang!") — kursiv, yarim shaffof */
+.city-name-header.is-empty .city-name-text {
+  font-style: italic;
+  color: var(--sub);
+  font-weight: 500;
+}
+
+/* ── Modal: nom kiritish oynasi ──
+   Markazda — overlay bilan fon qorayadi. Klassik neumorphic modal patterni.
+   - .is-open klassi JS orqali qo'shiladi/olib tashlanadi
+   - z-index: 999 — modal eng ustida
+   - backdrop tap → modal yopiladi (cancel bilan teng)
+*/
+
+.city-name-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.city-name-modal-overlay.is-open {
+  display: flex;
+  opacity: 1;
+}
+
+.city-name-modal {
+  background: var(--card);
+  border-radius: 20px;
+  box-shadow: var(--sh-out);
+  padding: 24px 20px 20px;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transform: scale(0.95);
+  transition: transform 0.18s ease;
+}
+
+.city-name-modal-overlay.is-open .city-name-modal {
+  transform: scale(1);
+}
+
+.city-name-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  margin: 0;
+}
+
+.city-name-modal-hint {
+  font-size: 12px;
+  color: var(--sub);
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.city-name-modal-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: var(--sh-in);
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.city-name-modal-input::placeholder {
+  color: var(--sub);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.city-name-modal-error {
+  font-size: 12px;
+  color: #E25555;                              /* qizil — xato xabari */
+  text-align: center;
+  margin: 0;
+  min-height: 14px;                            /* layout shift bo'lmasin */
+}
+
+.city-name-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.city-name-modal-btn {
+  flex: 1;
+  height: 44px;
+  border: none;
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: var(--sh-out);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: box-shadow 0.15s ease, transform 0.12s ease, color 0.18s ease;
+}
+
+.city-name-modal-btn:active {
+  box-shadow: var(--sh-in);
+  transform: scale(0.96);
+}
+
+.city-name-modal-btn.is-primary {
+  color: var(--accent);                        /* yashil — asosiy harakat */
+}
