@@ -133,6 +133,7 @@ HABIT_LIMIT = 15                          # Bir foydalanuvchi yarata oladigan ma
 CITY_GRID_SIZE   = 30                  # 30x30 = 900 katak
 BUILDING_DAYS    = 66                  # odat shakllanish kunlari (max progress)
 CITY_VERSION     = 1                   # schema versiyasi (kelajakdagi migratsiyalar uchun)
+CITY_NAME_MAX_LEN = 30                 # Shahar nomi maksimal uzunligi (XSS/UI uchun)
 
 # Bino turlari (10 ta) — har biri emoji + tarjima kaliti
 # name_key keyinchalik texts.py LANGS dict'iga 3 tilga qo'shiladi (Qoida #22)
