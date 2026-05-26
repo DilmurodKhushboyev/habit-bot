@@ -251,6 +251,7 @@ def get_streak_in_period(udata, days=None):
 # ============================================================
 # udata["city"] = {
 #   "version": 1,
+#   "name": "Mening shahrim" yoki None (eski user'larda yo'q — placeholder ko'rinadi),
 #   "buildings": [{id, habit_id, building_type, x, y, progress, started_at, last_updated}],
 #   "decorations": [{id, decoration_type, x, y, placed_at}],
 #   "insurance_active": bool,
@@ -275,6 +276,7 @@ def init_city_for_user(udata):
 
     udata["city"] = {
         "version": CITY_VERSION,
+        "name": None,
         "buildings": [],
         "decorations": [],
         "insurance_active": False,

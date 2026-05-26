@@ -585,9 +585,11 @@ async function loadCity() {
     if (!res || !res.ok) throw new Error('city_load_failed');
     _cityData = res;
     renderCityGrid(container, res);
+    updateCityNameHeader(res.name);
   } catch (e) {
     _cityData = null;
     renderCityError(container);
+    updateCityNameHeader(null);
   }
 }
 
@@ -770,4 +772,140 @@ function renderCityGrid(container, cityData) {
 //             Bino bosish modali (change_type) — A varianti bilan olib tashlangan.
 // PHASE C6:   renderDecorationsShop() — dekoratsiya bozor modali (buy_decoration, buy_insurance)
 // PHASE C7:   tarjimalar strings.js'ga qo'shiladi (10 bino + 5 dekoratsiya nomlari, city.* kalitlar)
-// PHASE C8:   premium CSS polish (qo'shimcha — agar kerak bo'lsa)
+// PHASE C8:   ✅ Shahar nomi (yuqori chap header + modal) — SHU YERDA pastda
+
+// ════════════════════════════════════════════════
+//  PHASE C8: SHAHAR NOMI (yuqori chap burchakda)
+// ════════════════════════════════════════════════
+// Vazifa: foydalanuvchi shaharga nom bera oladi. Tahrirlanadi.
+// Markup: index.html #city-name-header (tugma) + #city-name-modal-overlay (modal)
+// Backend: POST /api/city/<uid>/rename (flask_routes_city.py)
+// Strings: city.name_* kalitlar (strings.js)
+
+// ── Header matnini yangilash ──
+// loadCity() muvaffaqiyatda chaqiradi. name=null/'' → placeholder (is-empty klassi).
+// name=string → toza matn ko'rsatadi. textContent ishlatamiz (XSS himoyasi —
+// backend ham tozalaydi, lekin frontend ham doim toza qaysi).
+function updateCityNameHeader(name) {
+  const btn = document.getElementById('city-name-header');
+  const display = document.getElementById('city-name-display');
+  if (!btn || !display) return;
+
+  if (name && typeof name === 'string' && name.trim()) {
+    display.textContent = name;
+    btn.classList.remove('is-empty');
+  } else {
+    display.textContent = S('city', 'name_placeholder') || 'Shahringizni nomlang!';
+    btn.classList.add('is-empty');
+  }
+}
+
+// ── Modal ochish ──
+// Tugmalar matni va placeholder strings.js'dan to'ldiriladi (har til o'zgarganda
+// modal qayta ochilganda yangilanadi). Input qiymati joriy nom bilan to'ldiriladi
+// (agar bor bo'lsa) — foydalanuvchi tahrir qila olishi uchun.
+function openCityNameModal() {
+  const overlay = document.getElementById('city-name-modal-overlay');
+  const input = document.getElementById('city-name-modal-input');
+  const titleEl = document.getElementById('city-name-modal-title');
+  const hintEl = document.getElementById('city-name-modal-hint');
+  const saveBtn = document.getElementById('city-name-modal-save');
+  const cancelBtn = document.getElementById('city-name-modal-cancel');
+  const errorEl = document.getElementById('city-name-modal-error');
+  if (!overlay || !input) return;
+
+  // Tarjimalarni to'ldirish
+  if (titleEl)  titleEl.textContent  = S('city', 'name_modal_title')  || 'Shahar nomi';
+  if (hintEl)   hintEl.textContent   = S('city', 'name_modal_hint')   || '';
+  if (saveBtn)  saveBtn.textContent  = S('city', 'name_modal_save')   || 'Saqlash';
+  if (cancelBtn)cancelBtn.textContent= S('city', 'name_modal_cancel') || 'Bekor';
+  if (errorEl)  errorEl.textContent  = '';
+
+  // Joriy nom (agar bor bo'lsa) — _cityData keshidan
+  const currentName = (_cityData && typeof _cityData.name === 'string') ? _cityData.name : '';
+  input.value = currentName;
+
+  overlay.classList.add('is-open');
+
+  // Focus input — kichik delay (transform animatsiyasi tugasin)
+  setTimeout(() => {
+    try { input.focus(); input.select(); } catch (e) {}
+  }, 200);
+}
+
+// ── Modal yopish ──
+function closeCityNameModal() {
+  const overlay = document.getElementById('city-name-modal-overlay');
+  if (!overlay) return;
+  overlay.classList.remove('is-open');
+}
+
+// ── Saqlash: input qiymatini POST qiladi ──
+// Validation frontend'da ham qiladi (UX — backend javobini kutmasdan) lekin
+// backend ham tozalaydi (xavfsizlik — frontend bypass qilinmagan bo'lsin).
+async function saveCityNameFromInput() {
+  const input = document.getElementById('city-name-modal-input');
+  const errorEl = document.getElementById('city-name-modal-error');
+  const saveBtn = document.getElementById('city-name-modal-save');
+  if (!input) return;
+
+  const value = (input.value || '').trim();
+
+  // Frontend validation
+  if (!value) {
+    // Til bo'yicha xato xabari (backend ham qaytaradi, lekin server urinish keraksiz)
+    if (errorEl) {
+      const langErrMap = {
+        uz: "Nom bo'sh bo'lmasin",
+        ru: 'Имя не может быть пустым',
+        en: 'Name cannot be empty',
+      };
+      const lang = (typeof currentLang === 'string' && langErrMap[currentLang]) ? currentLang : 'uz';
+      errorEl.textContent = langErrMap[lang];
+    }
+    return;
+  }
+
+  if (value.length > 30) {
+    if (errorEl) {
+      const langErrMap = {
+        uz: 'Juda uzun (30 belgidan ko\u2018p emas)',
+        ru: 'Слишком длинно (не более 30 символов)',
+        en: 'Too long (max 30 characters)',
+      };
+      const lang = (typeof currentLang === 'string' && langErrMap[currentLang]) ? currentLang : 'uz';
+      errorEl.textContent = langErrMap[lang];
+    }
+    return;
+  }
+
+  // Saqlash tugmasi vaqtinchalik disable (double-click oldini olish)
+  if (saveBtn) saveBtn.setAttribute('disabled', 'true');
+
+  try {
+    const res = await apiFetch('city/' + userId + '/rename', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: value }),
+    });
+
+    if (res && res.ok) {
+      // Muvaffaqiyat: keshni yangilash + header'ni yangilash + modal yopish
+      if (_cityData) _cityData.name = res.name;
+      updateCityNameHeader(res.name);
+      closeCityNameModal();
+
+      // Toast (agar mavjud bo'lsa) — boshqa joylardagi pattern bilan bir xil
+      if (typeof showToast === 'function') {
+        showToast(S('city', 'name_saved') || '\u2705');
+      }
+    } else {
+      // Backend xato xabarini ko'rsatish
+      if (errorEl) errorEl.textContent = (res && res.error) ? res.error : (S('msg', 'connection_error') || 'Error');
+    }
+  } catch (e) {
+    if (errorEl) errorEl.textContent = S('msg', 'connection_error') || 'Connection error';
+  } finally {
+    if (saveBtn) saveBtn.removeAttribute('disabled');
+  }
+}

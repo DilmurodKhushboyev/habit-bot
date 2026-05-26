@@ -27,6 +27,7 @@ from config import (
     INSURANCE_PRICE,
     INSURANCE_DURATION,
     CITY_GRID_SIZE,
+    CITY_NAME_MAX_LEN,
 )
 from database import (
     load_user, save_user, init_city_for_user,
@@ -103,6 +104,16 @@ _CITY_ERR = {
         "uz": "Sug'urta allaqachon faol",
         "ru": "Страховка уже активна",
         "en": "Insurance already active",
+    },
+    "empty_name": {
+        "uz": "Nom bo'sh bo'lmasin",
+        "ru": "Имя не может быть пустым",
+        "en": "Name cannot be empty",
+    },
+    "name_too_long": {
+        "uz": f"Juda uzun ({CITY_NAME_MAX_LEN} belgidan ko'p emas)",
+        "ru": f"Слишком длинно (не более {CITY_NAME_MAX_LEN} символов)",
+        "en": f"Too long (max {CITY_NAME_MAX_LEN} characters)",
     },
 }
 
@@ -204,6 +215,7 @@ def register_city_routes(app):
         return jsonify({
             "ok": True,
             "grid_size": CITY_GRID_SIZE,
+            "name": city.get("name"),
             "buildings": buildings,
             "decorations": city.get("decorations", []),
             "insurance_active": bool(city.get("insurance_active")),
@@ -251,6 +263,55 @@ def register_city_routes(app):
                 return _err(u, "occupied")
             save_user(uid, u)
             return jsonify({"ok": True, "x": x, "y": y})
+        finally:
+            _lock.release()
+
+    # =================================================================
+    #  POST /api/city/<uid>/rename  — Shahar nomini o'zgartirish
+    # =================================================================
+    @app.route("/api/city/<int:uid>/rename", methods=["POST"])
+    @require_auth
+    def api_city_rename(uid):
+        """Foydalanuvchi shaharning nomini o'zgartiradi.
+        Body: {"name": "Mening shahrim"}
+
+        Validation:
+          - bo'sh string emas (strip'dan keyin)
+          - max CITY_NAME_MAX_LEN belgi (config.py)
+          - HTML/control belgilarni xavfsiz qilamiz (<, > olib tashlash —
+            frontend textContent ishlatadi, lekin ehtiyot uchun backendda
+            ham tozalaymiz)
+
+        Sabab: lock pattern — ikki tab bir vaqtda rename qilsa, oxirgi yozish
+        yutadi (last-write-wins, lekin atomic). Shop/move bilan bir xil pattern.
+        """
+        data = request.get_json(silent=True) or {}
+        raw_name = data.get("name", "")
+        if not isinstance(raw_name, str):
+            u_tmp = load_user(uid)
+            return _err(u_tmp, "empty_name")
+
+        # HTML/control belgilarni olib tashlash + trim
+        clean = raw_name.replace("<", "").replace(">", "").strip()
+
+        if not clean:
+            u_tmp = load_user(uid)
+            return _err(u_tmp, "empty_name")
+
+        if len(clean) > CITY_NAME_MAX_LEN:
+            u_tmp = load_user(uid)
+            return _err(u_tmp, "name_too_long")
+
+        _lock = _get_city_lock(uid)
+        if not _lock.acquire(timeout=3):
+            u_tmp = load_user(uid)
+            return _err(u_tmp, "busy", 429)
+        try:
+            u = load_user(uid)
+            init_city_for_user(u)
+            u["city"]["name"] = clean
+            save_user(uid, u)
+            return jsonify({"ok": True, "name": clean})
         finally:
             _lock.release()
 

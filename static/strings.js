@@ -14,7 +14,13 @@ const STRINGS = {
       zoom_reset:'Asl holatga qaytarish',
       kun_dan:'kun',
       tayyor:'tayyor',
-      recenter:'Markazga qaytish'
+      recenter:'Markazga qaytish',
+      name_placeholder:'Shahringizni nomlang!',
+      name_modal_title:'Shahar nomi',
+      name_modal_hint:'Shahringizga nom bering (max 30 belgi)',
+      name_modal_save:'Saqlash',
+      name_modal_cancel:'Bekor',
+      name_saved:'\u2705 Nom saqlandi'
     },
     profile: {
       ball:'Ball', streak:'Streak', done:'Bajarildi', rekord:'rekord',
@@ -429,7 +435,13 @@ const STRINGS = {
       zoom_reset:'Сбросить масштаб',
       kun_dan:'дн.',
       tayyor:'готово',
-      recenter:'К центру'
+      recenter:'К центру',
+      name_placeholder:'Назовите ваш город!',
+      name_modal_title:'Название города',
+      name_modal_hint:'Дайте имя вашему городу (макс. 30 символов)',
+      name_modal_save:'Сохранить',
+      name_modal_cancel:'Отмена',
+      name_saved:'\u2705 Имя сохранено'
     },
     profile: {
       ball:'Очки', streak:'Стрик', done:'Выполнено', rekord:'рекорд',
@@ -844,7 +856,13 @@ const STRINGS = {
       zoom_reset:'Reset zoom',
       kun_dan:'days',
       tayyor:'complete',
-      recenter:'Recenter'
+      recenter:'Recenter',
+      name_placeholder:'Name your city!',
+      name_modal_title:'City name',
+      name_modal_hint:'Give your city a name (max 30 characters)',
+      name_modal_save:'Save',
+      name_modal_cancel:'Cancel',
+      name_saved:'\u2705 Name saved'
     },
     profile: {
       ball:'Points', streak:'Streak', done:'Done', rekord:'record',

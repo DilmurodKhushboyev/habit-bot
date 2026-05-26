@@ -10,8 +10,8 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=615">
-<link rel="stylesheet" href="style-city.css?v=23">
-<script src="strings.js?v=566"></script>
+<link rel="stylesheet" href="style-city.css?v=26">
+<script src="strings.js?v=569"></script>
 <script src="app-core.js?v=568"></script>
 </head>
 <body>
@@ -98,6 +98,20 @@
 
 <!-- SHAHAR -->
 <div class="page" id="page-city">
+  <!-- Shahar nomi header (C8) — yuqori chap burchakda, tahrirlanadigan.
+       Bosilsa #city-name-modal-overlay ochiladi. Matn JS orqali to'ldiriladi
+       (app-city.js: updateCityNameHeader). #city-content TASHQARISIDA —
+       loadCity() innerHTML qayta yozsa ham header saqlanadi (zoom controls bilan bir xil pattern). -->
+  <button class="city-name-header is-empty" id="city-name-header" type="button"
+          onclick="openCityNameModal()" aria-label="Edit city name">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <!-- Edit pen ikonkasi — universal "tahrirlash" simboli -->
+      <path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="city-name-text" id="city-name-display">Shahringizni nomlang!</span>
+  </button>
+
   <div id="city-content">
     <div class="loading"><div class="spinner"></div><span class="loading-text">Yuklanmoqda...</span></div>
   </div>
@@ -133,6 +147,27 @@
         <path d="M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
       </svg>
     </button>
+  </div>
+
+  <!-- Shahar nomi modali (C8) — bosilganda is-open klassi qo'shiladi.
+       Backdrop tap → cancel (yopiladi). Save → POST /api/city/<uid>/rename.
+       app-city.js: openCityNameModal, closeCityNameModal, saveCityNameFromInput -->
+  <div class="city-name-modal-overlay" id="city-name-modal-overlay"
+       onclick="if(event.target===this) closeCityNameModal()">
+    <div class="city-name-modal" role="dialog" aria-modal="true" aria-labelledby="city-name-modal-title">
+      <h3 class="city-name-modal-title" id="city-name-modal-title">Shahar nomi</h3>
+      <p class="city-name-modal-hint" id="city-name-modal-hint">Shahringizga nom bering (max 30 belgi)</p>
+      <input type="text" class="city-name-modal-input" id="city-name-modal-input"
+             maxlength="30" autocomplete="off" spellcheck="false"
+             placeholder="Mening shaharim">
+      <p class="city-name-modal-error" id="city-name-modal-error"></p>
+      <div class="city-name-modal-actions">
+        <button class="city-name-modal-btn" id="city-name-modal-cancel" type="button"
+                onclick="closeCityNameModal()">Bekor</button>
+        <button class="city-name-modal-btn is-primary" id="city-name-modal-save" type="button"
+                onclick="saveCityNameFromInput()">Saqlash</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -377,8 +412,8 @@
 <script src="app-habits.js?v=562"></script>
 <script src="app-social.js?v=557"></script>
 <script src="app-reminders.js?v=562"></script>
-<script src="app-city.js?v=31"></script>
-<script src="app-city-buildings.js?v=16"></script>
+<script src="app-city.js?v=34"></script>
+<script src="app-city-buildings.js?v=18"></script>
 <script src="app-city-move.js?v=9"></script>
 </body>
 </html>
