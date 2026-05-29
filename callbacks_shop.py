@@ -61,6 +61,45 @@ def handle_shop_callbacks(call, uid, cdata, u):
         save_user(uid, u)
         return True
 
+    if cdata == "jonfix":
+        # 💀 "Jon 0%" ogohlantirishidagi tugma — bir martalik, bosilgach xabar o'chadi
+        bot.answer_callback_query(call.id)
+        balls = u.get("points", 0)
+        jon_val = round(u.get("jon", 100.0))
+        jon_price = SHOP_PRICES["jon_restore"]
+
+        def _del_jonfix_msg():
+            try: bot.delete_message(uid, call.message.message_id)
+            except Exception: pass
+
+        # Jon allaqachon yetarli (foydalanuvchi odat bajarib tiklagan) → xabarni o'chir
+        if jon_val > 20:
+            _del_jonfix_msg()
+            bot.answer_callback_query(call.id, T(uid, "jon_zero_already"), show_alert=False)
+            return True
+
+        # Ball yetmaydi → xabar QOLADI (keyin bosishi mumkin), faqat ogohlantirish
+        if balls < jon_price:
+            bot.send_message(uid,
+                T(uid, "bozor_jon_no_pts").format(price=jon_price, points=balls),
+                parse_mode="Markdown", reply_markup=ok_kb(uid)
+            )
+            return True
+
+        # Ball yetadi → jon berib, xabarni o'chir
+        u["points"] = balls - jon_price
+        add_points_history(u, -jon_price)
+        u["jon"] = 100.0
+        save_user(uid, u)
+        _del_jonfix_msg()
+        sent_ok = bot.send_message(uid, T(uid, "jon_zero_done"), parse_mode="Markdown")
+        def _del_jonfix_ok(chat_id, mid):
+            time.sleep(2)
+            try: bot.delete_message(chat_id, mid)
+            except: pass
+        threading.Thread(target=_del_jonfix_ok, args=(uid, sent_ok.message_id), daemon=True).start()
+        return True
+
     if cdata == "bozor_buy_jon":
         bot.answer_callback_query(call.id)
         balls = u.get("points", 0)

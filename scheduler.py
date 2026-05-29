@@ -11,7 +11,7 @@ import threading
 from datetime import datetime, date, timedelta, timezone
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from config import ADMIN_ID, BOT_TOKEN, mongo_col, groups_col, mongo_db, SHOP_BONUS_EFFECTS
+from config import ADMIN_ID, BOT_TOKEN, mongo_col, groups_col, mongo_db, SHOP_BONUS_EFFECTS, SHOP_PRICES
 from database import (load_user, save_user, load_all_users, load_group,
                       save_group, load_settings, add_points_history)
 from city_logic import update_building_progress
@@ -491,14 +491,17 @@ def daily_reset():
             if jon <= 0 and jon_before > 0:
                 try:
                     user_id_int = int(uid)
+                    lang = get_lang(user_id_int)
+                    L    = LANGS.get(lang, LANGS["uz"])
+                    jon_price = SHOP_PRICES["jon_restore"]
                     kb_jon = InlineKeyboardMarkup()
-                    kb_jon.add(InlineKeyboardButton("❤️ Bozordan jon sotib olish (50 ball)", callback_data="bozor_buy_jon"))
+                    kb_jon.add(InlineKeyboardButton(
+                        L["jon_zero_btn"].format(price=jon_price),
+                        callback_data="jonfix"
+                    ))
                     bot.send_message(
                         user_id_int,
-                        "*💀 Joningiz 0% ga yetdi!*\n\n"
-                        "Kecha barcha odatlaringiz bajarilmadi.\n\n"
-                        "Bugun barcha odatlaringizni bajarsangiz jon tiklanadi!\n"
-                        "Yoki bozordan *50 ball* evaziga jonni tiklashingiz mumkin.",
+                        L["jon_zero_title"].format(price=jon_price),
                         parse_mode="Markdown",
                         reply_markup=kb_jon
                     )
