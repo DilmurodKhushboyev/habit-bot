@@ -23,7 +23,6 @@ from flask import jsonify, request
 from config import (
     SHOP_DECORATION_PRICES,
     DECORATION_TYPES,
-    BUILDING_TYPES,
     INSURANCE_PRICE,
     INSURANCE_DURATION,
     CITY_GRID_SIZE,
@@ -34,7 +33,7 @@ from database import (
     get_user_city, add_points_history,
 )
 from city_logic import (
-    create_building, change_building_type, delete_building_for_habit,
+    create_building, delete_building_for_habit,
     place_decoration, delete_decoration, move_item,
     activate_insurance, get_building_stage,
     compact_buildings_to_center, backfill_buildings_from_habits,
@@ -312,45 +311,6 @@ def register_city_routes(app):
             u["city"]["name"] = clean
             save_user(uid, u)
             return jsonify({"ok": True, "name": clean})
-        finally:
-            _lock.release()
-
-    # =================================================================
-    #  POST /api/city/<uid>/change_type  — Bino turini o'zgartirish
-    # =================================================================
-    @app.route("/api/city/<int:uid>/change_type", methods=["POST"])
-    @require_auth
-    def api_city_change_type(uid):
-        """Bino turini o'zgartirish (foydalanuvchi qiziquvchi bo'lsa,
-        shahar sahifasidan tanlaydi — Qoida #5 javob: B varianti).
-        Body: {"habit_id": "...", "building_type": "stadium"}"""
-        data = request.get_json(silent=True) or {}
-        habit_id = str(data.get("habit_id", "")).strip()
-        new_type = str(data.get("building_type", "")).strip()
-
-        if new_type not in BUILDING_TYPES:
-            u_tmp = load_user(uid)
-            return _err(u_tmp, "invalid_type")
-        if not habit_id:
-            u_tmp = load_user(uid)
-            return _err(u_tmp, "not_found", 404)
-
-        _lock = _get_city_lock(uid)
-        if not _lock.acquire(timeout=3):
-            u_tmp = load_user(uid)
-            return _err(u_tmp, "busy", 429)
-        try:
-            u = load_user(uid)
-            init_city_for_user(u)
-            result = change_building_type(u, habit_id, new_type)
-            if result is None:
-                return _err(u, "not_found", 404)
-            save_user(uid, u)
-            return jsonify({
-                "ok": True,
-                "building_type": result["building_type"],
-                "progress": result["progress"],
-            })
         finally:
             _lock.release()
 
