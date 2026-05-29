@@ -745,7 +745,10 @@ def move_item(udata, item_id, new_x, new_y):
     ITEM_ID: binoda `habit_id` ni qidiradi (frontend `data-habit-id` atributi),
     dekoratsiyada `id` ni qidiradi. Backend ikkala variantni ham qabul qiladi.
 
-    Qaytaradi: True (success) / False (band yoki topilmadi / koord noto'g'ri).
+    Qaytaradi:
+      True  — muvaffaqiyatli ko'chirildi
+      False — yangi joy band yoki koordinata noto'g'ri
+      None  — item (bino/dekoratsiya) topilmadi
     """
     if not _is_valid_coord(new_x, new_y):
         return False
@@ -767,7 +770,7 @@ def move_item(udata, item_id, new_x, new_y):
                 target = d
                 break
     if target is None:
-        return False  # topilmadi
+        return None  # topilmadi (band emas — route 404 qaytaradi)
 
     cur_x, cur_y = target.get("x"), target.get("y")
     if cur_x == new_x and cur_y == new_y:
