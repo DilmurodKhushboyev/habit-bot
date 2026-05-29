@@ -629,26 +629,6 @@ def cleanup_orphan_buildings(udata):
 
     return removed
 
-def change_building_type(udata, habit_id, new_type):
-    """Bino turini o'zgartiradi (foydalanuvchi shahar sahifasidan).
-    Progress saqlanadi — faqat vizual ko'rinish o'zgaradi.
-
-    Qaytaradi:
-      yangilangan bino (success) yoki None (bino topilmadi / noto'g'ri tur).
-    """
-    if new_type not in BUILDING_TYPES:
-        return None
-
-    city = get_user_city(udata)
-    habit_id = str(habit_id)
-
-    for b in city.get("buildings") or []:
-        if str(b.get("habit_id")) == habit_id:
-            b["building_type"] = new_type
-            b["last_updated"] = _today_uz5_str()
-            return b
-    return None
-
 def delete_building_for_habit(udata, habit_id):
     """Habit o'chirilganda mos binoni ham o'chiradi.
     Bino bo'sh katakka aylanadi (boshqa narsa joylashtirish mumkin).
