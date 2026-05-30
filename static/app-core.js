@@ -41,7 +41,7 @@ let loaded = { today: false, profile: false, habits: false, stats: false, achiev
 let data   = {};
 
 // ── HEADER BALL SINXRON YANGILASH ──
-// Markaziy helper — har qayerda (checkin, bozor, guruh, kelajakdagi yangi joylar)
+// Markaziy helper — har qayerda (checkin, bozor, kelajakdagi yangi joylar)
 // ball o'zgarganda shu funksiya chaqiriladi. Header displeyi + global state sinxron.
 // Sabab: avval har joyda inline kod takrorlanardi (3-4 joyda), bozor/sotishda esa
 // umuman yo'q edi — shuning uchun bozordan sotib olingandan keyin header eski
@@ -134,21 +134,18 @@ function renderPremium() {
       ['\u2705', 'Cheksiz odat (' + premLimit + ' tagacha)', 'Bepul: faqat ' + freeLimit + ' ta'],
       ['\u2705', "Challenge \u2014 do'st bilan raqobat", "Bepul: yo'q"],
       ['\u2705', 'Batafsil statistika va hisobot', 'Bepul: cheklangan'],
-      ['\u2705', 'Guruh imkoniyatlari', 'Bepul: cheklangan'],
       ['\u2705', 'Kechki eslatma', "Bepul: yo'q"],
     ],
     en: [
       ['\u2705', 'Unlimited habits (up to ' + premLimit + ')', 'Free: only ' + freeLimit],
       ['\u2705', 'Challenges \u2014 compete with friends', 'Free: unavailable'],
       ['\u2705', 'Detailed stats & reports', 'Free: limited'],
-      ['\u2705', 'Group features', 'Free: limited'],
       ['\u2705', 'Evening reminders', 'Free: unavailable'],
     ],
     ru: [
       ['\u2705', '\u041d\u0435\u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u043d\u044b\u0435 \u043f\u0440\u0438\u0432\u044b\u0447\u043a\u0438 (\u0434\u043e ' + premLimit + ')', '\u0411\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e: \u0442\u043e\u043b\u044c\u043a\u043e ' + freeLimit],
       ['\u2705', '\u0412\u044b\u0437\u043e\u0432\u044b \u2014 \u0441\u043e\u0440\u0435\u0432\u043d\u043e\u0432\u0430\u043d\u0438\u044f \u0441 \u0434\u0440\u0443\u0437\u044c\u044f\u043c\u0438', '\u0411\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e: \u043d\u0435\u0442'],
       ['\u2705', '\u041f\u043e\u0434\u0440\u043e\u0431\u043d\u0430\u044f \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043a\u0430 \u0438 \u043e\u0442\u0447\u0451\u0442\u044b', '\u0411\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e: \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u043e'],
-      ['\u2705', '\u0424\u0443\u043d\u043a\u0446\u0438\u0438 \u0433\u0440\u0443\u043f\u043f', '\u0411\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e: \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u043e'],
       ['\u2705', '\u0412\u0435\u0447\u0435\u0440\u043d\u0438\u0435 \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u044f', '\u0411\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e: \u043d\u0435\u0442'],
     ],
   };
