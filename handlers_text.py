@@ -19,7 +19,7 @@ from telebot.types import (
 
 from config import ADMIN_ID, BOT_TOKEN
 from database import (load_user, save_user, load_all_users, count_users,
-                      load_group, save_group, user_exists,
+                      user_exists,
                       load_settings, save_settings, add_points_history)
 from helpers import T, get_lang, today_uz5
 from texts import LANGS
@@ -27,10 +27,9 @@ from motivation import MOTIVATSIYA
 from bot_setup import (bot, send_main_menu, main_menu, main_menu_dict,
                        send_message_colored, cBtn, ok_kb, kb_to_dict,
                        get_bot_username, _share_file_ids)
-from menus import (check_subscription, send_sub_required, send_menu2,
+from menus import (check_subscription, send_sub_required,
                    admin_menu)
 
-from groups import _save_new_group, _save_group_habit
 from scheduler import schedule_habit
 
 @bot.message_handler(func=lambda m: not (m.text and m.text.startswith("/")), content_types=["text", "photo", "document", "video", "audio", "voice", "sticker", "animation"])
@@ -141,39 +140,6 @@ def handle_text(msg):
                         parse_mode="Markdown", reply_markup=ok_kb())
                 except Exception:
                     pass
-            # Pending guruh
-            pending_g = u.pop("pending_group", None)
-            if pending_g:
-                try:
-                    g = load_group(pending_g)
-                    if g and str(uid) not in [str(m) for m in g.get("members", [])]:
-                        g["members"].append(str(uid))
-                        save_group(pending_g, g)
-                        groups = u.get("groups", [])
-                        if not any(x.get("id") == pending_g for x in groups):
-                            groups.append({"id": pending_g, "name": g["name"], "admin_id": g["admin_id"]})
-                            u["groups"] = groups
-                        try:
-                            g_admin_id = g.get("admin_id")
-                            if g_admin_id and str(g_admin_id) != str(uid):
-                                bot.send_message(int(g_admin_id),
-                                    f"👋 *{u.get('name','Yangi azo')}* guruhga qo\'shildi!\n"
-                                    f"👥 *{g['name']}*",
-                                    parse_mode="Markdown"
-                                )
-                        except Exception as _e: print(f"[warn] send_message: {_e}")
-                        sent_grp = bot.send_message(uid,
-                            f"✅ *{g['name']}* guruhiga qo\'shildingiz!\n"
-                            f"📌 Odat: *{g.get('habit_name','—')}*",
-                            parse_mode="Markdown", reply_markup=ok_kb()
-                        )
-                        def _del_grp_t(cid, mid):
-                            time.sleep(5)
-                            try: bot.delete_message(cid, mid)
-                            except: pass
-                        threading.Thread(target=_del_grp_t, args=(uid, sent_grp.message_id), daemon=True).start()
-                except Exception as e:
-                    print(f"[pending_group] xato: {e}")
             # Ism va username saqlash
             u["name"]     = msg.from_user.first_name or "Do'stim"
             u["username"]  = (msg.from_user.username or "").lower()
@@ -607,142 +573,6 @@ def handle_text(msg):
             bot.send_message(uid, "✅ Javob yuborildi.")
         except Exception as e:
             bot.send_message(uid, f"❌ Xato: {e}")
-        return
-
-    # ── Guruh yaratish: nom ──
-    if state == "group_waiting_name":
-        group_name = text.strip()
-        if not group_name:
-            return
-        try: bot.delete_message(uid, msg.message_id)
-        except: pass
-        old_mid = u.pop("temp_msg_id", None)
-        if old_mid:
-            try: bot.delete_message(uid, old_mid)
-            except: pass
-        u["temp_group"]["name"] = group_name
-        u["state"] = "group_waiting_habit"
-        save_user(uid, u)
-        cancel_kb = InlineKeyboardMarkup()
-        cancel_kb.add(cBtn("⬅️ Orqaga", "menu2_open", "primary"))
-        sent = bot.send_message(uid,
-            f"✅ Guruh nomi: *{group_name}*\n\n"
-            "2️⃣ Umumiy odat nomini kiriting:\n"
-            "_Masalan: Har kuni 30 bet kitob o'qish_",
-            parse_mode="Markdown", reply_markup=cancel_kb
-        )
-        u["temp_msg_id"] = sent.message_id
-        save_user(uid, u)
-        return
-
-    # ── Guruh yaratish: odat nomi ──
-    if state == "group_waiting_habit":
-        habit_name = text.strip()
-        if not habit_name:
-            return
-        try: bot.delete_message(uid, msg.message_id)
-        except: pass
-        old_mid = u.pop("temp_msg_id", None)
-        if old_mid:
-            try: bot.delete_message(uid, old_mid)
-            except: pass
-        u["temp_group"]["habit_name"] = habit_name
-        u["state"] = "group_waiting_time"
-        save_user(uid, u)
-        cancel_kb = InlineKeyboardMarkup()
-        cancel_kb.add(InlineKeyboardButton("⏩ Vaqtsiz", callback_data="group_create_no_time"))
-        cancel_kb.add(cBtn("⬅️ Orqaga", "menu2_open", "primary"))
-        sent = bot.send_message(uid,
-            f"✅ Odat: *{habit_name}*\n\n"
-            "3️⃣ Eslatma vaqtini kiriting:\n"
-            "_Masalan: 21:00_\n\n"
-            "_Yoki vaqtsiz qo'shish uchun tugmani bosing_",
-            parse_mode="Markdown", reply_markup=cancel_kb
-        )
-        u["temp_msg_id"] = sent.message_id
-        save_user(uid, u)
-        return
-
-    # ── Guruh yaratish: vaqt ──
-    if state == "group_waiting_time":
-        import re as _re_g
-        time_text = text.strip()
-        if not _re_g.match(r'^\d{1,2}:\d{2}$', time_text):
-            bot.send_message(uid, T(uid, "err_time_format"), parse_mode="Markdown")
-            return
-        try:
-            hh, mm = time_text.split(":")
-            if not (0 <= int(hh) <= 23 and 0 <= int(mm) <= 59):
-                raise ValueError
-            time_text = f"{int(hh):02d}:{int(mm):02d}"
-        except:
-            bot.send_message(uid, T(uid, "err_time_value"), parse_mode="Markdown")
-            return
-        try: bot.delete_message(uid, msg.message_id)
-        except: pass
-        old_mid = u.pop("temp_msg_id", None)
-        if old_mid:
-            try: bot.delete_message(uid, old_mid)
-            except: pass
-        u["temp_group"]["time"] = time_text
-        u["state"] = None
-        save_user(uid, u)
-        _save_new_group(uid, u)
-        return
-
-    # ── Guruh odati: nom ──
-    if state == "group_habit_waiting_name":
-        h_name = text.strip()
-        if not h_name:
-            return
-        try: bot.delete_message(uid, msg.message_id)
-        except: pass
-        old_mid = u.pop("temp_msg_id", None)
-        if old_mid:
-            try: bot.delete_message(uid, old_mid)
-            except: pass
-        u["temp_group_habit"]["name"] = h_name
-        u["state"] = "group_habit_waiting_time"
-        save_user(uid, u)
-        g_id      = u["temp_group_habit"]["g_id"]
-        cancel_kb = InlineKeyboardMarkup()
-        cancel_kb.add(InlineKeyboardButton("⏩ Vaqtsiz", callback_data=f"group_habit_no_time_{g_id}"))
-        cancel_kb.add(cBtn("⬅️ Orqaga", f"group_view_{g_id}", "primary"))
-        sent = bot.send_message(uid,
-            f"✅ Odat: *{h_name}*\n\n"
-            "Eslatma vaqtini kiriting:\n"
-            "_Masalan: 08:00_",
-            parse_mode="Markdown", reply_markup=cancel_kb
-        )
-        u["temp_msg_id"] = sent.message_id
-        save_user(uid, u)
-        return
-
-    # ── Guruh odati: vaqt ──
-    if state == "group_habit_waiting_time":
-        import re as _re_gh
-        time_text = text.strip()
-        if not _re_gh.match(r'^\d{1,2}:\d{2}$', time_text):
-            bot.send_message(uid, T(uid, "err_time_format"), parse_mode="Markdown")
-            return
-        try:
-            hh, mm = time_text.split(":")
-            if not (0 <= int(hh) <= 23 and 0 <= int(mm) <= 59):
-                raise ValueError
-            time_text = f"{int(hh):02d}:{int(mm):02d}"
-        except:
-            bot.send_message(uid, T(uid, "err_time_value"), parse_mode="Markdown")
-            return
-        try: bot.delete_message(uid, msg.message_id)
-        except: pass
-        old_mid = u.pop("temp_msg_id", None)
-        if old_mid:
-            try: bot.delete_message(uid, old_mid)
-            except: pass
-        u["temp_group_habit"]["time"] = time_text
-        u["state"] = None
-        save_user(uid, u)
-        _save_group_habit(uid, u)
         return
 
     # ── Broadcast matn/media (admin) ──

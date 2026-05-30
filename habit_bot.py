@@ -20,7 +20,7 @@ from texts import LANGS
 from motivation import MOTIVATSIYA
 from helpers import *        # noqa — T, get_lang, today_uz5, ...
 from bot_setup import bot
-from menus import *          # noqa — menu2, subscription, admin menus
+from menus import *          # noqa — subscription, admin menus
 
 # ── Handlerlarni ro'yxatdan o'tkazish (import tartib muhim!) ──
 import handlers_commands      # noqa — /start, /admin_panel, contact
@@ -29,7 +29,6 @@ import handlers_rating        # noqa — reyting rasm generatsiyasi
 import handlers_stats         # noqa — statistika, hisobotlar
 import handlers_callbacks     # noqa — callback dispatcher
 import handlers_text          # noqa — matn handleri, to'lov, inline
-import groups                 # noqa — guruh funksiyalari
 import achievements           # noqa — yutuqlar
 
 # ── Scheduler ──

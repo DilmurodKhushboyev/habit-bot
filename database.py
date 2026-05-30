@@ -6,7 +6,7 @@ Ma'lumotlar bazasi funksiyalari
 import time as _cache_time
 from datetime import date, datetime, timedelta
 
-from config import mongo_col, groups_col, reminders_col
+from config import mongo_col, reminders_col
 
 # ── Exponential backoff retry yordamchi ──────────────────────
 # 3 urinish: 0.3s → 0.7s → crash + log
@@ -293,31 +293,6 @@ def get_user_city(udata):
     if not isinstance(udata.get("city"), dict):
         init_city_for_user(udata)
     return udata["city"]
-
-def load_group(group_id):
-    def _fn():
-        doc = groups_col.find_one({"_id": str(group_id)})
-        if doc:
-            return {k: v for k, v in doc.items() if k != "_id"}
-        return None
-
-    return _retry_mongo(_fn, f"load_group ({group_id})", default=None)
-
-def save_group(group_id, gdata):
-    def _fn():
-        groups_col.update_one(
-            {"_id": str(group_id)},
-            {"$set": gdata},
-            upsert=True
-        )
-
-    _retry_mongo(_fn, f"save_group ({group_id})")
-
-def delete_group(group_id):
-    def _fn():
-        groups_col.delete_one({"_id": str(group_id)})
-
-    _retry_mongo(_fn, f"delete_group ({group_id})")
 
 # ============================================================
 #  ESLATMALAR (bir martalik)

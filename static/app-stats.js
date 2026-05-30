@@ -1,6 +1,6 @@
 // ── STATISTIKA ──
 
-// Reyting sahifasi uchun (page-stats) — faqat rating + guruh/do'st
+// Reyting sahifasi uchun (page-stats) — faqat rating + do'st
 async function loadStats() {
   _friendsLoaded = false;
   setStatSub(_statSub || 'rating');

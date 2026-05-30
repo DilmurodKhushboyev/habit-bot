@@ -11,7 +11,6 @@ from database import load_user, save_user
 from helpers import T, get_lang, today_uz5
 from bot_setup import (bot, send_main_menu, send_message_colored,
                        main_menu_dict, cBtn, ok_kb, kb_to_dict)
-from menus import send_menu2
 from handlers_stats import show_stats, delete_habit_menu
 from handlers_rating import show_rating
 
@@ -285,16 +284,6 @@ def handle_menu_callbacks(call, uid, cdata, u):
         try: bot.delete_message(uid, call.message.message_id)
         except Exception: pass
         send_main_menu(uid)
-        return True
-
-    # ============================================================
-    #  2-MENYU (GURUHLAR)
-    # ============================================================
-    if cdata == "menu2_open":
-        bot.answer_callback_query(call.id)
-        try: bot.delete_message(uid, call.message.message_id)
-        except Exception: pass
-        send_menu2(uid)
         return True
 
     if cdata == "dismiss_ball_notif":

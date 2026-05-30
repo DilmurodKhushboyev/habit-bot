@@ -11,9 +11,9 @@ import threading
 from datetime import datetime, date, timedelta, timezone
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from config import ADMIN_ID, BOT_TOKEN, mongo_col, groups_col, mongo_db, SHOP_BONUS_EFFECTS, SHOP_PRICES
-from database import (load_user, save_user, load_all_users, load_group,
-                      save_group, load_settings, add_points_history)
+from config import ADMIN_ID, BOT_TOKEN, mongo_col, mongo_db, SHOP_BONUS_EFFECTS, SHOP_PRICES
+from database import (load_user, save_user, load_all_users,
+                      load_settings, add_points_history)
 from city_logic import update_building_progress
 from helpers import T, get_lang, today_uz5
 from texts import LANGS
@@ -273,55 +273,6 @@ def unschedule_habit_today(user_id, habit_id):
     schedule.clear(f"{user_id}_{habit_id}")
     print(f"[schedule] {user_id}_{habit_id} — bugunlik to'xtatildi")
 
-def _is_member_done(val):
-    """done_today[uid_str] qiymatini to'g'ri tekshiradi (True, {"main": True}, {"main": False})."""
-    if val is True:
-        return True
-    if isinstance(val, dict):
-        return True in val.values()
-    return False
-
-def group_daily_reset():
-    """Har kuni 00:00 (UTC+5) da guruh progressini tozalash va eslatma yuborish"""
-    print("[group_reset] Guruh progresslari tozalanmoqda...")
-    from datetime import timezone, timedelta
-    tz_uz     = timezone(timedelta(hours=5))
-    yesterday = (datetime.now(tz_uz) - timedelta(days=1)).strftime("%Y-%m-%d")
-    try:
-        for g_doc in groups_col.find({}):
-            g_id  = g_doc["_id"]
-            g     = {k: v for k, v in g_doc.items() if k != "_id"}
-            members    = g.get("members", [])
-            done_today = g.get("done_today", {})
-            done_date  = g.get("done_date", "")
-            # Kecha hamma bajardimi?
-            if done_date == yesterday:
-                all_done = all(_is_member_done(done_today.get(str(mid), False)) for mid in members)
-                if all_done and members:
-                    g["streak"] = g.get("streak", 0) + 1
-                elif members:
-                    # Bajarmagan a'zolarga eslatma
-                    for mid in members:
-                        if not _is_member_done(done_today.get(str(mid), False)):
-                            try:
-                                mu = load_user(mid)
-                                bot.send_message(
-                                    int(mid),
-                                    f"😔 *{g['name']}*\n\n"
-                                    f"Kecha odatni bajarmadingiz.\n"
-                                    f"📌 *{g.get('habit_name','—')}*\n\n"
-                                    f"Bugun davom eting! 💪",
-                                    parse_mode="Markdown",
-                                    reply_markup=ok_kb(int(mid))
-                                )
-                            except Exception as _e: print(f"[warn] xato: {_e}")
-            # Progressni tozalash
-            g["done_today"] = {}
-            g["done_date"]  = ""
-            save_group(g_id, g)
-    except Exception as e:
-        print(f"[group_reset] Xato: {e}")
-
 def daily_reset():
     """Har kuni 00:00 (UTC+5) da barcha jadvallarni qayta yuklash"""
     from datetime import timezone, timedelta
@@ -532,38 +483,6 @@ def daily_reset():
                 mongo_col.update_one({"_id": uid}, {"$set": update_data})
             except Exception:
                 pass
-    # ── Guruhlar: daily reset ──
-    try:
-        for gdoc in groups_col.find({}):
-            g_id = gdoc["_id"]
-            g    = {k: v for k, v in gdoc.items() if k != "_id"}
-            # Kecha bajarmagan a'zolarga eslatma yuborish
-            done_today = g.get("done_today", {})
-            members    = g.get("members", [])
-            not_done   = [mid for mid in members if not _is_member_done(done_today.get(str(mid), False))]
-            if not_done and done_today:  # Kamida 1 kishi bajariganida
-                for mid in not_done:
-                    try:
-                        bot.send_message(
-                            int(mid),
-                            f"⏰ *{g['name']}*\n\n"
-                            f"Kecha *{g.get('habit_name','—')}* odatini bajarmaganingiz streak uzilishiga olib keldi!\n"
-                            f"Bugun bajaring! 💪",
-                            parse_mode="Markdown", reply_markup=ok_kb(int(mid))
-                        )
-                    except Exception as _e: print(f"[warn] xato: {_e}")
-            # Streak: agar hammasi bajargan bo'lsa allaqachon +1 bo'lgan
-            # Agar hammasi bajarmaganligi bo'lsa streak nollanadi
-            done_count = sum(1 for v in done_today.values() if (v is True or (isinstance(v, dict) and True in v.values())))
-            if done_count < len(members) and g.get("streak", 0) > 0:
-                g["streak"] = 0
-            # Yangi kun uchun tozalash
-            g["done_today"] = {}
-            g["done_date"]  = today_str
-            groups_col.update_one({"_id": g_id}, {"$set": g})
-    except Exception as e:
-        print(f"[daily_reset] guruh reset xatosi: {e}")
-
     # Kechagi (va undan oldingi) javobsiz eslatma xabarlarini chatdan o'chirish
     # — bugungilar qoladi (hali javob berish vaqti bor)
     try:
@@ -596,10 +515,10 @@ def daily_reset():
 
     # Faqat odat eslatma joblarini tozalash — tizim joblariga tegmaymiz
     # (daily_reset, weekly/monthly/yearly_report, evening_reminder,
-    #  group_daily_reset, challenge_resolve, habit_health saqlanishi kerak)
+    #  challenge_resolve, habit_health saqlanishi kerak)
     SYSTEM_JOB_TAGS = {
         "daily_reset", "weekly_report", "monthly_report", "yearly_report",
-        "evening_reminder", "group_daily_reset", "challenge_resolve", "habit_health"
+        "evening_reminder", "challenge_resolve", "habit_health"
     }
     all_jobs = schedule.get_jobs()
     for job in all_jobs:
@@ -942,7 +861,6 @@ def scheduler_loop():
     schedule.every().day.at("19:00").do(daily_reset).tag("daily_reset")
     # Har kuni 21:00 (UTC+5 = 16:00 UTC) da kechki eslatma
     schedule.every().day.at("16:00").do(send_evening_reminders).tag("evening_reminder")
-    schedule.every().day.at("19:00").do(group_daily_reset).tag("group_daily_reset")
     # Har kuni 00:05 (UTC+5 = 19:05 UTC) da muddati o'tgan challengelar hal qilinadi
     schedule.every().day.at("19:05").do(resolve_expired_challenges).tag("challenge_resolve")
     # Har juma 11:00 (UTC+5 = 06:00 UTC) da odat sog'liqligi tekshiruvi
