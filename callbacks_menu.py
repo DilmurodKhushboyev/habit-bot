@@ -7,6 +7,7 @@ import time
 import threading
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from config import ADMIN_ID
 from database import load_user, save_user
 from helpers import T, get_lang, today_uz5
 from bot_setup import (bot, send_main_menu, send_message_colored,
