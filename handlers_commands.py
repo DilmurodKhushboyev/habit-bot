@@ -13,7 +13,7 @@ from telebot.types import (
 )
 
 from config import ADMIN_ID
-from database import load_user, save_user, load_all_users, count_users, load_group, save_group
+from database import load_user, save_user, load_all_users, count_users
 from helpers import T, get_lang, today_uz5, lang_keyboard
 from texts import LANGS
 from motivation import MOTIVATSIYA
@@ -116,47 +116,6 @@ def cmd_start(msg):
                     save_user(uid, u_check)
         except Exception:
             pass
-
-    # Guruhga qo'shilish parametri
-    if start_param.startswith("grp_"):
-        g_id = start_param[4:]
-        u_check = load_user(uid)
-        if u_check.get("phone"):
-            g = load_group(g_id)
-            if g and str(uid) not in [str(m) for m in g.get("members", [])] and str(uid) != str(g.get("admin_id","")):
-                admin_id = g.get("admin_id")
-                # Foydalanuvchiga: so'rov yuborildi
-                sent_req = bot.send_message(uid,
-                    f"📨 *{g['name']}* guruhiga qo'shilish so'rovingiz yuborildi!\n\n"
-                    f"Guruh egasi tasdiqlashini kuting...",
-                    parse_mode="Markdown"
-                )
-                def del_req(chat_id, mid):
-                    time.sleep(5)
-                    try: bot.delete_message(chat_id, mid)
-                    except: pass
-                threading.Thread(target=del_req, args=(uid, sent_req.message_id), daemon=True).start()
-                # Adminga: tasdiqlash so'rovi
-                if admin_id:
-                    try:
-                        joiner_name = u_check.get("name", "Foydalanuvchi")
-                        kb_approve = InlineKeyboardMarkup()
-                        kb_approve.row(
-                            cBtn(f"✅ Qabul qilish", f"group_approve_{g_id}_{uid}", "success"),
-                            cBtn(f"❌ Rad etish",    f"group_reject_{g_id}_{uid}",  "danger")
-                        )
-                        bot.send_message(int(admin_id),
-                            f"👋 *{joiner_name}* guruhga qo'shilmoqchi!\n\n"
-                            f"👥 *{g['name']}*\n"
-                            f"📌 Odat: *{g.get('habit_name','—')}*",
-                            parse_mode="Markdown",
-                            reply_markup=kb_approve
-                        )
-                    except Exception as _e: print(f"[warn] xato: {_e}")
-        else:
-            # Ro'yxatdan o'tmagan — keyin qo'shamiz
-            u_check["pending_group"] = g_id
-            save_user(uid, u_check)
 
     u = load_user(uid)
 
@@ -367,40 +326,6 @@ def handle_contact(msg):
             try: bot.delete_message(cid, mid)
             except: pass
     threading.Thread(target=_del_batch_reg, args=(uid, list(_cleanup_ids)), daemon=True).start()
-
-    # Pending guruh — ro'yxatdan o'tgach avtomatik qo'shilish
-    pending_g = u.pop("pending_group", None)
-    if pending_g:
-        try:
-            g = load_group(pending_g)
-            if g and str(uid) not in [str(m) for m in g.get("members", [])]:
-                g["members"].append(str(uid))
-                save_group(pending_g, g)
-                groups = u.get("groups", [])
-                if not any(x.get("id") == pending_g for x in groups):
-                    groups.append({"id": pending_g, "name": g["name"], "admin_id": g["admin_id"]})
-                    u["groups"] = groups
-                try:
-                    admin_id = g.get("admin_id")
-                    if admin_id and str(admin_id) != str(uid):
-                        bot.send_message(int(admin_id),
-                            f"👋 *{u.get('name','Yangi azo')}* guruhga qo'shildi!\n"
-                            f"👥 *{g['name']}*",
-                            parse_mode="Markdown"
-                        )
-                except Exception as _e: print(f"[warn] send_message: {_e}")
-                sent_grp = bot.send_message(uid,
-                    f"✅ *{g['name']}* guruhiga qo'shildingiz!\n"
-                    f"📌 Odat: *{g.get('habit_name','—')}*",
-                    parse_mode="Markdown", reply_markup=ok_kb()
-                )
-                def _del_grp(cid, mid):
-                    time.sleep(5)
-                    try: bot.delete_message(cid, mid)
-                    except: pass
-                threading.Thread(target=_del_grp, args=(uid, sent_grp.message_id), daemon=True).start()
-        except Exception as e:
-            print(f"[pending_group] xato: {e}")
 
     # Ro'yxatdan o'tdi — asosiy menyuga yo'naltirish
     u["name"]     = msg.from_user.first_name or "Do'stim"

@@ -14,7 +14,7 @@ from flask import jsonify, request
 
 from config import BOT_TOKEN, ADMIN_ID, mongo_db, SHOP_PRICES, SHOP_SELL_PRICES, SHOP_STARS_PRICES, SHOP_ONE_TIME
 from database import (load_user, save_user, load_all_users, count_users,
-                      load_group, save_group, user_exists, add_points_history)
+                      user_exists, add_points_history)
 from helpers import T, get_lang, get_rank, today_uz5
 from texts import LANGS
 from bot_setup import bot, get_bot_username, _share_file_ids
