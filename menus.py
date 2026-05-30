@@ -1,77 +1,13 @@
 #!/usr/bin/env python3
 """
-2-menyu (guruhlar), obuna tekshirish, admin menyulari
+Obuna tekshirish, admin menyulari
 """
 
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from database import load_user, save_user, load_settings
 from helpers import T
-from bot_setup import (bot, send_message_colored, cBtn)
-
-
-# ============================================================
-#  2-MENYU (GURUHLAR MENYUSI)
-# ============================================================
-def menu2_dict(uid=None):
-    """2-menyu — guruhlar bo'limi, asosiy menyuning ko'zgudagi aksi"""
-    rows = []
-    rows.append([
-        {"text": "👥 Guruh yaratish",   "callback_data": "group_create", "style": "primary"},
-        {"text": "🗑 Guruhni o'chirish", "callback_data": "group_delete", "style": "danger"},
-    ])
-    rows.append([
-        {"text": "📊 Guruh statistika", "callback_data": "group_stats",  "style": "primary"},
-        {"text": "🏆 Guruh reytingi",   "callback_data": "group_rating", "style": "primary"},
-    ])
-    rows.append([
-        {"text": "🛒 Bozor",             "callback_data": "menu_bozor",     "style": "primary"},
-        {"text": "⚙️ Sozlamalar",        "callback_data": "menu_settings",  "style": "primary"},
-    ])
-    rows.append([
-        {"text": "🏠 Asosiy menyu",      "callback_data": "menu_main",      "style": "primary"},
-    ])
-    return {"inline_keyboard": rows}
-
-def build_menu2_text(uid):
-    u      = load_user(uid)
-    groups = u.get("groups", [])
-    text   = "👥 *Guruhlar menyusi*\n"
-    text  += "━" * 16 + "\n"
-    if not groups:
-        text += "\nHali hech qanday guruhga a'zo emassiz.\n"
-        text += "_Yangi guruh yarating yoki mavjudiga qo'shiling!_\n"
-    else:
-        text += f"\n*Guruhlaringiz:* {len(groups)} ta\n"
-        for g in groups:
-            member_count = len(g.get("members", []))
-            text += f"\n👥 *{g['name']}* — {member_count} a'zo"
-    text += "\n" + "━" * 16
-    return text
-
-def send_menu2(uid, text=None):
-    u = load_user(uid)
-    if text is None:
-        text = build_menu2_text(uid)
-    sent = send_message_colored(uid, text, menu2_dict(uid))
-    if sent is None:
-        kb = InlineKeyboardMarkup()
-        kb.row(
-            InlineKeyboardButton("👥 Guruh yaratish",    callback_data="group_create"),
-            InlineKeyboardButton("🗑 Guruhni o'chirish", callback_data="group_delete")
-        )
-        kb.row(
-            InlineKeyboardButton("📊 Guruh statistika",  callback_data="group_stats"),
-            InlineKeyboardButton("🏆 Guruh reytingi",    callback_data="group_rating")
-        )
-        kb.add(InlineKeyboardButton("🛒 Bozor",          callback_data="menu_bozor"))
-        kb.add(InlineKeyboardButton("🏠 1-menyu",        callback_data="menu_main"))
-        sent = bot.send_message(uid, text, parse_mode="Markdown", reply_markup=kb)
-    u["main_msg_id"] = sent.message_id
-    ids = u.get("start_msg_ids", [])
-    ids.append(sent.message_id)
-    u["start_msg_ids"] = ids
-    save_user(uid, u)
+from bot_setup import (bot, cBtn)
 
 
 def check_subscription(user_id):
