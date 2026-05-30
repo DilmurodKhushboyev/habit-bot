@@ -8,7 +8,7 @@ import time
 from datetime import datetime, date, timedelta, timezone
 from flask import jsonify, request
 
-from database import load_user, save_user, load_all_users, load_group, save_group, add_points_history
+from database import load_user, save_user, load_all_users, add_points_history
 from points_logic import apply_item_bonuses, apply_pet_dog_bonus
 from city_logic import update_building_progress
 from helpers import T, get_lang, get_rank, today_uz5
