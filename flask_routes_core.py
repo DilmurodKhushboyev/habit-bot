@@ -4,16 +4,15 @@ Flask API core routes: rating, profile, habits, groups
 """
 
 import uuid
-from datetime import datetime, date, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from flask import jsonify, request
 
 from config import mongo_db, mongo_col, SHOP_PRICES, HABIT_LIMIT
-from database import (load_user, save_user, load_all_users, load_group,
-                      save_group, delete_group,
+from database import (load_user, save_user, load_all_users,
+                      save_group,
                       add_points_history, get_points_in_period,
                       get_streak_in_period)
-from helpers import get_lang, get_rank, today_uz5
-from texts import LANGS
+from helpers import today_uz5
 from bot_setup import bot, get_bot_username
 from achievements import _ACHIEVEMENTS as ACHIEVEMENTS
 from flask_helpers import (require_auth, rate_limit_check, _tz_today,
@@ -458,7 +457,7 @@ def register_core_routes(app):
     @app.route("/api/habits/<int:uid>", methods=["POST"])
     @require_auth
     def api_habits_add(uid):
-        import uuid, re as _re
+        import re as _re
         data  = request.get_json() or {}
         name  = (data.get("name") or "").strip()
         icon  = (data.get("icon") or "✅").strip()
