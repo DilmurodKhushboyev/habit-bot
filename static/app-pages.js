@@ -84,7 +84,14 @@ function renderToday(d) {
   }
   weekCalHtml += '</div>';
 
-  // Vaqt bo'yicha sort: vaqtsiz eng oxirga, bajarilganlar done bo'lmaganlardan keyin
+  // ── TARTIBLASH ──
+  // 1. Bajarilmaganlar tepada, bajarilganlar pastda (done bloki)
+  // 2. Bajarilmaganlar orasida: MUHIMLIK asosiy (high → medium → low),
+  //    har daraja ICHIDA vaqt bo'yicha (eng yaqin vaqt birinchi, vaqtsiz oxirida)
+  // 3. Bajarilganlar orasida: tasdiqlash tartibida (oxirgi tasdiqlangan eng pastda)
+  // Eski odatlarda priority yo'q → 'medium' (backend ham shu fallback'ni qaytaradi)
+  const _PRIO_RANK = { high: 0, medium: 1, low: 2 };
+  const _prioOf = (h) => _PRIO_RANK[h.priority] !== undefined ? _PRIO_RANK[h.priority] : 1;
   const sortedHabits = [...(habits || [])].sort((a, b) => {
     // 1. Bajarilgan/bajarilmagan (bajarilmaganlar tepada)
     if (a.done !== b.done) return a.done ? 1 : -1;
@@ -93,14 +100,29 @@ function renderToday(d) {
       const la = a.last_done_at || 0;
       const lb = b.last_done_at || 0;
       if (la !== lb) return la - lb;
+      // Teng bo'lsa — muhimlik bo'yicha barqaror tartib
+      return _prioOf(a) - _prioOf(b);
     }
-    // 3. Vaqt bo'yicha o'sish tartibida (vaqtsiz eng oxirga)
+    // 3. Pending bloki: MUHIMLIK asosiy (high → medium → low)
+    const pa = _prioOf(a), pb = _prioOf(b);
+    if (pa !== pb) return pa - pb;
+    // 4. Bir xil muhimlik ichida: vaqt bo'yicha o'sish (vaqtsiz eng oxirga)
     const ta = a.time && a.time !== 'vaqtsiz' ? a.time : '99:99';
     const tb = b.time && b.time !== 'vaqtsiz' ? b.time : '99:99';
     return ta.localeCompare(tb);
   });
   let cardsHtml = '';
-  sortedHabits.forEach(h => {
+  sortedHabits.forEach((h, idx) => {
+    // ── AJRATUVCHI CHIZIQ ──
+    // Faqat pending (bajarilmagan) odatlar orasida, muhimlik darajasi
+    // o'zgargan joyda chiziq chiziladi (high|medium va medium|low → 2 ta).
+    // Done odatlar yoki birinchi karta oldida chiziq yo'q.
+    if (idx > 0 && !h.done) {
+      const prev = sortedHabits[idx - 1];
+      if (!prev.done && _prioOf(prev) !== _prioOf(h)) {
+        cardsHtml += '<div class="prio-divider"></div>';
+      }
+    }
     const rc  = h.repeat_count || 1;
     const tc  = h.today_count  || 0;
     const isRepeat = rc > 1;
@@ -114,7 +136,7 @@ function renderToday(d) {
     cardsHtml += `
       <div class="checkin-card ${h.done ? 'done' : ''} ${d.is_today_view === false ? 'readonly' : ''}" id="ccard-${h.id}">
         <div class="checkin-actions-bg">
-          <button class="cswipe-btn cswipe-edit" onclick="event.stopPropagation();openEdit('${h.id}','${_esc(h.name)}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}')">
+          <button class="cswipe-btn cswipe-edit" onclick="event.stopPropagation();openEdit('${h.id}','${_esc(h.name)}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}','${h.priority||'medium'}')">
             <svg width="18" height="18" viewBox="0 0 26 26" fill="none"><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="#fff" opacity="0.9"/></svg>
             <span>${S('habits','edit_btn')}</span>
           </button>
@@ -139,7 +161,7 @@ function renderToday(d) {
             <button class="checkin-dropdown-close" onclick="event.stopPropagation();closeAllCheckinDrops()">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"/></svg>
             </button>
-            <button class="checkin-dropdown-item" onclick="event.stopPropagation();closeAllCheckinDrops();openEdit('${h.id}','${_esc(h.name)}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}')">
+            <button class="checkin-dropdown-item" onclick="event.stopPropagation();closeAllCheckinDrops();openEdit('${h.id}','${_esc(h.name)}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}','${h.priority||'medium'}')">
               <svg width="15" height="15" viewBox="0 0 26 26" fill="none"><path d="M17 4L22 9L10 21L4 22L5 16L17 4Z" fill="var(--accent2)" opacity="0.85"/></svg>
               ${S('habits','edit_btn')}
             </button>

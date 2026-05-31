@@ -872,6 +872,14 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   100% { opacity: 0; transform: translateY(56px) translateX(var(--snow-drift, 0px)); }
 }
 
+/* Muhimlik darajalari orasidagi ajratuvchi chiziq (pending odatlar orasida) */
+.prio-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sub) 25%, var(--sub) 75%, transparent);
+  opacity: 0.22;
+  margin: 4px 14px 18px;
+}
+
 .checkin-card {
   background: var(--bg);
   box-shadow: var(--sh-sm);
