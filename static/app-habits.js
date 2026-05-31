@@ -286,7 +286,6 @@ function openAdd() {
 async function openEdit(id, name, icon, time, type, repeatCount, timesJson, priority) {
   _ensureHabitModal();
   editingHabitId = id;
-  showToast('🔍 EDIT keldi: priority=' + String(priority));  // DIAGNOSTIKA — keyin o'chiriladi
   _selectedPriority = (priority === 'low' || priority === 'high') ? priority : 'medium';
   document.getElementById('modal-title').textContent = S('habits','edit_title');
   _translateHabitModal();
@@ -331,7 +330,6 @@ async function saveHabit() {
   const saveBtn = document.getElementById('habit-save-txt');
   if (saveBtn && saveBtn.dataset.saving === '1') return;
   const name = document.getElementById('h-name').value.trim();
-  showToast('🔍 SAVE yuboradi: priority=' + String(_selectedPriority) + ' | mode=' + (editingHabitId ? 'EDIT' : 'YANGI'));  // DIAGNOSTIKA — keyin o'chiriladi
   const icon = document.querySelector('.icon-opt.selected')?.dataset.icon || '✅';
   const repeatCount = parseInt(document.getElementById('h-repeat-count').value) || 1;
   const isRepeat = repeatCount >= 2;
