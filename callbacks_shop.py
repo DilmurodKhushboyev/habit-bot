@@ -9,6 +9,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from config import ADMIN_ID, SHOP_PRICES
 from database import load_user, save_user, add_points_history
+from db_lock import user_lock
 from helpers import T, get_lang
 from bot_setup import (bot, send_main_menu, send_message_colored,
                        main_menu_dict, cBtn, ok_kb, kb_to_dict,
@@ -72,25 +73,43 @@ def handle_shop_callbacks(call, uid, cdata, u):
             try: bot.delete_message(uid, call.message.message_id)
             except Exception: pass
 
-        # Jon allaqachon yetarli (foydalanuvchi odat bajarib tiklagan) → xabarni o'chir
-        if jon_val > 20:
+        # S1 (race condition): load→modify→save bloki lock ichida, u QAYTA o'qiladi
+        # (tashqaridagi u eski nusxa bo'lishi mumkin). Tekshiruvlar ham lock ichida.
+        try:
+            with user_lock(uid):
+                u = load_user(uid)
+                jon_val = round(u.get("jon", 100.0))
+                balls = u.get("points", 0)
+
+                # Jon allaqachon yetarli (odat bajarib tiklagan) → tashqarida o'chir
+                if jon_val > 20:
+                    fixed = "already"
+                # Ball yetmaydi → xabar QOLADI (keyin bosishi mumkin)
+                elif balls < jon_price:
+                    fixed = "no_pts"
+                else:
+                    u["points"] = balls - jon_price
+                    add_points_history(u, -jon_price)
+                    u["jon"] = 100.0
+                    save_user(uid, u)
+                    fixed = "done"
+        except TimeoutError:
+            bot.send_message(uid, T(uid, "err_server_busy"),
+                             parse_mode="Markdown", reply_markup=ok_kb(uid))
+            return True
+
+        if fixed == "already":
             _del_jonfix_msg()
             bot.answer_callback_query(call.id, T(uid, "jon_zero_already"), show_alert=False)
             return True
-
-        # Ball yetmaydi → xabar QOLADI (keyin bosishi mumkin), faqat ogohlantirish
-        if balls < jon_price:
+        if fixed == "no_pts":
             bot.send_message(uid,
                 T(uid, "bozor_jon_no_pts").format(price=jon_price, points=balls),
                 parse_mode="Markdown", reply_markup=ok_kb(uid)
             )
             return True
 
-        # Ball yetadi → jon berib, xabarni o'chir
-        u["points"] = balls - jon_price
-        add_points_history(u, -jon_price)
-        u["jon"] = 100.0
-        save_user(uid, u)
+        # fixed == "done" → jon berildi, xabarni o'chir
         _del_jonfix_msg()
         sent_ok = bot.send_message(uid, T(uid, "jon_zero_done"), parse_mode="Markdown")
         def _del_jonfix_ok(chat_id, mid):
@@ -102,25 +121,40 @@ def handle_shop_callbacks(call, uid, cdata, u):
 
     if cdata == "bozor_buy_jon":
         bot.answer_callback_query(call.id)
-        balls = u.get("points", 0)
-        jon_val = round(u.get("jon", 100.0))
         jon_price = SHOP_PRICES["jon_restore"]
-        if jon_val > 20:
+        # S1 (race condition): tekshiruv + load→modify→save lock ichida, u QAYTA o'qiladi.
+        try:
+            with user_lock(uid):
+                u = load_user(uid)
+                balls = u.get("points", 0)
+                jon_val = round(u.get("jon", 100.0))
+                if jon_val > 20:
+                    outcome = "high"
+                elif balls < jon_price:
+                    outcome = "no_pts"
+                else:
+                    u["points"] = balls - jon_price
+                    add_points_history(u, -jon_price)
+                    u["jon"]    = 100.0
+                    save_user(uid, u)
+                    outcome = "ok"
+        except TimeoutError:
+            bot.send_message(uid, T(uid, "err_server_busy"),
+                             parse_mode="Markdown", reply_markup=ok_kb(uid))
+            return True
+
+        if outcome == "high":
             bot.send_message(uid,
                 T(uid, "bozor_jon_high").format(jon=jon_val),
                 parse_mode="Markdown", reply_markup=ok_kb(uid)
             )
             return True
-        if balls < jon_price:
+        if outcome == "no_pts":
             bot.send_message(uid,
                 T(uid, "bozor_jon_no_pts").format(price=jon_price, points=balls),
                 parse_mode="Markdown", reply_markup=ok_kb(uid)
             )
             return True
-        u["points"] = balls - jon_price
-        add_points_history(u, -jon_price)
-        u["jon"]    = 100.0
-        save_user(uid, u)
         bot.send_message(uid,
             T(uid, "bozor_jon_ok").format(price=jon_price),
             parse_mode="Markdown", reply_markup=ok_kb(uid)
@@ -213,11 +247,21 @@ def handle_shop_callbacks(call, uid, cdata, u):
         try: bot.delete_message(uid, call.message.message_id)
         except Exception: pass
         old_points = u.get("points", 0)
-        u["points"] = 0
-        # Period-filtered rating uchun reset hodisasini points_history ga yozish
-        if old_points > 0:
-            add_points_history(u, -old_points)
-        save_user(uid, u)
+        # S1 (race condition): ball nolga tushirish lock ichida, u QAYTA o'qiladi
+        # (ayni vaqtda checkin ball qo'shsa — yo'qolmasin, joriy balansdan reset).
+        try:
+            with user_lock(uid):
+                u = load_user(uid)
+                old_points = u.get("points", 0)
+                u["points"] = 0
+                # Period-filtered rating uchun reset hodisasini points_history ga yozish
+                if old_points > 0:
+                    add_points_history(u, -old_points)
+                save_user(uid, u)
+        except TimeoutError:
+            bot.send_message(uid, T(uid, "err_server_busy"),
+                             parse_mode="Markdown", reply_markup=ok_kb(uid))
+            return True
         sent_ok = bot.send_message(uid, T(uid, "ok_points_reset"), parse_mode="Markdown")
         def del_reset_ok(chat_id, mid):
             time.sleep(2)

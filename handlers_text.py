@@ -29,6 +29,7 @@ from bot_setup import (bot, send_main_menu, main_menu, main_menu_dict,
                        get_bot_username, _share_file_ids)
 from menus import (check_subscription, send_sub_required,
                    admin_menu)
+from db_lock import user_lock, two_user_locks
 
 from scheduler import schedule_habit
 
@@ -114,24 +115,28 @@ def handle_text(msg):
                 except Exception:
                     pass
                 try:
-                    u_ref = load_user(referrer_id)
-                    u_ref["points"] = u_ref.get("points", 0) + 50
-                    add_points_history(u_ref, 50)
-                    refs = u_ref.get("referrals", [])
-                    refs.append(uid)
-                    u_ref["referrals"] = refs
-                    milestone_msg = ""
-                    milestones = {5: "🛡 Streak himoyasi (1 ta) qo\'shildi!", 10: "⭐ +100 ball bonus!", 20: "💎 VIP nishon qo\'shildi!"}
-                    if len(refs) in milestones:
-                        milestone_msg = f"\n\n🏆 *Chegara bonusi:* {milestones[len(refs)]}"
-                        if len(refs) == 5:
-                            u_ref["streak_shields"] = u_ref.get("streak_shields", 0) + 1
-                        elif len(refs) == 10:
-                            u_ref["points"] = u_ref.get("points", 0) + 100
-                            add_points_history(u_ref, 100)
-                        elif len(refs) == 20:
-                            u_ref["is_vip"] = True
-                    save_user(referrer_id, u_ref)
+                    # ── Race himoyasi: referrer (u_ref) atomik zona (S1) ──
+                    # u_ref lock ICHIDA o'qiladi/yoziladi — referrer ayni vaqtda
+                    # checkin yoki boshqa do'st taklif qilsa ball yo'qolmaydi.
+                    with user_lock(referrer_id):
+                        u_ref = load_user(referrer_id)
+                        u_ref["points"] = u_ref.get("points", 0) + 50
+                        add_points_history(u_ref, 50)
+                        refs = u_ref.get("referrals", [])
+                        refs.append(uid)
+                        u_ref["referrals"] = refs
+                        milestone_msg = ""
+                        milestones = {5: "🛡 Streak himoyasi (1 ta) qo\'shildi!", 10: "⭐ +100 ball bonus!", 20: "💎 VIP nishon qo\'shildi!"}
+                        if len(refs) in milestones:
+                            milestone_msg = f"\n\n🏆 *Chegara bonusi:* {milestones[len(refs)]}"
+                            if len(refs) == 5:
+                                u_ref["streak_shields"] = u_ref.get("streak_shields", 0) + 1
+                            elif len(refs) == 10:
+                                u_ref["points"] = u_ref.get("points", 0) + 100
+                                add_points_history(u_ref, 100)
+                            elif len(refs) == 20:
+                                u_ref["is_vip"] = True
+                        save_user(referrer_id, u_ref)
                     bot.send_message(referrer_id,
                         f"🎉 *Do\'stingiz botga qo\'shildi!*\n\n"
                         f"*⭐ +50 ball* hisobingizga qo\'shildi!\n"
@@ -397,24 +402,34 @@ def handle_text(msg):
         except ValueError:
             bot.send_message(uid, T(uid, "err_positive_num"), parse_mode="Markdown")
             return
-        my_points  = u.get("points", 0)
         target_id  = u.get("transfer_target_id")
-        if amount > my_points:
-            bot.send_message(uid, T(uid, "err_not_enough_pts", points=my_points), parse_mode="Markdown")
-            return
         old_msg_id = u.pop("temp_msg_id", None)
         if old_msg_id:
             try: bot.delete_message(uid, old_msg_id)
             except: pass
-        target_u = load_user(target_id)
-        u["points"] = my_points - amount
-        add_points_history(u, -amount)
-        u["state"]  = None
-        u.pop("transfer_target_id", None)
-        save_user(uid, u)
-        target_u["points"] = target_u.get("points", 0) + amount
-        add_points_history(target_u, amount)
-        save_user(target_id, target_u)
+        # ── Race condition himoyasi: ikki user atomik zona (S1 + S2) ──
+        # u va target_u lock ICHIDA qayta o'qiladi (40-qatordagi eski nusxa
+        # emas) — aks holda double-spend/yo'qolish saqlanib qoladi. Balans
+        # tekshiruvi ham lock ichida (yangi qiymatda).
+        try:
+            with two_user_locks(uid, target_id):
+                u = load_user(uid)
+                my_points = u.get("points", 0)
+                if amount > my_points:
+                    bot.send_message(uid, T(uid, "err_not_enough_pts", points=my_points), parse_mode="Markdown")
+                    return
+                target_u = load_user(target_id)
+                u["points"] = my_points - amount
+                add_points_history(u, -amount)
+                u["state"]  = None
+                u.pop("transfer_target_id", None)
+                save_user(uid, u)
+                target_u["points"] = target_u.get("points", 0) + amount
+                add_points_history(target_u, amount)
+                save_user(target_id, target_u)
+        except TimeoutError:
+            bot.send_message(uid, T(uid, "err_server_busy"), parse_mode="Markdown")
+            return
         try:
             bot.send_message(
                 target_id,
@@ -491,18 +506,31 @@ def handle_text(msg):
         if not target_id:
             send_main_menu(uid)
             return
-        target_u = load_user(target_id)
-        _old_pts = target_u.get("points", 0)
-        target_u["points"] = max(0, _old_pts + amount)
-        add_points_history(target_u, target_u["points"] - _old_pts)
-        save_user(target_id, target_u)
-        # Agar admin o'ziga ball bergan bo'lsa, u va target_u bir user —
-        # u ni sinxronlashtiramiz, aks holda keyingi save_user(uid, u) eski
-        # points qiymatini qaytarib yozib, yangi ball yo'qolib ketadi.
-        if str(uid) == str(target_id):
-            u = target_u
-        u["state"] = None
-        save_user(uid, u)
+        # ── Race himoyasi: admin (u) + target_u atomik zona (S1) ──
+        # target_u lock ICHIDA qayta o'qiladi — ayni vaqtda target checkin
+        # qilsa ball yo'qolmaydi. two_user_locks deadlock-safe (uid==target_id
+        # bo'lsa bitta lock). u["state"] yangilash ham shu zonada.
+        try:
+            with two_user_locks(uid, target_id):
+                target_u = load_user(target_id)
+                _old_pts = target_u.get("points", 0)
+                target_u["points"] = max(0, _old_pts + amount)
+                add_points_history(target_u, target_u["points"] - _old_pts)
+                save_user(target_id, target_u)
+                # Agar admin o'ziga ball bergan bo'lsa, u va target_u bir user —
+                # u ni sinxronlashtiramiz, aks holda keyingi save_user(uid, u) eski
+                # points qiymatini qaytarib yozib, yangi ball yo'qolib ketadi.
+                if str(uid) == str(target_id):
+                    u = target_u
+                else:
+                    # uid != target_id: admin (u) ni lock ichida qayta o'qiymiz,
+                    # 40-qatordagi eski nusxa state'dan boshqa maydonni eskirtmasin.
+                    u = load_user(uid)
+                u["state"] = None
+                save_user(uid, u)
+        except TimeoutError:
+            bot.send_message(uid, T(uid, "err_server_busy"), parse_mode="Markdown")
+            return
         sign = "+" if amount >= 0 else ""
         try:
             bot.send_message(
@@ -627,49 +655,55 @@ def handle_successful_payment(msg):
     charge_id = msg.successful_payment.telegram_payment_charge_id  # Telegram unikal to'lov ID
     try:
         item_id = payload.replace("stars_", "", 1)
-        u = load_user(uid)
-        # Idempotency check: Telegram ba'zan "successful_payment" event'ini 2 marta yuborishi
-        # mumkin (network retry, webhook duplicate). Mukofotni FAQAT BIR MARTA berishimiz uchun
-        # har bir charge_id'ni saqlab boramiz va takror kelganda rad etamiz.
-        stars_payments = u.get("stars_payments", [])
-        if charge_id and charge_id in stars_payments:
-            print(f"[stars] Duplicate event rad etildi: charge_id={charge_id}, uid={uid}")
-            return
-        raw_inv = u.get("inventory", {})
-        if isinstance(raw_inv, list):
-            inventory = {i: 1 for i in raw_inv}
-        else:
-            inventory = dict(raw_inv)
-        # gift_box — tasodifiy mukofot
-        if item_id == "gift_box":
-            import random as _rnd
-            gifts = [
-                ("points", 100), ("points", 200), ("points", 500),
-                ("streak_shields", 1), ("xp_booster_days", 3),
-            ]
-            gift_type, gift_val = _rnd.choice(gifts)
-            if gift_type == "points":
-                u["points"] = u.get("points", 0) + gift_val
-                add_points_history(u, gift_val)
-                msg_text = f"🎁 *Sovga qutisi ochildi!*\n\n🎉 *+{gift_val} ball* qo'shildi!"
-            elif gift_type == "streak_shields":
-                u["streak_shields"] = u.get("streak_shields", 0) + gift_val
-                msg_text = f"🎁 *Sovga qutisi ochildi!*\n\n🛡 *{gift_val} ta streak himoyasi* qo'shildi!"
-            elif gift_type == "xp_booster_days":
-                u["xp_booster_days"] = u.get("xp_booster_days", 0) + gift_val
-                msg_text = f"🎁 *Sovga qutisi ochildi!*\n\n💎 *XP Booster {gift_val} kun* qo'shildi!"
+        # ── Race + idempotency himoyasi: lock ICHIDA o'qish→tekshir→yozish ──
+        # Stars = haqiqiy pul. charge_id duplicate tekshiruvi LOCK ICHIDA bo'lishi
+        # shart — aks holda 2 ta duplicate event ikkalasi ham tekshiruvdan o'tib,
+        # keyin 2 marta mukofot berishi mumkin (idempotency buziladi). Shuningdek
+        # foydalanuvchi ayni vaqtda checkin qilsa ball/inventar yo'qolmaydi (S1).
+        with user_lock(uid):
+            u = load_user(uid)
+            # Idempotency check: Telegram ba'zan "successful_payment" event'ini 2 marta yuborishi
+            # mumkin (network retry, webhook duplicate). Mukofotni FAQAT BIR MARTA berishimiz uchun
+            # har bir charge_id'ni saqlab boramiz va takror kelganda rad etamiz.
+            stars_payments = u.get("stars_payments", [])
+            if charge_id and charge_id in stars_payments:
+                print(f"[stars] Duplicate event rad etildi: charge_id={charge_id}, uid={uid}")
+                return
+            raw_inv = u.get("inventory", {})
+            if isinstance(raw_inv, list):
+                inventory = {i: 1 for i in raw_inv}
             else:
-                msg_text = "🎁 Sovga qutisi ochildi!"
-        else:
-            # Noma'lum Stars mahsulot — xato holati (bo'lmasligi kerak).
-            # raise → mavjud except blok ushlaydi va foydalanuvchi+adminga xabar yuboradi.
-            raise ValueError(f"Noma'lum Stars item_id: {item_id}")
-        u["inventory"] = inventory
-        # Idempotency: ushbu charge_id'ni ro'yxatga qo'shamiz — kelajakda takror kelsa rad etiladi
-        if charge_id:
-            stars_payments.append(charge_id)
-            u["stars_payments"] = stars_payments
-        save_user(uid, u)
+                inventory = dict(raw_inv)
+            # gift_box — tasodifiy mukofot
+            if item_id == "gift_box":
+                import random as _rnd
+                gifts = [
+                    ("points", 100), ("points", 200), ("points", 500),
+                    ("streak_shields", 1), ("xp_booster_days", 3),
+                ]
+                gift_type, gift_val = _rnd.choice(gifts)
+                if gift_type == "points":
+                    u["points"] = u.get("points", 0) + gift_val
+                    add_points_history(u, gift_val)
+                    msg_text = f"🎁 *Sovga qutisi ochildi!*\n\n🎉 *+{gift_val} ball* qo'shildi!"
+                elif gift_type == "streak_shields":
+                    u["streak_shields"] = u.get("streak_shields", 0) + gift_val
+                    msg_text = f"🎁 *Sovga qutisi ochildi!*\n\n🛡 *{gift_val} ta streak himoyasi* qo'shildi!"
+                elif gift_type == "xp_booster_days":
+                    u["xp_booster_days"] = u.get("xp_booster_days", 0) + gift_val
+                    msg_text = f"🎁 *Sovga qutisi ochildi!*\n\n💎 *XP Booster {gift_val} kun* qo'shildi!"
+                else:
+                    msg_text = "🎁 Sovga qutisi ochildi!"
+            else:
+                # Noma'lum Stars mahsulot — xato holati (bo'lmasligi kerak).
+                # raise → mavjud except blok ushlaydi va foydalanuvchi+adminga xabar yuboradi.
+                raise ValueError(f"Noma'lum Stars item_id: {item_id}")
+            u["inventory"] = inventory
+            # Idempotency: ushbu charge_id'ni ro'yxatga qo'shamiz — kelajakda takror kelsa rad etiladi
+            if charge_id:
+                stars_payments.append(charge_id)
+                u["stars_payments"] = stars_payments
+            save_user(uid, u)
         bot.send_message(uid, msg_text, parse_mode="Markdown")
     except Exception as e:
         # Xato yuz berdi — foydalanuvchi pul to'lagan, lekin mukofot berilmadi.
