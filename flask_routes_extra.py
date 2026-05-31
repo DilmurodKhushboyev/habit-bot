@@ -17,7 +17,7 @@ from database import (load_user, save_user, load_all_users, count_users,
                       user_exists, add_points_history)
 from helpers import T, get_lang, get_rank, today_uz5
 from texts import LANGS
-from db_lock import user_lock
+from db_lock import user_lock, two_user_locks
 from bot_setup import bot, get_bot_username, _share_file_ids
 from achievements import _ACHIEVEMENTS as ACHIEVEMENTS, check_achievements_toplevel
 from flask_helpers import (require_auth, rate_limit_check, _tz_today,
@@ -489,42 +489,54 @@ def register_extra_routes(app):
     def api_friends_add(uid, fid):
         if uid == fid:
             return jsonify({"ok": False, "error": "O'zingizni qo'sha olmaysiz"}), 400
-        u = load_user(uid)
-        friends = u.get("friends", [])
-        if fid not in friends:
-            if len(friends) >= 50:
-                return jsonify({"ok": False, "error": "Do'stlar limiti 50 ta"}), 400
-            friends.append(fid)
-            u["friends"] = friends
-            save_user(uid, u)
-        # Ikkinchi tomon: fid ning ro'yxatiga ham uid ni qo'shish
-        f = load_user(fid)
-        if f:
-            f_friends = f.get("friends", [])
-            if uid not in f_friends and len(f_friends) < 50:
-                f_friends.append(uid)
-                f["friends"] = f_friends
-                save_user(fid, f)
-        return jsonify({"ok": True})
+        # ── S1 himoyasi: ikki user lock (mutual friends race) ──
+        try:
+          with two_user_locks(uid, fid):
+            u = load_user(uid)
+            friends = u.get("friends", [])
+            if fid not in friends:
+                if len(friends) >= 50:
+                    return jsonify({"ok": False, "error": "Do'stlar limiti 50 ta"}), 400
+                friends.append(fid)
+                u["friends"] = friends
+                save_user(uid, u)
+            # Ikkinchi tomon: fid ning ro'yxatiga ham uid ni qo'shish
+            f = load_user(fid)
+            if f:
+                f_friends = f.get("friends", [])
+                if uid not in f_friends and len(f_friends) < 50:
+                    f_friends.append(uid)
+                    f["friends"] = f_friends
+                    save_user(fid, f)
+            return jsonify({"ok": True})
+        except TimeoutError:
+            return jsonify({"ok": False, "error": "Server band — qaytadan urinib ko'ring"}), 429
 
     @app.route("/api/friends/<int:uid>/remove/<int:fid>", methods=["DELETE"])
     @require_auth
     def api_friends_remove(uid, fid):
-        u = load_user(uid)
-        friends = u.get("friends", [])
-        if fid in friends:
-            friends.remove(fid)
-            u["friends"] = friends
-            save_user(uid, u)
-        # Ikkinchi tomon: fid ning ro'yxatidan ham uid ni o'chirish
-        f = load_user(fid)
-        if f:
-            f_friends = f.get("friends", [])
-            if uid in f_friends:
-                f_friends.remove(uid)
-                f["friends"] = f_friends
-                save_user(fid, f)
-        return jsonify({"ok": True})
+        if uid == fid:
+            return jsonify({"ok": True})
+        # ── S1 himoyasi: ikki user lock (mutual friends race) ──
+        try:
+          with two_user_locks(uid, fid):
+            u = load_user(uid)
+            friends = u.get("friends", [])
+            if fid in friends:
+                friends.remove(fid)
+                u["friends"] = friends
+                save_user(uid, u)
+            # Ikkinchi tomon: fid ning ro'yxatidan ham uid ni o'chirish
+            f = load_user(fid)
+            if f:
+                f_friends = f.get("friends", [])
+                if uid in f_friends:
+                    f_friends.remove(uid)
+                    f["friends"] = f_friends
+                    save_user(fid, f)
+            return jsonify({"ok": True})
+        except TimeoutError:
+            return jsonify({"ok": False, "error": "Server band — qaytadan urinib ko'ring"}), 429
 
     @app.route("/api/challenges/<int:uid>")
     @require_auth
@@ -636,30 +648,46 @@ def register_extra_routes(app):
             return jsonify({"ok": False, "error": "Challenge topilmadi yoki allaqachon ko'rib chiqilgan"})
         bet        = c.get("bet", 50)
         from_uid   = int(c.get("from_uid", 0))
-        # Ikkalasidan ham garov yechish
-        u_recv = load_user(uid)
-        u_send = load_user(from_uid)
-        if not u_recv or not u_send:
-            return jsonify({"ok": False, "error": "Foydalanuvchi topilmadi"})
-        if u_recv.get("points", 0) < bet:
-            return jsonify({"ok": False, "error": f"Sizda yetarli ball yo'q (kerak: {bet})"})
-        if u_send.get("points", 0) < bet:
-            return jsonify({"ok": False, "error": "Challenger'da yetarli ball yo'q"})
-        u_recv["points"] = u_recv.get("points", 0) - bet
-        add_points_history(u_recv, -bet)
-        u_send["points"] = u_send.get("points", 0) - bet
-        add_points_history(u_send, -bet)
-        save_user(uid, u_recv)
-        save_user(from_uid, u_send)
-        challenges_col.update_one(
-            {"_id": ObjectId(cid)},
-            {"$set": {
-                "status":      "active",
-                "accepted_at": today_uz5(),
-                "expires_at":  (datetime.now(timezone(timedelta(hours=5))) + timedelta(days=c.get("days", 7))).strftime("%Y-%m-%d"),
-            }}
-        )
-        # Yuboruvchiga xabar
+        # ── S1+S2 himoyasi: ikki user lock (deadlock-safe) + atomik DB guard ──
+        try:
+          with two_user_locks(uid, from_uid):
+            # Lock ICHIDA challenge'ni qayta o'qish (boshqa so'rov qabul qilib
+            # bo'lgan bo'lishi mumkin — double-accept oldini olish)
+            c = challenges_col.find_one({"_id": ObjectId(cid), "to_uid": str(uid), "status": "pending"})
+            if not c:
+                return jsonify({"ok": False, "error": "Challenge topilmadi yoki allaqachon ko'rib chiqilgan"})
+            bet      = c.get("bet", 50)
+            from_uid = int(c.get("from_uid", 0))
+            # Ikkala userni lock ICHIDA qayta o'qish (eski nusxa emas)
+            u_recv = load_user(uid)
+            u_send = load_user(from_uid)
+            if not u_recv or not u_send:
+                return jsonify({"ok": False, "error": "Foydalanuvchi topilmadi"})
+            if u_recv.get("points", 0) < bet:
+                return jsonify({"ok": False, "error": f"Sizda yetarli ball yo'q (kerak: {bet})"})
+            if u_send.get("points", 0) < bet:
+                return jsonify({"ok": False, "error": "Challenger'da yetarli ball yo'q"})
+            # Atomik DB guard: faqat status hali "pending" bo'lsa "active" qiladi.
+            # modified_count==0 → boshqa so'rov allaqachon qabul qilgan → ball yechilmaydi.
+            res = challenges_col.update_one(
+                {"_id": ObjectId(cid), "status": "pending"},
+                {"$set": {
+                    "status":      "active",
+                    "accepted_at": today_uz5(),
+                    "expires_at":  (datetime.now(timezone(timedelta(hours=5))) + timedelta(days=c.get("days", 7))).strftime("%Y-%m-%d"),
+                }}
+            )
+            if res.modified_count == 0:
+                return jsonify({"ok": False, "error": "Challenge allaqachon ko'rib chiqilgan"})
+            # Guard o'tdi — endi ball yechish (status DB'da "active" qulflandi)
+            u_recv["points"] = u_recv.get("points", 0) - bet
+            add_points_history(u_recv, -bet)
+            u_send["points"] = u_send.get("points", 0) - bet
+            add_points_history(u_send, -bet)
+            save_user(uid, u_recv)
+            save_user(from_uid, u_send)
+        except TimeoutError:
+            return jsonify({"ok": False, "error": "Server band — qaytadan urinib ko'ring"}), 429
         try:
             recv_name = u_recv.get("name", "Raqib")
             bot.send_message(
