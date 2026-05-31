@@ -17,24 +17,11 @@ from database import (load_user, save_user, load_all_users, count_users,
                       user_exists, add_points_history)
 from helpers import T, get_lang, get_rank, today_uz5
 from texts import LANGS
+from db_lock import user_lock
 from bot_setup import bot, get_bot_username, _share_file_ids
 from achievements import _ACHIEVEMENTS as ACHIEVEMENTS, check_achievements_toplevel
 from flask_helpers import (require_auth, rate_limit_check, _tz_today,
                            _is_done_today, _calc_best_streak)
-
-# ── Shop race condition himoyasi: per-user lock ──
-# Bitta foydalanuvchi uchun bir vaqtda faqat 1 ta buy/sell/activate amal bajariladi
-_shop_user_locks = {}
-_shop_locks_master = threading.Lock()
-
-def _get_shop_lock(uid):
-    """Foydalanuvchi uchun lazy yaratiladigan lock (thread-safe)."""
-    with _shop_locks_master:
-        lock = _shop_user_locks.get(uid)
-        if lock is None:
-            lock = threading.Lock()
-            _shop_user_locks[uid] = lock
-        return lock
 
 # Achievements kategoriya nomlari (3 tilda)
 CAT_LABELS = {
@@ -200,11 +187,9 @@ def register_extra_routes(app):
         # gift_box uchun pastdagi `if item_id == "gift_box"` erta return alohida ushlaydi.
         if item_id in SHOP_STARS_PRICES and item_id != "gift_box":
             return jsonify({"ok": False, "error": "Bu mahsulot faqat Telegram Stars bilan sotib olinadi"})
-        # ── Race condition himoyasi: per-user lock ──
-        _lock = _get_shop_lock(uid)
-        if not _lock.acquire(timeout=3):
-            return jsonify({"ok": False, "error": "Server band — qaytadan urinib ko'ring"}), 429
+        # ── Race condition himoyasi: markaziy per-user lock (db_lock) ──
         try:
+          with user_lock(uid):
             u = load_user(uid)
             raw_inv = u.get("inventory", [])
             if isinstance(raw_inv, list):
@@ -288,8 +273,8 @@ def register_extra_routes(app):
             u["inventory"] = inventory
             save_user(uid, u)
             return jsonify({"ok": True, "points": u.get("points", 0), "owned": inventory.get(item_id, 0)})
-        finally:
-            _lock.release()
+        except TimeoutError:
+            return jsonify({"ok": False, "error": "Server band — qaytadan urinib ko'ring"}), 429
 
     @app.route("/api/shop/<int:uid>/stars_invoice", methods=["POST"])
     @require_auth
@@ -339,11 +324,9 @@ def register_extra_routes(app):
         data = request.get_json() or {}
         item_id  = data.get("item_id", "")
         deactive = data.get("deactivate", False)
-        # ── Race condition himoyasi: per-user lock ──
-        _lock = _get_shop_lock(uid)
-        if not _lock.acquire(timeout=3):
-            return jsonify({"ok": False, "error": "Server band — qaytadan urinib ko'ring"}), 429
+        # ── Race condition himoyasi: markaziy per-user lock (db_lock) ──
         try:
+          with user_lock(uid):
             u = load_user(uid)
             if item_id.startswith("pet_"):
                 u["active_pet"]   = "" if deactive else item_id
@@ -353,8 +336,8 @@ def register_extra_routes(app):
                 u["active_car"]   = "" if deactive else item_id
             save_user(uid, u)
             return jsonify({"ok": True})
-        finally:
-            _lock.release()
+        except TimeoutError:
+            return jsonify({"ok": False, "error": "Server band — qaytadan urinib ko'ring"}), 429
 
     @app.route("/api/shop/<int:uid>/sell", methods=["POST"])
     @require_auth
@@ -366,11 +349,9 @@ def register_extra_routes(app):
         refund = SHOP_SELL_PRICES.get(item_id)
         if refund is None:
             return jsonify({"ok": False, "error": "Bu narsa sotilmaydi"})
-        # ── Race condition himoyasi: per-user lock ──
-        _lock = _get_shop_lock(uid)
-        if not _lock.acquire(timeout=3):
-            return jsonify({"ok": False, "error": "Server band — qaytadan urinib ko'ring"}), 429
+        # ── Race condition himoyasi: markaziy per-user lock (db_lock) ──
         try:
+          with user_lock(uid):
             u = load_user(uid)
             today = today_uz5()
             # Counter fieldlar uchun alohida tekshirish
@@ -445,8 +426,8 @@ def register_extra_routes(app):
             add_points_history(u, refund)
             save_user(uid, u)
             return jsonify({"ok": True, "points": u["points"], "refund": refund})
-        finally:
-            _lock.release()
+        except TimeoutError:
+            return jsonify({"ok": False, "error": "Server band — qaytadan urinib ko'ring"}), 429
 
     @app.route("/api/friends/<int:uid>")
     @require_auth
