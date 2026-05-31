@@ -9,6 +9,7 @@ from datetime import datetime, date, timedelta, timezone
 from flask import jsonify, request
 
 from database import load_user, save_user, load_all_users, add_points_history
+from config import STREAK_MILESTONES
 from points_logic import apply_item_bonuses, apply_pet_dog_bonus
 from city_logic import update_building_progress
 from helpers import T, get_lang, get_rank, today_uz5
@@ -20,14 +21,6 @@ from flask_helpers import (require_auth, rate_limit_check, _tz_today,
 
 
 def register_data_routes(app):
-
-    STREAK_MILESTONES = {
-        7:   {"emoji": "🔥", "title": "7 kunlik streak!",   "bonus": 10},
-        14:  {"emoji": "⚡", "title": "14 kunlik streak!",  "bonus": 20},
-        30:  {"emoji": "💎", "title": "30 kunlik streak!",  "bonus": 50},
-        60:  {"emoji": "🏆", "title": "60 kunlik streak!",  "bonus": 100},
-        100: {"emoji": "👑", "title": "100 kunlik streak!", "bonus": 200},
-    }
 
     def _apply_item_bonuses(u, base_points):
         # Ko'chirildi: points_logic.apply_item_bonuses (audit #5)
@@ -343,7 +336,7 @@ def register_data_routes(app):
                 streak_milestone = {
                     "streak": new_global_streak,
                     "emoji":  ms["emoji"],
-                    "title":  ms["title"],
+                    "title":  T(uid, "streak_milestone_title", days=new_global_streak),
                     "bonus":  ms["bonus"],
                 }
         return jsonify({

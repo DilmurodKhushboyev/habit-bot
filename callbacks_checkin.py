@@ -9,6 +9,7 @@ import time
 import threading
 from datetime import datetime, timedelta, timezone
 
+from config import STREAK_MILESTONES
 from database import load_user, save_user, add_points_history
 from points_logic import apply_item_bonuses, apply_pet_dog_bonus
 from city_logic import update_building_progress
@@ -23,15 +24,20 @@ from bot_setup import (bot, send_main_menu, main_menu_dict,
 # Foydalanuvchi streak bosqichiga yetganda tabrik yuborish uchun.
 # Bu funksiya `threading.Thread` orqali fon rejimida chaqiriladi
 # (`toggle_` 2 joyda + `done_` 2 joyda — callbacks_checkin_done.py import qiladi).
-STREAK_MILESTONES = (3, 7, 14, 30, 60, 100, 180, 365)
+# DIQQAT: ball berish bu yerda EMAS — chaqiruvchi joyda (asosiy thread'da,
+# save_user'dan oldin) beriladi (S1 race'dan qochish). Bu funksiya FAQAT
+# xabar yuboradi. STREAK_MILESTONES config.py'dan (yagona manba — WebApp bilan
+# sinxron). milestone kaliti dict bo'lgani uchun `in` tekshiruvi kalitlar bo'yicha.
 
 
 def _check_streak_milestone(uid: int, streak: int) -> None:
-    """Streak milestone ga yetilganda foydalanuvchiga tabrik yuboradi."""
+    """Streak milestone ga yetilganda foydalanuvchiga tabrik yuboradi (faqat xabar)."""
     try:
         if streak not in STREAK_MILESTONES:
             return
-        text = T(uid, "streak_milestone").format(days=streak)
+        ms = STREAK_MILESTONES[streak]
+        text = ms["emoji"] + " " + T(uid, "streak_milestone").format(
+            days=streak, bonus=ms["bonus"])
         _send_auto_delete(uid, text)
     except Exception as e:
         print(f"[streak_milestone] xato uid={uid} streak={streak}: {e}")
@@ -152,7 +158,18 @@ def handle_checkin_callbacks(call, uid, cdata, u):
                                 if u["streak"] > u.get("best_streak", 0):
                                     u["best_streak"] = u["streak"]
                                     u["best_streak_date"] = today
-                                threading.Thread(target=_check_streak_milestone, args=(uid, u["streak"]), daemon=True).start()
+                                # Streak milestone bonus (api_checkin bilan sinxron — S4)
+                                # Ball asosiy thread'da beriladi (S1 race'dan qochish),
+                                # xabar esa thread'da yuboriladi.
+                                if u["streak"] in STREAK_MILESTONES:
+                                    _msent = u.get("streak_milestones_sent", [])
+                                    if u["streak"] not in _msent:
+                                        _ms = STREAK_MILESTONES[u["streak"]]
+                                        u["points"] = u.get("points", 0) + _ms["bonus"]
+                                        add_points_history(u, _ms["bonus"], today)
+                                        _msent.append(u["streak"])
+                                        u["streak_milestones_sent"] = _msent
+                                        threading.Thread(target=_check_streak_milestone, args=(uid, u["streak"]), daemon=True).start()
                             # done_log: kunlik bajarilish tarixi
                             done_log = u.get("done_log", {})
                             done_log[today] = True
@@ -311,7 +328,18 @@ def handle_checkin_callbacks(call, uid, cdata, u):
                             if u["streak"] > u.get("best_streak", 0):
                                 u["best_streak"] = u["streak"]
                                 u["best_streak_date"] = today
-                            threading.Thread(target=_check_streak_milestone, args=(uid, u["streak"]), daemon=True).start()
+                            # Streak milestone bonus (api_checkin bilan sinxron — S4)
+                            # Ball asosiy thread'da beriladi (S1 race'dan qochish),
+                            # xabar esa thread'da yuboriladi.
+                            if u["streak"] in STREAK_MILESTONES:
+                                _msent = u.get("streak_milestones_sent", [])
+                                if u["streak"] not in _msent:
+                                    _ms = STREAK_MILESTONES[u["streak"]]
+                                    u["points"] = u.get("points", 0) + _ms["bonus"]
+                                    add_points_history(u, _ms["bonus"], today)
+                                    _msent.append(u["streak"])
+                                    u["streak_milestones_sent"] = _msent
+                                    threading.Thread(target=_check_streak_milestone, args=(uid, u["streak"]), daemon=True).start()
                         # done_log: kunlik bajarilgan kun
                         done_log = u.get("done_log", {})
                         done_log[today] = True
