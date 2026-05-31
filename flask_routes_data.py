@@ -88,6 +88,7 @@ def register_data_routes(app):
                 "name":         h["name"],
                 "icon":         h.get("icon", "✅"),
                 "time":         h.get("time", "vaqtsiz"),
+                "priority":     h.get("priority", "medium"),
                 "done":         is_done,
                 "streak":       h.get("streak", 0),
                 "repeat_count": rep_count,

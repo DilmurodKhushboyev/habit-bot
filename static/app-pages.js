@@ -112,17 +112,7 @@ function renderToday(d) {
     return ta.localeCompare(tb);
   });
   let cardsHtml = '';
-  sortedHabits.forEach((h, idx) => {
-    // ── AJRATUVCHI CHIZIQ ──
-    // Faqat pending (bajarilmagan) odatlar orasida, muhimlik darajasi
-    // o'zgargan joyda chiziq chiziladi (high|medium va medium|low → 2 ta).
-    // Done odatlar yoki birinchi karta oldida chiziq yo'q.
-    if (idx > 0 && !h.done) {
-      const prev = sortedHabits[idx - 1];
-      if (!prev.done && _prioOf(prev) !== _prioOf(h)) {
-        cardsHtml += '<div class="prio-divider"></div>';
-      }
-    }
+  sortedHabits.forEach((h) => {
     const rc  = h.repeat_count || 1;
     const tc  = h.today_count  || 0;
     const isRepeat = rc > 1;
