@@ -482,7 +482,7 @@ function _buildTimeInputs(count, existingTimes) {
   let html = '';
   for (let i = 0; i < n; i++) {
     const val = (sorted[i]) || '';
-    html += '<div class="time-row" id="ht-row-' + i + '">'
+    html += '<div class="time-row habit-time-row" id="ht-row-' + i + '">'
       + '<span class="time-lbl">' + S('msg','time_slot_n').replace('{n}', i + 1) + '</span>'
       + '<input class="time-input" type="time" id="ht-val-' + i + '" value="' + val + '" onchange="_sortHabitTimes()">'
       + '</div>';
@@ -500,7 +500,7 @@ function addHabitTime() {
   const rcEl = document.getElementById('h-repeat-count');
   if (rcEl && parseInt(rcEl.value) < i + 1) rcEl.value = i + 1;
   const div = document.createElement('div');
-  div.className = 'time-row';
+  div.className = 'time-row habit-time-row';
   div.id = 'ht-row-' + i;
   div.innerHTML = '<span class="time-lbl">' + S('msg','time_slot_n').replace('{n}', i + 1) + '</span>'
     + '<input class="time-input" type="time" id="ht-val-' + i + '" onchange="_sortHabitTimes()">';
