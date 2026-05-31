@@ -1425,31 +1425,11 @@ body.dark .prog-ring-wrap svg text { fill: #FFFFFF !important; }
   outline: none; cursor: pointer;
 }
 .time-input:disabled { opacity: 0.4; cursor: not-allowed; }
-/* Bo'sh holatda --:--ni ko'rinarli qilamiz (foydalanuvchi vaqt kiritsa bo'lishini bilsin) */
-.time-input::-webkit-datetime-edit { color: var(--sub); opacity: 0.95; }
+.time-input::-webkit-datetime-edit { color: var(--sub); opacity: 0.85; }
 .time-input:focus::-webkit-datetime-edit,
 .time-input:valid::-webkit-datetime-edit { color: var(--text); opacity: 1; }
 .time-input::-webkit-datetime-edit-fields-wrapper { font-weight: 600; }
-/* Eslatma vaqt inputi: native picker belgisi avvalgidek qoladi */
 .time-input::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
-/* Odat modalidagi vaqt qatori: native belgini yashirib, o'rniga pastga qaragan chevron */
-.habit-time-row .time-input::-webkit-calendar-picker-indicator {
-  opacity: 0;
-  cursor: pointer;
-  width: 22px;
-}
-.time-row { position: relative; }
-.habit-time-row::after {
-  content: '';
-  position: absolute;
-  right: 16px; top: 50%;
-  width: 9px; height: 9px;
-  border-right: 2px solid var(--sub);
-  border-bottom: 2px solid var(--sub);
-  transform: translateY(-65%) rotate(45deg);
-  opacity: 0.55;
-  pointer-events: none;
-}
 .time-clear {
   width: 34px; height: 34px; border-radius: 10px;
   border: none; cursor: pointer; font-size: 14px;
