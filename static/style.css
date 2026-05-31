@@ -653,7 +653,10 @@ body.page-profile-active .page-title { display: block; }
 .prio-btn.active::before { opacity: 0; }
 .prio-btn:active { transform: scale(0.96); }
 
-
+.icon-cat-tabs {
+  display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto;
+  padding: 6px 8px 4px; margin: 6px -8px 0; scrollbar-width: none;
+}
 .icon-cat-tabs::-webkit-scrollbar { display: none; }
 .icon-cat-btn {
   flex-shrink: 0; padding: 6px 12px; border-radius: 20px;
