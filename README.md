@@ -508,7 +508,7 @@ Modullar orasidagi `import` bog'liqligi — **koddan avtomatik chiqarilgan** (ta
 | `texts` | — | `callbacks_settings`, `helpers`, `scheduler`, `handlers_*`, `flask_routes_data/extra`, `habit_bot` |
 | `motivation` | — | `handlers_commands/stats/text`, `scheduler`, `flask_routes_data`, `habit_bot` |
 | `handlers_onboarding` | — | `habit_bot` |
-| `db_lock` | — (faqat `threading`, `contextlib`) | `handlers_text` (+ kelajakda `callbacks_shop`, `callbacks_checkin*`, `flask_routes_data/extra` — S1 migratsiyasi davom etmoqda) |
+| `db_lock` | — (faqat `threading`, `contextlib`) | `handlers_text`, `callbacks_shop`, `callbacks_checkin`, `callbacks_checkin_done` (+ kelajakda `flask_routes_data/extra`, `scheduler` — S1 migratsiyasi davom etmoqda) |
 | `database` | `config` | deyarli barcha modul |
 | `helpers` | `database`, `texts` | deyarli barcha modul |
 | `bot_setup` | `config`, `database`, `helpers` | deyarli barcha L3–L5 modul |
@@ -524,13 +524,13 @@ Modullar orasidagi `import` bog'liqligi — **koddan avtomatik chiqarilgan** (ta
 | `scheduler` | `bot_setup`, `city_logic`, `config`, `database`, `handlers_stats`, `helpers`, `motivation`, `texts` | `callbacks_checkin`, `callbacks_checkin_done`, `flask_routes_core/extra`, `handlers_text`, `habit_bot` |
 | `reminders_scheduler` | `bot_setup`, `config`, `database`, `helpers` | `callbacks_reminders`, `habit_bot` |
 | `callbacks_habits` | `bot_setup`, `callbacks_checkin`, `city_logic`, `database`, `handlers_stats`, `helpers` | `handlers_callbacks` |
-| `callbacks_checkin` | `achievements`, `bot_setup`, `callbacks_checkin_done`, `city_logic`, `config`, `database`, `helpers`, `points_logic`, `scheduler` | `callbacks_checkin_done`, `callbacks_habits` |
-| `callbacks_checkin_done` | `achievements`, `bot_setup`, `callbacks_checkin`, `city_logic`, `config`, `database`, `helpers`, `points_logic`, `scheduler` | `callbacks_checkin` |
+| `callbacks_checkin` | `achievements`, `bot_setup`, `callbacks_checkin_done`, `city_logic`, `config`, `database`, `db_lock`, `helpers`, `points_logic`, `scheduler` | `callbacks_checkin_done`, `callbacks_habits` |
+| `callbacks_checkin_done` | `achievements`, `bot_setup`, `callbacks_checkin`, `city_logic`, `config`, `database`, `db_lock`, `helpers`, `points_logic`, `scheduler` | `callbacks_checkin` |
 | `callbacks_admin` | `bot_setup`, `config`, `database`, `helpers`, `menus` | `handlers_callbacks` |
 | `callbacks_menu` | `bot_setup`, `config`, `database`, `handlers_rating`, `handlers_stats`, `helpers`, `menus` | `handlers_callbacks` |
 | `callbacks_reminders` | `bot_setup`, `helpers`, `reminders_scheduler` | `handlers_callbacks` |
 | `callbacks_settings` | `bot_setup`, `config`, `database`, `helpers`, `texts` | `handlers_callbacks` |
-| `callbacks_shop` | `bot_setup`, `config`, `database`, `helpers` | `handlers_callbacks` |
+| `callbacks_shop` | `bot_setup`, `config`, `database`, `db_lock`, `helpers` | `handlers_callbacks` |
 | `flask_routes_city` | `city_logic`, `config`, `database`, `flask_helpers` | `flask_api` |
 | `flask_routes_core` | `achievements`, `bot_setup`, `city_logic`, `config`, `database`, `flask_helpers`, `helpers`, `scheduler` | `flask_api` |
 | `flask_routes_data` | `bot_setup`, `city_logic`, `config`, `database`, `flask_helpers`, `helpers`, `motivation`, `points_logic`, `texts` | `flask_api` |
@@ -540,6 +540,6 @@ Modullar orasidagi `import` bog'liqligi — **koddan avtomatik chiqarilgan** (ta
 | `flask_api` | `flask_helpers`, `flask_routes_*` (barcha 5 ta) | `habit_bot` |
 | `habit_bot` | L0–L5 modullarning ko'pi (`achievements`, `bot_setup`, `config`, `database`, `flask_api`, `handlers_*`, `helpers`, `menus`, `motivation`, `reminders_scheduler`, `scheduler`, `texts`) | — (kirish nuqtasi) |
 
-**⚠️ Nazorat ostidagi circular import:** `callbacks_checkin` ↔ `callbacks_checkin_done` bir-birini import qiladi. Buzilmaydi, chunki `callbacks_checkin.py` `STREAK_MILESTONES` va `_check_streak_milestone` ta'rifidan **keyin** `callbacks_checkin_done` ni import qiladi (modul yarmigacha yuklangач). Bu ikki faylning import tartibini o'zgartirmang.
+**⚠️ Nazorat ostidagi circular import:** `callbacks_checkin` ↔ `callbacks_checkin_done` bir-birini import qiladi. Buzilmaydi, chunki `callbacks_checkin.py` `STREAK_MILESTONES` va `_check_streak_milestone` ta'rifidan **keyin** `callbacks_checkin_done` ni import qiladi (modul yarmigacha yuklangач). Bu ikki faylning import tartibini o'zgartirmang. (`from db_lock import user_lock` ikkala faylda ham xavfsiz — `db_lock` L0 qatlam, hech qanday lokal modul import qilmaydi; `callbacks_checkin_done` da u `callbacks_checkin` import'idan oldin turadi.)
 
 **Eslatma:** yuqoridagi jadval `import X` / `from X import ...` (modul boshidagi) larни qamraydi. Funksiya ichidagi lazy import'lar (masalan circular oldini olish uchun) bu jadvalga kirmasligi mumkin — batafsil bog'liqlik feature qo'shganda tekshiriladi.

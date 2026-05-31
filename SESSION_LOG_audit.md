@@ -68,10 +68,10 @@ qilib, yozsa — keyingi yozish oldingisini **o'chiradi** (last-write-wins).
 | `handlers_text.py` | admin ball berish | Target checkin to'qnashishi | 🟡 | ✅ #18 |
 | `handlers_text.py` | referral bonus | Referrer checkin to'qnashishi | 🟡 | ✅ #18 |
 | `handlers_text.py` | Stars to'lov | Duplicate event / checkin | 🔴 | ✅ #18 |
-| `callbacks_shop.py` | 83-86 (jon sotib olish) | Ayni vaqtda checkin → ball yo'qoladi | 🟡 | ⏳ |
-| `callbacks_shop.py` | 198-203 (reset) | Ayni vaqtda ball qo'shilsa → yo'qoladi | 🟡 | ⏳ |
-| `callbacks_checkin.py` | hammasi | Standart checkin pattern | 🟡 | ⏳ |
-| `callbacks_checkin_done.py` | hammasi | Bildirishnomadan checkin | 🟡 | ⏳ |
+| `callbacks_shop.py` | 83-86 (jon sotib olish) | Ayni vaqtda checkin → ball yo'qoladi | 🟡 | ✅ #19 |
+| `callbacks_shop.py` | 198-203 (reset) | Ayni vaqtda ball qo'shilsa → yo'qoladi | 🟡 | ✅ #19 |
+| `callbacks_checkin.py` | hammasi | Standart checkin pattern | 🟡 | ✅ #19 |
+| `callbacks_checkin_done.py` | hammasi | Bildirishnomadan checkin | 🟡 | ✅ #19 |
 | `flask_routes_data.py` | api_checkin | WebApp checkin | 🟡 | ⏳ |
 | `flask_routes_core.py` | habits CRUD | Odat | 🟢 | ⏳ |
 | `scheduler.py` | daily_reset, milestone | Cron job + bot xabari to'qnashishi | 🟡 | ⏳ |
@@ -1848,11 +1848,52 @@ Chaqiruvchi (`flask_routes_data.py`) 4 joyda ishlatadi:
 - ❌ Cache-bust SHART EMAS — frontend tegilmadi
 - ✅ Yangi fayl BOR: `db_lock.py` (GitHub'ga qo'shing)
 
-## 🔵 KEYINGI CHATGA (#19)
+## ✅ #19 — S1 migratsiya davomi: `callbacks_shop.py` + `callbacks_checkin.py` + `callbacks_checkin_done.py`
 
-> #18 da S1 infratuzilma (`db_lock.py`) tayyor + `handlers_text.py` 4 blok migratsiya (transfer/admin/referral/Stars). S1 jadvalida holat ustuni — qaysi joylar qolgani ko'rsatilgan.
-> **Audit ustuvorligi (S1 migratsiya davomi):** 🟡 `callbacks_shop.py` (jon sotib olish 83-86, reset 198-203) → `user_lock`. 🟡 `callbacks_checkin.py` + `callbacks_checkin_done.py` (standart checkin) → `user_lock` (DIQQAT: `_check_streak_milestone` thread'da — lock asosiy thread'da, README:541 circular import tartibi). 🟡 `flask_routes_data.py` (api_checkin). 🟡 `flask_routes_extra.py` — mavjud `_get_shop_lock` ni `db_lock` ga ko'chirib markazlashtirish (Qoida #17) + `api_friends_add`. 🟢 `flask_routes_core.py` (habits CRUD), `scheduler.py` (cron).
-> **Eslatma:** har bosqichda lock ichida `load_user` QAYTA o'qilishi shart (eski nusxa bilan ishlamaslik). `err_server_busy` kaliti tayyor (timeout javobi).
+**Sabab:** #18 da `db_lock.py` infratuzilma + `handlers_text.py` migratsiya tugagandi. #19 — S1 jadvalidagi keyingi ⏳ joylar: bozor (ball sarflash) va checkin (eng tez-tez chaqiriladigan ball oqimi).
+
+**Qamrov:** 3 fayl, Variant 2 (per-user `threading.Lock`, #18 dagi pattern). Har joyda lock ICHIDA `load_user` QAYTA o'qiladi (tashqi/eski nusxa bilan ishlamaslik — #18 saboqi). `TimeoutError` (3s) → `err_server_busy` (#18 da tayyor, 3 til).
+
+**`callbacks_shop.py` (3 blok):**
+1. 🟡 `jonfix` — ball ayirish + tekshiruv (`jon_val>20`, `balls<jon_price`) `with user_lock(uid)` ichida; natija `fixed` flagiga (`already`/`no_pts`/`done`) → xabar/o'chirish lock'dan TASHQARIDA (network lock ichida emas, #18 referral qarori). `jonfix` S1 jadvalida alohida yo'q edi — Qoida #09 (xuddi `bozor_buy_jon` mantiqi) bo'yicha qamrandi.
+2. 🟡 `bozor_buy_jon` — xuddi shu, `outcome` flagi (`high`/`no_pts`/`ok`).
+3. 🟡 `bozor_reset_do` — `points=0` lock ichida, joriy balansdan reset (ayni vaqtdagi checkin yo'qolmaydi). Menyu qayta chizish + `u2=load_user` (faqat `main_msg_id`, 🟢) lock'dan tashqarida — Qoida #04 (tegilmadi).
+- Tegilmagan: `menu_bozor`, `bozor_referral`, `bozor_transfer`, `bozor_reset_confirm` — faqat `main_msg_id`/`state` yozadi, ballsiz (🟢). `bot.get_me()` (134) — S3 alohida.
+
+**`callbacks_checkin.py` (`toggle_`):** butun `load → modify → save → menyu` zonasi (`u=load_user`dan `send_main_menu` fallback'gача) `try: with user_lock(uid):` ichiga. `skip_` (ballsiz) va `done_` delegatsiyasi lock'dan TASHQARIDA. `from db_lock import user_lock`.
+
+**`callbacks_checkin_done.py` (`done_`):** butun zonasi xuddi shunday lock bilan. `from db_lock import user_lock` — `callbacks_checkin` import'idan **OLDIN** (circular tartib saqlandi, README:543).
+
+**MUHIM qarorlar (Qoida #21):**
+- Checkin'da lock butun blokni (network ham ichida) qamraydi — `save_user` va `bot.send_message` aralashgan, ularni ajratish 350-qatorlik xavfli refaktor bo'lardi (Qoida #04/#23). Bu BIR user locki, network tez (~200-300ms), auto-delete `time.sleep(3)` THREAD'da (lock tashqarisida) → boshqa userlar bloklanmaydi.
+- `_check_streak_milestone` thread'da `.start()` (lock ICHIDA chaqiriladi-yu, thread o'zi `user_lock` OLMAYDI) → deadlock yo'q. Tasdiqlandi: `achievements`, `city_logic`, `points_logic`, `scheduler` hech biri `user_lock` olmaydi (re-entrancy xavfi yo'q).
+- `toggle_`→`done_` delegatsiyasi (handle_done_callbacks) lock'dan tashqarida chaqiriladi → nested lock yo'q (bitta `cdata` bir vaqtda toggle ham done ham bo'lolmaydi).
+
+**Test scenario (Qoida #15):**
+- Stub runtime: ikki checkin fayli birga import OK (circular buzilmadi). Checkin streak 6→7 → +5 base +10 milestone = 15 ball, `sent=[7]` guard ✅. Undo: 15→10, streak 7→6 ✅.
+- Concurrency: 200 parallel `toggle_` bir userda — deadlock/crash YO'Q, lock serializatsiya qildi ✅.
+- `py_compile`: `callbacks_shop.py`, `callbacks_checkin.py`, `callbacks_checkin_done.py` ✅.
+
+**Revert reja (Qoida #16):** Har fayl mustaqil — eng oson 3 faylni eski versiyaga qaytarish. Yoki qo'lda: `from db_lock import user_lock` o'chirish + `try/with` o'rashni olib blok tanasini chapga indent qilish (checkin: −8 space) + `except TimeoutError` blokini o'chirish + shop flag-mantiqini (`fixed`/`outcome`) eski inline `if/return` ketma-ketligiga qaytarish.
+
+**Strategik muammolarga ta'sir:** S1 — `callbacks_shop.py` + `callbacks_checkin.py` + `callbacks_checkin_done.py` qamrovdan CHIQDI (✅ jadvalda). Checkin lock asosiy thread'da, milestone ball undan oldin → S1 qamroviga yangi race qo'shilmadi. S2/S3/S4/S5 ga aloqasiz.
+
+## 📦 BU SESSIYADA O'ZGARGAN FAYLLAR (#19)
+**Backend (3):** `callbacks_shop.py` (3 blok lock + import), `callbacks_checkin.py` (toggle_ lock + import), `callbacks_checkin_done.py` (done_ lock + import)
+**Tegilmagan (faqat o'qildi):** `db_lock.py` (imzo tasdiqlandi)
+**Hujjat:** `README.md` (`db_lock` importerlar qatori; `callbacks_checkin`/`callbacks_checkin_done`/`callbacks_shop` import ustuniga `db_lock`; circular import eslatmasiga `db_lock` xavfsizligi), `SESSION_LOG_audit.md` (#19 qaydi, S1 jadval 4 qator → ✅ #19)
+
+## ⚠️ DEPLOY ESLATMASI (#19)
+- 🔴 **3 fayl bir vaqtda** + `db_lock.py` serverda bo'lishi shart (#18 dan bor). `texts.py` `err_server_busy` ham (#18 dan bor).
+- ✅ YUKLA: `callbacks_shop.py`, `callbacks_checkin.py`, `callbacks_checkin_done.py` + README + SESSION_LOG
+- ❌ Cache-bust SHART EMAS — frontend tegilmadi
+- ❌ Yangi fayl YO'Q (`db_lock.py` allaqachon bor)
+
+## 🔵 KEYINGI CHATGA (#20)
+
+> #19 da S1 migratsiya davom etdi: `callbacks_shop.py` (jonfix/buy_jon/reset), `callbacks_checkin.py` (toggle_), `callbacks_checkin_done.py` (done_). S1 jadvalida holat ustuni — qaysi joylar qolgani ko'rsatilgan.
+> **Audit ustuvorligi (S1 migratsiya davomi — qolgan ⏳):** 🟡 `flask_routes_data.py` (`api_checkin` — WebApp, bot toggle bilan sinxron bo'lishi shart). 🟡 `flask_routes_extra.py` — mavjud `_get_shop_lock` ni `db_lock` ga ko'chirib markazlashtirish (Qoida #17) + `api_friends_add` (mutual friends). 🟢 `flask_routes_core.py` (habits CRUD), `scheduler.py` (daily_reset/milestone cron).
+> **Eslatma:** har bosqichda lock ICHIDA `load_user` QAYTA o'qilishi shart. `err_server_busy` kaliti tayyor (Flask'da 429 JSON javobi bilan ham ishlatilishi mumkin). Flask route'larda `TimeoutError` → `jsonify({"ok":False,...}), 429` (bot'dagi `answer_callback_query` o'rniga).
 > **⏳ FOYDALANUVCHI SO'RAGAN (kutilmoqda):** inline tugma bosilganda XABAR O'CHSIN (3 xil o'chirish uslubini yagona standartga) — alohida sessiya.
 
 
