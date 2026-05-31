@@ -18,6 +18,7 @@ from motivation import MOTIVATSIYA
 from bot_setup import bot
 from flask_helpers import (require_auth, rate_limit_check, _tz_today,
                            _is_done_today, _calc_best_streak)
+from db_lock import user_lock
 
 
 def register_data_routes(app):
@@ -117,242 +118,246 @@ def register_data_routes(app):
     @app.route("/api/checkin/<int:uid>/<hid>", methods=["POST"])
     @require_auth
     def api_checkin(uid, hid):
-        u = load_user(uid)
-        today = today_uz5()
-        habits = u.get("habits", [])
-        points_before = u.get("points", 0)
-        # CITY: bino progress delta — har holatda hisoblanadi va oxirida yagona joyga
-        # qo'llaniladi. +1 = fully done (simple yoki repeat full), -1 = undo, 0 = partial repeat.
-        _city_delta = 0
-        found_h = None
-        for h in habits:
-            if h["id"] == hid:
-                found_h = h
-                hab_type  = h.get("type", "simple")
-                rep_count = h.get("repeat_count", 1)
-                if hab_type == "repeat" and rep_count > 1:
-                    done = h.get("done_today_count", 0)
-                    if h.get("done_date") != today:
-                        done = 0
-                    if done >= rep_count:
-                        # Allaqachon to'liq bajarilgan — bekor qilish (0 ga tushirish)
-                        done = 0
-                        _city_delta = -1   # CITY: fully bekor qilindi — bino regress (PHASE A3)
-                        h["last_done"] = None
-                        h["last_done_at"] = None
-                        h["streak"] = max(0, h.get("streak", 0) - 1)
-                        _undo_base = 5
-                        if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
-                            _undo_base = 15
-                        elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
-                            _undo_base = 10
-                        if u.get("xp_booster_days", 0) > 0:
-                            _undo_base = round(_undo_base * 1.1)
-                        _undo_base = _apply_item_bonuses(u, _undo_base)
-                        _old_pts = u.get("points", 0)
-                        u["points"] = max(0, _old_pts - _undo_base)
-                        # Audit #9: -_undo_base (done branch +_base bilan symmetric).
-                        # Eski `u["points"] - _old_pts` clamp tufayli noto'g'ri delta beradi
-                        # (audit #8 Muammo A bilan bir xil pattern — points_logic.py).
-                        add_points_history(u, -_undo_base, today)
-                        # pet_dog kunlik bonusini qaytarish (agar bugun berilgan bo'lsa)
-                        # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
-                        _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
-                        if not _still_done:
-                            _apply_pet_dog_bonus(u, today, is_undo=True)
-                        if not _still_done and u.get("streak_last_date") == today:
-                            u["streak"] = max(0, u.get("streak", 0) - 1)
-                            u["streak_last_date"] = ""
+        try:
+            with user_lock(uid):
+                u = load_user(uid)
+                today = today_uz5()
+                habits = u.get("habits", [])
+                points_before = u.get("points", 0)
+                # CITY: bino progress delta — har holatda hisoblanadi va oxirida yagona joyga
+                # qo'llaniladi. +1 = fully done (simple yoki repeat full), -1 = undo, 0 = partial repeat.
+                _city_delta = 0
+                found_h = None
+                for h in habits:
+                    if h["id"] == hid:
+                        found_h = h
+                        hab_type  = h.get("type", "simple")
+                        rep_count = h.get("repeat_count", 1)
+                        if hab_type == "repeat" and rep_count > 1:
+                            done = h.get("done_today_count", 0)
+                            if h.get("done_date") != today:
+                                done = 0
+                            if done >= rep_count:
+                                # Allaqachon to'liq bajarilgan — bekor qilish (0 ga tushirish)
+                                done = 0
+                                _city_delta = -1   # CITY: fully bekor qilindi — bino regress (PHASE A3)
+                                h["last_done"] = None
+                                h["last_done_at"] = None
+                                h["streak"] = max(0, h.get("streak", 0) - 1)
+                                _undo_base = 5
+                                if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
+                                    _undo_base = 15
+                                elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
+                                    _undo_base = 10
+                                if u.get("xp_booster_days", 0) > 0:
+                                    _undo_base = round(_undo_base * 1.1)
+                                _undo_base = _apply_item_bonuses(u, _undo_base)
+                                _old_pts = u.get("points", 0)
+                                u["points"] = max(0, _old_pts - _undo_base)
+                                # Audit #9: -_undo_base (done branch +_base bilan symmetric).
+                                # Eski `u["points"] - _old_pts` clamp tufayli noto'g'ri delta beradi
+                                # (audit #8 Muammo A bilan bir xil pattern — points_logic.py).
+                                add_points_history(u, -_undo_base, today)
+                                # pet_dog kunlik bonusini qaytarish (agar bugun berilgan bo'lsa)
+                                # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
+                                _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
+                                if not _still_done:
+                                    _apply_pet_dog_bonus(u, today, is_undo=True)
+                                if not _still_done and u.get("streak_last_date") == today:
+                                    u["streak"] = max(0, u.get("streak", 0) - 1)
+                                    u["streak_last_date"] = ""
+                            else:
+                                done += 1
+                                if done >= rep_count:
+                                    _city_delta = +1   # CITY: fully bajarildi — bino progress (PHASE A3)
+                                    h["last_done"] = today
+                                    h["last_done_at"] = time.time()
+                                    h["streak"] = h.get("streak", 0) + 1
+                                    if h["streak"] > h.get("best_streak", 0):
+                                        h["best_streak"] = h["streak"]
+                                    # Global streak: kuniga bir marta oshsin
+                                    if u.get("streak_last_date") != today:
+                                        u["streak"] = u.get("streak", 0) + 1
+                                        u["streak_last_date"] = today
+                                        if u["streak"] > u.get("best_streak", 0):
+                                            u["best_streak"] = u["streak"]
+                                            u["best_streak_date"] = today
+                                    _base = 5
+                                    if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
+                                        _base = 15
+                                    elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
+                                        _base = 10
+                                    if u.get("xp_booster_days", 0) > 0:
+                                        _base = round(_base * 1.1)
+                                    _base = _apply_item_bonuses(u, _base)
+                                    u["points"] = u.get("points", 0) + _base
+                                    add_points_history(u, _base, today)
+                                    # pet_dog kunlik birinchi checkin bonusi (faqat bir marta)
+                                    _apply_pet_dog_bonus(u, today, is_undo=False)
+                            h["done_today_count"] = done
+                            h["done_date"] = today
+                            is_done = done >= rep_count
+                            today_count = done
+                        else:
+                            if h.get("last_done") == today:
+                                _city_delta = -1   # CITY: simple undo — bino regress (PHASE A3)
+                                h["last_done"] = None
+                                h["last_done_at"] = None
+                                h["streak"] = max(0, h.get("streak", 0) - 1)
+                                _undo_base = 5
+                                if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
+                                    _undo_base = 15
+                                elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
+                                    _undo_base = 10
+                                if u.get("xp_booster_days", 0) > 0:
+                                    _undo_base = round(_undo_base * 1.1)
+                                _undo_base = _apply_item_bonuses(u, _undo_base)
+                                _old_pts = u.get("points", 0)
+                                u["points"] = max(0, _old_pts - _undo_base)
+                                # Audit #9: -_undo_base (done branch +_base bilan symmetric).
+                                # Eski `u["points"] - _old_pts` clamp tufayli noto'g'ri delta beradi
+                                # (audit #8 Muammo A bilan bir xil pattern — points_logic.py).
+                                add_points_history(u, -_undo_base, today)
+                                # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
+                                _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
+                                # pet_dog kunlik bonusini qaytarish (agar bugun boshqa odat qolmagan bo'lsa)
+                                if not _still_done:
+                                    _apply_pet_dog_bonus(u, today, is_undo=True)
+                                if not _still_done and u.get("streak_last_date") == today:
+                                    u["streak"] = max(0, u.get("streak", 0) - 1)
+                                    u["streak_last_date"] = ""
+                                is_done = False
+                            else:
+                                from datetime import timezone, timedelta as _td
+                                _tz = timezone(_td(hours=5))
+                                _yesterday = (datetime.now(_tz) - _td(days=1)).strftime("%Y-%m-%d")
+                                _city_delta = +1   # CITY: simple done — bino progress (PHASE A3)
+                                h["streak"] = h.get("streak", 0) + 1 if h.get("last_done") == _yesterday else 1
+                                if h["streak"] > h.get("best_streak", 0):
+                                    h["best_streak"] = h["streak"]
+                                h["last_done"] = today
+                                h["last_done_at"] = time.time()
+                                _base = 5
+                                if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
+                                    _base = 15
+                                elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
+                                    _base = 10
+                                if u.get("xp_booster_days", 0) > 0:
+                                    _base = round(_base * 1.1)
+                                _base = _apply_item_bonuses(u, _base)
+                                u["points"] = u.get("points", 0) + _base
+                                add_points_history(u, _base, today)
+                                # pet_dog kunlik birinchi checkin bonusi (faqat bir marta)
+                                _apply_pet_dog_bonus(u, today, is_undo=False)
+                                # Global streak: kuniga bir marta oshsin
+                                if u.get("streak_last_date") != today:
+                                    u["streak"] = u.get("streak", 0) + 1
+                                    u["streak_last_date"] = today
+                                    if u["streak"] > u.get("best_streak", 0):
+                                        u["best_streak"] = u["streak"]
+                                        u["best_streak_date"] = today
+                                is_done = True
+                            today_count = 1 if is_done else 0
+                        break
+                u["habits"] = habits
+                # History yangilash (statistika uchun)
+                history = u.get("history", {})
+                day_data = history.get(today, {})
+                done_count_now = sum(1 for hh in habits if hh.get("last_done") == today)
+                total_now = len(habits)
+                # Har bir odat holatini ham saqlash
+                hab_map = day_data.get("habits", {})
+                if found_h:
+                    hab_map[hid] = found_h.get("last_done") == today
+                day_data["done"]   = done_count_now
+                day_data["total"]  = total_now
+                day_data["habits"] = hab_map
+                # Smart reminder uchun checkin vaqtini saqlash
+                _ctimes = day_data.get("checkin_times", {})
+                if found_h:
+                    if is_done:
+                        from datetime import datetime as _dt_sr, timedelta as _td_sr
+                        _ctimes[hid] = (_dt_sr.now() + _td_sr(hours=5)).strftime("%H:%M")
                     else:
-                        done += 1
-                        if done >= rep_count:
-                            _city_delta = +1   # CITY: fully bajarildi — bino progress (PHASE A3)
-                            h["last_done"] = today
-                            h["last_done_at"] = time.time()
-                            h["streak"] = h.get("streak", 0) + 1
-                            if h["streak"] > h.get("best_streak", 0):
-                                h["best_streak"] = h["streak"]
-                            # Global streak: kuniga bir marta oshsin
-                            if u.get("streak_last_date") != today:
-                                u["streak"] = u.get("streak", 0) + 1
-                                u["streak_last_date"] = today
-                                if u["streak"] > u.get("best_streak", 0):
-                                    u["best_streak"] = u["streak"]
-                                    u["best_streak_date"] = today
-                            _base = 5
-                            if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
-                                _base = 15
-                            elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
-                                _base = 10
-                            if u.get("xp_booster_days", 0) > 0:
-                                _base = round(_base * 1.1)
-                            _base = _apply_item_bonuses(u, _base)
-                            u["points"] = u.get("points", 0) + _base
-                            add_points_history(u, _base, today)
-                            # pet_dog kunlik birinchi checkin bonusi (faqat bir marta)
-                            _apply_pet_dog_bonus(u, today, is_undo=False)
-                    h["done_today_count"] = done
-                    h["done_date"] = today
-                    is_done = done >= rep_count
-                    today_count = done
-                else:
-                    if h.get("last_done") == today:
-                        _city_delta = -1   # CITY: simple undo — bino regress (PHASE A3)
-                        h["last_done"] = None
-                        h["last_done_at"] = None
-                        h["streak"] = max(0, h.get("streak", 0) - 1)
-                        _undo_base = 5
-                        if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
-                            _undo_base = 15
-                        elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
-                            _undo_base = 10
-                        if u.get("xp_booster_days", 0) > 0:
-                            _undo_base = round(_undo_base * 1.1)
-                        _undo_base = _apply_item_bonuses(u, _undo_base)
-                        _old_pts = u.get("points", 0)
-                        u["points"] = max(0, _old_pts - _undo_base)
-                        # Audit #9: -_undo_base (done branch +_base bilan symmetric).
-                        # Eski `u["points"] - _old_pts` clamp tufayli noto'g'ri delta beradi
-                        # (audit #8 Muammo A bilan bir xil pattern — points_logic.py).
-                        add_points_history(u, -_undo_base, today)
-                        # Global streak: faqat bugun boshqa birorta odat bajarilmagan bo'lsa kamaytir
-                        _still_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
-                        # pet_dog kunlik bonusini qaytarish (agar bugun boshqa odat qolmagan bo'lsa)
-                        if not _still_done:
-                            _apply_pet_dog_bonus(u, today, is_undo=True)
-                        if not _still_done and u.get("streak_last_date") == today:
-                            u["streak"] = max(0, u.get("streak", 0) - 1)
-                            u["streak_last_date"] = ""
-                        is_done = False
-                    else:
-                        from datetime import timezone, timedelta as _td
-                        _tz = timezone(_td(hours=5))
-                        _yesterday = (datetime.now(_tz) - _td(days=1)).strftime("%Y-%m-%d")
-                        _city_delta = +1   # CITY: simple done — bino progress (PHASE A3)
-                        h["streak"] = h.get("streak", 0) + 1 if h.get("last_done") == _yesterday else 1
-                        if h["streak"] > h.get("best_streak", 0):
-                            h["best_streak"] = h["streak"]
-                        h["last_done"] = today
-                        h["last_done_at"] = time.time()
-                        _base = 5
-                        if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
-                            _base = 15
-                        elif u.get("bonus_2x_active") and u.get("bonus_2x_date") == today:
-                            _base = 10
-                        if u.get("xp_booster_days", 0) > 0:
-                            _base = round(_base * 1.1)
-                        _base = _apply_item_bonuses(u, _base)
-                        u["points"] = u.get("points", 0) + _base
-                        add_points_history(u, _base, today)
-                        # pet_dog kunlik birinchi checkin bonusi (faqat bir marta)
-                        _apply_pet_dog_bonus(u, today, is_undo=False)
-                        # Global streak: kuniga bir marta oshsin
-                        if u.get("streak_last_date") != today:
-                            u["streak"] = u.get("streak", 0) + 1
-                            u["streak_last_date"] = today
-                            if u["streak"] > u.get("best_streak", 0):
-                                u["best_streak"] = u["streak"]
-                                u["best_streak_date"] = today
-                        is_done = True
-                    today_count = 1 if is_done else 0
-                break
-        u["habits"] = habits
-        # History yangilash (statistika uchun)
-        history = u.get("history", {})
-        day_data = history.get(today, {})
-        done_count_now = sum(1 for hh in habits if hh.get("last_done") == today)
-        total_now = len(habits)
-        # Har bir odat holatini ham saqlash
-        hab_map = day_data.get("habits", {})
-        if found_h:
-            hab_map[hid] = found_h.get("last_done") == today
-        day_data["done"]   = done_count_now
-        day_data["total"]  = total_now
-        day_data["habits"] = hab_map
-        # Smart reminder uchun checkin vaqtini saqlash
-        _ctimes = day_data.get("checkin_times", {})
-        if found_h:
-            if is_done:
-                from datetime import datetime as _dt_sr, timedelta as _td_sr
-                _ctimes[hid] = (_dt_sr.now() + _td_sr(hours=5)).strftime("%H:%M")
-            else:
-                _ctimes.pop(hid, None)
-        day_data["checkin_times"] = _ctimes
-        history[today] = day_data
-        u["history"] = history
-        # done_log yangilash (rating score uchun — 30 kunlik faollik)
-        if is_done:
-            done_log = u.get("done_log", {})
-            done_log[today] = True
-            u["done_log"] = done_log
-        elif not is_done and found_h:
-            # Undo: agar bugun hech bir odat bajarilmagan bo'lsa — done_log dan o'chirish
-            still_any_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
-            if not still_any_done:
-                done_log = u.get("done_log", {})
-                done_log.pop(today, None)
-                u["done_log"] = done_log
-        # total_done yangilash (achievements uchun)
-        # _city_delta = +1 (fully done) / -1 (undo) / 0 (repeat partial — tegilmaydi)
-        if found_h:
-            if _city_delta == +1:
-                found_h["total_done"] = found_h.get("total_done", 0) + 1
-            elif _city_delta == -1:
-                found_h["total_done"] = max(0, found_h.get("total_done", 0) - 1)
-        # XP booster kunini kamaytirish (kuniga bir marta)
-        if u.get("xp_booster_days", 0) > 0:
-            last_boost = u.get("xp_booster_last_day", "")
-            if last_boost != today:
-                u["xp_booster_days"] = max(0, u["xp_booster_days"] - 1)
-                u["xp_booster_last_day"] = today
-        # CITY: bino progress yangilash (delta hisoblangan: +1/-1/0) (PHASE A3)
-        if _city_delta != 0 and found_h:
-            try:
-                update_building_progress(u, hid, _city_delta)
-            except Exception as _ce:
-                print(f"[city] update_building_progress {_city_delta:+d} xato (uid={uid}): {_ce}")
-        save_user(uid, u)
-        if not found_h:
-            return jsonify({"ok": False, "error": "Odat topilmadi"})
-        # done_count hisoblash
-        done_count = sum(1 for hh in habits if hh.get("last_done") == today)
-        total = len(habits)
-        all_done = done_count == total and total > 0
-        # Yutuqlarni tekshir
-        new_ach = check_achievements(uid, u)
-        new_badges = [{"id": a["id"], "icon": a["icon"], "title": a["title"]} for a in new_ach]
-        # Streak milestone tekshiruvi (WebApp uchun — bot xabar yubormasdan, faqat response orqali)
-        streak_milestone = None
-        new_global_streak = u.get("streak", 0)
-        if is_done and new_global_streak in STREAK_MILESTONES:
-            ms = STREAK_MILESTONES[new_global_streak]
-            sent_list = u.get("streak_milestones_sent", [])
-            if new_global_streak not in sent_list:
-                u["points"] = u.get("points", 0) + ms["bonus"]
-                add_points_history(u, ms["bonus"], today)
-                sent_list.append(new_global_streak)
-                u["streak_milestones_sent"] = sent_list
+                        _ctimes.pop(hid, None)
+                day_data["checkin_times"] = _ctimes
+                history[today] = day_data
+                u["history"] = history
+                # done_log yangilash (rating score uchun — 30 kunlik faollik)
+                if is_done:
+                    done_log = u.get("done_log", {})
+                    done_log[today] = True
+                    u["done_log"] = done_log
+                elif not is_done and found_h:
+                    # Undo: agar bugun hech bir odat bajarilmagan bo'lsa — done_log dan o'chirish
+                    still_any_done = any(hh.get("last_done") == today for hh in habits if hh["id"] != hid)
+                    if not still_any_done:
+                        done_log = u.get("done_log", {})
+                        done_log.pop(today, None)
+                        u["done_log"] = done_log
+                # total_done yangilash (achievements uchun)
+                # _city_delta = +1 (fully done) / -1 (undo) / 0 (repeat partial — tegilmaydi)
+                if found_h:
+                    if _city_delta == +1:
+                        found_h["total_done"] = found_h.get("total_done", 0) + 1
+                    elif _city_delta == -1:
+                        found_h["total_done"] = max(0, found_h.get("total_done", 0) - 1)
+                # XP booster kunini kamaytirish (kuniga bir marta)
+                if u.get("xp_booster_days", 0) > 0:
+                    last_boost = u.get("xp_booster_last_day", "")
+                    if last_boost != today:
+                        u["xp_booster_days"] = max(0, u["xp_booster_days"] - 1)
+                        u["xp_booster_last_day"] = today
+                # CITY: bino progress yangilash (delta hisoblangan: +1/-1/0) (PHASE A3)
+                if _city_delta != 0 and found_h:
+                    try:
+                        update_building_progress(u, hid, _city_delta)
+                    except Exception as _ce:
+                        print(f"[city] update_building_progress {_city_delta:+d} xato (uid={uid}): {_ce}")
                 save_user(uid, u)
-                streak_milestone = {
-                    "streak": new_global_streak,
-                    "emoji":  ms["emoji"],
-                    "title":  T(uid, "streak_milestone_title", days=new_global_streak),
-                    "bonus":  ms["bonus"],
-                }
-        return jsonify({
-            "ok":              True,
-            "done":            is_done,
-            "streak":          found_h.get("streak", 0),
-            "repeat_count":    found_h.get("repeat_count", 1),
-            "today_count":     today_count,
-            "points":          u.get("points", 0),
-            "earned":          u.get("points", 0) - points_before,
-            "all_done":        all_done,
-            "done_count":      done_count,
-            "total":           total,
-            "new_badges":      new_badges,
-            "streak_milestone": streak_milestone,
-        })
+                if not found_h:
+                    return jsonify({"ok": False, "error": "Odat topilmadi"})
+                # done_count hisoblash
+                done_count = sum(1 for hh in habits if hh.get("last_done") == today)
+                total = len(habits)
+                all_done = done_count == total and total > 0
+                # Yutuqlarni tekshir
+                new_ach = check_achievements(uid, u)
+                new_badges = [{"id": a["id"], "icon": a["icon"], "title": a["title"]} for a in new_ach]
+                # Streak milestone tekshiruvi (WebApp uchun — bot xabar yubormasdan, faqat response orqali)
+                streak_milestone = None
+                new_global_streak = u.get("streak", 0)
+                if is_done and new_global_streak in STREAK_MILESTONES:
+                    ms = STREAK_MILESTONES[new_global_streak]
+                    sent_list = u.get("streak_milestones_sent", [])
+                    if new_global_streak not in sent_list:
+                        u["points"] = u.get("points", 0) + ms["bonus"]
+                        add_points_history(u, ms["bonus"], today)
+                        sent_list.append(new_global_streak)
+                        u["streak_milestones_sent"] = sent_list
+                        save_user(uid, u)
+                        streak_milestone = {
+                            "streak": new_global_streak,
+                            "emoji":  ms["emoji"],
+                            "title":  T(uid, "streak_milestone_title", days=new_global_streak),
+                            "bonus":  ms["bonus"],
+                        }
+                return jsonify({
+                    "ok":              True,
+                    "done":            is_done,
+                    "streak":          found_h.get("streak", 0),
+                    "repeat_count":    found_h.get("repeat_count", 1),
+                    "today_count":     today_count,
+                    "points":          u.get("points", 0),
+                    "earned":          u.get("points", 0) - points_before,
+                    "all_done":        all_done,
+                    "done_count":      done_count,
+                    "total":           total,
+                    "new_badges":      new_badges,
+                    "streak_milestone": streak_milestone,
+                })
+        except TimeoutError:
+            return jsonify({"ok": False, "error": T(uid, "err_server_busy")}), 429
 
     def _calc_trend(history, habits, now_uz, total):
         """Joriy hafta vs oldingi hafta bajarilish foizini solishtiradi."""

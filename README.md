@@ -508,7 +508,7 @@ Modullar orasidagi `import` bog'liqligi — **koddan avtomatik chiqarilgan** (ta
 | `texts` | — | `callbacks_settings`, `helpers`, `scheduler`, `handlers_*`, `flask_routes_data/extra`, `habit_bot` |
 | `motivation` | — | `handlers_commands/stats/text`, `scheduler`, `flask_routes_data`, `habit_bot` |
 | `handlers_onboarding` | — | `habit_bot` |
-| `db_lock` | — (faqat `threading`, `contextlib`) | `handlers_text`, `callbacks_shop`, `callbacks_checkin`, `callbacks_checkin_done` (+ kelajakda `flask_routes_data/extra`, `scheduler` — S1 migratsiyasi davom etmoqda) |
+| `db_lock` | — (faqat `threading`, `contextlib`) | `handlers_text`, `callbacks_shop`, `callbacks_checkin`, `callbacks_checkin_done`, `flask_routes_data` (+ kelajakda `flask_routes_extra`, `scheduler` — S1 migratsiyasi davom etmoqda) |
 | `database` | `config` | deyarli barcha modul |
 | `helpers` | `database`, `texts` | deyarli barcha modul |
 | `bot_setup` | `config`, `database`, `helpers` | deyarli barcha L3–L5 modul |
@@ -533,7 +533,7 @@ Modullar orasidagi `import` bog'liqligi — **koddan avtomatik chiqarilgan** (ta
 | `callbacks_shop` | `bot_setup`, `config`, `database`, `db_lock`, `helpers` | `handlers_callbacks` |
 | `flask_routes_city` | `city_logic`, `config`, `database`, `flask_helpers` | `flask_api` |
 | `flask_routes_core` | `achievements`, `bot_setup`, `city_logic`, `config`, `database`, `flask_helpers`, `helpers`, `scheduler` | `flask_api` |
-| `flask_routes_data` | `bot_setup`, `city_logic`, `config`, `database`, `flask_helpers`, `helpers`, `motivation`, `points_logic`, `texts` | `flask_api` |
+| `flask_routes_data` | `bot_setup`, `city_logic`, `config`, `database`, `db_lock`, `flask_helpers`, `helpers`, `motivation`, `points_logic`, `texts` | `flask_api` |
 | `flask_routes_extra` | `achievements`, `bot_setup`, `config`, `database`, `flask_helpers`, `helpers`, `scheduler`, `texts` | `flask_api` |
 | `flask_routes_reminders` | `config`, `database`, `flask_helpers` | `flask_api` |
 | `handlers_callbacks` | `bot_setup`, `callbacks_*` (6 ta: admin, habits, menu, reminders, settings, shop), `database`, `helpers`, `menus` | `habit_bot` |

@@ -72,7 +72,7 @@ qilib, yozsa — keyingi yozish oldingisini **o'chiradi** (last-write-wins).
 | `callbacks_shop.py` | 198-203 (reset) | Ayni vaqtda ball qo'shilsa → yo'qoladi | 🟡 | ✅ #19 |
 | `callbacks_checkin.py` | hammasi | Standart checkin pattern | 🟡 | ✅ #19 |
 | `callbacks_checkin_done.py` | hammasi | Bildirishnomadan checkin | 🟡 | ✅ #19 |
-| `flask_routes_data.py` | api_checkin | WebApp checkin | 🟡 | ⏳ |
+| `flask_routes_data.py` | api_checkin | WebApp checkin | 🟡 | ✅ #20 |
 | `flask_routes_core.py` | habits CRUD | Odat | 🟢 | ⏳ |
 | `scheduler.py` | daily_reset, milestone | Cron job + bot xabari to'qnashishi | 🟡 | ⏳ |
 | `flask_routes_extra.py` | api_friends_add | Mutual friends (Audit #10) | 🟡 | ⏳ |
@@ -1889,11 +1889,49 @@ Chaqiruvchi (`flask_routes_data.py`) 4 joyda ishlatadi:
 - ❌ Cache-bust SHART EMAS — frontend tegilmadi
 - ❌ Yangi fayl YO'Q (`db_lock.py` allaqachon bor)
 
-## 🔵 KEYINGI CHATGA (#20)
+## ✅ #20 — S1 migratsiya davomi: `flask_routes_data.py` (`api_checkin` — WebApp checkin)
 
-> #19 da S1 migratsiya davom etdi: `callbacks_shop.py` (jonfix/buy_jon/reset), `callbacks_checkin.py` (toggle_), `callbacks_checkin_done.py` (done_). S1 jadvalida holat ustuni — qaysi joylar qolgani ko'rsatilgan.
-> **Audit ustuvorligi (S1 migratsiya davomi — qolgan ⏳):** 🟡 `flask_routes_data.py` (`api_checkin` — WebApp, bot toggle bilan sinxron bo'lishi shart). 🟡 `flask_routes_extra.py` — mavjud `_get_shop_lock` ni `db_lock` ga ko'chirib markazlashtirish (Qoida #17) + `api_friends_add` (mutual friends). 🟢 `flask_routes_core.py` (habits CRUD), `scheduler.py` (daily_reset/milestone cron).
-> **Eslatma:** har bosqichda lock ICHIDA `load_user` QAYTA o'qilishi shart. `err_server_busy` kaliti tayyor (Flask'da 429 JSON javobi bilan ham ishlatilishi mumkin). Flask route'larda `TimeoutError` → `jsonify({"ok":False,...}), 429` (bot'dagi `answer_callback_query` o'rniga).
+**Sabab:** #19 da bot tomoni (`callbacks_checkin`/`callbacks_checkin_done`) `user_lock` bilan himoyalangandi, WebApp `api_checkin` esa himoyasiz qolgandi. Foydalanuvchi telefonida bir vaqtda bot tugmasi + WebApp ochiq bo'lsa → S1 race (ball yo'qolishi yoki double). Ikki kanal nomuvofiq edi (Qoida #10 — bot handler va WebApp API sinxron bo'lishi shart). S1 jadvalida 🟡, lekin checkin eng tez-tez chaqiriladigan ball oqimi → prioritet.
+
+**Qamrov:** 1 fayl, Variant 2 (per-user `threading.Lock`, #18/#19 dagi pattern). `api_checkin` butun tanasi (`u = load_user(uid)` dan barcha `save_user` + `return jsonify` gacha) `try: with user_lock(uid):` ichiga o'raldi.
+
+**O'zgargan joylar (`flask_routes_data.py`, 2 joy):**
+1. **Import** (21-qator): `from db_lock import user_lock`.
+2. **`api_checkin`** (`load → modify → save` butun blok): `with user_lock(uid)` ichida. Lock ICHIDA: `load_user` (eski nusxa emas — funksiya boshida o'qiladi), ball/streak/city modifikatsiya, 1-`save_user`, `check_achievements` (ichida o'z `save_user`'i), milestone `save_user`, `return jsonify`. `except TimeoutError:` → `return jsonify({"ok": False, "error": T(uid, "err_server_busy")}), 429` (#20 qaydidagi Flask pattern — bot'dagi `answer_callback_query` o'rniga). `err_server_busy` kaliti #18 da 3 tilda tayyor (UZ:94/EN:262/RU:430 — tasdiqlandi).
+
+**MUHIM qarorlar (Qoida #21):**
+- Butun blok (city `update_building_progress` + `check_achievements` ham) lock ICHIDA — ularni ajratish 200-qatorlik xavfli refaktor bo'lardi (Qoida #04/#23). Network yo'q (WebApp javobi faqat dict — `bot.send_message` yo'q), shuning uchun lock zonasi tez. Bot checkin'dagidan farqli (u Telegram xabar yuborardi) — bu yerda yanada xavfsiz.
+- `update_building_progress` (city_logic) va `check_achievements` lock ichida chaqiriladi-yu, ikkalasi ham `user_lock` OLMAYDI (#19 da tasdiqlangan) → re-entrancy/deadlock yo'q.
+- `points_before` (123) ham lock ichida o'qiladi → `earned` delta to'g'ri (race yo'q).
+- `not found_h` baribir save qiladigan joy (keraksiz save) TEGILMADI — alohida masala (Qoida #04).
+
+**Test scenario (Qoida #15):**
+- Foydalanuvchi WebApp'da checkin → `with user_lock(uid)` → atomik `load→modify→save` → to'g'ri ball ✅.
+- Bot tugmasi + WebApp bir vaqtda → biri lock oladi, ikkinchisi 3s kutadi → ketma-ket → ball yo'qolmaydi ✅ (#19 bot tomoni ham `user_lock` — bir xil registry, bir uid bir lock).
+- 3s ichida lock bo'shamasa → `429` + `err_server_busy` matni → frontend xato holati (crash yo'q).
+
+**Tekshiruvlar:** `py_compile` ✅. AST: birinchi stmt `Try`→`With(user_lock)`, `except TimeoutError` bor, 2 `save_user` + 2 `return` lock ICHIDA, 1 `return` (`429`) lock TASHQARISIDA ✅. `T` import (15), `jsonify` import (9), `user_lock` import (21) ✅. `texts.py` `err_server_busy` 3 til ✅ (tegilmadi, faqat o'qildi).
+
+**Revert reja (Qoida #16):** (1) 21-qatordagi `from db_lock import user_lock` o'chirish. (2) `api_checkin` tanasidan `try:`+`with user_lock(uid):` (boshda) va `except TimeoutError:`+`return ...429` (oxirida) olib, tanani −8 space chapga indent. Eng oson: faylni eski versiyaga qaytarish.
+
+**Strategik muammolarga ta'sir:** S1 — `flask_routes_data.py` (`api_checkin`) qamrovdan CHIQDI (✅ jadvalda). Endi checkin oqimi BARCHA kanallarda (bot toggle/done + WebApp) lock bilan sinxron. Qolgan S1 ⏳: `flask_routes_extra.py` (`_get_shop_lock`→`db_lock` markazlashtirish + `api_friends_add`), `flask_routes_core.py` (habits CRUD 🟢), `scheduler.py` (daily_reset/milestone 🟡). S2/S3/S5 ga aloqasiz.
+
+## 📦 BU SESSIYADA O'ZGARGAN FAYLLAR (#20)
+**Backend (1):** `flask_routes_data.py` — `api_checkin` lock bilan o'raldi + `from db_lock import user_lock` (21-qator)
+**Tegilmagan (faqat o'qildi):** `db_lock.py` (imzo tasdiqlandi — Flask uchun `TimeoutError`→429), `texts.py` (`err_server_busy` 3 til tasdiqlandi)
+**Hujjat:** `README.md` (`db_lock` importerlar qatoriga `flask_routes_data`; `flask_routes_data` import ustuniga `db_lock`), `SESSION_LOG_audit.md` (#20 qaydi, S1 jadval `api_checkin` qatori → ✅ #20)
+
+## ⚠️ DEPLOY ESLATMASI (#20)
+- 🔴 `flask_routes_data.py` `from db_lock import user_lock` qiladi — `db_lock.py` serverda bo'lishi SHART (#18 dan bor). `texts.py` `err_server_busy` ham (#18 dan bor).
+- ✅ YUKLA: `flask_routes_data.py` + README + SESSION_LOG
+- ❌ Cache-bust SHART EMAS — frontend tegilmadi
+- ❌ Yangi fayl YO'Q (`db_lock.py` allaqachon bor)
+
+## 🔵 KEYINGI CHATGA (#21)
+
+> #20 da S1 migratsiya WebApp checkin'ga yetdi: `flask_routes_data.py` (`api_checkin`). Endi checkin oqimi barcha kanallarda lock bilan. S1 jadvalida holat ustuni — qolgan ⏳ joylar ko'rsatilgan.
+> **Audit ustuvorligi (S1 migratsiya davomi — qolgan ⏳):** 🟡 `flask_routes_extra.py` — mavjud `_get_shop_lock` ni `db_lock` ga ko'chirib markazlashtirish (Qoida #17) + `api_friends_add` (mutual friends race) + `api_challenges_accept` (S2 — challenge stake). 🟢 `flask_routes_core.py` (habits CRUD), `scheduler.py` (daily_reset/milestone cron).
+> **Eslatma:** har bosqichda lock ICHIDA `load_user` QAYTA o'qilishi shart. Flask route'larda `TimeoutError` → `jsonify({"ok":False, "error":T(uid,"err_server_busy")}), 429` (#20 pattern — tayyor namuna `flask_routes_data.api_checkin`).
 > **⏳ FOYDALANUVCHI SO'RAGAN (kutilmoqda):** inline tugma bosilganda XABAR O'CHSIN (3 xil o'chirish uslubini yagona standartga) — alohida sessiya.
 
 
