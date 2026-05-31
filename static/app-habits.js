@@ -382,6 +382,10 @@ async function deleteHabit(id) {
         const _msg = (S('today','delete_locked') || 'Bu odatni hozircha o\'chirib bo\'lmaydi. Yana {min} daqiqadan so\'ng o\'chira olasiz.')
                        .replace('{min}', rj.wait_min);
         alert('🔒 ' + _msg);
+        // OK bosilgach (alert bloklovchi) orqadagi karta swipe holatini yopish.
+        // Today va Odatlar sahifalari uchun ikkalasi ham (closeModal patterni #270).
+        if (typeof closeAllCheckinSwipes === 'function') closeAllCheckinSwipes();
+        if (typeof closeAllHabitSwipes === 'function') closeAllHabitSwipes();
         return;
       }
       showToast('❌ ' + (rj.error || S('msg','error_label')), true); return;
