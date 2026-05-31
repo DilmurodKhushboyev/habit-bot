@@ -75,8 +75,8 @@ qilib, yozsa — keyingi yozish oldingisini **o'chiradi** (last-write-wins).
 | `flask_routes_data.py` | api_checkin | WebApp checkin | 🟡 | ✅ #20 |
 | `flask_routes_core.py` | habits CRUD | Odat | 🟢 | ⏳ |
 | `scheduler.py` | daily_reset, milestone | Cron job + bot xabari to'qnashishi | 🟡 | ⏳ |
-| `flask_routes_extra.py` | api_friends_add | Mutual friends (Audit #10) | 🟡 | ⏳ |
-| `flask_routes_extra.py` | shop buy/sell/activate | Mavjud `_get_shop_lock` → `db_lock` ga ko'chirilsin (markazlashtirish) | 🟡 | ⏳ |
+| `flask_routes_extra.py` | api_friends_add | Mutual friends (Audit #10) | 🟡 | ✅ #21 |
+| `flask_routes_extra.py` | shop buy/sell/activate | Mavjud `_get_shop_lock` → `db_lock` ga ko'chirildi (markazlashtirish) | 🟡 | ✅ #21 |
 
 **Mavjud yarim yechim:** `flask_routes_extra.py` da `_get_shop_lock(uid)` per-user
 `threading.Lock` (faqat WebApp shop himoyalangan, bot tomonida yo'q).
@@ -94,24 +94,24 @@ qilib, yozsa — keyingi yozish oldingisini **o'chiradi** (last-write-wins).
 
 ---
 
-### 🟡 S2 — Ball transfer atomic emas (rollback yo'q)
+### 🟡 S2 — Ball transfer/stake atomic emas (rollback yo'q) — QISMAN YOPILDI (#18, #21)
 
 **Topilgan:** Audit #7 (`callbacks_shop.py`)
-**Tarqalish:** `handlers_text.py` 443-451 (ball transfer), `flask_routes_extra.py` 660-665 (`api_challenges_accept` — Audit #10 qayd)
+**Tarqalish:** `handlers_text.py` (ball transfer — ✅ #18 `two_user_locks`), `flask_routes_extra.py` (`api_challenges_accept` stake — ✅ #21)
 
-**Muammo:** Transfer = 2 ta `save_user`. Agar 2-`save_user` xato bersa
+**✅ #18 (transfer):** `two_user_locks` + balans lock ichida tekshirish → over-spend/double-spend yopildi.
+**✅ #21 (`api_challenges_accept`):** `two_user_locks(uid, from_uid)` + lock ichida challenge/user qayta o'qish + **atomik DB guard** (`update_one({_id, status:"pending"})`, `modified_count==0` → ball yechilmaydi). Guard ball yechishdan OLDIN → double-accept butunlay yopildi (20 parallel accept → faqat 1 ball yechildi, test bilan tasdiqlandi).
+
+**⏳ Qolgan nozik nuqta (past xavf):** `api_challenges_accept`'da guard o'tib, keyin `save_user` MongoDB xato bersa → DB status "active", lekin ball yechilmaydi (yarim holat). Eski koddan yaxshiroq (eski: ball yechilardi, status keyin xato bo'lardi). `database.py` 3x retry + Atlas barqarorligi → amaliy xavf past. To'liq save-failure rollback yoki MongoDB transaction — alohida masala.
+
+**Muammo (asl):** Transfer = 2 ta `save_user`. Agar 2-`save_user` xato bersa
 (MongoDB uzilishi), birinchi qabul qilingan — ball yo'qoladi.
 
-**Misol:** A → B ga 50 ball:
-- A: `100 → 50` ✅
-- B: `200 → 250` ❌ (MongoDB xato)
-- Natija: **50 ball yo'qoldi** (atomic emas, rollback yo'q)
-
-**Strategik yechim:**
+**Strategik yechim (kelajakda — to'liq atomiklik uchun):**
 - MongoDB transactions (Atlas free tier qo'llab-quvvatlaydi)
 - Yoki rollback pattern: 2-save xato bo'lsa, 1-save ni qaytarish
 
-**Keyingi qadam:** S1 bilan birga hal qilinadi.
+**Keyingi qadam:** Lock darajasidagi himoya tugadi (#18, #21). To'liq save-failure atomiklik kerak bo'lsa — MongoDB transaction migratsiyasi (alohida sessiya).
 
 ---
 
@@ -1927,11 +1927,58 @@ Chaqiruvchi (`flask_routes_data.py`) 4 joyda ishlatadi:
 - ❌ Cache-bust SHART EMAS — frontend tegilmadi
 - ❌ Yangi fayl YO'Q (`db_lock.py` allaqachon bor)
 
-## 🔵 KEYINGI CHATGA (#21)
+## 🔵 KEYINGI CHATGA (#21) — BAJARILDI (#21 da)
 
 > #20 da S1 migratsiya WebApp checkin'ga yetdi: `flask_routes_data.py` (`api_checkin`). Endi checkin oqimi barcha kanallarda lock bilan. S1 jadvalida holat ustuni — qolgan ⏳ joylar ko'rsatilgan.
 > **Audit ustuvorligi (S1 migratsiya davomi — qolgan ⏳):** 🟡 `flask_routes_extra.py` — mavjud `_get_shop_lock` ni `db_lock` ga ko'chirib markazlashtirish (Qoida #17) + `api_friends_add` (mutual friends race) + `api_challenges_accept` (S2 — challenge stake). 🟢 `flask_routes_core.py` (habits CRUD), `scheduler.py` (daily_reset/milestone cron).
-> **Eslatma:** har bosqichda lock ICHIDA `load_user` QAYTA o'qilishi shart. Flask route'larda `TimeoutError` → `jsonify({"ok":False, "error":T(uid,"err_server_busy")}), 429` (#20 pattern — tayyor namuna `flask_routes_data.api_checkin`).
+> **Eslatma:** har bosqichda lock ICHIDA `load_user` QAYTA o'qilishi shart. Flask route'larda `TimeoutError` → `jsonify(...), 429` (#20 pattern — tayyor namuna `flask_routes_data.api_checkin`).
 > **⏳ FOYDALANUVCHI SO'RAGAN (kutilmoqda):** inline tugma bosilganda XABAR O'CHSIN (3 xil o'chirish uslubini yagona standartga) — alohida sessiya.
+
+## ✅ #21 — S1+S2 migratsiya davomi: `flask_routes_extra.py` (shop markazlashtirish + friends + challenge accept)
+
+**Sabab:** #20 da checkin barcha kanallarda lock bilan himoyalangandi. `flask_routes_extra.py` qoldi — 3 xil race: (1) shop alohida `_get_shop_lock` registry'da edi (checkin `user_lock` bilan SINXRON EMAS — bir vaqtda checkin+xarid → ball race ochiq), (2) `api_challenges_accept` 🔴 S1+S2 (double-accept + atomik emas), (3) `api_friends_add/remove` mutual friends race.
+
+**Qamrov:** 1 fayl (`flask_routes_extra.py`), 3 qadam. `import`: `from db_lock import user_lock, two_user_locks`.
+
+**Qadam 1 — shop markazlashtirish (Qoida #17):** Eski `_shop_user_locks`/`_shop_locks_master`/`_get_shop_lock` registry (13 qator) O'CHIRILDI. `api_shop_buy`/`api_shop_activate`/`api_shop_sell` → `with user_lock(uid):` + `except TimeoutError → 429`. Endi shop va checkin AYNI lock registry → bir uid bir lock → ball race sinxron. Xato matni (`"Server band..."`) TEGILMADI (Qoida #18 — faqat mexanizm o'zgardi, matn emas; 3 tilga tarjima shart emas — mavjud matn saqlandi).
+
+**Qadam 2 — `api_challenges_accept` (🔴 S1+S2):** Butun ball zonasi `with two_user_locks(uid, from_uid):` ichiga (deadlock-safe). Lock ICHIDA: challenge `find_one` QAYTA o'qish (status hali pending'mi) + ikkala user `load_user` QAYTA o'qish + balans tekshiruvi. **Atomik DB guard:** `update_one({_id, status:"pending"}, {$set:{status:"active"...}})` — `modified_count==0` → boshqa so'rov allaqachon qabul qilgan → ball YECHILMAYDI, return. Guard ball yechishdan OLDIN (status DB'da qulflanadi, keyin ball xavfsiz). Network (`bot.send_message`) lock TASHQARISIDA (#18 referral qarori).
+
+**Qadam 3 — `api_friends_add` + `api_friends_remove` (🟡 S1):** Ikkala route butun zonasi `with two_user_locks(uid, fid):` ichida, ikki user lock ichida qayta o'qiladi. `api_friends_remove` ga `uid==fid` guard QO'SHILDI (avval yo'q edi — `two_user_locks` bir xil uid'da deadlock xavfi; `add`'da allaqachon bor edi). `remove`'da `uid==fid` → `{"ok":True}` (zararsiz no-op, eski xulq saqlandi).
+
+**MUHIM qarorlar (Qoida #21):**
+- Shop xato matni saqlandi (Qoida #18). 3 tilga tarjima qilinmadi — yangi matn emas, mavjudini saqlash.
+- `api_challenges_accept`'da DB guard ball yechishdan OLDIN — double-accept'ni multi-process'da ham yopadi (lock bitta instance, lekin `update_one({status:pending})` MongoDB atomik).
+- `import threading` (9-qator) endi modul darajasida ishlatilmaydi (registry o'chdi, webhook lokal `_thr`), lekin TEGILMADI (Qoida #04 — keraksiz tozalash emas; zararsiz).
+- S2 to'liq atomiklik (save-failure rollback) qo'shilmadi — guard double-accept (asosiy 🔴) ni yopdi, save-failure past xavf (3x retry + Atlas), alohida masala (Qoida #23).
+
+**Test scenario (Qoida #15):**
+- Shop: with+erta return lock bo'shaydi ✅, band lock → 3s → 429 ✅, 50 parallel buy serializatsiya ✅.
+- Challenge: 20 parallel accept → faqat 1 ball yechildi (qolgan 19 "already") ✅.
+- Friends: 100 marta mutual-race (A↔B bir vaqtda) → har safar izchil, dublikatsiz, ikki tomonlama ✅.
+- `py_compile` ✅. AST: 3 shop route `with user_lock`+`except TimeoutError`, accept `two_user_locks`+atomik guard, friends `two_user_locks`+`uid==fid` guard ✅.
+
+**Revert reja (Qoida #16):** Faylni eski versiyaga qaytarish eng oson. Yoki har qadam mustaqil: (1) import'dan `two_user_locks` olib, 3 shop route'ni `_get_shop_lock`/`finally` ga qaytar + registry blokini tikla; (2) accept'ni eski lock'siz `load_user`/2-save + `update_one({_id})` ga qaytar; (3) friends'da `two_user_locks` o'rashni olib chapga indent + `remove`'dan `uid==fid` guardni o'chir.
+
+**Strategik muammolarga ta'sir:** S1 — `flask_routes_extra` (shop + friends) qamrovdan CHIQDI. S2 — `api_challenges_accept` lock+guard bilan QISMAN YOPILDI (double-accept to'liq, save-failure rollback qoldi). Qolgan S1 ⏳: `flask_routes_core.py` (habits CRUD 🟢), `scheduler.py` (daily_reset/milestone 🟡). S3/S4/S5 ga aloqasiz.
+
+## 📦 BU SESSIYADA O'ZGARGAN FAYLLAR (#21)
+**Backend (1):** `flask_routes_extra.py` — import (`two_user_locks` qo'shildi) + eski `_get_shop_lock` registry o'chdi + 3 shop route (`user_lock`) + `api_challenges_accept` (`two_user_locks`+DB guard) + `api_friends_add`/`api_friends_remove` (`two_user_locks`+`uid==fid` guard)
+**Tegilmagan (faqat o'qildi):** `db_lock.py` (`user_lock`/`two_user_locks` imzo tasdiqlandi)
+**Hujjat:** `README.md` (`db_lock` importerlar qatoriga `flask_routes_extra`; `flask_routes_extra` import ustuniga `db_lock`; `flask_routes_extra` tavsifi yangilandi; shop lock pattern qatori `db_lock` ga), `SESSION_LOG_audit.md` (#21 qaydi, S1 jadval 2 qator → ✅ #21, S2 bo'limi qisman yopildi)
+
+## ⚠️ DEPLOY ESLATMASI (#21)
+- 🔴 `flask_routes_extra.py` `from db_lock import user_lock, two_user_locks` qiladi — `db_lock.py` serverda bo'lishi SHART (#18 dan bor, `two_user_locks` ham #18 dan bor).
+- ✅ YUKLA: `flask_routes_extra.py` + README + SESSION_LOG
+- ❌ Cache-bust SHART EMAS — frontend tegilmadi
+- ❌ Yangi fayl YO'Q (`db_lock.py` allaqachon bor)
+
+## 🔵 KEYINGI CHATGA (#22)
+
+> #21 da S1+S2 migratsiya `flask_routes_extra.py` ga yetdi: shop markazlashtirildi (eski `_get_shop_lock` o'chdi), `api_challenges_accept` (S1+S2, atomik DB guard), `api_friends_add/remove` (mutual race). S1 jadvalida holat ustuni — qolgan ⏳ joylar.
+> **Audit ustuvorligi (S1 migratsiya — oxirgi qolganlar):** 🟢 `flask_routes_core.py` (habits CRUD — past xavf, odat o'zgarishi ballsiz), 🟡 `scheduler.py` (`daily_reset`/milestone cron — bot xabari bilan to'qnashish; DIQQAT: scheduler thread'da ishlaydi, `user_lock` qo'shilganda checkin lock bilan to'qnashmasligi tekshirilsin). Bular tugagach S1 to'liq yopiladi.
+> **Eslatma:** Flask route'larda `TimeoutError` → `jsonify(...), 429`. Ikki user zonasida `two_user_locks(a,b)` (deadlock-safe) + `a==b` guard. Tayyor namunalar: shop=`user_lock` (`flask_routes_extra`), accept/friends=`two_user_locks` (`flask_routes_extra`).
+> **⏳ FOYDALANUVCHI SO'RAGAN (kutilmoqda):** inline tugma bosilganda XABAR O'CHSIN (3 xil o'chirish uslubini yagona standartga) — alohida sessiya.
+> **⏳ S2 to'liq atomiklik (past xavf):** `api_challenges_accept` + transfer save-failure rollback yoki MongoDB transaction — kerak bo'lsa alohida sessiya.
 
 
