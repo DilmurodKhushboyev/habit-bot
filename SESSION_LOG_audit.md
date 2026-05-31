@@ -41,29 +41,42 @@ muammoni "ko'rinmas" qiladi — har topilgan strategik masala SHU faylda.
 >
 > **Status belgilari:** 🔴 Yuqori xavf · 🟡 O'rta xavf · 🟢 Past xavf · ⚪ Tugatilgan
 
-### 🔴 S1 — Race condition (load_user/save_user pattern)
+### 🔴 S1 — Race condition (load_user/save_user pattern) — MIGRATSIYA BOSHLANDI (#18)
 
 **Topilgan:** Audit #5 (Stars to'lov)
 **Tarqalish:** Butun loyiha — har joyda `u = load_user(uid); ...; save_user(uid, u)`
+
+**⚙️ INFRATUZILMA TAYYOR (#18):** `db_lock.py` yaratildi — `user_lock(uid)` (bitta user) va `two_user_locks(a, b)` (transfer, deadlock-safe lock ordering: kichik uid avval). L0 qatlam (faqat `threading`/`contextlib`, circular import yo'q). Stress-test: 50 parallel checkin lock'siz 250→35 (ball yo'qoldi), lock bilan 250→250. Transfer 30x parallel double-spend yo'q, jami saqlandi.
+
+**✅ #18 da migratsiya qilingan joylar (`handlers_text.py`):**
+- 🔴 Transfer (`bozor_waiting_transfer_amount`) — `two_user_locks`, u+target_u lock ichida qayta o'qiladi, balans tekshiruvi lock ichida → double-spend + over-spend + qabul qiluvchi yo'qolishi YOPILDI (S2 ham — atomik zona).
+- 🟡 Admin ball berish (`admin_waiting_points_amount`) — `two_user_locks`, target_u lock ichida.
+- 🟡 Referral bonus (referrer `u_ref`) — `user_lock(referrer_id)`, lock ichida o'qiladi.
+- 🔴 Stars to'lov (`handle_successful_payment`) — `user_lock(uid)`, idempotency tekshiruvi (charge_id) HAM lock ichida → duplicate event 2x mukofot xavfi yopildi.
+
+**⏳ Migratsiya QOLGAN joylar (keyingi bosqichlar):**
 
 **Muammo:** Ikki jarayon bir vaqtda bir userning `udata` sini o'qib, modifikatsiya
 qilib, yozsa — keyingi yozish oldingisini **o'chiradi** (last-write-wins).
 
 **Aniq topilgan joylar:**
 
-| Fayl | Joy | Senariy | Xavf |
-|------|-----|---------|------|
-| `handlers_text.py` | 555-559 (admin ball berish) | Admin `+100` bersa, ayni vaqtda user checkin `+5` qilsa → checkin yo'qoladi | 🟡 |
-| `handlers_text.py` | 443-451 (transfer) | Yuboruvchi 2 marta bosib `+50` ikki marta yuborsa → ball "yaratiladi" (double-spend) | 🔴 |
-| `handlers_text.py` | 443-451 (transfer) | Qabul qiluvchi ayni vaqtda checkin qilsa → checkin yo'qoladi | 🔴 |
-| `callbacks_shop.py` | 83-86 (jon sotib olish) | Ayni vaqtda checkin → ball yo'qoladi | 🟡 |
-| `callbacks_shop.py` | 198-203 (reset) | Ayni vaqtda ball qo'shilsa → yo'qoladi | 🟡 |
-| `callbacks_checkin.py` | hammasi | Standart checkin pattern | 🟡 |
-| `callbacks_checkin_done.py` | hammasi | Bildirishnomadan checkin | 🟡 |
-| `flask_routes_data.py` | api_checkin | WebApp checkin | 🟡 |
-| `flask_routes_core.py` | habits CRUD | Odat | 🟢 |
-| `scheduler.py` | daily_reset, milestone | Cron job + bot xabari to'qnashishi | 🟡 |
-| `flask_routes_extra.py` | 510-519 (api_friends_add) | Mutual friends qo'shish — `fid` ayni vaqtda checkin qilsa friends yangilash checkin'ni o'chiradi (Audit #10 qayd) | 🟡 |
+| Fayl | Joy | Senariy | Xavf | Holat |
+|------|-----|---------|------|-------|
+| `handlers_text.py` | transfer (double-spend) | Tugma 2x bosilsa ball "yaratiladi" | 🔴 | ✅ #18 |
+| `handlers_text.py` | transfer (qabul qiluvchi checkin) | Checkin yo'qoladi | 🔴 | ✅ #18 |
+| `handlers_text.py` | admin ball berish | Target checkin to'qnashishi | 🟡 | ✅ #18 |
+| `handlers_text.py` | referral bonus | Referrer checkin to'qnashishi | 🟡 | ✅ #18 |
+| `handlers_text.py` | Stars to'lov | Duplicate event / checkin | 🔴 | ✅ #18 |
+| `callbacks_shop.py` | 83-86 (jon sotib olish) | Ayni vaqtda checkin → ball yo'qoladi | 🟡 | ⏳ |
+| `callbacks_shop.py` | 198-203 (reset) | Ayni vaqtda ball qo'shilsa → yo'qoladi | 🟡 | ⏳ |
+| `callbacks_checkin.py` | hammasi | Standart checkin pattern | 🟡 | ⏳ |
+| `callbacks_checkin_done.py` | hammasi | Bildirishnomadan checkin | 🟡 | ⏳ |
+| `flask_routes_data.py` | api_checkin | WebApp checkin | 🟡 | ⏳ |
+| `flask_routes_core.py` | habits CRUD | Odat | 🟢 | ⏳ |
+| `scheduler.py` | daily_reset, milestone | Cron job + bot xabari to'qnashishi | 🟡 | ⏳ |
+| `flask_routes_extra.py` | api_friends_add | Mutual friends (Audit #10) | 🟡 | ⏳ |
+| `flask_routes_extra.py` | shop buy/sell/activate | Mavjud `_get_shop_lock` → `db_lock` ga ko'chirilsin (markazlashtirish) | 🟡 | ⏳ |
 
 **Mavjud yarim yechim:** `flask_routes_extra.py` da `_get_shop_lock(uid)` per-user
 `threading.Lock` (faqat WebApp shop himoyalangan, bot tomonida yo'q).
@@ -122,7 +135,15 @@ va `get_bot_username()` ga almashtirish.
 
 ---
 
-### 🔴 S4 — Bot tomonida streak milestone ball bermaydi (WebApp/bot nomuvofiq)
+### ⚪ S4 — Bot tomonida streak milestone ball bermaydi (YOPILDI — audit #17)
+
+**Status:** ⚪ YOPILDI — audit #17 da hal qilindi. `STREAK_MILESTONES` `config.py` ga ko'chirildi (8 ta, yagona manba, dict). Bot (`callbacks_checkin` toggle_/skip_ + `callbacks_checkin_done` done_) endi WebApp `api_checkin` bilan AYNI mantiq: `bonus` ball + `add_points_history` + `streak_milestones_sent[]` duplicate guard — ball asosiy thread'da (S1 race'dan qochib), xabar thread'da. WebApp `flask_routes_data` ham config'dan o'qiydi (avval lokal 5-elementli dict edi) + `title` lokalizatsiya qilindi (`texts.py streak_milestone_title`, 3 til — avval o'zbekcha hardcode). Bot xabariga `{bonus}` qo'shildi (3 til). 3 kanal to'liq sinxron, kanal asosidagi adolatsizlik yo'q. Batafsil: audit #17 qaydi.
+
+**Tarixiy qayd (asl muammo):** WebApp ball berardi+guard bor edi, bot faqat xabar yuborardi (ball yo'q, guard yo'q → spam). Bot tuple (8 ta), WebApp dict (5 ta) — nomuvofiq. Endi dolzarb emas.
+
+---
+
+### 🗄️ S4 — TARIXIY TAFSILOT (yopilgan, ma'lumot uchun saqlangan)
 
 **Topilgan:** Audit #8 (`points_logic.py` chaqiruvchilari audit)
 **Tarqalish:** `callbacks_checkin.py`, `callbacks_checkin_done.py`, `flask_routes_data.py`
@@ -1654,9 +1675,9 @@ S1–S4 ga aloqasiz. Yangi **S5** qo'shildi (guruh race) — hal qilinmadi, faqa
 
 **O'chirilgan fayllar (2):** `groups.py` (~269), `callbacks_groups.py` (564) — to'liq.
 
-**Tozalangan fayllar (14):**
-- **Bot:** `handlers_callbacks.py` (dispatch+import, 7→6 sub-handler), `handlers_text.py` (5 guruh state + pending-guruh blok + 3 import, 972→802), `habit_bot.py` (`import groups`), `callbacks_menu.py` (#13), `menus.py` (#13)
-- **API/cron:** `flask_routes_core.py` (4 `api_groups*` endpoint + yetim importlar `save_group`/`add_points_history`/`mongo_db`/`bot`, 818→612), `scheduler.py` (`group_daily_reset` funksiya + `daily_reset` guruh bloki + `SYSTEM_JOB_TAGS` + `_is_member_done` helper + yetim importlar, 972→890)
+**Tozalangan fayllar (17):**
+- **Bot:** `handlers_callbacks.py` (dispatch+import, 7→6 sub-handler), `handlers_text.py` (5 guruh state + pending-guruh blok + 3 import, 972→802), `habit_bot.py` (`import groups`), `callbacks_menu.py` (#13), `menus.py` (#13), `handlers_commands.py` (`load_group`/`save_group` import + deep-link `grp_` guruhga qo'shilish blok + pending-guruh blok, 409→334)
+- **API/cron:** `flask_routes_core.py` (4 `api_groups*` endpoint + yetim importlar `save_group`/`add_points_history`/`mongo_db`/`bot`, 818→612), `scheduler.py` (`group_daily_reset` funksiya + `daily_reset` guruh bloki + `SYSTEM_JOB_TAGS` + `_is_member_done` helper + yetim importlar, 972→890), `flask_routes_data.py` (`load_group`/`save_group` yetim import), `flask_routes_extra.py` (`load_group`/`save_group` yetim import)
 - **DB:** `database.py` (`load_group`/`save_group`/`delete_group` + `groups_col` import, 395→370), `config.py` (`groups_col` ta'rifi + index)
 - **Frontend:** `app-social.js` (13 guruh funksiya + `setGroupSub`, `setStatSub` dan yetim `loadGroups()` chaqiruvi, 1460→1198), `app-core.js` (premium "guruh" bandi 3 til + izoh), `strings.js` (`groups:` blok 3 til + `grp_*`/`confirm_del_group`/`ph_group_name`/`tab_grp_friend`/`tab_groups` — 3 til balansda, 1271→1169), `app-stats.js` (izoh), `index.html` (gsub tab tugmalari + `#groups-content`, `#friends-content` ochiq qilindi, cache-bust 4 fayl → v=617)
 
@@ -1666,9 +1687,17 @@ S1–S4 ga aloqasiz. Yangi **S5** qo'shildi (guruh race) — hal qilinmadi, faqa
 
 **Strategik muammolarga ta'sir:** S1 (race) qamrovidan guruh checkin (`flask_routes_core`) chiqdi. S5 (guruh race) endi **mavzusiz** — guruh yo'q. S2 dan `flask_routes_extra` challenge qoldi (tirik). S4 (milestone) o'zgarmadi.
 
+## 🔴 CRASH SABOQI (#14 — deploy paytida)
+
+**Nima bo'ldi:** `database.py` dan `load_group`/`save_group` o'chirilgach, bot Railway'da `ImportError: cannot import name 'load_group' from 'database'` bilan crash bo'ldi (10:21, qayta-qayta restart). Sabab: **3 ta fayl** (`handlers_commands.py`, `flask_routes_data.py`, `flask_routes_extra.py`) hali `load_group`/`save_group` ni import qilardi — lekin ular dastlabki audit qamroviga kirmagan edi (ko'rilmagan fayllar).
+
+**Tuzatish:** 3 faylda import o'chirildi (`flask_routes_data`/`extra` da yetim import edi; `handlers_commands` da deep-link + pending-guruh bloklari ham bor edi). Bot ishga tushdi.
+
+**🔑 KELAJAK QOIDASI (Qoida #09 kengaytmasi):** `database.py`/`config.py` dan **eksport qilinadigan funksiya yoki o'zgaruvchi** o'chirishdan OLDIN — butun repo bo'ylab `grep -rn "funksiya_nomi" *.py` qilib BARCHA import qiluvchilarni topish SHART. Faqat ko'rilgan fayllar bilan cheklanish xato — import xatosi butun botni yiqitadi. Eng xavfli iboralar: `load_group`, `save_group`, `from groups`, `callbacks_groups`, `send_menu2`, `groups_col`. **Deploy tartibi:** past qatlam (DB/config) o'zgarishi yuqori qatlam (import qiluvchilar) bilan BIR vaqtda yuklanishi shart.
+
 ## 📦 BU SESSIYADA O'ZGARGAN FAYLLAR (#13 + #14)
 **O'chirilgan (2):** `groups.py`, `callbacks_groups.py`
-**Backend (9):** `menus.py`, `callbacks_menu.py`, `handlers_callbacks.py`, `handlers_text.py`, `habit_bot.py`, `flask_routes_core.py`, `scheduler.py`, `database.py`, `config.py`
+**Backend (12):** `menus.py`, `callbacks_menu.py`, `handlers_callbacks.py`, `handlers_text.py`, `habit_bot.py`, `flask_routes_core.py`, `scheduler.py`, `database.py`, `config.py`, `handlers_commands.py`, `flask_routes_data.py`, `flask_routes_extra.py`
 **Frontend (5):** `index.html`, `app-social.js`, `app-core.js`, `strings.js`, `app-stats.js`
 **Hujjat:** `README.md` (fayl xaritasi, bog'liqlik jadvali, §208/220/229/242/259/278/474/481/484/499 + L3 qatlam), `SESSION_LOG_audit.md` (#13+#14 qaydi)
 
@@ -1679,9 +1708,151 @@ S1–S4 ga aloqasiz. Yangi **S5** qo'shildi (guruh race) — hal qilinmadi, faqa
 - ✅ Cache-bust: `index.html` da 4 fayl → v=617 (strings, app-core, app-stats, app-social)
 - ❌ Yangi fayl YO'Q
 
-## 🔵 KEYINGI CHATGA (#15)
+## ✅ #15 — `callbacks_menu.py` `ADMIN_ID` import bug (YAKUNLANDI)
 
-> #13+#14 da menu2 + butun guruh tizimi olib tashlandi (16 fayl: 2 o'chirilgan + 14 tozalangan). Do'st, challenge, shop, statistika, shahar TIRIK.
-> **Aniqlangan bug (tegilmagan):** `callbacks_menu.py` `ADMIN_ID` import qilinmagan (`dismiss_ball_notif`/`admin_confirm_ball_*` da `NameError`) — tuzatish kerak.
-> **Foydalanuvchi rejasi:** do'st tizimi ham "tez orada" o'chiriladi (aytadi).
-> **Audit ustuvorligi:** 🔴 S4 (milestone), 🔴 S1+S2 (race, db_lock — endi guruhsiz, faqat user+city+challenge), `flask_routes_data.py`, qolgan frontend fayllar. S5 (guruh race) — YOPILDI (guruh yo'q).
+**Sabab:** Audit #13 da topilgan, qoida #04 sababli o'sha sessiyada qoldirilgan bug — `callbacks_menu.py` `ADMIN_ID` ni 3 joyda ishlatardi (302, 314, 318) lekin import qilmagan → `dismiss_ball_notif` yoki `admin_confirm_ball_*` bosilganda `NameError: name 'ADMIN_ID' is not defined`.
+
+**Ta'sir doirasi (Qoida #09):** Faqat shu 2 handler zarar ko'rardi. `dismiss_ball_notif` — foydalanuvchi ball bildirishnomasidagi tugmani bosganda adminga "tasdiqladi" xabari yuborilmasdi (crash). `admin_confirm_ball_*` — admin tasdiqlash tugmasini bosganda crash.
+
+**Tuzatish:** `callbacks_menu.py` 10-qatorga `from config import ADMIN_ID` qo'shildi. `callbacks_admin.py:11` aynan shu patternni ishlatadi (`from config import ADMIN_ID`). `config.py:13` da `ADMIN_ID` ta'riflangan. Bog'liqlik xaritasi L0 qatlam — `config` hech narsa import qilmaydi → circular import xavfi yo'q.
+
+**Test scenario (Qoida #15):**
+- Foydalanuvchi ball bildirishnomasidagi tugmani bosadi → adminga xabar yuboriladi (302) ✅ (avval crash edi)
+- Admin "✅ Tasdiqlash" bosadi → `uid == ADMIN_ID` o'tadi (314) → xabar 5s keyin o'chiriladi (318) ✅
+
+**Revert reja (Qoida #16):** 10-qatordagi `from config import ADMIN_ID` ni o'chirish kifoya. Mustaqil.
+
+**Strategik muammolarga ta'sir:** S1–S4 ga aloqasiz. Faqat import qo'shildi, mantiq tegilmadi.
+
+## 📦 BU SESSIYADA O'ZGARGAN FAYLLAR (#15)
+**Backend (1 fayl):**
+- `callbacks_menu.py` — `from config import ADMIN_ID` import qo'shildi (10-qator)
+
+**Hujjat:** `README.md` (bog'liqlik jadvali — `callbacks_menu` `import qiladi` ustuniga `config` qo'shildi), `SESSION_LOG_audit.md` (#15 qaydi)
+
+## ⚠️ DEPLOY ESLATMASI (#15)
+- ✅ Backend 1 fayli (`callbacks_menu.py`) GitHub'ga yuklanishi kerak
+- ✅ README + SESSION_LOG yangilandi — yuklash kerak
+- ❌ Cache-bust SHART EMAS — frontend tegilmadi
+- ❌ Yangi fayl YO'Q
+
+## ✅ #16 — `points_logic.py` auditi → TOZA (TUZATISH YO'Q)
+
+**Audit yo'nalishi:** `points_logic.py` (75 qator, sof funksiyalar) — kichik/xavfsiz, strategik infratuzilma talab qilmaydi. Tegilgan fayl: YO'Q (audit-only). Tekshirish uchun o'qildi: `flask_routes_data.py` (chaqiruvchi — `apply_pet_dog_bonus`/`apply_item_bonuses` qanday ishlatilishini ko'rish, Qoida #09/#10/#11). Qoidalar #02, #04 saqlandi.
+
+**`apply_item_bonuses` — TOZA:**
+- `total_percent` to'g'ri stack (badge + car), `<= 0` da erta qaytadi.
+- `effect.get("value", 0)` / `effect.get("type")` — None-safe.
+- B variant kafolat (`max(boosted, base_points + 1)`) izoh bilan mos.
+
+**`apply_pet_dog_bonus` — TOZA (shubha qilingan double-bonus bug EMAS):**
+Chaqiruvchi (`flask_routes_data.py`) 4 joyda ishlatadi:
+- DONE (199 repeat, 254 simple): `is_undo=False` shartsiz, lekin funksiya ichidagi `last_bonus_date != today` guard kunlik faqat 1 marta beradi (2-odat qayta bermaydi).
+- UNDO (169 repeat, 229 simple): `is_undo=True` faqat `if not _still_done` (bugun boshqa odat qolmagan) bo'lganda → bonus faqat oxirgi odat undo'da qaytariladi.
+
+**Simmetriya tasdiqlandi (net = 1 marta):** 1-odat done `+bonus` → 2-odat done `0` (guard) → 2-odat undo (`_still_done=true`, qaytarmaydi) → 1-odat undo (`_still_done=false`, `-bonus`, `last_bonus_date=""`) → qayta checkin `+bonus` (to'g'ri). `apply_item_bonuses` ham done/undo da symmetric (`_base`/`_undo_base` bir xil foiz).
+
+**Test scenario (Qoida #15):** pet_dog faol foydalanuvchi 2 odatli kuni → 1-checkin `+bonus`, 2-checkin `0`, 2-undo bonus qoladi, 1-undo `-bonus` (net 0), qayta checkin `+bonus`. Mantiq to'g'ri.
+
+**Revert reja (Qoida #16):** Yo'q — kod o'zgarmadi.
+
+**Strategik muammolarga ta'sir:** S1–S4 ga aloqasiz. `apply_pet_dog_bonus`/`apply_item_bonuses` `save_user` qilmaydi (chaqiruvchi qiladi) → S1 (race) `flask_routes_data` qamrovida qoladi, bu fayl alohida xavf qo'shmaydi.
+
+## 📦 BU SESSIYADA O'ZGARGAN FAYLLAR (#16)
+**Kod:** YO'Q (audit-only — `points_logic.py` toza topildi).
+**Hujjat:** `SESSION_LOG_audit.md` (#16 qaydi). README tegilmadi (kod o'zgarmadi, Qoida #21).
+
+## ⚠️ DEPLOY ESLATMASI (#16)
+- ❌ Kod fayli YO'Q — deploy SHART EMAS.
+- ✅ `SESSION_LOG_audit.md` yangilandi (ixtiyoriy — faqat audit tarixi).
+- ❌ Cache-bust SHART EMAS.
+
+## ✅ #17 — S4 streak milestone sinxronlashtirildi (YAKUNLANDI)
+
+**Sabab:** S4 strategik muammo — bot tomonida streak milestone ball BERMASDI (faqat WebApp berardi), duplicate guard yo'q (har checkin spam), `STREAK_MILESTONES` ikki xil (bot tuple 8 ta, WebApp dict 5 ta). Kanal asosidagi adolatsizlik. Foydalanuvchi qarori: bot 8 milestone'ni saqlash (3 kun erta motivatsiya, 180/365 sodiqlik), WebApp 8 taga kengaytiriladi.
+
+**Qamrov:** 5 fayl, 4 bosqich (Qoida #23 — bosqichli).
+
+**Bosqich 1 — `config.py`:** Yangi `STREAK_MILESTONES` dict (8 ta: 3✨/7🔥/14⚡/30💎/60🏆/100👑/180🌟/365🎖️ — `emoji`+`bonus` 5/10/20/50/100/200/300/500), `HABIT_LIMIT` dan keyin, CITY dan oldin. `title` qasddan QO'SHILMADI — lokalizatsiya `texts.py` orqali. Yagona manba.
+
+**Bosqich 2 — `callbacks_checkin.py` (bot toggle_/skip_):** `from config import STREAK_MILESTONES` (lokal tuple o'chirildi). `_check_streak_milestone` dict'dan oladi, faqat XABAR yuboradi (emoji + `{days}`+`{bonus}` `.format`). Ball berish 2 blokda (repeat 164-172, simple 334-342): global streak `+1` ichida, `if streak in STREAK_MILESTONES` + `streak_milestones_sent` guard → `bonus` ball + `add_points_history` + thread (xabar). ASOSIY thread'da (S1 race'dan qochish), mavjud `save_user`'dan oldin — alohida save YO'Q.
+
+**Bosqich 2b — `callbacks_checkin_done.py` (bot done_/bildirishnoma):** `from config import STREAK_MILESTONES` (`add_points_history` allaqachon import edi). Xuddi shu ball+guard mantiq 2 blokda (repeat 64-72, simple 160-168). `_check_streak_milestone` ni avvalgidek import qiladi (circular import tartibi buzilmadi — README:541).
+
+**Bosqich 3 — `flask_routes_data.py` (WebApp api_checkin):** Lokal 5-elementli dict o'chirildi → `from config import STREAK_MILESTONES` (8 ta). Mavjud guard+ball+history bloki to'g'ri edi, faqat `ms["title"]` (config'da yo'q) → `T(uid, "streak_milestone_title", days=...)` (lokalizatsiya, Qoida #22 — avval o'zbekcha hardcode `app-pages.js` popup'da rus/ingliz userga ham ko'rinardi).
+
+**Bosqich 4 — `texts.py`:** (a) yangi kalit `streak_milestone_title` 3 til (`{days}` — WebApp popup sarlavhasi); (b) `streak_milestone` matniga `🎁 *+{bonus} ⭐* qo'shildi!` qatori 3 til (bot xabarida bonus ko'rsatish — WebApp popup bilan izchil); (c) matn boshidagi qattiq `🔥` olib tashlandi 3 til → milestone emojisi DINAMIK (`ms["emoji"]` chaqiruvchida prefiks; avval `🔥 🔥`/`🎖️ 🔥` dublikat edi).
+
+**`T()` izmosi tasdiqlandi (`helpers.py:22`):** `return text.format(**kwargs) if kwargs else text` → `T(uid, key, kwarg=...)` (format ichkarida) VA `T(uid, key).format(...)` (xom qaytaradi) ikkalasi xavfsiz. `flask_routes_data` kwarg uslubi, `callbacks_checkin` `.format` uslubi — ikkalasi to'g'ri.
+
+**Test scenario (Qoida #15):** Bot 7-kun streak → `+10` ball, "🔥 Tabriklaymiz! 7 kunlik streak! 🎁 +10 ⭐ ball" + `sent=[7]` → o'sha kun 2-odat checkin: `streak_last_date==today` → milestone blok ishlamaydi (takror yo'q) → ertasi WebApp: `7 in sent` → bermaydi (sinxron). EN user WebApp 30-kun → popup "💎 30-day streak! +50 ⭐". Yangi 3/180/365 endi 3 kanalda. Hammasi `py_compile` ✅, 3 til `{days}`+`{bonus}` balansda, dublikat emoji yo'q.
+
+**Revert reja (Qoida #16):** Har fayl mustaqil. Eng oson — 5 faylni eski versiyaga qaytarish. Yoki: config dict o'chirish + 3 faylda `from config import STREAK_MILESTONES` olib tuple/lokal-dict qaytarish + 4 blokdan milestone-bonus olib `threading.Thread` ni guard'siz tiklash + texts.py 3 yangi qator + `streak_milestone` eski matn.
+
+**Strategik muammolarga ta'sir:** S4 → ⚪ YOPILDI. S1 (race) — milestone ball asosiy thread'da `save_user`'dan oldin qo'shildi, alohida save YO'Q → S1 qamroviga YANGI race qo'shilmadi (mavjud checkin save patterniga qo'shildi). S2/S3 ga aloqasiz.
+
+## 📦 BU SESSIYADA O'ZGARGAN FAYLLAR (#17)
+**Backend (4 fayl):** `config.py` (STREAK_MILESTONES dict), `callbacks_checkin.py` (import+2 blok ball+guard), `callbacks_checkin_done.py` (import+2 blok ball+guard), `flask_routes_data.py` (lokal dict→config import + title lokalizatsiya)
+**Lokalizatsiya (1 fayl):** `texts.py` (`streak_milestone` +bonus +dinamik emoji, yangi `streak_milestone_title` — 3 til)
+**Tegilmagan (faqat o'qildi):** `app-pages.js`, `helpers.py`
+**Hujjat:** `README.md` (§47 fayl daraxti config, §207 config STREAK_MILESTONES bloki, dependency jadval — `callbacks_checkin`/`callbacks_checkin_done`/`flask_routes_data` → import ustuniga `config`), `SESSION_LOG_audit.md` (#17 qaydi, S4 → ⚪)
+
+## ⚠️ DEPLOY ESLATMASI (#17)
+- 🔴 **5 fayl BIR VAQTDA** (CRASH SABOQI #14): `callbacks_checkin`/`_done`/`flask_routes_data` `from config import STREAK_MILESTONES` qiladi — config eski qolsa `ImportError` → bot crash.
+- ✅ YUKLA: `config.py`, `callbacks_checkin.py`, `callbacks_checkin_done.py`, `flask_routes_data.py`, `texts.py` + README + SESSION_LOG
+- ❌ Cache-bust SHART EMAS — frontend (`app-pages.js`, `strings.js`) tegilmadi
+- ❌ Yangi fayl YO'Q
+
+## ✅ #18 — S1/S2 infratuzilma (`db_lock.py`) + `handlers_text.py` migratsiya (BOSQICH 1-2 YAKUNLANDI)
+
+**Sabab:** S1 (race condition) + S2 (transfer atomic emas) — eng muhim strategik muammo. Variant 2 (per-user `threading.Lock`) tanlandi (S1 qaydidagi tavsiya: oson, tez, 1 instance uchun yetarli).
+
+**Qamrov:** Bosqichli (Qoida #23). Bosqich 1 — infratuzilma. Bosqich 2 — `handlers_text.py` (eng xavfli, ball transfer + Stars). Qolgan fayllar keyingi bosqichlarda.
+
+**Bosqich 1 — `db_lock.py` (YANGI FAYL, L0 qatlam):**
+- `get_user_lock(uid)` — lazy per-user lock (int/str uid bir xil lock).
+- `user_lock(uid, timeout=3)` — `with` context manager (bitta user); timeout'da `TimeoutError`, `finally`'da release.
+- `two_user_locks(a, b, timeout=3)` — transfer uchun (ikki user). **Deadlock-safe:** lock ordering (kichik uid avval) — A→B va B→A teskari transferlar bir vaqtda deadlock qilmaydi. `a==b` → bitta lock (o'z-o'zini bloklamaydi).
+- **MUHIM qaror:** lock `load_user`/`save_user` ICHIGA qo'yilmadi (faqat save'ni qulflash race'ni to'xtatmaydi — lock o'qishdan oldin olinib yozishdan keyin qo'yilishi shart). `database.py` tegilmadi (Qoida #02/#04). Chaqiruvchi `with` bilan butun `load→modify→save` blokini o'raydi.
+- **Cheklov (halol qayd):** faqat 1 process (Railway 1 instance). 2+ instance → MongoDB atomic ($inc) kerak (S1 Variant 1, kelajak).
+
+**Bosqich 2 — `handlers_text.py` (4 blok o'raldi):**
+1. 🔴 **Transfer** (`bozor_waiting_transfer_amount`): `two_user_locks(uid, target_id)`. `u` + `target_u` lock ICHIDA qayta o'qiladi (40-qatordagi `handle_text` boshidagi eski nusxa emas), balans tekshiruvi (`amount > my_points`) ham lock ichida → double-spend, over-spend, qabul qiluvchi yo'qolishi YOPILDI. S2 ham yopildi (ikki save bitta atomik zonada).
+2. 🟡 **Admin ball berish** (`admin_waiting_points_amount`): `two_user_locks(uid, target_id)`. `target_u` lock ichida o'qiladi. `uid==target_id` (admin o'ziga) → `u=target_u` sinxron; `uid!=target_id` → admin `u` ham lock ichida qayta o'qiladi (state'dan boshqa maydon eskirmasin).
+3. 🟡 **Referral bonus** (referrer): `user_lock(referrer_id)`. `u_ref` lock ichida o'qiladi/yoziladi. Yangi user `u` o'ralmadi (Qoida #04 — hali faol emas, race past; butun reg blokini o'rash juda keng zona, lock ichida network chaqiruv yomon).
+4. 🔴 **Stars to'lov** (`handle_successful_payment`): `user_lock(uid)`. **Idempotency tekshiruvi (`charge_id in stars_payments`) HAM lock ichida** — aks holda 2 duplicate event ikkalasi tekshiruvdan o'tib 2x mukofot berishi mumkin edi. Haqiqiy pul → eng muhim.
+
+**Yangi matn kaliti (Qoida #22):** `texts.py` `err_server_busy` — 3 til (UZ/RU/EN). Lock timeout (3s)'da foydalanuvchiga ko'rsatiladi. Markazlashtirilgan — keyingi bosqichlar (`callbacks_shop`, `callbacks_checkin`) ham shu kalitni ishlatadi.
+
+**Tegilmagan (Qoida #04):** `_run_broadcast` admin state save (faqat `state` maydoni, ball yo'q → past xavf). `callbacks_shop.py`, `callbacks_checkin*.py`, `flask_routes_*` — keyingi bosqichlar.
+
+**Test scenario (Qoida #15):**
+- Birlik: int/str bir lock ✅, with oladi/qaytaradi ✅, band lock→TimeoutError ✅, exception'da release ✅, two_user A==B bitta lock ✅, deadlock 100x teskari transfer ✅.
+- Race stress: 50 parallel checkin lock'siz 250→35 (S1 isbot), lock bilan 250→250 ✅.
+- Transfer integ: 30x parallel double-spend yo'q (jami 1000 saqlandi) ✅; A=100 ball, 5x50 urinish → faqat 2 o'tdi (over-spend yo'q) ✅.
+- `py_compile`: `db_lock.py`, `handlers_text.py`, `texts.py` ✅. `err_server_busy` 3 til balansda ✅.
+
+**Revert reja (Qoida #16):** Har fayl mustaqil. (1) `handlers_text.py` — 4 blokdan `with user_lock`/`two_user_locks` o'rashni olib, lock ichidagi qayta-`load_user`larni eski (lock'siz) holatga qaytarish + `from db_lock import` o'chirish. (2) `texts.py` — 3 `err_server_busy` qatorini o'chirish. (3) `db_lock.py` — butunlay o'chirish (hech kim import qilmay qoladi). Eng oson: `db_lock.py` o'chirish + `handlers_text.py` ni eski versiyaga qaytarish.
+
+**Strategik muammolarga ta'sir:** S1 — `handlers_text.py` qamrovdan CHIQDI (✅). S2 — transfer atomik zona bo'ldi (✅ shu qism). Qolgan S1 joylari (`callbacks_shop`, `callbacks_checkin*`, `flask_routes_*`) ⏳ keyingi bosqich. S3/S4/S5 ga aloqasiz.
+
+## 📦 BU SESSIYADA O'ZGARGAN FAYLLAR (#18)
+**Yangi (1):** `db_lock.py` — per-user lock infratuzilma (L0 qatlam)
+**Backend (1):** `handlers_text.py` — 4 blok lock bilan o'raldi + `from db_lock import` (32-qator)
+**Lokalizatsiya (1):** `texts.py` — `err_server_busy` 3 til
+**Hujjat:** `README.md` (fayl daraxti — `db_lock.py`; L0 qatlam; dependency jadval — `db_lock` qatori + `handlers_text` import ustuni), `SESSION_LOG_audit.md` (#18 qaydi, S1 jadval holat ustuni + migratsiya qaydi)
+
+## ⚠️ DEPLOY ESLATMASI (#18)
+- 🔴 **3 fayl BIR VAQTDA** (CRASH SABOQI #14): `handlers_text.py` `from db_lock import user_lock, two_user_locks` qiladi — `db_lock.py` yuklanmasa `ImportError` → bot crash. `texts.py` ham (`err_server_busy` kerak, aks holda `T()` bo'sh qaytaradi — crash emas, lekin xato matn).
+- ✅ YUKLA: `db_lock.py` (YANGI), `handlers_text.py`, `texts.py` + README + SESSION_LOG
+- ❌ Cache-bust SHART EMAS — frontend tegilmadi
+- ✅ Yangi fayl BOR: `db_lock.py` (GitHub'ga qo'shing)
+
+## 🔵 KEYINGI CHATGA (#19)
+
+> #18 da S1 infratuzilma (`db_lock.py`) tayyor + `handlers_text.py` 4 blok migratsiya (transfer/admin/referral/Stars). S1 jadvalida holat ustuni — qaysi joylar qolgani ko'rsatilgan.
+> **Audit ustuvorligi (S1 migratsiya davomi):** 🟡 `callbacks_shop.py` (jon sotib olish 83-86, reset 198-203) → `user_lock`. 🟡 `callbacks_checkin.py` + `callbacks_checkin_done.py` (standart checkin) → `user_lock` (DIQQAT: `_check_streak_milestone` thread'da — lock asosiy thread'da, README:541 circular import tartibi). 🟡 `flask_routes_data.py` (api_checkin). 🟡 `flask_routes_extra.py` — mavjud `_get_shop_lock` ni `db_lock` ga ko'chirib markazlashtirish (Qoida #17) + `api_friends_add`. 🟢 `flask_routes_core.py` (habits CRUD), `scheduler.py` (cron).
+> **Eslatma:** har bosqichda lock ichida `load_user` QAYTA o'qilishi shart (eski nusxa bilan ishlamaslik). `err_server_busy` kaliti tayyor (timeout javobi).
+> **⏳ FOYDALANUVCHI SO'RAGAN (kutilmoqda):** inline tugma bosilganda XABAR O'CHSIN (3 xil o'chirish uslubini yagona standartga) — alohida sessiya.
+
+

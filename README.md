@@ -44,8 +44,9 @@ super_habits/
 ├── habit_bot.py              ← ASOSIY ENTRY POINT
 │
 ├── ─── YADRO ──────────────────────────────────────────
-├── config.py                 ← Sozlamalar, MongoDB, SHOP_PRICES/SELL/STARS/BONUS_EFFECTS, CITY konstantalar
+├── config.py                 ← Sozlamalar, MongoDB, SHOP_PRICES/SELL/STARS/BONUS_EFFECTS, STREAK_MILESTONES, CITY konstantalar
 ├── database.py               ← CRUD: load/save user, settings, cache, init_city_for_user
+├── db_lock.py                ← Per-user lock (race condition himoyasi S1/S2): user_lock, two_user_locks
 ├── city_logic.py             ← Shahar logikasi: bino qurish, progress, dekoratsiya, insurance (sof funksiyalar)
 ├── points_logic.py           ← Ball bonus logikasi: badge/car foiz, pet_dog kunlik bonus (sof funksiyalar)
 ├── texts.py                  ← LANGS dict (uz/en/ru tarjimalar)
@@ -204,7 +205,7 @@ index.html (WebApp entry point)
 
 | Fayl | Qatorlar | Vazifasi |
 |------|----------|----------|
-| `config.py` | ~178 | `BOT_TOKEN`, `ADMIN_ID`, `MONGO_URI` (DB nomi oxiridan avtomatik — staging/prod ajratish), MongoDB ulanish va indekslar. **Bozor markazlashtirilgan:** `SHOP_PRICES` (14 mahsulot), `SHOP_SELL_PRICES` (12 × 50%), `SHOP_STARS_PRICES` (`gift_box`: 5 Stars), `SHOP_ONE_TIME` (bir martalik nishon/pet/car), `SHOP_BONUS_EFFECTS` (7 ta mahsulot vazifasi: badge_fire/star/secret points_percent 3/5/12%, car_sport 8%, pet_cat streak_save 7 kun, pet_dog daily_bonus +2, pet_rabbit jon_soften 50%). **City konstantalari:** `CITY_GRID_SIZE=30` (PHASE C2.1 da 20→30 kengaytirildi — eski user binolari saqlanadi, koordinatalar 0-29 oraliqda valid), `BUILDING_DAYS=66`, `CITY_VERSION=1`, `BUILDING_TYPES` (10 ta: stadium/library/mosque/school/park/cafe/bank/hospital/studio/house — emoji + name_key), `BUILDING_STAGE_THRESHOLDS=[13,26,39,52,66]` (5 vizual stage), `DECORATION_TYPES` (5 ta: tree/flower/car/bench/fountain), `SHOP_DECORATION_PRICES` (tree:30, flower:20, car:80, bench:40, fountain:120), `INSURANCE_PRICE=200`, `INSURANCE_DURATION=30`. **Odat:** `HABIT_LIMIT=15` (bir foydalanuvchi maksimal odat soni — freemium qo'shilganda FREE/PREM ga ajratiladi) |
+| `config.py` | ~178 | `BOT_TOKEN`, `ADMIN_ID`, `MONGO_URI` (DB nomi oxiridan avtomatik — staging/prod ajratish), MongoDB ulanish va indekslar. **Bozor markazlashtirilgan:** `SHOP_PRICES` (14 mahsulot), `SHOP_SELL_PRICES` (12 × 50%), `SHOP_STARS_PRICES` (`gift_box`: 5 Stars), `SHOP_ONE_TIME` (bir martalik nishon/pet/car), `SHOP_BONUS_EFFECTS` (7 ta mahsulot vazifasi: badge_fire/star/secret points_percent 3/5/12%, car_sport 8%, pet_cat streak_save 7 kun, pet_dog daily_bonus +2, pet_rabbit jon_soften 50%). **City konstantalari:** `CITY_GRID_SIZE=30` (PHASE C2.1 da 20→30 kengaytirildi — eski user binolari saqlanadi, koordinatalar 0-29 oraliqda valid), `BUILDING_DAYS=66`, `CITY_VERSION=1`, `BUILDING_TYPES` (10 ta: stadium/library/mosque/school/park/cafe/bank/hospital/studio/house — emoji + name_key), `BUILDING_STAGE_THRESHOLDS=[13,26,39,52,66]` (5 vizual stage), `DECORATION_TYPES` (5 ta: tree/flower/car/bench/fountain), `SHOP_DECORATION_PRICES` (tree:30, flower:20, car:80, bench:40, fountain:120), `INSURANCE_PRICE=200`, `INSURANCE_DURATION=30`. **Odat:** `HABIT_LIMIT=15` (bir foydalanuvchi maksimal odat soni — freemium qo'shilganda FREE/PREM ga ajratiladi). **Streak milestone (yagona manba — S4):** `STREAK_MILESTONES` dict (8 ta: 3✨/7🔥/14⚡/30💎/60🏆/100👑/180🌟/365🎖️, har biri `emoji`+`bonus` 5/10/20/50/100/200/300/500). Bot (`callbacks_checkin`+`callbacks_checkin_done`) VA WebApp (`flask_routes_data.api_checkin`) SHU dict'dan o'qiydi — sinxron. Streak global qiymati kalitga tenglashganda: `bonus` ball beriladi + `u["streak_milestones_sent"][]` ga yoziladi (takror bermaslik guard). Ball asosiy thread'da (S1 race'dan qochish), xabar thread'da. Foydalanuvchi matni `texts.py` `streak_milestone` (xabar) + `streak_milestone_title` (WebApp popup sarlavhasi) — 3 til. `emoji` dinamik (matn boshida hardcode emoji YO'Q) |
 | `database.py` | ~370 | `load_user`, `save_user`, `load_all_users` (60s cache), `count_users`, `user_exists` (3x retry). **Period helper'lari:** `add_points_history(udata, delta)` — har kun delta'ni `points_history: {YYYY-MM-DD: int}` ga saqlaydi, `get_points_in_period(udata, days)` — davriy ball yig'indisi (history bo'sh → fallback umumiy `points`), `get_streak_in_period(udata, days)` — `done_log` dan davriy maks ketma-ket kunlar. **City helper'lari:** `init_city_for_user(udata)` — bo'sh shahar yaratadi (idempotent — mavjud city'ga tegmaydi), `get_user_city(udata)` — auto-init bilan shahar obyektini qaytaradi. `udata["city"] = {version, name, buildings: [...], decorations: [...], insurance_active, insurance_until}` |
 | `points_logic.py` | ~71 | **Ball bonus logikasi** — sof funksiyalar, DB ga to'g'ridan-to'g'ri yozmaydi (chaqiruvchi `save_user` qiladi). `apply_item_bonuses(u, base_points)` — faol `active_badge` + `active_car` foizlarini stack qiladi (`SHOP_BONUS_EFFECTS` dan `points_percent` turi), B variant majburiy `+1` kafolat (round natijasida bonus yo'qolsa ham foydalanuvchi foyda ko'rsin), `apply_pet_dog_bonus(u, today, is_undo=False)` — `active_pet=="pet_dog"` bo'lsa kunlik BIRINCHI checkin'ga `+N` (`daily_bonus` qiymati), `pet_dog_last_bonus_date` field bilan kuniga 1 marta kafolat; `is_undo=True` da bonus qaytariladi. **Audit #5:** avval `flask_routes_data.py` ichidagi nested funksiyalar edi — 3 joydan (WebApp checkin, bot `toggle_`, bot `done_`) import qilinishi uchun ajratildi (Qoida #10 sinxron) |
 | `city_logic.py` | ~470 | **Shahar (City) logikasi** — sof funksiyalar, DB ga to'g'ridan-to'g'ri yozmaydi (chaqiruvchi `save_user` qiladi). `find_empty_slot(udata, gap=True)` — markazdan halqama-halqa birinchi mos katak (gap=True: 8 qo'shni katak ham bo'sh, fallback gap=False), `get_building_stage(progress)` 0-66→0-4 vizual bosqich, `create_building(...)` idempotent (bir habit_id bir bino), `update_building_progress(udata, habit_id, delta)` +1/-1 clamp 0..66 + insurance check + eski user uchun auto-create (delta>0 da), `backfill_buildings_from_habits(udata)` — har odat uchun retroaktiv bino yaratadi (Variant B: bo'sh poydevor ham yaratiladi, progress = `min(effective_done, 66)`, `effective_done = max(total_done, history_count)` — repeat odatlar qisman tasdiqlangan kunlari ham hisoblanadi, statistika `api_stats` bilan to'g'ridan-to'g'ri sinxron), idempotent, `GET /api/city/<uid>` da bir marta chaqiriladi, `resync_building_progress(udata)` — mavjud binolar progress'ini `effective_done` bilan sinxronlaydi (faqat KO'TARADI, past tushirmaydi — insurance/regress mantig'i bilan to'qnashmaslik uchun), idempotent, repeat odatlar qisman tasdiqlash holatida bino balandligi va statistika "JAMI" orasidagi nomuvofiqlikni tuzatadi, `cleanup_orphan_buildings(udata)` — odat ro'yxatida mavjud bo'lmagan `habit_id` ga bog'langan binolarni o'chiradi (orfan tozalash), idempotent, `compact_buildings_to_center(udata)` — versiyalangan migration (`COMPACT_VERSION`, pinned bo'lmagan binolarni progress bo'yicha markazga qayta yig'adi, pinned tegilmaydi), `delete_building_for_habit`, `place_decoration`/`delete_decoration`, `move_item(udata, item_id, new_x, new_y)` (`True`=ko'chdi / `False`=band yoki koord noto'g'ri / `None`=item topilmadi, muvaffaqiyatda `pinned=True` — kelajak migration tegmaydi; item_id binoda `habit_id`, dekoratsiyada `id`), `activate_insurance`, `_is_insurance_active` |
@@ -224,7 +225,7 @@ index.html (WebApp entry point)
 
 | Fayl | Qatorlar | Vazifasi |
 |------|----------|----------|
-| `handlers_commands.py` | 362 | `/start`, til tanlash, deep link, `/admin_panel`, kontakt qabul qilish |
+| `handlers_commands.py` | 334 | `/start`, til tanlash, deep link (`ref_` referral), `/admin_panel`, kontakt qabul qilish. **Eslatma:** guruh deep-link (`grp_` qo'shilish so'rovi) + pending-guruh bloki audit #14 da o'chirildi (guruh tizimi olib tashlangan) |
 | `handlers_callbacks.py` | 165 | **Dispatcher**: darhol `answer_callback_query` → umumiy preamble (til, obuna) → 6 ta sub-handlerga yo'naltirish. `ack_delete_msg` — universal xabar o'chirish |
 | `handlers_text.py` | ~802 | Matn xabarlari (state machine), Stars to'lov (faqat `gift_box`: random 100/200/500 ball, 1 shield, 3 kun XP booster) — `handle_successful_payment` idempotency check (`stars_payments[]` ro'yxati `telegram_payment_charge_id`'larni saqlaydi, duplicate event'lar rad etiladi), xato yuz berganda foydalanuvchiga 3 tilli xabar + `tg://user?id={ADMIN_ID}` tugmasi va adminga avtomatik bildirishnoma (`charge_id`/`payload`/xato bilan), noma'lum `item_id` → `raise ValueError` (mavjud `except` blok ushlab xuddi shu xabarlarni yuboradi), broadcast, inline query. **Eslatma:** shaxsiy odat qo'shish state'lari (`waiting_repeat_count`/`waiting_habit_name`/`waiting_habit_time`) audit #3 da o'chirildi; `bozor_waiting_subtract` state audit #7 da olib tashlandi; guruh odati wizard'i (`group_waiting_*`) + pending-guruh bloki audit #14 da o'chirildi (guruh tizimi olib tashlangan) |
 | `handlers_rating.py` | 381 | PIL bilan reyting rasm generatsiyasi (top-10 grid) |
@@ -493,7 +494,7 @@ Audit jarayonida muammo bir joyda topilib, **boshqa joylarda ham tarqalgan** bo'
 Modullar orasidagi `import` bog'liqligi — **koddan avtomatik chiqarilgan** (taxmin emas). Bir faylni o'zgartirishdan oldin "kim meni import qiladi" ustunига qarang — ta'sir doirasi shu (Qoida #9).
 
 **Qatlamlar** (pastdan yuqoriga — pastki qatlam yuqorisini import qilmaydi):
-- **L0 (poydevor):** `config`, `texts`, `motivation`, `handlers_onboarding` — hech qanday lokal modul import qilmaydi
+- **L0 (poydevor):** `config`, `texts`, `motivation`, `handlers_onboarding`, `db_lock` — hech qanday lokal modul import qilmaydi
 - **L1 (ma'lumot):** `database` (→config), `helpers` (→database, texts)
 - **L2 (yadro):** `bot_setup`, `city_logic`, `points_logic`, `flask_helpers`
 - **L3 (mantiq):** `achievements`, `menus`, `handlers_*`, `scheduler`, `reminders_scheduler`
@@ -507,6 +508,7 @@ Modullar orasidagi `import` bog'liqligi — **koddan avtomatik chiqarilgan** (ta
 | `texts` | — | `callbacks_settings`, `helpers`, `scheduler`, `handlers_*`, `flask_routes_data/extra`, `habit_bot` |
 | `motivation` | — | `handlers_commands/stats/text`, `scheduler`, `flask_routes_data`, `habit_bot` |
 | `handlers_onboarding` | — | `habit_bot` |
+| `db_lock` | — (faqat `threading`, `contextlib`) | `handlers_text` (+ kelajakda `callbacks_shop`, `callbacks_checkin*`, `flask_routes_data/extra` — S1 migratsiyasi davom etmoqda) |
 | `database` | `config` | deyarli barcha modul |
 | `helpers` | `database`, `texts` | deyarli barcha modul |
 | `bot_setup` | `config`, `database`, `helpers` | deyarli barcha L3–L5 modul |
@@ -518,20 +520,20 @@ Modullar orasidagi `import` bog'liqligi — **koddan avtomatik chiqarilgan** (ta
 | `handlers_rating` | `bot_setup`, `database`, `helpers` | `callbacks_menu`, `habit_bot` |
 | `handlers_stats` | `bot_setup`, `config`, `database`, `helpers`, `motivation`, `texts` | `callbacks_habits`, `callbacks_menu`, `scheduler`, `habit_bot` |
 | `handlers_commands` | `bot_setup`, `config`, `database`, `helpers`, `menus`, `motivation`, `texts` | `habit_bot` |
-| `handlers_text` | `bot_setup`, `config`, `database`, `helpers`, `menus`, `motivation`, `scheduler`, `texts` | `habit_bot` |
+| `handlers_text` | `bot_setup`, `config`, `database`, `db_lock`, `helpers`, `menus`, `motivation`, `scheduler`, `texts` | `habit_bot` |
 | `scheduler` | `bot_setup`, `city_logic`, `config`, `database`, `handlers_stats`, `helpers`, `motivation`, `texts` | `callbacks_checkin`, `callbacks_checkin_done`, `flask_routes_core/extra`, `handlers_text`, `habit_bot` |
 | `reminders_scheduler` | `bot_setup`, `config`, `database`, `helpers` | `callbacks_reminders`, `habit_bot` |
 | `callbacks_habits` | `bot_setup`, `callbacks_checkin`, `city_logic`, `database`, `handlers_stats`, `helpers` | `handlers_callbacks` |
-| `callbacks_checkin` | `achievements`, `bot_setup`, `callbacks_checkin_done`, `city_logic`, `database`, `helpers`, `points_logic`, `scheduler` | `callbacks_checkin_done`, `callbacks_habits` |
-| `callbacks_checkin_done` | `achievements`, `bot_setup`, `callbacks_checkin`, `city_logic`, `database`, `helpers`, `points_logic`, `scheduler` | `callbacks_checkin` |
+| `callbacks_checkin` | `achievements`, `bot_setup`, `callbacks_checkin_done`, `city_logic`, `config`, `database`, `helpers`, `points_logic`, `scheduler` | `callbacks_checkin_done`, `callbacks_habits` |
+| `callbacks_checkin_done` | `achievements`, `bot_setup`, `callbacks_checkin`, `city_logic`, `config`, `database`, `helpers`, `points_logic`, `scheduler` | `callbacks_checkin` |
 | `callbacks_admin` | `bot_setup`, `config`, `database`, `helpers`, `menus` | `handlers_callbacks` |
-| `callbacks_menu` | `bot_setup`, `database`, `handlers_rating`, `handlers_stats`, `helpers`, `menus` | `handlers_callbacks` |
+| `callbacks_menu` | `bot_setup`, `config`, `database`, `handlers_rating`, `handlers_stats`, `helpers`, `menus` | `handlers_callbacks` |
 | `callbacks_reminders` | `bot_setup`, `helpers`, `reminders_scheduler` | `handlers_callbacks` |
 | `callbacks_settings` | `bot_setup`, `config`, `database`, `helpers`, `texts` | `handlers_callbacks` |
 | `callbacks_shop` | `bot_setup`, `config`, `database`, `helpers` | `handlers_callbacks` |
 | `flask_routes_city` | `city_logic`, `config`, `database`, `flask_helpers` | `flask_api` |
 | `flask_routes_core` | `achievements`, `bot_setup`, `city_logic`, `config`, `database`, `flask_helpers`, `helpers`, `scheduler` | `flask_api` |
-| `flask_routes_data` | `bot_setup`, `city_logic`, `database`, `flask_helpers`, `helpers`, `motivation`, `points_logic`, `texts` | `flask_api` |
+| `flask_routes_data` | `bot_setup`, `city_logic`, `config`, `database`, `flask_helpers`, `helpers`, `motivation`, `points_logic`, `texts` | `flask_api` |
 | `flask_routes_extra` | `achievements`, `bot_setup`, `config`, `database`, `flask_helpers`, `helpers`, `scheduler`, `texts` | `flask_api` |
 | `flask_routes_reminders` | `config`, `database`, `flask_helpers` | `flask_api` |
 | `handlers_callbacks` | `bot_setup`, `callbacks_*` (6 ta: admin, habits, menu, reminders, settings, shop), `database`, `helpers`, `menus` | `habit_bot` |
