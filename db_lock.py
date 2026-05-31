@@ -85,3 +85,57 @@ def user_lock(user_id, timeout=LOCK_TIMEOUT):
         yield
     finally:
         lock.release()
+
+
+@contextmanager
+def two_user_locks(uid_a, uid_b, timeout=LOCK_TIMEOUT):
+    """Bir vaqtda IKKI foydalanuvchini himoyalaydi (ball transfer uchun).
+
+    Transfer A→B: A dan ayiriladi, B ga qo'shiladi — ikkala userning
+    `load → modify → save` bloki bitta atomik zona ichida bo'lishi shart
+    (S1 + S2). Aks holda transfer paytida A yoki B alohida checkin qilsa
+    ball yo'qoladi yoki rollback bo'lmaydi.
+
+    DEADLOCK OLDINI OLISH (lock ordering): lock'lar HAR DOIM kichik uid'dan
+    boshlab olinadi. Misol — A→B va B→A teskari transferlar bir vaqtda:
+      - Tartibsiz olsa: thread1 lock(A)+kutadi lock(B); thread2 lock(B)+
+        kutadi lock(A) → ikkalasi bir-birini kutadi (deadlock).
+      - Tartibli (kichik→katta): ikkala thread ham AVVAL min(A,B) ni oladi
+        → biri ikkinchisini kutadi, deadlock yo'q.
+
+    A == B bo'lsa (o'ziga transfer — bo'lmasligi kerak, lekin himoya):
+    faqat BITTA lock olinadi (bir lock'ni 2 marta olish → o'z-o'zini bloklash).
+
+    Misol:
+        try:
+            with two_user_locks(uid, target_id):
+                u  = load_user(uid)
+                tu = load_user(target_id)
+                u["points"]  -= amount
+                tu["points"] += amount
+                save_user(uid, u)
+                save_user(target_id, tu)
+        except TimeoutError:
+            ...  # server band
+    """
+    a, b = str(uid_a), str(uid_b)
+    # Bir xil user → bitta lock kifoya (ikki marta olish o'z-o'zini bloklaydi)
+    if a == b:
+        with user_lock(a, timeout=timeout):
+            yield
+        return
+    # Deterministik tartib — kichik uid avval (deadlock oldini olish)
+    first, second = (a, b) if a < b else (b, a)
+    lock1 = get_user_lock(first)
+    lock2 = get_user_lock(second)
+    if not lock1.acquire(timeout=timeout):
+        raise TimeoutError(f"two_user_locks timeout (uid={first})")
+    try:
+        if not lock2.acquire(timeout=timeout):
+            raise TimeoutError(f"two_user_locks timeout (uid={second})")
+        try:
+            yield
+        finally:
+            lock2.release()
+    finally:
+        lock1.release()
