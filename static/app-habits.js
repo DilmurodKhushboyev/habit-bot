@@ -376,7 +376,12 @@ async function deleteHabit(id) {
       // Backend `wait_min` (qolgan daqiqa) qaytaradi — manba bitta: server (frontend
       // o'zi vaqt hisoblamaydi). Bot `confirm_delete_` bilan sinxron mantiq.
       if (rj.error === 'delete_locked') {
-        showToast('🔒 ' + S('today','delete_locked').replace('{min}', rj.wait_min), true);
+        // #toast element faqat Odatlar sahifasida mavjud — Today/dropdown'dan
+        // o'chirilganda showToast jimgina yo'qoladi. alert() har sahifada ishonchli
+        // (deleteHabit boshidagi confirm() kabi native WebView dialog).
+        const _msg = (S('today','delete_locked') || 'Bu odatni hozircha o\'chirib bo\'lmaydi. Yana {min} daqiqadan so\'ng o\'chira olasiz.')
+                       .replace('{min}', rj.wait_min);
+        alert('🔒 ' + _msg);
         return;
       }
       showToast('❌ ' + (rj.error || S('msg','error_label')), true); return;
