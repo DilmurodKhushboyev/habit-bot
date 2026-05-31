@@ -111,6 +111,7 @@ const STRINGS = {
       progress_label:'JARAYON',
       readonly_msg:'Faqat bugungi odatlarni belgilash mumkin',
       back_to_today:'Bugunga qaytish',
+      delete_locked:"Bu odatni hozircha o'chirib bo'lmaydi. Yana {min} daqiqadan so'ng o'chira olasiz.",
     },
     achievements: {
       title:'Yutuqlarim',
@@ -497,6 +498,7 @@ const STRINGS = {
       progress_label:'ПРОГРЕСС',
       readonly_msg:'Отмечать можно только сегодняшние привычки',
       back_to_today:'К сегодняшнему дню',
+      delete_locked:'Эту привычку пока нельзя удалить. Удаление будет доступно через {min} мин.',
       limit_reached:'⚠️ Достигнут максимум! (15 привычек)',
     },
     achievements: {
@@ -884,6 +886,7 @@ const STRINGS = {
       progress_label:'PROGRESS',
       readonly_msg:'Only today\'s habits can be marked',
       back_to_today:'Back to today',
+      delete_locked:"This habit can't be deleted yet. You can delete it in {min} min.",
       limit_reached:'⚠️ Limit reached! (15 habits)',
     },
     achievements: {

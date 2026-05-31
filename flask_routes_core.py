@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from flask import jsonify, request
 
-from config import mongo_col, SHOP_PRICES, HABIT_LIMIT
+from config import mongo_col, SHOP_PRICES, HABIT_LIMIT, HABIT_DELETE_LOCK_SEC
 from database import (load_user, save_user, load_all_users,
                       get_points_in_period,
                       get_streak_in_period)
@@ -505,6 +505,9 @@ def register_core_routes(app):
             "done_today_count": 0,
             "last_done":    None,
             "created_at":   today_uz5(),
+            # DELETE-LOCK: aniq yaratilish vaqti (Unix soniya). created_at faqat sana —
+            # 1 soatlik o'chirish blokirovkasi uchun soat-daqiqa aniqligi kerak.
+            "created_ts":   int(datetime.now(timezone.utc).timestamp()),
         }
         habits = u.get("habits", [])
         habits.append(new_habit)
@@ -588,6 +591,20 @@ def register_core_routes(app):
     def api_habits_delete(uid, hid):
         u = load_user(uid)
         habits = u.get("habits", [])
+        # ── DELETE-LOCK (anti-exploit) ──────────────────────────────
+        # Odat yaratilgandan keyin 1 soat ichida o'chirib bo'lmaydi.
+        # Sabab: "yarat → tasdiqla → ball ol → o'chir → qayta yarat" ball
+        # to'plash exploiti. Bot `callbacks_habits.py` `confirm_delete_` da
+        # XUDDI SHU tekshiruv bor (Qoida #10 sinxron).
+        # Eski odatlar (`created_ts` yo'q) → fallback: ruxsat (qulflanib qolmasin).
+        target = next((h for h in habits if h.get("id") == hid), None)
+        if target and target.get("created_ts"):
+            elapsed = int(datetime.now(timezone.utc).timestamp()) - int(target["created_ts"])
+            if elapsed < HABIT_DELETE_LOCK_SEC:
+                wait_min = max(1, (HABIT_DELETE_LOCK_SEC - elapsed + 59) // 60)
+                return jsonify({"ok": False, "error": "delete_locked",
+                                "wait_min": wait_min}), 403
+        # ────────────────────────────────────────────────────────────
         new_habits = [h for h in habits if h.get("id") != hid]
         if len(new_habits) == len(habits):
             return jsonify({"ok": False, "error": "Topilmadi"}), 404

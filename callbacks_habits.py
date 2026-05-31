@@ -8,8 +8,10 @@ qilinadi (Qoida #24 — fayl hajmi).
 import time
 import threading
 import schedule
+from datetime import datetime, timezone
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from config import HABIT_DELETE_LOCK_SEC
 from database import load_user, save_user
 from city_logic import delete_building_for_habit
 from helpers import T
@@ -199,6 +201,18 @@ def handle_habits_callbacks(call, uid, cdata, u):
         u          = load_user(uid)
         habits     = u.get("habits", [])
         habit_name = next((h["name"] for h in habits if h["id"] == habit_id), "")
+        # ── DELETE-LOCK (anti-exploit) — WebApp `api_habits_delete` bilan SINXRON (Qoida #10) ──
+        # Odat yaratilgandan keyin 1 soat ichida o'chirib bo'lmaydi.
+        # Eski odatlar (`created_ts` yo'q) → fallback: ruxsat.
+        target = next((h for h in habits if h["id"] == habit_id), None)
+        if target and target.get("created_ts"):
+            elapsed = int(datetime.now(timezone.utc).timestamp()) - int(target["created_ts"])
+            if elapsed < HABIT_DELETE_LOCK_SEC:
+                wait_min = max(1, (HABIT_DELETE_LOCK_SEC - elapsed + 59) // 60)
+                bot.answer_callback_query(
+                    call.id, T(uid, "delete_locked", min=wait_min), show_alert=True)
+                return True
+        # ──────────────────────────────────────────────────────────────────────────────────
         # Schedule dan o'chirish
         schedule.clear(f"{uid}_{habit_id}")
         u["habits"] = [h for h in habits if h["id"] != habit_id]

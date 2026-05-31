@@ -371,7 +371,25 @@ async function deleteHabit(id) {
       method: 'DELETE', headers: {'X-Init-Data': initData, 'X-User-Id': userId}
     });
     const rj = await res.json().catch(() => ({}));
-    if (!res.ok || rj.ok === false) { showToast('❌ ' + (rj.error || S('msg','error_label')), true); return; }
+    if (!res.ok || rj.ok === false) {
+      // DELETE-LOCK: odat yaratilgandan keyin 1 soat o'tmaguncha o'chirib bo'lmaydi.
+      // Backend `wait_min` (qolgan daqiqa) qaytaradi — manba bitta: server (frontend
+      // o'zi vaqt hisoblamaydi). Bot `confirm_delete_` bilan sinxron mantiq.
+      if (rj.error === 'delete_locked') {
+        // #toast element faqat Odatlar sahifasida mavjud — Today/dropdown'dan
+        // o'chirilganda showToast jimgina yo'qoladi. alert() har sahifada ishonchli
+        // (deleteHabit boshidagi confirm() kabi native WebView dialog).
+        const _msg = (S('today','delete_locked') || 'Bu odatni hozircha o\'chirib bo\'lmaydi. Yana {min} daqiqadan so\'ng o\'chira olasiz.')
+                       .replace('{min}', rj.wait_min);
+        alert('🔒 ' + _msg);
+        // OK bosilgach (alert bloklovchi) orqadagi karta swipe holatini yopish.
+        // Today va Odatlar sahifalari uchun ikkalasi ham (closeModal patterni #270).
+        if (typeof closeAllCheckinSwipes === 'function') closeAllCheckinSwipes();
+        if (typeof closeAllHabitSwipes === 'function') closeAllHabitSwipes();
+        return;
+      }
+      showToast('❌ ' + (rj.error || S('msg','error_label')), true); return;
+    }
     showToast('🗑️ O\'chirildi!');
     // Today sahifasida bo'lsa — today ni yangilash
     const todayPage = document.getElementById('page-today');

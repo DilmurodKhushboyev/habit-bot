@@ -122,6 +122,12 @@ REMINDER_MAX_TEXT_LEN    = 200            # Eslatma matnining maksimal uzunligi 
 HABIT_LIMIT = 15                          # Bir foydalanuvchi yarata oladigan maksimal odat soni
                                           # (freemium qo'shilganda FREE/PREM ga ajratiladi)
 
+# Odat yaratilgandan keyin uni o'chirish uchun kutiladigan vaqt (soniya).
+# Anti-exploit: "yarat → tasdiqla → ball ol → o'chir → qayta yarat" ball to'plash
+# siklini buzadi. flask_routes_core.api_habits_delete VA callbacks_habits.confirm_delete_
+# (bot/WebApp sinxron, Qoida #10) shu konstantadan o'qiydi.
+HABIT_DELETE_LOCK_SEC = 3600              # 1 soat
+
 # ============================================================
 #  STREAK MILESTONE'LARI (markazlashtirilgan — yagona manba)
 #  Bot (callbacks_checkin / callbacks_checkin_done) VA WebApp
