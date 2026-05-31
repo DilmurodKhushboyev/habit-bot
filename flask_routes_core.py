@@ -443,6 +443,7 @@ def register_core_routes(app):
                 "name":         h.get("name",""),
                 "icon":         h.get("icon","✅"),
                 "time":         h.get("time","vaqtsiz"),
+                "priority":     h.get("priority","medium"),
                 "times":        h.get("repeat_times", []),
                 "type":         h.get("type","simple"),
                 "repeat_count": h.get("repeat_count",1),
@@ -462,6 +463,11 @@ def register_core_routes(app):
         icon  = (data.get("icon") or "✅").strip()
         time_ = (data.get("time") or "vaqtsiz").strip()
         hab_type     = data.get("type", "simple")
+        # Muhimlik darajasi: low | medium | high (default medium).
+        # Frontend tartiblash uchun ishlatadi (high → medium → low).
+        priority = (data.get("priority") or "medium").strip()
+        if priority not in ("low", "medium", "high"):
+            priority = "medium"
         try:
             repeat_count = max(1, min(int(data.get("repeat_count", 1)), 100))
         except (ValueError, TypeError):
@@ -497,6 +503,7 @@ def register_core_routes(app):
             "name":         name,
             "icon":         icon,
             "time":         time_,
+            "priority":     priority,
             "type":         "repeat" if hab_type == "repeat" else "simple",
             "repeat_count": repeat_count if hab_type == "repeat" else 1,
             "repeat_times": repeat_times if hab_type == "repeat" else [],
@@ -535,6 +542,10 @@ def register_core_routes(app):
         icon  = (data.get("icon") or "✅").strip()
         time_ = (data.get("time") or "vaqtsiz").strip()
         type_ = (data.get("type") or "simple").strip()
+        # Muhimlik darajasi (low | medium | high, default medium)
+        priority = (data.get("priority") or "medium").strip()
+        if priority not in ("low", "medium", "high"):
+            priority = "medium"
         try:
             repeat_count = max(1, min(int(data.get("repeat_count") or 1), 100))
         except (ValueError, TypeError):
@@ -568,6 +579,7 @@ def register_core_routes(app):
                 h["name"] = name
                 h["icon"] = icon
                 h["time"] = time_
+                h["priority"] = priority
                 h["type"] = type_
                 h["repeat_count"] = repeat_count if type_ == "repeat" else 1
                 h["repeat_times"] = repeat_times if type_ == "repeat" else []

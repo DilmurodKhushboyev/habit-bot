@@ -16,6 +16,7 @@ function _iconCatLabel(key) { const k = _ICON_CAT_KEYS[key]; return k ? key.slic
 let _iconCat = Object.keys(ICON_CATS)[0];
 const ICONS = Object.values(ICON_CATS).flat();
 let editingHabitId = null;
+let _selectedPriority = 'medium';  // Yangi odat uchun default: o'rta
 
 async function refreshHabitsJon() {
   try {
@@ -41,7 +42,7 @@ function renderHabits(habits, jon = 100) {
   const _esc = (s) => s.replace(/'/g, "\\'");
   let rows = '';
   habits.forEach(h => {
-    const editArgs = `'${h.id}','${_esc(h.name)}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}'`;
+    const editArgs = `'${h.id}','${_esc(h.name)}','${h.icon||'✅'}','${h.time||'vaqtsiz'}','${h.type||'simple'}',${h.repeat_count||1},'${encodeURIComponent(JSON.stringify(h.times||[]))}','${h.priority||'medium'}'`;
     rows += `
       <div class="habit-card" id="hcard-${h.id}">
         <div class="habit-card-actions-bg">
@@ -116,6 +117,10 @@ function renderHabits(habits, jon = 100) {
           <button type="button" class="rep-btn" style="width:100%;margin-top:6px;justify-content:center" onclick="addHabitTime()">${S('reminders','add_time')}</button>
         </div>
         <div class="field">
+          <label id="lbl-prio">${S('habits','priority_label')}</label>
+          ${_buildPriorityField()}
+        </div>
+        <div class="field">
           <label id="lbl-icon-pick">Icon tanlang</label>
           ${iconGrid}
         </div>
@@ -143,6 +148,30 @@ function selectIconCat(btn, idx) {
 function selectIcon(el) {
   document.querySelectorAll('.icon-opt').forEach(e => e.classList.remove('selected'));
   el.classList.add('selected');
+}
+
+function _buildPriorityField() {
+  // Muhimlik darajasi tanlash bloki (low | medium | high).
+  // _selectedPriority global holatdan faol tugmani belgilaydi.
+  const opts = [
+    {v:'high',   k:'priority_high'},
+    {v:'medium', k:'priority_medium'},
+    {v:'low',    k:'priority_low'},
+  ];
+  return `
+    <div class="prio-tabs" id="prio-tabs">
+      ${opts.map(o =>
+        `<button type="button" class="prio-btn prio-${o.v}${o.v === _selectedPriority ? ' active' : ''}"
+          data-prio="${o.v}" onclick="selectPriority('${o.v}')">${S('habits', o.k)}</button>`
+      ).join('')}
+    </div>`;
+}
+
+function selectPriority(v) {
+  _selectedPriority = v;
+  document.querySelectorAll('.prio-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.prio === v);
+  });
 }
 
 function _buildIconGrid() {
@@ -186,6 +215,10 @@ function _ensureHabitModal() {
           <button type="button" class="rep-btn" style="width:100%;margin-top:6px;justify-content:center" onclick="addHabitTime()">${S('reminders','add_time')}</button>
         </div>
         <div class="field">
+          <label id="lbl-prio">${S('habits','priority_label')}</label>
+          ${_buildPriorityField()}
+        </div>
+        <div class="field">
           <label id="lbl-icon-pick">Icon tanlang</label>
           ${iconGrid}
         </div>
@@ -206,7 +239,14 @@ function _translateHabitModal() {
   m('lbl-habit-type', 'habits', 'type_label');
   m('lbl-per-day-hint', 'habits', 'per_day_hint');
   m('lbl-time', 'habits', 'time_label');
+  m('lbl-prio', 'habits', 'priority_label');
   m('lbl-icon-pick', 'habits', 'icon_label');
+  // Daraja tugmalari matnini joriy tilga yangilash
+  const _prioKeys = {high:'priority_high', medium:'priority_medium', low:'priority_low'};
+  document.querySelectorAll('.prio-btn').forEach(b => {
+    const k = _prioKeys[b.dataset.prio];
+    if (k) b.textContent = S('habits', k);
+  });
   const hn = document.getElementById('h-name');
   if (hn) hn.placeholder = S('msg','ph_habit_name');
 }
@@ -228,11 +268,13 @@ function openAdd() {
   // }
   editingHabitId = null;
   document.getElementById('modal-title').textContent = S('habits','add_new');
+  _selectedPriority = 'medium';  // Yangi odat → o'rta default
   _translateHabitModal();
   document.getElementById('h-name').value = '';
   const rcEl = document.getElementById('h-repeat-count');
   if (rcEl) rcEl.value = 1;
   _buildTimeInputs(1, []);
+  selectPriority('medium');  // UI tugmasini sinxronlash
   document.querySelectorAll('.icon-opt').forEach(e => e.classList.remove('selected'));
   document.querySelector('.icon-opt')?.classList.add('selected');
   document.getElementById('habit-modal').classList.add('open');
@@ -241,9 +283,10 @@ function openAdd() {
     if (inp) inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, 320);
 }
-async function openEdit(id, name, icon, time, type, repeatCount, timesJson) {
+async function openEdit(id, name, icon, time, type, repeatCount, timesJson, priority) {
   _ensureHabitModal();
   editingHabitId = id;
+  _selectedPriority = (priority === 'low' || priority === 'high') ? priority : 'medium';
   document.getElementById('modal-title').textContent = S('habits','edit_title');
   _translateHabitModal();
   document.getElementById('h-name').value = name;
@@ -254,6 +297,7 @@ async function openEdit(id, name, icon, time, type, repeatCount, timesJson) {
   try { times = JSON.parse(decodeURIComponent(timesJson || '[]')); } catch(e) { times = []; }
   if (!times.length && time && time !== 'vaqtsiz') times = [time];
   _buildTimeInputs(repeatCount || 1, times);
+  selectPriority(_selectedPriority);  // UI tugmasini sinxronlash
   document.querySelectorAll('.icon-opt').forEach(e => {
     e.classList.toggle('selected', e.dataset.icon === icon);
   });
@@ -326,7 +370,7 @@ async function saveHabit() {
       const res = await fetch(`${API}/habits/${userId}/${editingHabitId}`, {
         method: 'PUT',
         headers: {'Content-Type':'application/json','X-Init-Data':initData,'X-User-Id':userId},
-        body: JSON.stringify({name, icon, time: timeFinal, type: isRepeat ? 'repeat' : 'simple', repeat_count: repeatCount, repeat_times: isRepeat ? timesArr : []})
+        body: JSON.stringify({name, icon, time: timeFinal, priority: _selectedPriority, type: isRepeat ? 'repeat' : 'simple', repeat_count: repeatCount, repeat_times: isRepeat ? timesArr : []})
       });
       const rj = await res.json().catch(() => ({}));
       if (!res.ok || rj.ok === false) { showToast('❌ ' + (rj.error || S('msg','error_label')), true); return; }
@@ -335,7 +379,7 @@ async function saveHabit() {
       const res = await fetch(`${API}/habits/${userId}`, {
         method: 'POST',
         headers: {'Content-Type':'application/json','X-Init-Data':initData,'X-User-Id':userId},
-        body: JSON.stringify({name, icon, time: timeFinal, type: isRepeat ? 'repeat' : 'simple', repeat_count: repeatCount, repeat_times: isRepeat ? timesArr : []})
+        body: JSON.stringify({name, icon, time: timeFinal, priority: _selectedPriority, type: isRepeat ? 'repeat' : 'simple', repeat_count: repeatCount, repeat_times: isRepeat ? timesArr : []})
       });
       const rj = await res.json().catch(() => ({}));
       if (!res.ok || rj.ok === false) {
