@@ -17,6 +17,7 @@ from achievements import check_achievements_toplevel
 from bot_setup import (bot, main_menu_dict, edit_message_colored,
                        build_main_text)
 from callbacks_checkin import _check_streak_milestone
+from config import STREAK_MILESTONES
 
 
 def handle_done_callbacks(call, uid, cdata, u):
@@ -58,7 +59,17 @@ def handle_done_callbacks(call, uid, cdata, u):
                             if u["streak"] > u.get("best_streak", 0):
                                 u["best_streak"] = u["streak"]
                                 u["best_streak_date"] = today
-                            threading.Thread(target=_check_streak_milestone, args=(uid, u["streak"]), daemon=True).start()
+                            # Streak milestone bonus (api_checkin bilan sinxron — S4)
+                            # Ball asosiy thread'da, xabar thread'da.
+                            if u["streak"] in STREAK_MILESTONES:
+                                _msent = u.get("streak_milestones_sent", [])
+                                if u["streak"] not in _msent:
+                                    _ms = STREAK_MILESTONES[u["streak"]]
+                                    u["points"] = u.get("points", 0) + _ms["bonus"]
+                                    add_points_history(u, _ms["bonus"], today)
+                                    _msent.append(u["streak"])
+                                    u["streak_milestones_sent"] = _msent
+                                    threading.Thread(target=_check_streak_milestone, args=(uid, u["streak"]), daemon=True).start()
                         _base = 5
                         if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:
                             _base = 15
@@ -144,7 +155,17 @@ def handle_done_callbacks(call, uid, cdata, u):
                     if u["streak"] > u.get("best_streak", 0):
                         u["best_streak"] = u["streak"]
                         u["best_streak_date"] = today
-                    threading.Thread(target=_check_streak_milestone, args=(uid, u["streak"]), daemon=True).start()
+                    # Streak milestone bonus (api_checkin bilan sinxron — S4)
+                    # Ball asosiy thread'da, xabar thread'da.
+                    if u["streak"] in STREAK_MILESTONES:
+                        _msent = u.get("streak_milestones_sent", [])
+                        if u["streak"] not in _msent:
+                            _ms = STREAK_MILESTONES[u["streak"]]
+                            u["points"] = u.get("points", 0) + _ms["bonus"]
+                            add_points_history(u, _ms["bonus"], today)
+                            _msent.append(u["streak"])
+                            u["streak_milestones_sent"] = _msent
+                            threading.Thread(target=_check_streak_milestone, args=(uid, u["streak"]), daemon=True).start()
                 # Bonus multiplier hisoblash (WebApp api_checkin bilan bir xil)
                 _base = 5
                 if u.get("bonus_3x_active") and u.get("bonus_3x_date") == today:

@@ -123,6 +123,28 @@ HABIT_LIMIT = 15                          # Bir foydalanuvchi yarata oladigan ma
                                           # (freemium qo'shilganda FREE/PREM ga ajratiladi)
 
 # ============================================================
+#  STREAK MILESTONE'LARI (markazlashtirilgan — yagona manba)
+#  Bot (callbacks_checkin / callbacks_checkin_done) VA WebApp
+#  (flask_routes_data.api_checkin) shu dict'dan o'qiydi — sinxron.
+#  streak global qiymati shu kalitlardan biriga tenglashganda:
+#    - foydalanuvchiga "bonus" ball beriladi
+#    - u["streak_milestones_sent"] ga qo'shiladi (takror bermaslik uchun)
+#  emoji — xabarda; bonus — beriladigan ball.
+#  (Eslatma: foydalanuvchiga ko'rinadigan matn texts.py "streak_milestone"
+#   orqali 3 tilda — Qoida #22. Bu yerdagi qiymat faqat raqam/emoji.)
+# ============================================================
+STREAK_MILESTONES = {
+    3:   {"emoji": "✨", "bonus": 5},
+    7:   {"emoji": "🔥", "bonus": 10},
+    14:  {"emoji": "⚡", "bonus": 20},
+    30:  {"emoji": "💎", "bonus": 50},
+    60:  {"emoji": "🏆", "bonus": 100},
+    100: {"emoji": "👑", "bonus": 200},
+    180: {"emoji": "🌟", "bonus": 300},
+    365: {"emoji": "🎖️", "bonus": 500},
+}
+
+# ============================================================
 #  CITY (SHAHAR) — gamification 2.0
 #  Foydalanuvchi har odat tasdiqlasa → bino qurilishi davom etadi.
 #  66 kun = bino to'liq quriladi (odat shakllanishi ilmiy chegarasi).
