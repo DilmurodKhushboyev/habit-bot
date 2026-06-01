@@ -150,6 +150,25 @@ function selectIcon(el) {
   el.classList.add('selected');
 }
 
+function _selectIconForEdit(icon) {
+  // Ikonka qaysi kategoriyada borligini aniqlaymiz
+  const keys = Object.keys(ICON_CATS);
+  let catIdx = keys.findIndex(k => ICON_CATS[k].includes(icon));
+  if (catIdx < 0) catIdx = 0;  // topilmasa — birinchi kategoriya
+  const cat = keys[catIdx];
+  _iconCat = cat;
+  // Kategoriya tugmasini faollashtirish
+  const catBtns = document.querySelectorAll('.icon-cat-btn');
+  catBtns.forEach((b, i) => b.classList.toggle('active', i === catIdx));
+  // Grid'ni shu kategoriya ikonkalari bilan qurish
+  const grid = document.getElementById('icon-grid-inner');
+  if (grid) {
+    grid.innerHTML = ICON_CATS[cat].map(ic =>
+      `<div class="icon-opt${ic === icon ? ' selected' : ''}" data-icon="${ic}" onclick="selectIcon(this)">${ic}</div>`
+    ).join('');
+  }
+}
+
 function _buildPriorityField() {
   // Muhimlik darajasi tanlash bloki (low | medium | high).
   // _selectedPriority global holatdan faol tugmani belgilaydi.
@@ -298,9 +317,10 @@ async function openEdit(id, name, icon, time, type, repeatCount, timesJson, prio
   if (!times.length && time && time !== 'vaqtsiz') times = [time];
   _buildTimeInputs(repeatCount || 1, times);
   selectPriority(_selectedPriority);  // UI tugmasini sinxronlash
-  document.querySelectorAll('.icon-opt').forEach(e => {
-    e.classList.toggle('selected', e.dataset.icon === icon);
-  });
+  // Ikonkani to'g'ri tanlash: ikonka joriy grid'da bo'lmasligi mumkin
+  // (boshqa kategoriyada). Shuning uchun ikonka qaysi kategoriyada bo'lsa,
+  // o'sha kategoriyaga o'tib, grid'ni qayta quramiz, keyin selected qilamiz.
+  _selectIconForEdit(icon);
   document.getElementById('habit-modal').classList.add('open');
   setTimeout(() => {
     const inp = document.getElementById('h-name');
