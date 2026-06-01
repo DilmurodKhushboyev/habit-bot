@@ -294,8 +294,9 @@ function openAdd() {
   if (rcEl) rcEl.value = 1;
   _buildTimeInputs(1, []);
   selectPriority('medium');  // UI tugmasini sinxronlash
-  document.querySelectorAll('.icon-opt').forEach(e => e.classList.remove('selected'));
-  document.querySelector('.icon-opt')?.classList.add('selected');
+  // Ikonkani default holatga qaytaramiz: "Sevimli" kategoriya, birinchi ikonka (✅)
+  // tanlangan. Aks holda oldingi tahrirlashdan qolgan kategoriya "eslab qolinadi".
+  _selectIconForEdit(ICON_CATS[Object.keys(ICON_CATS)[0]][0]);
   document.getElementById('habit-modal').classList.add('open');
   setTimeout(() => {
     const inp = document.getElementById('h-name');
